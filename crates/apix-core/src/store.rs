@@ -26,17 +26,17 @@ pub const ENVIRONMENTS_DIR: &str = "environments";
 
 #[derive(Debug, thiserror::Error)]
 pub enum StoreError {
-    #[error("{path}: {source}")]
+    #[error("{path}")]
     Io {
         path: PathBuf,
         #[source]
         source: std::io::Error,
     },
-    #[error("{path}: {source}")]
+    #[error("{path}")]
     Parse {
         path: PathBuf,
         #[source]
-        source: toml::de::Error,
+        source: Box<toml::de::Error>,
     },
     #[error("could not serialize: {0}")]
     Serialize(#[from] toml::ser::Error),
@@ -49,7 +49,7 @@ fn read_toml<T: for<'de> Deserialize<'de>>(path: &Path) -> Result<T, StoreError>
     })?;
     toml::from_str(&text).map_err(|source| StoreError::Parse {
         path: path.to_owned(),
-        source,
+        source: Box::new(source),
     })
 }
 
@@ -105,7 +105,10 @@ impl Collection {
     }
 
     pub fn environment(&self, name: &str) -> Result<Environment, StoreError> {
-        let path = self.root.join(ENVIRONMENTS_DIR).join(format!("{name}.toml"));
+        let path = self
+            .root
+            .join(ENVIRONMENTS_DIR)
+            .join(format!("{name}.toml"));
         let mut env: Environment = read_toml(&path)?;
         env.name = name.to_owned();
         Ok(env)
@@ -148,7 +151,9 @@ fn collect_requests(dir: &Path, is_root: bool, out: &mut Vec<PathBuf>) {
             if !(is_root && name == ENVIRONMENTS_DIR) {
                 collect_requests(&path, false, out);
             }
-        } else if path.extension().is_some_and(|ext| ext == "toml") && !(is_root && name == COLLECTION_FILE) {
+        } else if path.extension().is_some_and(|ext| ext == "toml")
+            && !(is_root && name == COLLECTION_FILE)
+        {
             out.push(path);
         }
     }
@@ -164,9 +169,21 @@ mod tests {
         let _ = fs::remove_dir_all(&root);
         fs::create_dir_all(root.join("environments")).unwrap();
         fs::create_dir_all(root.join("users")).unwrap();
-        fs::write(root.join(COLLECTION_FILE), "name = \"Demo\"\n[vars]\nhost = \"example.com\"\n").unwrap();
-        fs::write(root.join("environments/dev.toml"), "[vars]\nhost = \"localhost\"\n").unwrap();
-        fs::write(root.join("health.toml"), "name = \"Health\"\nurl = \"https://{{host}}/health\"\n").unwrap();
+        fs::write(
+            root.join(COLLECTION_FILE),
+            "name = \"Demo\"\n[vars]\nhost = \"example.com\"\n",
+        )
+        .unwrap();
+        fs::write(
+            root.join("environments/dev.toml"),
+            "[vars]\nhost = \"localhost\"\n",
+        )
+        .unwrap();
+        fs::write(
+            root.join("health.toml"),
+            "name = \"Health\"\nurl = \"https://{{host}}/health\"\n",
+        )
+        .unwrap();
         root
     }
 
@@ -179,9 +196,18 @@ mod tests {
         let collection = Collection::open(&root).unwrap();
         assert_eq!(collection.meta.name, "Demo");
         assert_eq!(collection.environment_names(), ["dev"]);
-        assert_eq!(collection.environment("dev").unwrap().vars["host"], "localhost");
-        assert_eq!(collection.request_paths(), [root.join("health.toml"), path.clone()]);
-        assert_eq!(Collection::find_root(&path).as_deref(), Some(root.as_path()));
+        assert_eq!(
+            collection.environment("dev").unwrap().vars["host"],
+            "localhost"
+        );
+        assert_eq!(
+            collection.request_paths(),
+            [root.join("health.toml"), path.clone()]
+        );
+        assert_eq!(
+            Collection::find_root(&path).as_deref(),
+            Some(root.as_path())
+        );
         assert_eq!(load_request(&path).unwrap().method, Method::Post);
 
         fs::remove_dir_all(root).unwrap();

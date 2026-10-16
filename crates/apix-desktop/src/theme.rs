@@ -9,7 +9,8 @@ fn hue(degrees: f32) -> f32 {
 }
 
 pub fn background() -> Hsla {
-    hsla(hue(225.), 0.25, 0.06, 0.78)
+    // Dark enough to read as obsidian over a light blurred desktop, while still letting the blur through.
+    hsla(hue(225.), 0.25, 0.05, 0.90)
 }
 
 pub fn surface() -> Hsla {

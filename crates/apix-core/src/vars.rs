@@ -19,7 +19,10 @@ impl Variables {
         Self::default()
     }
 
-    pub fn with_layer<'a>(mut self, layer: impl IntoIterator<Item = (&'a String, &'a String)>) -> Self {
+    pub fn with_layer<'a>(
+        mut self,
+        layer: impl IntoIterator<Item = (&'a String, &'a String)>,
+    ) -> Self {
         for (key, value) in layer {
             self.map.insert(key.clone(), value.clone());
         }
@@ -104,7 +107,11 @@ impl Request {
                     username: s(username),
                     password: s(password),
                 },
-                Auth::ApiKey { key, value, location } => Auth::ApiKey {
+                Auth::ApiKey {
+                    key,
+                    value,
+                    location,
+                } => Auth::ApiKey {
                     key: s(key),
                     value: s(value),
                     location: *location,
@@ -149,9 +156,16 @@ mod tests {
 
     #[test]
     fn follows_nested_variables_and_stops_on_cycles() {
-        let v = vars(&[("base", "https://{{host}}"), ("host", "api.dev"), ("loop", "{{loop}}")]);
+        let v = vars(&[
+            ("base", "https://{{host}}"),
+            ("host", "api.dev"),
+            ("loop", "{{loop}}"),
+        ]);
         let mut missing = BTreeSet::new();
-        assert_eq!(v.interpolate("{{base}}/v1", &mut missing), "https://api.dev/v1");
+        assert_eq!(
+            v.interpolate("{{base}}/v1", &mut missing),
+            "https://api.dev/v1"
+        );
         assert_eq!(v.interpolate("{{loop}}", &mut missing), "{{loop}}");
         assert!(missing.is_empty());
     }
@@ -175,13 +189,18 @@ mod tests {
         let mut req = Request::new(Method::Post, "{{base}}/login");
         req.headers.push(KeyValue::new("X-Env", "{{env}}"));
         req.body = Body::Json(r#"{"user":"{{user}}"}"#.into());
-        req.auth = Auth::Bearer { token: "{{token}}".into() };
+        req.auth = Auth::Bearer {
+            token: "{{token}}".into(),
+        };
 
         let v = vars(&[("base", "http://x"), ("env", "dev"), ("user", "ada")]);
         let resolved = req.resolve(&v);
         assert_eq!(resolved.request.url, "http://x/login");
         assert_eq!(resolved.request.headers[0].value, "dev");
-        assert_eq!(resolved.request.body, Body::Json(r#"{"user":"ada"}"#.into()));
+        assert_eq!(
+            resolved.request.body,
+            Body::Json(r#"{"user":"ada"}"#.into())
+        );
         assert!(resolved.missing.contains("token"));
     }
 }

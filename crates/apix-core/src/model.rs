@@ -215,7 +215,8 @@ token = "{{token}}"
 
     #[test]
     fn minimal_file_defaults_to_get() {
-        let req: Request = toml::from_str("name = \"Ping\"\nurl = \"https://example.com\"").unwrap();
+        let req: Request =
+            toml::from_str("name = \"Ping\"\nurl = \"https://example.com\"").unwrap();
         assert_eq!(req.method, Method::Get);
         assert!(req.body.is_none() && req.auth.is_none());
     }

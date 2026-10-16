@@ -52,12 +52,11 @@ impl Response {
 
     /// The body as text; JSON is pretty-printed, anything else is decoded lossily.
     pub fn pretty_body(&self) -> String {
-        if self.is_json() {
-            if let Ok(value) = serde_json::from_slice::<serde_json::Value>(&self.body) {
-                if let Ok(pretty) = serde_json::to_string_pretty(&value) {
-                    return pretty;
-                }
-            }
+        if self.is_json()
+            && let Ok(value) = serde_json::from_slice::<serde_json::Value>(&self.body)
+            && let Ok(pretty) = serde_json::to_string_pretty(&value)
+        {
+            return pretty;
         }
         String::from_utf8_lossy(&self.body).into_owned()
     }
@@ -89,7 +88,12 @@ impl HttpClient {
         let headers = response
             .headers()
             .iter()
-            .map(|(k, v)| (k.to_string(), String::from_utf8_lossy(v.as_bytes()).into_owned()))
+            .map(|(k, v)| {
+                (
+                    k.to_string(),
+                    String::from_utf8_lossy(v.as_bytes()).into_owned(),
+                )
+            })
             .collect();
         let body = response.bytes().await?;
 
@@ -118,7 +122,12 @@ impl HttpClient {
             .filter(|q| q.enabled)
             .map(|q| (q.key.as_str(), q.value.as_str()))
             .collect();
-        if let Auth::ApiKey { key, value, location: ApiKeyLocation::Query } = &req.auth {
+        if let Auth::ApiKey {
+            key,
+            value,
+            location: ApiKeyLocation::Query,
+        } = &req.auth
+        {
             query.push((key.as_str(), value.as_str()));
         }
         if !query.is_empty() {
@@ -137,14 +146,21 @@ impl HttpClient {
             Auth::None => builder,
             Auth::Bearer { token } => builder.bearer_auth(token),
             Auth::Basic { username, password } => builder.basic_auth(username, Some(password)),
-            Auth::ApiKey { key, value, location: ApiKeyLocation::Header } => builder.header(key, value),
-            Auth::ApiKey { location: ApiKeyLocation::Query, .. } => builder,
+            Auth::ApiKey {
+                key,
+                value,
+                location: ApiKeyLocation::Header,
+            } => builder.header(key, value),
+            Auth::ApiKey {
+                location: ApiKeyLocation::Query,
+                ..
+            } => builder,
         };
 
-        if let Some(content_type) = req.body.default_content_type() {
-            if !req.has_header(CONTENT_TYPE.as_str()) {
-                builder = builder.header(CONTENT_TYPE, content_type);
-            }
+        if let Some(content_type) = req.body.default_content_type()
+            && !req.has_header(CONTENT_TYPE.as_str())
+        {
+            builder = builder.header(CONTENT_TYPE, content_type);
         }
         builder = match &req.body {
             Body::None => builder,
@@ -172,7 +188,10 @@ mod tests {
     fn builds_query_auth_and_body() {
         let mut req = Request::new(Method::Post, "https://example.com/items?page=1");
         req.query.push(KeyValue::new("sort", "name"));
-        req.query.push(KeyValue { enabled: false, ..KeyValue::new("debug", "1") });
+        req.query.push(KeyValue {
+            enabled: false,
+            ..KeyValue::new("debug", "1")
+        });
         req.auth = Auth::ApiKey {
             key: "api_key".into(),
             value: "secret".into(),
@@ -180,8 +199,16 @@ mod tests {
         };
         req.body = Body::Json("{}".into());
 
-        let built = HttpClient::new().unwrap().build(&req).unwrap().build().unwrap();
-        assert_eq!(built.url().as_str(), "https://example.com/items?page=1&sort=name&api_key=secret");
+        let built = HttpClient::new()
+            .unwrap()
+            .build(&req)
+            .unwrap()
+            .build()
+            .unwrap();
+        assert_eq!(
+            built.url().as_str(),
+            "https://example.com/items?page=1&sort=name&api_key=secret"
+        );
         assert_eq!(built.headers()[CONTENT_TYPE], "application/json");
         assert_eq!(built.body().and_then(|b| b.as_bytes()), Some(&b"{}"[..]));
     }
@@ -189,9 +216,15 @@ mod tests {
     #[test]
     fn explicit_content_type_wins() {
         let mut req = Request::new(Method::Post, "https://example.com");
-        req.headers.push(KeyValue::new("content-type", "application/vnd.api+json"));
+        req.headers
+            .push(KeyValue::new("content-type", "application/vnd.api+json"));
         req.body = Body::Json("{}".into());
-        let built = HttpClient::new().unwrap().build(&req).unwrap().build().unwrap();
+        let built = HttpClient::new()
+            .unwrap()
+            .build(&req)
+            .unwrap()
+            .build()
+            .unwrap();
         assert_eq!(built.headers()[CONTENT_TYPE], "application/vnd.api+json");
     }
 }

@@ -59,10 +59,19 @@ impl VarArgs {
             (Some(c), env) => {
                 vars = vars.with_layer(&c.meta.vars);
                 if let Some(name) = env {
+                    let available = c.environment_names();
+                    if !available.contains(name) {
+                        bail!(
+                            "unknown environment `{name}` (available: {})",
+                            available.join(", ")
+                        );
+                    }
                     vars = vars.with_layer(&c.environment(name)?.vars);
                 }
             }
-            (None, Some(name)) => bail!("--env {name} given, but no apix.toml was found above the request"),
+            (None, Some(name)) => {
+                bail!("--env {name} given, but no apix.toml was found above the request")
+            }
             (None, None) => {}
         }
         for (k, v) in &self.vars {
@@ -89,8 +98,14 @@ async fn run(cli: Cli) -> Result<bool> {
     let client = HttpClient::new()?;
     let style = Style::detect();
     match cli.command {
-        Command::Send { file, vars, include_headers } => {
-            let collection = Collection::find_root(&file).map(Collection::open).transpose()?;
+        Command::Send {
+            file,
+            vars,
+            include_headers,
+        } => {
+            let collection = Collection::find_root(&file)
+                .map(Collection::open)
+                .transpose()?;
             let vars = vars.build(collection.as_ref())?;
             let response = send_file(&client, &file, &vars).await?;
             print_status(&style, &response);
@@ -104,16 +119,25 @@ async fn run(cli: Cli) -> Result<bool> {
             Ok(response.is_success())
         }
         Command::Run { dir, vars } => {
-            let root = Collection::find_root(&dir)
-                .with_context(|| format!("no apix.toml found in {} or its parents", dir.display()))?;
+            let root = Collection::find_root(&dir).with_context(|| {
+                format!("no apix.toml found in {} or its parents", dir.display())
+            })?;
             let collection = Collection::open(&root)?;
             let vars = vars.build(Some(&collection))?;
             let (mut passed, mut failed) = (0, 0);
             for path in collection.request_paths() {
-                let label = path.strip_prefix(&root).unwrap_or(&path).display().to_string();
+                let label = path
+                    .strip_prefix(&root)
+                    .unwrap_or(&path)
+                    .display()
+                    .to_string();
                 match send_file(&client, &path, &vars).await {
                     Ok(response) => {
-                        if response.is_success() { passed += 1 } else { failed += 1 }
+                        if response.is_success() {
+                            passed += 1
+                        } else {
+                            failed += 1
+                        }
                         print!("{label:<40} ");
                         print_status(&style, &response);
                     }
@@ -140,7 +164,11 @@ async fn send_file(client: &HttpClient, path: &Path, vars: &Variables) -> Result
 }
 
 fn print_status(style: &Style, response: &Response) {
-    let color = if response.is_success() { style.green } else { style.red };
+    let color = if response.is_success() {
+        style.green
+    } else {
+        style.red
+    };
     println!(
         "{color}{} {}{}  {}{:.1} ms · {}{}",
         response.status,
@@ -171,9 +199,19 @@ struct Style {
 impl Style {
     fn detect() -> Self {
         if std::io::stdout().is_terminal() && std::env::var_os("NO_COLOR").is_none() {
-            Self { green: "\x1b[32m", red: "\x1b[31m", dim: "\x1b[2m", reset: "\x1b[0m" }
+            Self {
+                green: "\x1b[32m",
+                red: "\x1b[31m",
+                dim: "\x1b[2m",
+                reset: "\x1b[0m",
+            }
         } else {
-            Self { green: "", red: "", dim: "", reset: "" }
+            Self {
+                green: "",
+                red: "",
+                dim: "",
+                reset: "",
+            }
         }
     }
 }

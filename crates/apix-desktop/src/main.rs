@@ -4,6 +4,7 @@
 mod theme;
 
 use apix_core::Method;
+use gpui_kit::component::TitleBar;
 use gpui_kit::*;
 
 struct ApixWindow {
@@ -38,7 +39,7 @@ impl ApixWindow {
             .flex_col()
             .w(px(240.))
             .h_full()
-            .pt(px(40.)) // room for the transparent titlebar / traffic lights
+            .pt_3()
             .gap_1()
             .border_r_1()
             .border_color(theme::hairline())
@@ -88,64 +89,90 @@ impl ApixWindow {
 
 impl Render for ApixWindow {
     fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
+        // Our own title bar: it draws the min/max/close buttons on Windows and
+        // Linux, leaves room for the traffic lights on macOS, and drags the window.
+        let title_bar = TitleBar::new()
+            .bg(transparent_black())
+            .border_color(theme::hairline())
+            .child(
+                div()
+                    .text_xs()
+                    .font_weight(FontWeight::SEMIBOLD)
+                    .text_color(theme::text_muted())
+                    .child("Apix"),
+            );
+
         div()
             .flex()
+            .flex_col()
             .size_full()
             // Translucent on purpose: the OS blur shows through.
             .bg(theme::background())
             .text_color(theme::text())
-            .child(self.sidebar())
+            .child(title_bar)
             .child(
                 div()
                     .flex()
-                    .flex_col()
                     .flex_1()
-                    .gap_3()
-                    .p_3()
-                    .pt(px(40.))
-                    .child(self.request_bar())
-                    .child(
-                        div()
-                            .flex()
-                            .flex_1()
-                            .items_center()
-                            .justify_center()
-                            .rounded_lg()
-                            .border_1()
-                            .border_color(theme::hairline())
-                            .text_sm()
-                            .text_color(theme::text_muted())
-                            .child("Send a request to see the response · Ctrl+K for commands"),
-                    ),
+                    .min_h_0()
+                    .child(self.sidebar())
+                    .child(self.main_panel()),
+            )
+    }
+}
+
+impl ApixWindow {
+    fn main_panel(&self) -> impl IntoElement {
+        div()
+            .flex()
+            .flex_col()
+            .flex_1()
+            .gap_3()
+            .p_3()
+            .child(self.request_bar())
+            .child(
+                div()
+                    .flex()
+                    .flex_1()
+                    .items_center()
+                    .justify_center()
+                    .rounded_lg()
+                    .border_1()
+                    .border_color(theme::hairline())
+                    .text_sm()
+                    .text_color(theme::text_muted())
+                    .child("Send a request to see the response · Ctrl+K for commands"),
             )
     }
 }
 
 fn main() {
-    gpui_kit::application().run(|cx| {
-        gpui_kit::init(cx);
+    // The bundled Lucide icons (window controls, inputs, menus) are embedded in the binary.
+    gpui_kit::application()
+        .with_assets(gpui_kit::assets::Assets)
+        .run(|cx| {
+            gpui_kit::init(cx);
 
-        let options = WindowOptions {
-            window_bounds: Some(WindowBounds::Windowed(Bounds::centered(
-                None,
-                size(px(1200.), px(780.)),
-                cx,
-            ))),
-            titlebar: Some(TitlebarOptions {
-                title: Some("Apix".into()),
-                appears_transparent: true,
-                ..Default::default()
-            }),
-            window_background: WindowBackgroundAppearance::Blurred,
-            ..Default::default()
-        };
+            let options = WindowOptions {
+                window_bounds: Some(WindowBounds::Windowed(Bounds::centered(
+                    None,
+                    size(px(1200.), px(780.)),
+                    cx,
+                ))),
+                titlebar: Some(TitlebarOptions {
+                    title: Some("Apix".into()),
+                    ..TitleBar::title_bar_options()
+                }),
+                window_background: WindowBackgroundAppearance::Blurred,
+                ..TitleBar::window_options()
+            };
 
-        gpui_kit::open_window(options, cx, |_, cx| {
-            cx.new(|_| ApixWindow {
-                method: Method::Get,
-                url: "https://jsonplaceholder.typicode.com/users".into(),
+            gpui_kit::open_window(options, cx, |_, cx| {
+                cx.new(|_| ApixWindow {
+                    method: Method::Get,
+                    url: "https://jsonplaceholder.typicode.com/users".into(),
+                })
             })
-        })
-        .expect("failed to open the Apix window");
-    });
+            .expect("failed to open the Apix window");
+        });
 }
