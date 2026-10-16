@@ -48,3 +48,7 @@ token = "{{token}}"
 ## License
 
 [Apache-2.0](LICENSE)
+
+The desktop app embeds [Inter](https://github.com/rsms/inter) and
+[JetBrains Mono](https://github.com/JetBrains/JetBrainsMono), both under the
+SIL Open Font License 1.1 ([licenses](crates/apix-desktop/assets/fonts)).

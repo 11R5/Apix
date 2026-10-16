@@ -15,7 +15,7 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 
 ## M1 — Send a request from the UI
 - [x] Design tokens (Obsidian and Cyber themes; `APIX_THEME=cyber`)
-- [ ] Embedded Inter / JetBrains Mono fonts (system fonts for now)
+- [x] Embedded Inter 4.1 and JetBrains Mono 2.304 fonts (OFL 1.1)
 - [x] tokio runtime bridged into GPUI, with cancellable requests (Esc)
 - [x] Editable URL bar, method picker, Send button, Enter / Ctrl+Enter
 - [x] Response panel: status, time, size, Pretty / Raw / Headers

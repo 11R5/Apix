@@ -11,11 +11,15 @@ use gpui_kit::{
 
 /// Points gpui-kit's component theme at our palette so built-in inputs,
 /// tabs, menus and buttons match the rest of the window.
-pub fn apply(palette: &Palette, cx: &mut App) {
+pub fn apply(palette: &Palette, embedded_fonts: bool, cx: &mut App) {
     // Switching mode reloads the stock colours, so it must happen before our overrides.
     Theme::change(ThemeMode::Dark, None, cx);
     let p = *palette;
     Theme::update(cx, |t| {
+        if embedded_fonts {
+            t.font_family = crate::fonts::UI.into();
+            t.mono_font_family = crate::fonts::MONO.into();
+        }
         t.background = p.surface;
         t.foreground = p.text;
         t.muted_foreground = p.text_muted;

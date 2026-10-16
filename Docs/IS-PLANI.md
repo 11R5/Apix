@@ -349,9 +349,9 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 - [x] `apix` CLI: `send` ve `run`, `--env` ve `--var` ile
 - [x] Masaüstü kabuğu: blur'lu pencere, başlık çubuğu, pencere düğmeleri
 
-### M1 — Arayüzden gerçek istek 🔜 (8 maddeden 6'sı bitti)
+### M1 — Arayüzden gerçek istek 🔜 (8 maddeden 7'si bitti)
 1. [x] **Tasarım token'ları:** §1.3'teki paleti `theme.rs`'e taşımak, Obsidian ve Cyber temaları (S)
-2. [ ] **Fontları gömmek:** Inter ve JetBrains Mono (S). Font dosyalarını indirmek için onay bekleniyor. Şimdilik sistem fontları kullanılıyor.
+2. [x] **Fontları gömmek:** Inter 4.1 ve JetBrains Mono 2.304 (OFL 1.1), toplam 2.2 MB (S)
 3. [x] **tokio ↔ GPUI köprüsü:** istekler arka planda çalışır, sonuç arayüze gelir, iptal edilebilir (M)
 4. [x] **URL çubuğu:** düzenlenebilir alan, metot seçici, SEND düğmesi, Ctrl+Enter (M)
 5. [x] **Yanıt paneli:** durum, süre, boyut, Pretty ve Raw görünümleri, Headers sekmesi (M)

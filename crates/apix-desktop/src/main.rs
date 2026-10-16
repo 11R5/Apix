@@ -1,6 +1,7 @@
 // No console window behind the app in release builds on Windows.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod fonts;
 mod net;
 mod theme;
 mod workspace;
@@ -30,8 +31,9 @@ fn main() {
         .with_assets(gpui_kit::assets::Assets)
         .run(move |cx| {
             gpui_kit::init(cx);
+            let embedded_fonts = fonts::register(cx);
             let palette = Palette::new(Variant::from_env());
-            theme::apply(&palette, cx);
+            theme::apply(&palette, embedded_fonts, cx);
             workspace::bind_keys(cx);
 
             let options = WindowOptions {
