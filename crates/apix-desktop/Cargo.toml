@@ -12,4 +12,7 @@ path = "src/main.rs"
 
 [dependencies]
 apix-core.workspace = true
-gpui-kit.workspace = true
+apix-http.workspace = true
+# `tree-sitter` turns on syntax highlighting in the code editor (JSON is included).
+gpui-kit = { workspace = true, features = ["tree-sitter"] }
+tokio.workspace = true

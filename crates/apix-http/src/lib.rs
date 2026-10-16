@@ -58,7 +58,30 @@ impl Response {
         {
             return pretty;
         }
+        self.raw_body()
+    }
+
+    pub fn raw_body(&self) -> String {
         String::from_utf8_lossy(&self.body).into_owned()
+    }
+}
+
+/// `512 B`, `1.6 KB`, `3.2 MB`.
+pub fn human_size(bytes: usize) -> String {
+    match bytes {
+        0..1024 => format!("{bytes} B"),
+        1024..1_048_576 => format!("{:.1} KB", bytes as f64 / 1024.0),
+        _ => format!("{:.1} MB", bytes as f64 / 1_048_576.0),
+    }
+}
+
+/// `840 µs`, `57 ms`, `1.24 s`.
+pub fn human_duration(d: Duration) -> String {
+    let micros = d.as_micros();
+    match micros {
+        0..1_000 => format!("{micros} µs"),
+        1_000..1_000_000 => format!("{} ms", micros / 1_000),
+        _ => format!("{:.2} s", d.as_secs_f64()),
     }
 }
 

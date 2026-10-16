@@ -1,45 +1,149 @@
-//! "Obsidian & electric cyan": a dark, translucent palette. Surfaces are
-//! partly transparent so the OS blur (Mica / vibrancy / compositor) shows through.
+//! Design tokens from Docs/IS-PLANI.md §1.3. Surfaces are partly transparent
+//! so the OS blur (Mica / vibrancy / compositor) shows through.
+
+use std::sync::Arc;
 
 use apix_core::Method;
-use gpui_kit::{Hsla, hsla};
+use gpui_kit::component::{Theme, ThemeMode};
+use gpui_kit::{
+    App, Background, Hsla, Rgba, linear_color_stop, linear_gradient, rgb, rgba, transparent_black,
+};
 
-fn hue(degrees: f32) -> f32 {
-    degrees / 360.
+/// Points gpui-kit's component theme at our palette so built-in inputs,
+/// tabs, menus and buttons match the rest of the window.
+pub fn apply(palette: &Palette, cx: &mut App) {
+    // Switching mode reloads the stock colours, so it must happen before our overrides.
+    Theme::change(ThemeMode::Dark, None, cx);
+    let p = *palette;
+    Theme::update(cx, |t| {
+        t.background = p.surface;
+        t.foreground = p.text;
+        t.muted_foreground = p.text_muted;
+        t.border = p.hairline;
+        t.input = hex(0xFFFFFF, 0.12);
+        t.ring = p.border_active;
+        t.caret = p.accent;
+        t.selection = p.accent.opacity(0.28);
+        t.primary = p.accent;
+        t.primary_hover = p.accent.opacity(0.88);
+        t.primary_active = p.accent.opacity(0.76);
+        t.primary_foreground = p.accent_fg;
+        // Buttons have their own colour slots that do not follow `primary`.
+        t.button_primary = p.accent;
+        t.button_primary_hover = p.accent.opacity(0.88);
+        t.button_primary_active = p.accent.opacity(0.76);
+        t.button_primary_foreground = p.accent_fg;
+        t.popover = p.surface_raised;
+        t.popover_foreground = p.text;
+        t.tab_bar = transparent_black();
+        t.tab = transparent_black();
+        t.tab_active = transparent_black();
+        t.tab_foreground = p.text_muted;
+        t.tab_active_foreground = p.text;
+        t.title_bar = transparent_black();
+        t.title_bar_border = p.hairline;
+
+        // The code editor paints its own (opaque) background; let the panel show through.
+        let mut highlight = (*t.highlight_theme).clone();
+        highlight.style.editor_background = Some(transparent_black());
+        highlight.style.editor_gutter_background = Some(transparent_black());
+        highlight.style.editor_active_line = Some(hex(0xFFFFFF, 0.04));
+        highlight.style.editor_line_number = Some(p.text_muted.opacity(0.6));
+        t.highlight_theme = Arc::new(highlight);
+    });
 }
 
-pub fn background() -> Hsla {
-    // Dark enough to read as obsidian over a light blurred desktop, while still letting the blur through.
-    hsla(hue(225.), 0.25, 0.05, 0.90)
+/// `0xRRGGBB` + opacity (0.0–1.0).
+fn hex(color: u32, alpha: f32) -> Hsla {
+    let mut c: Rgba = rgb(color);
+    c.a = alpha;
+    c.into()
 }
 
-pub fn surface() -> Hsla {
-    hsla(hue(225.), 0.20, 0.10, 0.70)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum Variant {
+    /// Dark and quiet. The default.
+    #[default]
+    Obsidian,
+    /// The cyan glass gradient from the mockup.
+    Cyber,
 }
 
-/// 1px panel separators.
-pub fn hairline() -> Hsla {
-    hsla(0., 0., 1., 0.08)
+impl Variant {
+    /// `APIX_THEME=cyber` picks the mockup gradient until the settings screen exists.
+    pub fn from_env() -> Self {
+        match std::env::var("APIX_THEME").as_deref() {
+            Ok(v) if v.eq_ignore_ascii_case("cyber") => Variant::Cyber,
+            _ => Variant::Obsidian,
+        }
+    }
 }
 
-pub fn text() -> Hsla {
-    hsla(0., 0., 0.92, 1.)
+#[derive(Debug, Clone, Copy)]
+pub struct Palette {
+    pub bg_from: Hsla,
+    pub bg_to: Hsla,
+    pub surface: Hsla,
+    pub surface_raised: Hsla,
+    pub hairline: Hsla,
+    pub border_active: Hsla,
+    pub accent: Hsla,
+    pub accent_fg: Hsla,
+    pub text: Hsla,
+    pub text_muted: Hsla,
+    pub ok: Hsla,
+    pub warn: Hsla,
+    pub err: Hsla,
 }
 
-pub fn text_muted() -> Hsla {
-    hsla(0., 0., 0.92, 0.45)
-}
+impl Palette {
+    pub fn new(variant: Variant) -> Self {
+        let (bg_from, bg_to) = match variant {
+            Variant::Obsidian => (hex(0x0A0E16, 0.92), hex(0x111827, 0.92)),
+            Variant::Cyber => (hex(0x0F2A3D, 0.88), hex(0x161E3A, 0.88)),
+        };
+        Self {
+            bg_from,
+            bg_to,
+            surface: hex(0x0E1726, 0.70),
+            // Menus and popovers float over text, so they stay nearly opaque.
+            surface_raised: hex(0x132033, 0.97),
+            hairline: rgba(0xFFFFFF14).into(),
+            border_active: hex(0x22D3EE, 0.60),
+            accent: hex(0x22D3EE, 1.0),
+            accent_fg: hex(0x04121A, 1.0),
+            text: hex(0xE6EDF3, 1.0),
+            text_muted: hex(0x8B9BB0, 1.0),
+            ok: hex(0x34D399, 1.0),
+            warn: hex(0xFBBF24, 1.0),
+            err: hex(0xF87171, 1.0),
+        }
+    }
 
-pub fn accent() -> Hsla {
-    hsla(hue(185.), 1., 0.5, 1.)
+    pub fn background(&self) -> Background {
+        linear_gradient(
+            135.,
+            linear_color_stop(self.bg_from, 0.),
+            linear_color_stop(self.bg_to, 1.),
+        )
+    }
+
+    pub fn status(&self, code: u16) -> Hsla {
+        match code {
+            200..300 => self.ok,
+            300..400 => self.warn,
+            _ => self.err,
+        }
+    }
 }
 
 pub fn method_color(method: Method) -> Hsla {
     match method {
-        Method::Get => accent(),
-        Method::Post => hsla(hue(142.), 0.70, 0.55, 1.),
-        Method::Put | Method::Patch => hsla(hue(38.), 0.90, 0.60, 1.),
-        Method::Delete => hsla(hue(0.), 0.80, 0.62, 1.),
-        Method::Head | Method::Options => hsla(hue(265.), 0.60, 0.70, 1.),
+        Method::Get => hex(0x34D399, 1.0),
+        Method::Post => hex(0x22D3EE, 1.0),
+        Method::Put => hex(0xFBBF24, 1.0),
+        Method::Patch => hex(0xFB923C, 1.0),
+        Method::Delete => hex(0xF87171, 1.0),
+        Method::Head | Method::Options => hex(0xA78BFA, 1.0),
     }
 }

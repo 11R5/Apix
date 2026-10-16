@@ -5,7 +5,7 @@ use std::process::ExitCode;
 use anyhow::{Context, Result, bail};
 use apix_core::store::load_request;
 use apix_core::{Collection, Variables};
-use apix_http::{HttpClient, Response};
+use apix_http::{HttpClient, Response, human_size};
 use clap::{Args, Parser, Subcommand};
 
 #[derive(Parser)]
@@ -176,17 +176,9 @@ fn print_status(style: &Style, response: &Response) {
         style.reset,
         style.dim,
         response.timing.total.as_secs_f64() * 1000.0,
-        format_size(response.body.len()),
+        human_size(response.body.len()),
         style.reset,
     );
-}
-
-fn format_size(bytes: usize) -> String {
-    match bytes {
-        0..1024 => format!("{bytes} B"),
-        1024..1_048_576 => format!("{:.1} KB", bytes as f64 / 1024.0),
-        _ => format!("{:.1} MB", bytes as f64 / 1_048_576.0),
-    }
 }
 
 struct Style {

@@ -14,12 +14,14 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [x] `apix-desktop`: blurred, transparent window with its own title bar and window controls
 
 ## M1 — Send a request from the UI
-- [ ] Design tokens (Obsidian and Cyber themes) and embedded Inter / JetBrains Mono fonts
-- [ ] tokio runtime bridged into GPUI, with cancellable requests
-- [ ] Editable URL bar, method picker, SEND button, Ctrl+Enter
-- [ ] Response panel: status, time, size, Pretty / Raw / Headers
-- [ ] Highlighted, virtualized JSON viewer (100 MB without dropped frames)
-- [ ] Params / Headers tables with enable toggles; JSON / Text / XML body editor
+- [x] Design tokens (Obsidian and Cyber themes; `APIX_THEME=cyber`)
+- [ ] Embedded Inter / JetBrains Mono fonts (system fonts for now)
+- [x] tokio runtime bridged into GPUI, with cancellable requests (Esc)
+- [x] Editable URL bar, method picker, Send button, Enter / Ctrl+Enter
+- [x] Response panel: status, time, size, Pretty / Raw / Headers
+- [x] Highlighted, foldable JSON viewer
+- [ ] Virtualized viewer for 100 MB bodies (bodies over 8 MB are clipped for now)
+- [x] Params / Headers tables with enable toggles; JSON / Text / XML body editor
 
 ## M2 — Collections and Postman import
 - [ ] Open folder, recent folders, sidebar tree built from files on disk

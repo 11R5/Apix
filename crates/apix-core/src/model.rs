@@ -45,6 +45,17 @@ impl fmt::Display for Method {
     }
 }
 
+impl std::str::FromStr for Method {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Method::ALL
+            .into_iter()
+            .find(|m| m.as_str().eq_ignore_ascii_case(s))
+            .ok_or_else(|| format!("unknown HTTP method `{s}`"))
+    }
+}
+
 /// A header, query parameter or form field. Disabled rows stay in the file
 /// (like Postman's checkbox) but are never sent.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -211,6 +222,13 @@ token = "{{token}}"
         let text = toml::to_string_pretty(&req).unwrap();
         let back: Request = toml::from_str(&text).unwrap();
         assert_eq!(req, back);
+    }
+
+    #[test]
+    fn parses_methods_case_insensitively() {
+        assert_eq!("delete".parse::<Method>(), Ok(Method::Delete));
+        assert_eq!("PATCH".parse::<Method>(), Ok(Method::Patch));
+        assert!("FETCH".parse::<Method>().is_err());
     }
 
     #[test]
