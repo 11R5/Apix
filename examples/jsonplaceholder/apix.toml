@@ -1,0 +1,4 @@
+name = "JSONPlaceholder"
+
+[vars]
+base_url = "https://jsonplaceholder.typicode.com"

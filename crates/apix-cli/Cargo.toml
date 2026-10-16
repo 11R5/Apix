@@ -1,0 +1,18 @@
+[package]
+name = "apix-cli"
+description = "Run Apix requests and collections from the terminal and CI"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "apix"
+path = "src/main.rs"
+
+[dependencies]
+anyhow.workspace = true
+apix-core.workspace = true
+apix-http.workspace = true
+clap.workspace = true
+tokio.workspace = true

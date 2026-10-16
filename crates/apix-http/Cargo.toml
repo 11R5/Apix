@@ -1,0 +1,14 @@
+[package]
+name = "apix-http"
+description = "The HTTP engine that sends Apix requests"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+apix-core.workspace = true
+bytes.workspace = true
+reqwest.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true

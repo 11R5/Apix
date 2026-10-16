@@ -1,0 +1,15 @@
+name = "Create user"
+method = "POST"
+url = "{{base_url}}/users"
+
+[[headers]]
+key = "Accept"
+value = "application/json"
+
+[body]
+json = '''
+{
+  "name": "Ada Lovelace",
+  "email": "ada@example.com"
+}
+'''

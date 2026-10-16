@@ -1,0 +1,7 @@
+name = "List users"
+method = "GET"
+url = "{{base_url}}/users"
+
+[[query]]
+key = "_limit"
+value = "3"
