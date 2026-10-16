@@ -3,61 +3,62 @@
 Each milestone produces something you can use on its own. Postman parity
 comes first, then the features Postman does not have.
 
-## M0 — Foundation ✅ (this commit)
+The detailed, feature-by-feature plan (in Turkish) is [IS-PLANI.md](IS-PLANI.md).
+The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
+
+## M0 — Foundation ✅
 - [x] Cargo workspace, release profile tuned for size and speed
 - [x] `apix-core`: request model, layered `{{variables}}`, TOML collection format
 - [x] `apix-http`: reqwest + rustls, query/header/body/auth, TTFB and total timing
 - [x] `apix` CLI: `apix send <file>`, `apix run <dir>` with `--env` / `--var`
-- [x] `apix-desktop`: blurred, transparent GPUI window shell
+- [x] `apix-desktop`: blurred, transparent window with its own title bar and window controls
 
-## M1 — A request you can actually send from the UI
-- [ ] tokio runtime bridged into GPUI (`cx.spawn`)
-- [ ] Editable URL bar, method picker, Ctrl+Enter to send
-- [ ] Params / Headers / Body / Auth tabs (key–value tables with enable toggles)
-- [ ] Response panel: status, time, size, headers, pretty JSON with syntax highlighting
-- [ ] Virtualized body viewer (100 MB without dropped frames)
-- [ ] Sidebar loads a collection folder from disk and saves edits back
+## M1 — Send a request from the UI
+- [ ] Design tokens (Obsidian and Cyber themes) and embedded Inter / JetBrains Mono fonts
+- [ ] tokio runtime bridged into GPUI, with cancellable requests
+- [ ] Editable URL bar, method picker, SEND button, Ctrl+Enter
+- [ ] Response panel: status, time, size, Pretty / Raw / Headers
+- [ ] Highlighted, virtualized JSON viewer (100 MB without dropped frames)
+- [ ] Params / Headers tables with enable toggles; JSON / Text / XML body editor
 
-## M2 — Daily-driver parity
-- [ ] Environments switcher with secret (`*.local.toml` + OS keychain) values
-- [ ] Command palette (Ctrl/⌘+K): switch env, import, run, open, settings
-- [ ] Tabs, history, duplicate, rename, drag to reorder
-- [ ] Cookies jar, redirects/TLS/proxy/timeout settings, client certificates
-- [ ] Body types: multipart/form-data with files, binary, GraphQL
-- [ ] Auth: Digest, OAuth 2.0 (auth code + PKCE, client credentials, refresh), AWS SigV4
-- [ ] Import: cURL paste detection, Postman v2.1, Insomnia, OpenAPI 3, HAR
-- [ ] Code snippets: curl, fetch, axios, Python requests, Go, Rust, C#, Java, PHP, Swift
+## M2 — Collections and Postman import
+- [ ] Open folder, recent folders, sidebar tree built from files on disk
+- [ ] Edit and save (Ctrl+S), create / rename / duplicate / delete (to trash), drag to reorder
+- [ ] Tabs, file watching
+- [ ] **Postman Collection v2.1/v2.0 and environment import**, with an import report
+- [ ] `apix import postman <file> --out <dir>`
 
-## M3 — Scripting & testing
-- [ ] `apix-script` on QuickJS, with a `pm.*`-compatible API so Postman scripts keep working
-- [ ] Pre-request and test scripts, `expect`-style assertions, JSON Schema validation
-- [ ] Declarative no-code assertions (`status == 200`, `body.users.length > 0`)
-- [ ] Collection runner UI, data-driven runs (CSV/JSON), JUnit report for CI
-- [ ] Request chaining: extract values from a response into variables
+## M3 — Environments, variables, auth
+- [ ] Environment switcher and editor, secrets in `*.local.toml` and the OS keychain
+- [ ] Dynamic variables (`{{$guid}}`, `{{$timestamp}}`, …), variable chips with hover preview
+- [ ] Auth tab with inheritance from folder or collection; OAuth 2.0 flows
+- [ ] Command palette (Ctrl/⌘+K)
 
-## M4 — Protocols
-- [ ] WebSocket, Server-Sent Events
-- [ ] GraphQL with schema introspection and autocomplete
-- [ ] gRPC (unary + streaming) with server reflection or `.proto` files
-- [ ] SOAP helpers, MQTT
+## M4 — Daily driver
+- [ ] multipart, binary and GraphQL bodies; Digest, AWS SigV4 and OAuth 1.0 auth
+- [ ] Request settings (timeout, TLS, proxy, client certificates), cookie manager
+- [ ] Code snippets, cURL import/export, history
+- [ ] Insomnia, OpenAPI 3 and HAR import; export to Postman
 
-## M5 — Beyond Postman
-Features where a native Rust app has an edge:
-- [ ] **Built-in load testing.** `apix bench` and a UI chart, with thousands of
-      concurrent requests from tokio and latency percentiles. Postman has no real equivalent.
-- [ ] **Response diff.** Compare two runs or two environments side by side.
-- [ ] **Time-travel history.** Every sent request is stored with its response.
-      It can be searched and replayed.
-- [ ] **Local mock server** generated from saved examples or an OpenAPI file.
-- [ ] **Capture proxy.** Record traffic from a browser or phone into a collection.
-- [ ] **MCP server mode** (`apix mcp`). AI agents can list and run your collections.
-- [ ] **AI assist.** Generate tests and explain errors with your own API key (optional, off by default).
-- [ ] **Plugins** via WASM (custom auth, importers, visualizers).
-- [ ] **Flows.** A visual node graph for request chaining.
-- [ ] **Monitors**, run by a local scheduler or by the CLI in CI. No cloud lock-in.
+## M5 — Scripting, testing, runner
+- [ ] `apix-script` on QuickJS with a `pm.*`-compatible API
+- [ ] Pre-request and test scripts, built-in libraries, no-code assertions
+- [ ] Test results tab and console
+- [ ] Runner UI, data-driven runs (CSV/JSON), JUnit / HTML reports
 
-## Release & distribution
-- [ ] GitHub Actions: test on Windows/macOS/Linux, build release artifacts
+## M6 — Protocols
+- [ ] WebSocket, SSE, GraphQL introspection, gRPC, Socket.IO, MQTT, SOAP
+
+## M7 — Advanced
+- [ ] Local mock server, docs generation, monitors, visualizer, capture proxy
+- [ ] Git integration, light theme, Turkish and English UI, settings, auto-update
+
+## M8 — Beyond Postman
+- [ ] Load testing (`apix bench`), response diff, time-travel history
+- [ ] MCP server mode (`apix mcp`), optional AI assist, WASM plugins, Flows
+
+## M9 — Release & distribution
+- [ ] GitHub Actions: test and build on Windows, macOS and Linux
 - [ ] Installers: `.msi`/winget, `.dmg`/Homebrew cask, AppImage/Flatpak/`.deb`
-- [ ] Signed and notarized macOS builds, signed Windows builds
+- [ ] Signed Windows builds (so Smart App Control allows them) and notarized macOS builds
 - [ ] Docs site, logo, and a launch post (r/rust, Hacker News)
