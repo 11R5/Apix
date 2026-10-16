@@ -23,8 +23,8 @@ cargo build --release          # optimized binaries in target/release
 ## CLI
 
 ```sh
-apix send examples/jsonplaceholder/users/list-users.toml
-apix send examples/jsonplaceholder/health.toml --env local --var token=abc -i
+apix send examples/jsonplaceholder/users/list-users.apix
+apix send examples/jsonplaceholder/health.apix --env local --var token=abc -i
 apix run examples/jsonplaceholder
 ```
 
@@ -33,7 +33,7 @@ apix run examples/jsonplaceholder
 ## Collection format
 
 ```toml
-# users/create-user.toml
+# users/create-user.apix
 name = "Create user"
 method = "POST"
 url = "{{base_url}}/users"

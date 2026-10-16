@@ -44,7 +44,7 @@ Apix, Postman'in yaptığı her şeyi yapan bir API istemcisi olacak. Postman'de
 | `120 FPS` sayacı her zaman açık | Sadece geliştirici modunda görünecek (Ctrl+Shift+P). | Minimalizm |
 | Her yerde rozet | Rozet sadece bilgi taşıyorsa kullanılacak. | Görsel gürültüyü azaltmak |
 | macOS trafik ışıkları | Windows ve Linux'ta sağda küçült/büyüt/kapat düğmeleri (✅ yapıldı) | Her platform kendi düzenini kullanır. |
-| `.apix` uzantısı | **Karar gerekiyor**, bkz. §6 | |
+| `.apix` uzantısı | ✅ Kullanılıyor. İçerik TOML. | |
 
 ### 1.3 Renk paleti (tasarım token'ları)
 | Token | Değer | Kullanım |
@@ -422,7 +422,7 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 ## 6. Karar bekleyen konular
 | # | Konu | Seçenekler | Önerim |
 |---|---|---|---|
-| 1 | **İstek dosyası uzantısı** | `istek.toml` veya `istek.apix` (içerik yine TOML) | **`.apix`**. Dosya ilişkilendirme mümkün olur (çift tıklayınca Apix açılır), marka görünür olur, `apix.toml` ile karışmaz. GitHub'da renklendirme için `.gitattributes`'a `*.apix linguist-language=TOML` eklenir. |
+| 1 | ~~İstek dosyası uzantısı~~ | ✅ **Karar verildi: `.apix`** (içerik TOML). `.gitattributes` ile GitHub TOML olarak renklendiriyor. | |
 | 2 | Varsayılan tema | Obsidian (sade) veya Cyber (mockup) | Obsidian varsayılan olsun, Cyber tek tıkla seçilebilsin. |
 | 3 | Postman script uyumluluğu ne kadar olsun | Tam `pm.*` veya kendi API'miz | `pm.*` ile uyumlu ve `apix.*` takma adı. Geçişi kolaylaştırır. |
 | 4 | Arayüz dili | Sadece İngilizce veya TR + EN | TR + EN (M7). Kod ve dokümanlar İngilizce kalır. |

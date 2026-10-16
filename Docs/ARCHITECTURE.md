@@ -47,7 +47,7 @@ Nothing depends on `desktop`.
 ## Data flow of a request
 
 ```
-.toml file ──load──▶ Request ──resolve(Variables)──▶ Request (resolved)
+.apix file ──load──▶ Request ──resolve(Variables)──▶ Request (resolved)
                                                         │
                        pre-request script (later) ◀─────┤
                                                         ▼
@@ -75,9 +75,9 @@ my-api/
 │   ├── dev.toml            [vars] base_url = "http://localhost:8080"
 │   └── prod.toml
 ├── users/
-│   ├── list-users.toml
-│   └── create-user.toml
-└── health.toml
+│   ├── list-users.apix
+│   └── create-user.apix
+└── health.apix
 ```
 
 A request file:
@@ -103,8 +103,8 @@ token = "{{token}}"
 
 Open questions:
 - **Secrets.** Environment values such as tokens should not be committed.
-  The plan is `environments/*.local.toml` (gitignored) layered on top, plus
-  OS keychain storage through the `keyring` crate.
+  `environments/<name>.local.toml` (gitignored) is already layered over `<name>.toml`;
+  OS keychain storage through the `keyring` crate comes next.
 - **Ordering in the sidebar.** Folders and files are sorted by name for now. An
   optional `order` field may be added later.
 

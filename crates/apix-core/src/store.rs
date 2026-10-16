@@ -6,11 +6,12 @@
 //! ├── apix.toml              # collection name + collection variables
 //! ├── environments/
 //! │   ├── dev.toml           # [vars] base_url = "http://localhost:8080"
+//! │   ├── dev.local.toml     # secrets layered over dev.toml, gitignored
 //! │   └── prod.toml
 //! ├── users/                 # folders are folders
-//! │   ├── list-users.toml    # one request per file
-//! │   └── create-user.toml
-//! └── health.toml
+//! │   ├── list-users.apix    # one request per file (TOML inside)
+//! │   └── create-user.apix
+//! └── health.apix
 //! ```
 
 use std::collections::HashMap;
@@ -23,6 +24,11 @@ use crate::model::Request;
 
 pub const COLLECTION_FILE: &str = "apix.toml";
 pub const ENVIRONMENTS_DIR: &str = "environments";
+/// Request files have their own extension so the OS can open them with Apix.
+/// Their content is plain TOML.
+pub const REQUEST_EXTENSION: &str = "apix";
+/// `dev.local.toml` holds the secrets for `dev.toml` and is never committed.
+const LOCAL_SUFFIX: &str = ".local";
 
 #[derive(Debug, thiserror::Error)]
 pub enum StoreError {
@@ -51,6 +57,10 @@ fn read_toml<T: for<'de> Deserialize<'de>>(path: &Path) -> Result<T, StoreError>
         path: path.to_owned(),
         source: Box::new(source),
     })
+}
+
+pub fn is_request_file(path: &Path) -> bool {
+    path.extension().is_some_and(|ext| ext == REQUEST_EXTENSION)
 }
 
 pub fn load_request(path: &Path) -> Result<Request, StoreError> {
@@ -96,7 +106,7 @@ impl Collection {
     /// Walks up from `start` (a request file or any folder inside a
     /// collection) to the nearest folder that contains `apix.toml`.
     pub fn find_root(start: &Path) -> Option<PathBuf> {
-        // Absolute first, so a relative path like `health.toml` can still walk up past the cwd.
+        // Absolute first, so a relative path like `health.apix` can still walk up past the cwd.
         let start = std::path::absolute(start).unwrap_or_else(|_| start.to_path_buf());
         start
             .ancestors()
@@ -104,12 +114,15 @@ impl Collection {
             .map(Path::to_path_buf)
     }
 
+    /// Loads `environments/<name>.toml` with `<name>.local.toml` (if present) layered on top.
     pub fn environment(&self, name: &str) -> Result<Environment, StoreError> {
-        let path = self
-            .root
-            .join(ENVIRONMENTS_DIR)
-            .join(format!("{name}.toml"));
-        let mut env: Environment = read_toml(&path)?;
+        let dir = self.root.join(ENVIRONMENTS_DIR);
+        let mut env: Environment = read_toml(&dir.join(format!("{name}.toml")))?;
+        let local = dir.join(format!("{name}{LOCAL_SUFFIX}.toml"));
+        if local.is_file() {
+            let secrets: Environment = read_toml(&local)?;
+            env.vars.extend(secrets.vars);
+        }
         env.name = name.to_owned();
         Ok(env)
     }
@@ -123,6 +136,7 @@ impl Collection {
             .map(|e| e.path())
             .filter(|p| p.extension().is_some_and(|ext| ext == "toml"))
             .filter_map(|p| p.file_stem().map(|s| s.to_string_lossy().into_owned()))
+            .filter(|name| !name.ends_with(LOCAL_SUFFIX))
             .collect();
         names.sort();
         names
@@ -131,29 +145,27 @@ impl Collection {
     /// Every request file in the collection, in a stable (sorted) order.
     pub fn request_paths(&self) -> Vec<PathBuf> {
         let mut out = Vec::new();
-        collect_requests(&self.root, true, &mut out);
+        collect_requests(&self.root, &mut out);
         out
     }
 }
 
-fn collect_requests(dir: &Path, is_root: bool, out: &mut Vec<PathBuf>) {
+fn collect_requests(dir: &Path, out: &mut Vec<PathBuf>) {
     let Ok(entries) = fs::read_dir(dir) else {
         return;
     };
     let mut paths: Vec<PathBuf> = entries.filter_map(Result::ok).map(|e| e.path()).collect();
     paths.sort();
     for path in paths {
-        let name = path.file_name().unwrap_or_default().to_string_lossy();
-        if name.starts_with('.') {
+        let hidden = path
+            .file_name()
+            .is_some_and(|name| name.to_string_lossy().starts_with('.'));
+        if hidden {
             continue;
         }
         if path.is_dir() {
-            if !(is_root && name == ENVIRONMENTS_DIR) {
-                collect_requests(&path, false, out);
-            }
-        } else if path.extension().is_some_and(|ext| ext == "toml")
-            && !(is_root && name == COLLECTION_FILE)
-        {
+            collect_requests(&path, out);
+        } else if is_request_file(&path) {
             out.push(path);
         }
     }
@@ -176,39 +188,54 @@ mod tests {
         .unwrap();
         fs::write(
             root.join("environments/dev.toml"),
-            "[vars]\nhost = \"localhost\"\n",
+            "[vars]\nhost = \"localhost\"\ntoken = \"placeholder\"\n",
         )
         .unwrap();
         fs::write(
-            root.join("health.toml"),
+            root.join("environments/dev.local.toml"),
+            "[vars]\ntoken = \"secret\"\n",
+        )
+        .unwrap();
+        fs::write(
+            root.join("health.apix"),
             "name = \"Health\"\nurl = \"https://{{host}}/health\"\n",
         )
         .unwrap();
+        // Not a request: other TOML files in the tree are ignored.
+        fs::write(root.join("users/notes.toml"), "x = 1\n").unwrap();
         root
     }
 
     #[test]
     fn opens_collection_and_lists_requests() {
         let root = temp_collection("list");
-        let path = root.join("users/create.toml");
+        let path = root.join("users/create.apix");
         save_request(&path, &Request::new(Method::Post, "https://{{host}}/users")).unwrap();
 
         let collection = Collection::open(&root).unwrap();
         assert_eq!(collection.meta.name, "Demo");
-        assert_eq!(collection.environment_names(), ["dev"]);
-        assert_eq!(
-            collection.environment("dev").unwrap().vars["host"],
-            "localhost"
-        );
         assert_eq!(
             collection.request_paths(),
-            [root.join("health.toml"), path.clone()]
+            [root.join("health.apix"), path.clone()]
         );
         assert_eq!(
             Collection::find_root(&path).as_deref(),
             Some(root.as_path())
         );
         assert_eq!(load_request(&path).unwrap().method, Method::Post);
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn local_environment_file_overrides_and_is_not_listed() {
+        let root = temp_collection("local");
+        let collection = Collection::open(&root).unwrap();
+
+        assert_eq!(collection.environment_names(), ["dev"]);
+        let dev = collection.environment("dev").unwrap();
+        assert_eq!(dev.vars["host"], "localhost");
+        assert_eq!(dev.vars["token"], "secret");
 
         fs::remove_dir_all(root).unwrap();
     }
