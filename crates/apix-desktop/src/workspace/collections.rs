@@ -13,16 +13,18 @@ use std::time::Duration;
 use apix_core::store::{self, CollectionMeta, TreeNode};
 use apix_core::{Collection, Method, Request, Variables};
 use apix_import::postman::{self, Kind};
+use gpui_kit::component::IndexPath;
 use gpui_kit::component::button::{Button, ButtonVariants as _};
 use gpui_kit::component::dialog::AlertDialog;
 use gpui_kit::component::input::{Input, InputState};
 use gpui_kit::component::menu::{ContextMenuExt as _, PopupMenu, PopupMenuItem};
 use gpui_kit::component::notification::Notification;
+use gpui_kit::component::select::Select;
 use gpui_kit::component::{Icon, IconName, Sizable, WindowExt as _, h_flex, v_flex};
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
-use super::{Workspace, describe, key_hint};
+use super::{NO_ENVIRONMENT, Workspace, describe, key_hint};
 use crate::theme;
 
 /// Keeps the folder watcher alive; dropping it stops watching.
@@ -55,8 +57,9 @@ impl Workspace {
         };
         match Collection::open(&root) {
             Ok(collection) => {
-                self.vars = Variables::new().with_layer(&collection.meta.vars);
                 self.collection = Some(collection);
+                self.environment = self.app_state.environment_for(&root);
+                self.app_state.remember_collection(&root);
                 self.watcher = watch(&root, window, cx);
                 self.collapsed.clear();
                 self.selected = None;
@@ -77,9 +80,12 @@ impl Workspace {
             return;
         };
         if let Ok(fresh) = Collection::open(&collection.root) {
-            self.vars = Variables::new().with_layer(&fresh.meta.vars);
             *collection = fresh;
         }
+        self.refresh_environments(window, cx);
+        let Some(collection) = &self.collection else {
+            return;
+        };
         let root = collection.root.clone();
         self.tree = collection.tree();
         self.requests.clear();
@@ -123,6 +129,81 @@ impl Workspace {
             }
         }
         cx.notify();
+    }
+
+    // -----------------------------------------------------------------------
+    // Environments
+    // -----------------------------------------------------------------------
+
+    /// Re-reads `environments/`, keeps the choice if it still exists, and
+    /// rebuilds the variables used for sending.
+    fn refresh_environments(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let names = self
+            .collection
+            .as_ref()
+            .map(Collection::environment_names)
+            .unwrap_or_default();
+        if self
+            .environment
+            .as_ref()
+            .is_some_and(|current| !names.contains(current))
+        {
+            self.environment = None;
+        }
+        let selected = self
+            .environment
+            .as_ref()
+            .and_then(|current| names.iter().position(|n| n == current))
+            .map_or(0, |ix| ix + 1);
+        let items: Vec<SharedString> = std::iter::once(SharedString::from(NO_ENVIRONMENT))
+            .chain(names.into_iter().map(SharedString::from))
+            .collect();
+        self.env_select.update(cx, |state, cx| {
+            state.set_items(items, window, cx);
+            state.set_selected_index(Some(IndexPath::new(selected)), window, cx);
+        });
+        self.rebuild_vars(window, cx);
+    }
+
+    pub(super) fn set_environment(
+        &mut self,
+        name: Option<String>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if self.environment == name {
+            return;
+        }
+        self.environment = name;
+        if let Some(root) = self.collection.as_ref().map(|c| c.root.clone()) {
+            self.app_state
+                .set_environment(&root, self.environment.as_deref());
+        }
+        self.rebuild_vars(window, cx);
+        cx.notify();
+    }
+
+    /// Collection variables, with the active environment (and its `.local.toml` secrets) on top.
+    fn rebuild_vars(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let Some(collection) = &self.collection else {
+            self.vars = Variables::new();
+            return;
+        };
+        let mut vars = Variables::new().with_layer(&collection.meta.vars);
+        if let Some(name) = &self.environment {
+            match collection.environment(name) {
+                Ok(env) => vars = vars.with_layer(&env.vars),
+                Err(e) => self.notify_error(describe(&e), window, cx),
+            }
+        }
+        self.vars = vars;
+    }
+
+    /// Production environments get a red line under the title bar.
+    pub(super) fn is_prod(&self) -> bool {
+        self.environment
+            .as_ref()
+            .is_some_and(|name| name.to_lowercase().contains("prod"))
     }
 
     /// Opens a request in the editor, asking first if the current one has unsaved edits.
@@ -799,6 +880,30 @@ impl Workspace {
             self.render_empty_state(cx).into_any_element()
         };
 
+        let env_row =
+            has_collection.then(|| {
+                h_flex()
+                    .px_3()
+                    .pb_2()
+                    .gap_2()
+                    .items_center()
+                    .child(div().w(px(8.)).h(px(8.)).flex_none().rounded_full().bg(
+                        if self.is_prod() {
+                            p.err
+                        } else if self.environment.is_some() {
+                            p.ok
+                        } else {
+                            p.text_muted.opacity(0.4)
+                        },
+                    ))
+                    .child(
+                        div()
+                            .flex_1()
+                            .min_w_0()
+                            .child(Select::new(&self.env_select).small()),
+                    )
+            });
+
         v_flex()
             .w(px(248.))
             .flex_none()
@@ -806,6 +911,7 @@ impl Workspace {
             .border_r_1()
             .border_color(p.hairline)
             .child(header)
+            .children(env_row)
             .child(
                 div()
                     .id("sidebar-list")
@@ -855,6 +961,59 @@ impl Workspace {
                     .text_color(p.text_muted)
                     .child("Or drop a Postman export or a folder onto the window."),
             )
+            .children(self.render_recent(cx))
+    }
+
+    /// Recently opened collections, shown when nothing is open.
+    fn render_recent(&self, cx: &mut Context<Self>) -> Option<impl IntoElement> {
+        let p = self.palette;
+        let recent: Vec<PathBuf> = self.app_state.recent_collections().cloned().collect();
+        if recent.is_empty() {
+            return None;
+        }
+        let rows = recent.into_iter().enumerate().map(|(ix, root)| {
+            let name = root
+                .file_name()
+                .map(|n| n.to_string_lossy().into_owned())
+                .unwrap_or_else(|| root.display().to_string());
+            let parent = root
+                .parent()
+                .map(|p| p.display().to_string())
+                .unwrap_or_default();
+            let open = root.clone();
+            div()
+                .id(("recent", ix))
+                .px_2()
+                .py_1()
+                .rounded_md()
+                .cursor_pointer()
+                .hover(|s| s.bg(hsla(0., 0., 1., 0.05)))
+                .on_click(cx.listener(move |this, _: &ClickEvent, window, cx| {
+                    this.open_or_create(open.clone(), window, cx)
+                }))
+                .child(div().text_sm().truncate().child(name))
+                .child(
+                    div()
+                        .text_xs()
+                        .text_color(p.text_muted)
+                        .truncate()
+                        .child(parent),
+                )
+        });
+        Some(
+            v_flex()
+                .pt_4()
+                .gap_px()
+                .child(
+                    div()
+                        .px_2()
+                        .pb_1()
+                        .text_xs()
+                        .text_color(p.text_muted)
+                        .child("RECENT"),
+                )
+                .children(rows),
+        )
     }
 
     fn render_nodes(

@@ -25,6 +25,7 @@ use gpui_kit::*;
 
 use crate::large_view::{Document, LARGE_BODY_BYTES, LargeView};
 use crate::net;
+use crate::state::AppState;
 use crate::theme::{self, Palette};
 
 actions!(
@@ -52,6 +53,10 @@ pub fn bind_keys(cx: &mut App) {
 }
 
 type MethodSelect = SelectState<Vec<&'static str>>;
+type EnvSelect = SelectState<Vec<SharedString>>;
+
+/// The first entry of the environment picker.
+const NO_ENVIRONMENT: &str = "No environment";
 
 /// One editable row of the Params or Headers table.
 struct KvRow {
@@ -207,6 +212,10 @@ pub struct Workspace {
     /// The request file open in the editor.
     selected: Option<PathBuf>,
     watcher: Option<collections::Watcher>,
+    /// The active environment of the open collection, by file name.
+    environment: Option<String>,
+    env_select: Entity<EnvSelect>,
+    app_state: AppState,
     /// The request as last loaded or saved. Fields the editor does not cover
     /// yet (auth, form bodies) come from here, and edits are compared to it.
     base: Request,
@@ -244,6 +253,14 @@ impl Workspace {
                 .placeholder("https://api.example.com/users   or   {{base_url}}/users")
         });
         let body = cx.new(|cx| EditorState::new(window, cx).language("json"));
+        let env_select = cx.new(|cx| {
+            SelectState::new(
+                vec![SharedString::from(NO_ENVIRONMENT)],
+                Some(IndexPath::new(0)),
+                window,
+                cx,
+            )
+        });
         let response_body = cx.new(|cx| {
             let mut state = EditorState::new(window, cx).language("json");
             state.set_readonly(true, cx);
@@ -270,6 +287,18 @@ impl Workspace {
                 window,
                 |_, _, _: &SelectEvent<Vec<&'static str>>, _, cx| cx.notify(),
             ),
+            cx.subscribe_in(
+                &env_select,
+                window,
+                |this, state, _: &SelectEvent<Vec<SharedString>>, window, cx| {
+                    let name = state
+                        .read(cx)
+                        .selected_value()
+                        .filter(|v| v.as_ref() != NO_ENVIRONMENT)
+                        .map(|v| v.to_string());
+                    this.set_environment(name, window, cx);
+                },
+            ),
         ];
 
         let mut this = Self {
@@ -282,6 +311,9 @@ impl Workspace {
             load_errors: Vec::new(),
             selected: None,
             watcher: None,
+            environment: None,
+            env_select,
+            app_state: AppState::load(),
             base: Request::default(),
             vars: Variables::new(),
             method,
@@ -943,6 +975,11 @@ impl Workspace {
             }
             None => "No collection".to_string(),
         };
+        let environment = self.environment.as_ref().map(|name| {
+            div()
+                .text_color(if self.is_prod() { p.err } else { p.ok })
+                .child(format!("env: {name}"))
+        });
         let unsaved = self.is_dirty(cx).then(|| {
             div()
                 .text_color(p.warn)
@@ -959,6 +996,7 @@ impl Workspace {
             .text_xs()
             .text_color(p.text_muted)
             .child(div().flex_1().min_w_0().truncate().child(location))
+            .children(environment)
             .children(unsaved)
             .child(format!("{} send  ·  Esc cancel", key_hint("Enter")))
     }
@@ -1023,6 +1061,10 @@ impl Render for Workspace {
             .bg(p.background())
             .text_color(p.text)
             .child(self.render_title_bar())
+            // Hard to miss: requests in a production environment touch real data.
+            .when(self.is_prod(), |d| {
+                d.child(div().h(px(2.)).flex_none().bg(p.err))
+            })
             .child(
                 h_flex()
                     .flex_1()

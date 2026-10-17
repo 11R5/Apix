@@ -14,11 +14,15 @@ path = "src/main.rs"
 apix-core.workspace = true
 apix-http.workspace = true
 apix-import.workspace = true
+# The OS config folder for recent collections and chosen environments.
+dirs = "6"
 # `tree-sitter` turns on syntax highlighting in the code editor (JSON is included).
 gpui-kit = { workspace = true, features = ["tree-sitter"] }
 # Same version gpui-component already builds, so it is not compiled twice.
 notify = "8.2.0"
+serde.workspace = true
 tokio.workspace = true
+toml.workspace = true
 # Deleting from the sidebar moves files to the OS trash instead of removing them.
 trash = "5"
 

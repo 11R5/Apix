@@ -280,10 +280,13 @@ dependencies = [
  "apix-core",
  "apix-http",
  "apix-import",
+ "dirs 6.0.0",
  "embed-resource",
  "gpui-kit",
  "notify",
+ "serde",
  "tokio",
+ "toml 0.8.23",
  "trash",
 ]
 

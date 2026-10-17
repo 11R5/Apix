@@ -251,12 +251,12 @@ A Projesi/                      apix-project.toml  (ad, renk, koleksiyon sıras�
 | Özellik | Ayrıntı | Durum |
 |---|---|---|
 | **Aç / Yeni koleksiyon / Yeni proje** | Başlangıç ekranı ve komut paletinde üç seçenek. "Yeni proje" sihirbazı ad, klasör ve ilk ortamları (Test, Prod) sorar. | ⬜ M |
-| **Son açılanlar** | Projeler ve koleksiyonlar, son açılma sırasıyla | ⬜ S |
+| **Son açılanlar** | Projeler ve koleksiyonlar, son açılma sırasıyla. Koleksiyonlar için ✅ (boş ekranda "RECENT" listesi, kullanıcı ayarlarında `state.toml`); projeler C1 ile gelecek. | ✅ koleksiyon · ⬜ proje |
 | **Proje seçici** | Başlık çubuğunda "A Projesi ▾"; projeler arası tek tıkla geçiş | ⬜ M |
 | **Proje ortamları** | Projenin `environments/` klasörü, içindeki tüm koleksiyonlara uygulanır. Koleksiyonun kendi ortamı varsa onun üstüne eklenir. Katman sırası: proje → koleksiyon → ortam → yerel. | ⬜ M |
 | **Özelleştirilebilir gruplama** | Kenar çubuğu iki şekilde gösterilebilir: "Proje → Ortam → Koleksiyonlar" ya da "Proje → Koleksiyonlar". Bir koleksiyon belirli ortamlara bağlanabilir, örneğin "Raporlar sadece Test'te". Gruplara renk ve sıra verilebilir. | ⬜ M |
 | **Var olan koleksiyonu projeye ekleme** | Sürükle-bırak ile ya da "Projeye taşı" menüsüyle | ⬜ S |
-| **Prod koruması** | Prod ortamı seçiliyken pencere kenarında kırmızı bir çizgi görünür. DELETE, PUT ve PATCH göndermeden önce onay istenir (açılıp kapatılabilir). | ⬜ S |
+| **Prod koruması** | Prod ortamı seçiliyken pencere kenarında kırmızı bir çizgi görünür. DELETE, PUT ve PATCH göndermeden önce onay istenir (açılıp kapatılabilir). | Kırmızı çizgi ✅ (adında "prod" geçen ortamlar) · onay ⬜ S |
 
 ### C2. Şifreli koleksiyonlar 🔐 (not 2)
 Bir koleksiyon (veya proje) parola ile şifrelenir. Parolayı bilmeyen hiçbir araç, dosyalar elinde olsa bile içeriği okuyamaz.
@@ -298,7 +298,7 @@ Bir koleksiyon (veya proje) parola ile şifrelenir. Parolayı bilmeyen hiçbir a
 |---|---|
 | Kapsamlar: global → koleksiyon → ortam → yerel ve script. Sonraki kapsam öncekini ezer. | ✅ motor |
 | `{{değişken}}` çözümleme. İç içe değişkenler çalışır, döngüye girmez, eksikler raporlanır. | ✅ |
-| Ortam seçici (üst çubukta "Production ▾") | 🔜 S |
+| Ortam seçici (kenar çubuğunda, koleksiyon başına hatırlanır) | ✅ |
 | Ortam editörü: tablo, gizli değerler (••••), başlangıç ve güncel değer | ⬜ M |
 | **Gizli değerler:** `*.local.toml` (git'e girmez, ✅) ve işletim sistemi anahtarlığı (Keychain / Credential Manager / Secret Service) | ⬜ M |
 | **Dinamik değişkenler:** `{{$guid}}`, `{{$timestamp}}`, `{{$isoTimestamp}}`, `{{$randomInt}}`, `{{$randomEmail}}` ... (Postman'in tüm listesi) | ⬜ M |
@@ -455,12 +455,12 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 **Bitti sayılması için:** gerçek bir Postman koleksiyonu içe aktarılıp arayüzden gezilebilmeli ve istekleri çalıştırılabilmeli.
 
 ### M3 — Simge, projeler, ortamlar, kopyalama, auth
-1. [ ] **Uygulama simgesi** (not 4) (M)
+1. [x] **Uygulama simgesi** (not 4) (M). `tools/icongen` aracı logodan PNG, ICO, ICNS ve Linux hicolor dosyalarını üretir. Simge exe'ye gömülü, başlık çubuğunda da görünüyor.
    - `Logo/LogoFirst.jpg` kırpılır: alttaki yansıma atılır, zemin squircle dışında saydam yapılır.
    - 16–32 px için sadeleştirilmiş bir sürüm hazırlanır (sadece kuş ve X). Küçük boyutta ince çizgiler kaybolur.
    - Windows için `.ico` exe'ye gömülür, macOS için `.icns`, Linux için hicolor PNG'leri ve `.desktop` dosyası.
    - Mümkünse saydam zeminli PNG veya vektör (SVG) bir ana dosya edinilir. JPG zemini sabit olduğu için en temiz sonuç bundan alınır.
-2. [ ] **Ortam seçici ve ortam editörü:** üst çubukta "Test ▾". Gizli değerler, OS anahtarlığı, dinamik değişkenler (`{{$guid}}` …). (M)
+2. [ ] **Ortam seçici ve ortam editörü:** Seçici ✅ (kenar çubuğunda; Windows'ta başlık çubuğu sürükleme alanı olduğu için oraya konmadı). Koleksiyon başına hatırlanıyor, `.local.toml` gizli değerleri dahil. Kalanlar: ortam editörü, OS anahtarlığı, dinamik değişkenler (`{{$guid}}` …). (M)
 3. [ ] **Projeler (§C1):** Aç / Yeni koleksiyon / Yeni proje, son açılanlar, proje seçici, proje ortamları, Proje → Ortam → Koleksiyonlar gruplaması, prod koruması (L)
 4. [ ] **Kabuk komutu olarak kopyala** (§I): bash/sh `curl`, cmd `curl.exe`, PowerShell `Invoke-RestMethod`, fish, HTTPie, wget. Yapıştırılan `curl` komutunu isteğe çevirme. (M)
 5. [ ] **Metot seçerek yeni istek** (§C) (S)

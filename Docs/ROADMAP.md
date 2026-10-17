@@ -25,7 +25,7 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 
 ## M2 — Collections and Postman import
 - [x] Open folder (Ctrl+O, or drop it on the window; offers to start a collection), sidebar tree built from files on disk
-- [ ] Recent folders
+- [x] Recent collections (empty state)
 - [x] Edit and save (Ctrl+S) with an unsaved marker and a save/discard prompt; new (Ctrl+N), rename, duplicate, delete to trash from a context menu
 - [ ] Drag to reorder
 - [x] File watching (outside edits show up within ~0.5 s)
@@ -34,8 +34,9 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [x] `apix import <file> [--out dir] [--into collection]`
 
 ## M3 — Icon, projects, environments, copy-as, auth
-- [ ] App icon from `Logo/LogoFirst.jpg`: transparent squircle, simplified 16–32 px glyph; `.ico` (embedded in the exe), `.icns`, Linux hicolor PNGs + `.desktop`
-- [ ] Environment switcher and editor, secrets in `*.local.toml` and the OS keychain, dynamic variables (`{{$guid}}`, …)
+- [x] App icon from `Logo/LogoFirst.jpg` (`cargo run -p icongen --release`): transparent squircle, tighter crop at 32 px and below; `.ico` embedded in the exe, `.icns`, Linux hicolor PNGs + `.desktop`
+- [x] Environment switcher in the sidebar, remembered per collection, with `*.local.toml` secrets; red line for prod
+- [ ] Environment editor, OS keychain, dynamic variables (`{{$guid}}`, …)
 - [ ] Projects: Open / New collection / New project, recent items, project switcher, project-wide environments, grouping as Project → Environment → Collections, prod guard
 - [ ] Copy request as a shell command: bash/sh `curl`, cmd `curl.exe`, PowerShell `Invoke-RestMethod`, fish, HTTPie, wget; paste a `curl` command to create a request
 - [ ] New request with a chosen method
