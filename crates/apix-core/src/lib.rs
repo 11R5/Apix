@@ -4,6 +4,7 @@
 
 pub mod model;
 pub mod store;
+pub mod text;
 pub mod vars;
 
 pub use model::{ApiKeyLocation, Auth, Body, KeyValue, Method, Request};

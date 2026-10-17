@@ -2,10 +2,11 @@
 
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
+use std::sync::Arc;
 
 use apix_core::store::load_request;
 use apix_core::{Body, Collection, KeyValue, Method, Request, Variables};
-use apix_http::{Response, human_duration, human_size};
+use apix_http::{Response, group_digits, human_duration, human_size};
 use gpui_kit::component::button::{Button, ButtonVariants};
 use gpui_kit::component::checkbox::Checkbox;
 use gpui_kit::component::input::{Editor, EditorState, Input, InputEvent, InputState};
@@ -18,16 +19,13 @@ use gpui_kit::component::{
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
+use crate::large_view::{Document, LARGE_BODY_BYTES, LargeView};
 use crate::net;
 use crate::theme::{self, Palette};
 
 actions!(apix, [SendRequest, CancelRequest]);
 
 const CONTEXT: &str = "ApixWorkspace";
-
-/// Response bodies above this size are cut in the viewer until the
-/// virtualized viewer lands; the full body is still kept in memory.
-const MAX_VIEW_BYTES: usize = 8 * 1024 * 1024;
 
 pub fn bind_keys(cx: &mut App) {
     cx.bind_keys([
@@ -126,11 +124,49 @@ impl BodyKind {
     }
 }
 
+/// A response with its body already formatted and indexed for viewing.
 struct Finished {
     response: Response,
-    pretty: String,
-    raw: String,
-    lang: &'static str,
+    pretty: Arc<Document>,
+    /// The unformatted body. For large bodies it is only built when the Raw
+    /// tab is opened, so a 100 MB response is not held three times over.
+    raw: Option<Arc<Document>>,
+    /// Too big for the code editor; shown in the virtualized viewer.
+    large: bool,
+    json: bool,
+}
+
+impl Finished {
+    /// Linear in the body size. Runs on a background thread.
+    fn prepare(response: Response) -> Self {
+        let json = response.is_json();
+        let large = response.body.len() >= LARGE_BODY_BYTES;
+        let formatted = json
+            .then(|| apix_core::text::pretty_json(&response.body))
+            .flatten();
+        let (pretty, raw) = match formatted {
+            Some(text) => {
+                let raw = (!large).then(|| raw_document(&response, json));
+                (Arc::new(Document::new(text, true)), raw)
+            }
+            // Nothing to format: Pretty and Raw are the same text.
+            None => {
+                let doc = raw_document(&response, json);
+                (doc.clone(), Some(doc))
+            }
+        };
+        Self {
+            response,
+            pretty,
+            raw,
+            large,
+            json,
+        }
+    }
+}
+
+fn raw_document(response: &Response, json: bool) -> Arc<Document> {
+    Arc::new(Document::new(response.raw_body(), json))
 }
 
 enum ResponseState {
@@ -168,6 +204,10 @@ pub struct Workspace {
     response_tab: usize,
     response: ResponseState,
     response_body: Entity<EditorState>,
+    large_view: Option<Entity<LargeView>>,
+    /// Raw view of a large body, built on first use.
+    raw_doc: Option<Arc<Document>>,
+    raw_task: Option<Task<()>>,
     /// The in-flight request. Dropping it cancels the request.
     task: Option<Task<()>>,
     _subscriptions: Vec<Subscription>,
@@ -240,6 +280,9 @@ impl Workspace {
             response_tab: 0,
             response: ResponseState::Idle,
             response_body,
+            large_view: None,
+            raw_doc: None,
+            raw_task: None,
             task: None,
             _subscriptions: subscriptions,
         };
@@ -292,6 +335,9 @@ impl Workspace {
 
         self.base = request;
         self.task = None;
+        self.raw_task = None;
+        self.raw_doc = None;
+        self.large_view = None;
         self.response = ResponseState::Idle;
         cx.notify();
     }
@@ -360,7 +406,11 @@ impl Workspace {
         // Replacing an older task drops it, which cancels that request.
         self.task = Some(cx.spawn_in(window, async move |this, cx| {
             let result = pending.await;
-            this.update_in(cx, |this, window, cx| this.finish(result, window, cx))
+            // Formatting and indexing a big body must not stall the UI thread.
+            let prepared = cx
+                .background_spawn(async move { result.map(Finished::prepare) })
+                .await;
+            this.update_in(cx, |this, window, cx| this.finish(prepared, window, cx))
                 .ok();
         }));
         cx.notify();
@@ -381,19 +431,15 @@ impl Workspace {
 
     fn finish(
         &mut self,
-        result: Result<Response, String>,
+        result: Result<Finished, String>,
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
         self.task = None;
+        self.raw_doc = None;
+        self.raw_task = None;
         match result {
-            Ok(response) => {
-                let finished = Finished {
-                    pretty: response.pretty_body(),
-                    raw: response.raw_body(),
-                    lang: if response.is_json() { "json" } else { "text" },
-                    response,
-                };
+            Ok(finished) => {
                 self.response = ResponseState::Done(Rc::new(finished));
                 self.set_response_tab(0, window, cx);
             }
@@ -404,16 +450,56 @@ impl Workspace {
 
     fn set_response_tab(&mut self, ix: usize, window: &mut Window, cx: &mut Context<Self>) {
         self.response_tab = ix;
-        if let ResponseState::Done(done) = &self.response {
-            let (text, lang) = match ix {
-                0 => (&done.pretty, done.lang),
-                _ => (&done.raw, "text"),
-            };
-            let text = clip_for_view(text);
-            self.response_body.update(cx, |state, cx| {
-                state.set_highlighter(lang, cx);
-                state.set_value(text, window, cx);
-            });
+        self.large_view = None;
+        let ResponseState::Done(done) = &self.response else {
+            cx.notify();
+            return;
+        };
+        let done = done.clone();
+        let doc = match ix {
+            0 => Some(done.pretty.clone()),
+            1 => done.raw.clone().or_else(|| self.raw_doc.clone()),
+            _ => {
+                cx.notify();
+                return;
+            }
+        };
+
+        match doc {
+            Some(doc) if done.large => {
+                let palette = self.palette;
+                self.large_view = Some(cx.new(|cx| LargeView::new(doc, palette, cx)));
+            }
+            Some(doc) => {
+                let lang = if ix == 0 && done.json { "json" } else { "text" };
+                let text = doc.text().to_owned();
+                self.response_body.update(cx, |state, cx| {
+                    state.set_highlighter(lang, cx);
+                    state.set_value(text, window, cx);
+                });
+            }
+            // Raw view of a large body: build it in the background, then show it.
+            None if self.raw_task.is_none() => {
+                let body = done.response.body.clone();
+                let json = done.json;
+                self.raw_task = Some(cx.spawn_in(window, async move |this, cx| {
+                    let doc = cx
+                        .background_spawn(async move {
+                            let text = String::from_utf8_lossy(&body).into_owned();
+                            Arc::new(Document::new(text, json))
+                        })
+                        .await;
+                    this.update_in(cx, |this, window, cx| {
+                        this.raw_doc = Some(doc);
+                        this.raw_task = None;
+                        if this.response_tab == 1 {
+                            this.set_response_tab(1, window, cx);
+                        }
+                    })
+                    .ok();
+                }));
+            }
+            None => {}
         }
         cx.notify();
     }
@@ -486,23 +572,6 @@ fn load_collection(dir: Option<&Path>) -> (Option<Collection>, Vec<SidebarItem>,
 
 fn source_of(err: &dyn std::error::Error) -> String {
     err.source().map(|s| s.to_string()).unwrap_or_default()
-}
-
-/// Cuts very large bodies at a char boundary so the editor stays responsive.
-fn clip_for_view(text: &str) -> String {
-    if text.len() <= MAX_VIEW_BYTES {
-        return text.to_owned();
-    }
-    let mut end = MAX_VIEW_BYTES;
-    while !text.is_char_boundary(end) {
-        end -= 1;
-    }
-    format!(
-        "{}\n\n… showing the first {} of {}.",
-        &text[..end],
-        human_size(end),
-        human_size(text.len())
-    )
 }
 
 // ---------------------------------------------------------------------------
@@ -897,11 +966,25 @@ impl Workspace {
                 let status = p.status(response.status);
                 let headers_label: SharedString =
                     format!("Headers {}", response.headers.len()).into();
-                let content = if self.response_tab == 2 {
-                    self.render_response_headers(response).into_any_element()
-                } else {
-                    Editor::new(&self.response_body).h_full().into_any_element()
+                let content = match (&self.large_view, self.response_tab) {
+                    (_, 2) => self.render_response_headers(response).into_any_element(),
+                    (Some(view), _) => view.clone().into_any_element(),
+                    (None, _) if done.large => centered(
+                        h_flex()
+                            .gap_2()
+                            .items_center()
+                            .text_sm()
+                            .text_color(p.text_muted)
+                            .child(Spinner::new().small().color(p.accent))
+                            .child("Preparing the raw view…")
+                            .into_any_element(),
+                    )
+                    .into_any_element(),
+                    (None, _) => Editor::new(&self.response_body).h_full().into_any_element(),
                 };
+                let viewer_note = done
+                    .large
+                    .then(|| format!("{} lines", group_digits(done.pretty.lines().into())));
                 shell
                     .child(
                         h_flex()
@@ -925,13 +1008,11 @@ impl Workspace {
                                         response.reason.unwrap_or("")
                                     )),
                             )
-                            .child(format!("{} total", human_duration(response.timing.total)))
-                            .child(format!(
-                                "{} to first byte",
-                                human_duration(response.timing.ttfb)
-                            ))
+                            .child(human_duration(response.timing.total))
+                            .child(format!("TTFB {}", human_duration(response.timing.ttfb)))
                             .child(human_size(response.body.len()))
-                            .child(response.version.clone()),
+                            .child(response.version.clone())
+                            .children(viewer_note),
                     )
                     .child(
                         TabBar::new("response-tabs")

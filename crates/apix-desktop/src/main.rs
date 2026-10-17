@@ -2,6 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod fonts;
+mod large_view;
 mod net;
 mod theme;
 mod workspace;
@@ -35,6 +36,7 @@ fn main() {
             let palette = Palette::new(Variant::from_env());
             theme::apply(&palette, embedded_fonts, cx);
             workspace::bind_keys(cx);
+            large_view::bind_keys(cx);
 
             let options = WindowOptions {
                 window_bounds: Some(WindowBounds::Windowed(Bounds::centered(

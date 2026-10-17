@@ -349,13 +349,13 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 - [x] `apix` CLI: `send` ve `run`, `--env` ve `--var` ile
 - [x] Masaüstü kabuğu: blur'lu pencere, başlık çubuğu, pencere düğmeleri
 
-### M1 — Arayüzden gerçek istek 🔜 (8 maddeden 7'si bitti)
+### M1 — Arayüzden gerçek istek ✅ (tamamlandı)
 1. [x] **Tasarım token'ları:** §1.3'teki paleti `theme.rs`'e taşımak, Obsidian ve Cyber temaları (S)
 2. [x] **Fontları gömmek:** Inter 4.1 ve JetBrains Mono 2.304 (OFL 1.1), toplam 2.2 MB (S)
 3. [x] **tokio ↔ GPUI köprüsü:** istekler arka planda çalışır, sonuç arayüze gelir, iptal edilebilir (M)
 4. [x] **URL çubuğu:** düzenlenebilir alan, metot seçici, SEND düğmesi, Ctrl+Enter (M)
 5. [x] **Yanıt paneli:** durum, süre, boyut, Pretty ve Raw görünümleri, Headers sekmesi (M)
-6. [ ] **JSON görüntüleyici:** renklendirme ve katlama ✅. Büyük yanıtlar için sanal liste henüz yok (L). Şimdilik 8 MB üstü yanıtlar kesilerek gösteriliyor.
+6. [x] **JSON görüntüleyici:** renklendirme ve katlama. 512 KB üstü yanıtlar için satır tabanlı sanal görüntüleyici var. 100 MB JSON (9.6 milyon satır) release derlemede yaklaşık 0.33 saniyede ekrana geliyor. Tekerlek, kaydırma çubuğu ve klavye (↑ ↓ PgUp PgDn Ctrl+Home/End) ile geziliyor. Bellek 100 MB yanıtla yaklaşık 407 MB. (L)
 7. [x] **Params ve Headers tabloları:** aç/kapa kutucuğu, sayı rozetleri (M)
 8. [x] **Body editörü:** JSON, Text ve XML seçenekleri (M)
 
@@ -405,6 +405,7 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 ### M9 — Yayın
 - GitHub Actions: Windows, macOS ve Linux'ta test ve derleme
 - Kurulum paketleri: `.msi` ve winget, `.dmg` ve Homebrew, AppImage, Flatpak ve `.deb`
+- İkili boyutunu 15 MB hedefine indirmek (şu an release 27.7 MB; içinde 2.2 MB font, simgeler ve tree-sitter var)
 - **İmzalı sürümler:** Windows kod imzası (Akıllı Uygulama Denetimi engellemesin diye) ve macOS notarization
 - Logo, web sitesi, tanıtım (r/rust, Hacker News)
 

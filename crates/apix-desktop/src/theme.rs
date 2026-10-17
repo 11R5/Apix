@@ -4,6 +4,7 @@
 use std::sync::Arc;
 
 use apix_core::Method;
+use apix_core::text::JsonToken;
 use gpui_kit::component::{Theme, ThemeMode};
 use gpui_kit::{
     App, Background, Hsla, Rgba, linear_color_stop, linear_gradient, rgb, rgba, transparent_black,
@@ -138,6 +139,17 @@ impl Palette {
             300..400 => self.warn,
             _ => self.err,
         }
+    }
+}
+
+/// Colours for the large-body viewer, close to the code editor's JSON theme.
+pub fn json_token_color(p: &Palette, token: JsonToken) -> Hsla {
+    match token {
+        JsonToken::Key => p.text,
+        JsonToken::String => hex(0x86EFAC, 1.0),
+        JsonToken::Number => hex(0xFDBA74, 1.0),
+        JsonToken::Keyword => hex(0xC4B5FD, 1.0),
+        JsonToken::Punctuation => p.text_muted,
     }
 }
 

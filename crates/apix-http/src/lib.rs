@@ -51,10 +51,10 @@ impl Response {
     }
 
     /// The body as text; JSON is pretty-printed, anything else is decoded lossily.
+    /// Linear and tree-free, so it is safe for very large bodies.
     pub fn pretty_body(&self) -> String {
         if self.is_json()
-            && let Ok(value) = serde_json::from_slice::<serde_json::Value>(&self.body)
-            && let Ok(pretty) = serde_json::to_string_pretty(&value)
+            && let Some(pretty) = apix_core::text::pretty_json(&self.body)
         {
             return pretty;
         }
@@ -73,6 +73,19 @@ pub fn human_size(bytes: usize) -> String {
         1024..1_048_576 => format!("{:.1} KB", bytes as f64 / 1024.0),
         _ => format!("{:.1} MB", bytes as f64 / 1_048_576.0),
     }
+}
+
+/// `9656462` → `9,656,462`.
+pub fn group_digits(n: u64) -> String {
+    let digits = n.to_string();
+    let mut out = String::with_capacity(digits.len() + digits.len() / 3);
+    for (i, c) in digits.chars().enumerate() {
+        if i > 0 && (digits.len() - i).is_multiple_of(3) {
+            out.push(',');
+        }
+        out.push(c);
+    }
+    out
 }
 
 /// `840 µs`, `57 ms`, `1.24 s`.
@@ -249,5 +262,39 @@ mod tests {
             .build()
             .unwrap();
         assert_eq!(built.headers()[CONTENT_TYPE], "application/vnd.api+json");
+    }
+
+    #[test]
+    fn formats_human_numbers() {
+        assert_eq!(group_digits(0), "0");
+        assert_eq!(group_digits(999), "999");
+        assert_eq!(group_digits(1_000), "1,000");
+        assert_eq!(group_digits(9_656_462), "9,656,462");
+        assert_eq!(human_size(1_536), "1.5 KB");
+        assert_eq!(human_duration(Duration::from_micros(57_400)), "57 ms");
+    }
+
+    #[test]
+    fn pretty_body_matches_serde_json_layout() {
+        let raw = r#"[{"id":1,"name":"Leanne","address":{"geo":{"lat":"-37.3159"},"tags":[]},"ok":true,"n":null},{"id":2,"x":{}}]"#;
+        let response = Response {
+            status: 200,
+            reason: Some("OK"),
+            version: "HTTP/1.1".into(),
+            headers: vec![(
+                "Content-Type".into(),
+                "application/json; charset=utf-8".into(),
+            )],
+            body: Bytes::from_static(raw.as_bytes()),
+            timing: Timing {
+                ttfb: Duration::ZERO,
+                total: Duration::ZERO,
+            },
+        };
+        let value: serde_json::Value = serde_json::from_str(raw).unwrap();
+        assert_eq!(
+            response.pretty_body(),
+            serde_json::to_string_pretty(&value).unwrap()
+        );
     }
 }

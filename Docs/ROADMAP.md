@@ -20,7 +20,7 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [x] Editable URL bar, method picker, Send button, Enter / Ctrl+Enter
 - [x] Response panel: status, time, size, Pretty / Raw / Headers
 - [x] Highlighted, foldable JSON viewer
-- [ ] Virtualized viewer for 100 MB bodies (bodies over 8 MB are clipped for now)
+- [x] Row-based virtual viewer for large bodies: 100 MB of JSON (9.6M lines) shows in ~0.33 s in release builds, scrolls by wheel, scrollbar and keyboard
 - [x] Params / Headers tables with enable toggles; JSON / Text / XML body editor
 
 ## M2 — Collections and Postman import
@@ -62,5 +62,6 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 ## M9 — Release & distribution
 - [ ] GitHub Actions: test and build on Windows, macOS and Linux
 - [ ] Installers: `.msi`/winget, `.dmg`/Homebrew cask, AppImage/Flatpak/`.deb`
+- [ ] Shrink the release binary to the 15 MB target (27.7 MB today)
 - [ ] Signed Windows builds (so Smart App Control allows them) and notarized macOS builds
 - [ ] Docs site, logo, and a launch post (r/rust, Hacker News)
