@@ -306,7 +306,7 @@ impl Workspace {
     }
 
     /// Opens a request in the editor, asking first if the current one has unsaved edits.
-    fn select(&mut self, path: PathBuf, window: &mut Window, cx: &mut Context<Self>) {
+    pub(super) fn select(&mut self, path: PathBuf, window: &mut Window, cx: &mut Context<Self>) {
         if self.selected.as_ref() == Some(&path) {
             return;
         }
@@ -506,7 +506,12 @@ impl Workspace {
         );
     }
 
-    fn new_folder(&mut self, parent: Option<PathBuf>, window: &mut Window, cx: &mut Context<Self>) {
+    pub(super) fn new_folder(
+        &mut self,
+        parent: Option<PathBuf>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         let Some(parent) = parent.or_else(|| self.collection.as_ref().map(|c| c.root.clone()))
         else {
             return;
@@ -731,7 +736,12 @@ impl Workspace {
     }
 
     /// Opens the collection around `dir`, or offers to start one there.
-    fn open_or_create(&mut self, dir: PathBuf, window: &mut Window, cx: &mut Context<Self>) {
+    pub(super) fn open_or_create(
+        &mut self,
+        dir: PathBuf,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         if Collection::find_root(&dir).is_some() {
             self.guard_unsaved(
                 window,
@@ -1739,7 +1749,7 @@ fn collection_menu(
 impl Workspace {
     /// Asks for a name and a parent folder, then creates and opens a project
     /// with Test and Prod environments.
-    fn prompt_new_project(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+    pub(super) fn prompt_new_project(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         self.prompt_name(
             "New project",
             String::new(),
@@ -1778,7 +1788,7 @@ impl Workspace {
     }
 
     /// In a project, adds a collection to it; otherwise asks where to create one.
-    fn prompt_new_collection(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+    pub(super) fn prompt_new_collection(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         let project_root = self.project.as_ref().map(|p| p.root.clone());
         let label = if project_root.is_some() {
             "Create"
@@ -1861,7 +1871,12 @@ impl Workspace {
         );
     }
 
-    fn set_group_by(&mut self, group_by: GroupBy, window: &mut Window, cx: &mut Context<Self>) {
+    pub(super) fn set_group_by(
+        &mut self,
+        group_by: GroupBy,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         let Some(project) = &mut self.project else {
             return;
         };

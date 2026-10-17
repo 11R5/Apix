@@ -3,6 +3,7 @@
 mod auth_editor;
 mod collections;
 mod env_editor;
+mod palette;
 mod shell_copy;
 mod var_chips;
 
@@ -43,6 +44,7 @@ actions!(
         OpenCollection,
         ImportFile,
         EditVariables,
+        OpenPalette,
         MethodGet,
         MethodPost,
         MethodPut,
@@ -63,6 +65,8 @@ pub fn bind_keys(cx: &mut App) {
         KeyBinding::new("secondary-n", NewRequest, Some(CONTEXT)),
         KeyBinding::new("secondary-o", OpenCollection, Some(CONTEXT)),
         KeyBinding::new("secondary-e", EditVariables, Some(CONTEXT)),
+        KeyBinding::new("secondary-k", OpenPalette, Some(CONTEXT)),
+        KeyBinding::new("secondary-p", OpenPalette, Some(CONTEXT)),
         // Alt+1…7 pick the method, in the order of the method picker.
         KeyBinding::new("alt-1", MethodGet, Some(CONTEXT)),
         KeyBinding::new("alt-2", MethodPost, Some(CONTEXT)),
@@ -502,7 +506,7 @@ impl Workspace {
         request
     }
 
-    fn send(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+    pub(super) fn send(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         let request = self.with_inherited_auth(self.build_request(cx), self.selected.as_deref());
         if request.url.is_empty() {
             self.fail("Enter a URL to send a request.", cx);
@@ -1111,7 +1115,11 @@ impl Workspace {
             .child(div().flex_1().min_w_0().truncate().child(location))
             .children(environment)
             .children(unsaved)
-            .child(format!("{} send  ·  Esc cancel", key_hint("Enter")))
+            .child(format!(
+                "{} commands  ·  {} send  ·  Esc cancel",
+                key_hint("K"),
+                key_hint("Enter")
+            ))
     }
 }
 
@@ -1163,6 +1171,9 @@ impl Render for Workspace {
             )
             .on_action(
                 cx.listener(|this, _: &EditVariables, window, cx| this.open_env_editor(window, cx)),
+            )
+            .on_action(
+                cx.listener(|this, _: &OpenPalette, window, cx| this.open_palette(window, cx)),
             )
             // A click anywhere brings focus back inside the workspace (inputs
             // focus themselves first, so they keep it), so shortcuts keep working.

@@ -47,7 +47,7 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [x] Variable chips in the URL bar (defined, dynamic or missing, by colour); hovering one shows its value, with secrets masked, and the scope it comes from
 - [x] Auth tab (inherit, none, Bearer, Basic, API key); folders (`folder.toml`), collections and projects can set auth that requests inherit, in the app and the CLI; Postman imports keep auth where it was set
 - [ ] OAuth 2.0 flows (moved to M4)
-- [ ] Command palette (Ctrl/⌘+K)
+- [x] Command palette (Ctrl+K or Ctrl+P): fuzzy search over every request and command (new request by method, environments, copy as, auth, grouping, recent folders)
 - [ ] From M2: tabs, drag to reorder
 
 ## M4 — Daily driver

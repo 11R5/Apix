@@ -13,10 +13,10 @@
 | M0 Temel | ✅ |
 | M1 Arayüzden istek | ✅ 100 MB JSON ~0.33 s'de açılıyor |
 | M2 Koleksiyonlar, Postman içe aktarma | ✅ 8/10 · sekmeler ve sürükle-bırak M3'e taşındı |
-| M3 Simge, projeler, ortamlar, kopyalama, auth | 🔜 7/9 · bitti: simge, ortam seçici ve editörü, dinamik değişkenler, projeler, kabuk komutu olarak kopyalama, metotla yeni istek, değişken çipleri, Auth sekmesi ve miras · sıradaki: komut paleti |
+| M3 Simge, projeler, ortamlar, kopyalama, auth | 🔜 8/9 · bitti: simge, ortam seçici ve editörü, dinamik değişkenler, projeler, kabuk komutu olarak kopyalama, metotla yeni istek, değişken çipleri, Auth sekmesi ve miras, komut paleti · sıradaki: sekmeler ve sürükle-bırak |
 | M4–M9 | ⬜ |
 
-Release ikili dosyası 27.7 MB (üst sınır ~40 MB). Testler: core 32, desktop 2, codegen 11, import 10, http 4 (hepsi geçiyor, clippy uyarısız).
+Release ikili dosyası 27.7 MB (üst sınır ~40 MB). Testler: core 32, desktop 4, codegen 11, import 10, http 4 (hepsi geçiyor, clippy uyarısız).
 
 ### Kullanıcı notları (17 Ekim 2026) ve plana nasıl işlendikleri
 | # | Not | Nereye işlendi |
@@ -261,7 +261,7 @@ A Projesi/                      apix-project.toml  (ad, renk, koleksiyon sıras�
 
 | Özellik | Ayrıntı | Durum |
 |---|---|---|
-| **Aç / Yeni koleksiyon / Yeni proje** | Başlangıç ekranı ve komut paletinde üç seçenek. "Yeni proje" sihirbazı ad, klasör ve ilk ortamları (Test, Prod) sorar. | ✅ Kenar çubuğundaki proje/koleksiyon menüsünden (yeni proje Test ve Prod ortamlarıyla oluşur). Komut paleti M3'te. |
+| **Aç / Yeni koleksiyon / Yeni proje** | Başlangıç ekranı ve komut paletinde üç seçenek. "Yeni proje" sihirbazı ad, klasör ve ilk ortamları (Test, Prod) sorar. | ✅ Kenar çubuğundaki proje/koleksiyon menüsünden (yeni proje Test ve Prod ortamlarıyla oluşur). Komut paletinde de var. |
 | **Son açılanlar** | Projeler ve koleksiyonlar, son açılma sırasıyla. Boş ekranda "RECENT" listesi ve proje menüsünde "Recent"; kullanıcı ayarlarında `state.toml`. | ✅ |
 | **Proje seçici** | Kenar çubuğunun üstündeki "Shop ▾" menüsü: son açılanlar, Aç, Yeni proje. Windows'ta başlık çubuğu sürükleme alanı olduğu için oraya konmadı. | ✅ |
 | **Proje ortamları** | Projenin `environments/` klasörü, içindeki tüm koleksiyonlara uygulanır. Koleksiyonun kendi ortamı varsa onun üstüne eklenir. Katman sırası: proje → koleksiyon → ortam → yerel. | ✅ (CLI `--env` de aynı katmanları kullanıyor) |
@@ -392,7 +392,7 @@ Bir koleksiyon (veya proje) parola ile şifrelenir. Parolayı bilmeyen hiçbir a
 |---|---|
 | Şeffaf ve blur'lu pencere, kendi başlık çubuğu | ✅ |
 | **Uygulama simgesi** (not 4): kaynak `Logo/LogoFirst.jpg` (2048×2048). Windows için `.ico` (16–256 px, exe içine gömülü), macOS için `.icns` (16–1024 px, @2x dahil), Linux için hicolor PNG'leri ve `.desktop` dosyası. Ayrıca başlık çubuğundaki işaret, README ve GitHub sosyal önizlemesi. Ayrıntılar M3'te. | ✅ · ⬜ GitHub sosyal önizlemesi |
-| Komut paleti (Ctrl/⌘+K) | ⬜ M (M3) |
+| Komut paleti (Ctrl/⌘+K, Ctrl/⌘+P) | ✅ |
 | Kısayol tablosu ve kısayolları özelleştirme | ⬜ M |
 | Ayarlar ekranı (tema, cam ayarı, font, proxy, güncelleme) | ⬜ M |
 | Türkçe ve İngilizce arayüz (`rust-i18n`, gpui-kit zaten destekliyor) | ⬜ M |
@@ -465,7 +465,7 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 
 **Bitti sayılması için:** gerçek bir Postman koleksiyonu içe aktarılıp arayüzden gezilebilmeli ve istekleri çalıştırılabilmeli.
 
-### M3 — Simge, projeler, ortamlar, kopyalama, auth 🔜 (9 maddeden 7'si bitti)
+### M3 — Simge, projeler, ortamlar, kopyalama, auth 🔜 (9 maddeden 8'i bitti)
 1. [x] **Uygulama simgesi** (not 4) (M). `tools/icongen` aracı logodan PNG, ICO, ICNS ve Linux hicolor dosyalarını üretir. Simge exe'ye gömülü, başlık çubuğunda da görünüyor.
    - `Logo/LogoFirst.jpg` kırpılır: alttaki yansıma atılır, zemin squircle dışında saydam yapılır.
    - 16–32 px için sadeleştirilmiş bir sürüm hazırlanır (sadece kuş ve X). Küçük boyutta ince çizgiler kaybolur.
@@ -477,7 +477,7 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 5. [x] **Metot seçerek yeni istek** (§C): kenar çubuğundaki "+" menüsü, klasör ve koleksiyon menülerinde "New request ▸". POST, PUT ve PATCH JSON gövdeyle açılır. URL çubuğunda Alt+1…7 metodu değiştirir. (S)
 6. [x] **Değişken çipleri** (§A2): URL çubuğunda renkli çipler, üstüne gelince değer, kapsam ve gizlilik bilgisi. Kalan: Params, Headers ve Body alanları. (M)
 7. [x] **Auth sekmesi:** Inherit, No auth, Bearer, Basic, API key. Klasör, koleksiyon ve proje auth'u (sağ tık → Auth…, proje menüsü), istekler en yakın üst öğeden miras alır; masaüstü, CLI ve "Copy as" aynı kuralı kullanır. Postman içe aktarma auth'u olduğu yerde bırakır. OAuth 2.0 M4'e taşındı. (L)
-8. [ ] Komut paleti (Ctrl/⌘+K) (M)
+8. [x] **Komut paleti** (Ctrl+K veya Ctrl+P): tüm istekler ve komutlar içinde bulanık arama ("crus" → "Create user"). Komutlar: gönder, kaydet, metotla yeni istek, klasör, koleksiyon, proje, aç, içe aktar, değişkenler, ortam seçimi, kopyala, auth, gruplama, son açılanlar. (M)
 9. [ ] M2'den kalanlar: sekmeler, sürükle-bırak ile taşıma ve sıralama (M)
 
 ### M4 — Günlük kullanıma hazır
