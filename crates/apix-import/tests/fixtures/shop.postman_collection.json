@@ -1,0 +1,178 @@
+{
+	"info": {
+		"_postman_id": "5f0c2a44-1c1e-4b7e-9f63-0d2a4cbe1e11",
+		"name": "Shop API",
+		"description": "Orders and users for the demo shop.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "123456"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{ "key": "token", "value": "{{token}}", "type": "string" }
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": { "type": "text/javascript", "exec": ["pm.variables.set('ts', Date.now());"] }
+		}
+	],
+	"variable": [
+		{ "key": "baseUrl", "value": "https://shop.example.com/api", "type": "string" },
+		{ "key": "unused", "value": "x", "disabled": true }
+	],
+	"item": [
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "List users",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept", "value": "application/json" },
+							{ "key": "X-Debug", "value": "1", "disabled": true }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/users?page=2&limit=20",
+							"host": ["{{baseUrl}}"],
+							"path": ["users"],
+							"query": [
+								{ "key": "page", "value": "2" },
+								{ "key": "limit", "value": "20" },
+								{ "key": "sort", "value": "name", "disabled": true }
+							]
+						},
+						"description": "Paginated list."
+					},
+					"response": [
+						{ "name": "200", "code": 200, "body": "[]" }
+					],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('ok', function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Get user",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users/:userId",
+							"host": ["{{baseUrl}}"],
+							"path": ["users", ":userId"],
+							"variable": [{ "key": "userId", "value": "42" }]
+						}
+					}
+				},
+				{
+					"name": "Create user",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Ada\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": "{{baseUrl}}/users"
+					}
+				},
+				{
+					"name": "Delete user",
+					"request": {
+						"auth": { "type": "noauth" },
+						"method": "DELETE",
+						"header": [],
+						"url": { "raw": "{{baseUrl}}/users/:id", "variable": [{ "key": "id" }] }
+					}
+				}
+			]
+		},
+		{
+			"name": "Orders",
+			"auth": {
+				"type": "apikey",
+				"apikey": [
+					{ "key": "key", "value": "api_key", "type": "string" },
+					{ "key": "value", "value": "{{apiKey}}", "type": "string" },
+					{ "key": "in", "value": "query", "type": "string" }
+				]
+			},
+			"item": [
+				{
+					"name": "Create order (form)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{ "key": "sku", "value": "A-1", "type": "text" },
+								{ "key": "qty", "value": "2", "type": "text" }
+							]
+						},
+						"url": "{{baseUrl}}/orders"
+					}
+				},
+				{
+					"name": "Upload invoice",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{ "key": "note", "value": "march", "type": "text" },
+								{ "key": "file", "type": "file", "src": "/tmp/invoice.pdf" }
+							]
+						},
+						"url": "{{baseUrl}}/orders/invoice"
+					}
+				},
+				{
+					"name": "Search orders",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query ($q: String) { orders(q: $q) { id } }",
+								"variables": "{\"q\": \"open\"}"
+							}
+						},
+						"url": "{{baseUrl}}/graphql"
+					}
+				}
+			]
+		},
+		{
+			"name": "Health",
+			"request": {
+				"auth": {
+					"type": "oauth2",
+					"oauth2": [{ "key": "grant_type", "value": "client_credentials", "type": "string" }]
+				},
+				"method": "PROPFIND",
+				"header": [],
+				"url": "{{baseUrl}}/health"
+			}
+		},
+		{
+			"name": "Health",
+			"request": { "method": "HEAD", "header": [], "url": "{{baseUrl}}/health" }
+		}
+	]
+}

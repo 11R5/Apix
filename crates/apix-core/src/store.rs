@@ -14,7 +14,7 @@
 //! └── health.apix
 //! ```
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -68,18 +68,56 @@ pub fn load_request(path: &Path) -> Result<Request, StoreError> {
 }
 
 pub fn save_request(path: &Path, request: &Request) -> Result<(), StoreError> {
-    let text = toml::to_string_pretty(request)?;
+    write_toml(path, request)
+}
+
+fn write_toml(path: &Path, value: &impl Serialize) -> Result<(), StoreError> {
+    let text = toml::to_string_pretty(value)?;
     fs::write(path, text).map_err(|source| StoreError::Io {
         path: path.to_owned(),
         source,
     })
 }
 
+/// Variables are sorted on disk so saving never reorders a file and diffs stay small.
+pub type VarMap = BTreeMap<String, String>;
+
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct CollectionMeta {
     pub name: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub description: String,
     #[serde(default)]
-    pub vars: HashMap<String, String>,
+    pub vars: VarMap,
+}
+
+/// Writes `apix.toml` into `root`.
+pub fn save_collection_meta(root: &Path, meta: &CollectionMeta) -> Result<(), StoreError> {
+    write_toml(&root.join(COLLECTION_FILE), meta)
+}
+
+#[derive(Serialize)]
+struct EnvironmentFile<'a> {
+    vars: &'a VarMap,
+}
+
+/// Writes `environments/<name>.toml`, or `<name>.local.toml` when `local`
+/// (secrets, gitignored). Creates the folder when needed.
+pub fn save_environment(
+    root: &Path,
+    name: &str,
+    vars: &VarMap,
+    local: bool,
+) -> Result<PathBuf, StoreError> {
+    let dir = root.join(ENVIRONMENTS_DIR);
+    fs::create_dir_all(&dir).map_err(|source| StoreError::Io {
+        path: dir.clone(),
+        source,
+    })?;
+    let suffix = if local { LOCAL_SUFFIX } else { "" };
+    let path = dir.join(format!("{name}{suffix}.toml"));
+    write_toml(&path, &EnvironmentFile { vars })?;
+    Ok(path)
 }
 
 #[derive(Debug, Clone)]
@@ -93,7 +131,7 @@ pub struct Environment {
     #[serde(skip)]
     pub name: String,
     #[serde(default)]
-    pub vars: HashMap<String, String>,
+    pub vars: VarMap,
 }
 
 impl Collection {

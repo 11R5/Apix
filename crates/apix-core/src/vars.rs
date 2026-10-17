@@ -89,6 +89,7 @@ impl Request {
 
         let request = Request {
             name: self.name.clone(),
+            description: self.description.clone(),
             method: self.method,
             url: s(&self.url),
             query: pairs(&self.query, &mut s),

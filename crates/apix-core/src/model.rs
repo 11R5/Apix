@@ -151,6 +151,9 @@ impl Auth {
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub struct Request {
     pub name: String,
+    /// Markdown notes shown with the request (Postman's description).
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub description: String,
     #[serde(default)]
     pub method: Method,
     pub url: String,

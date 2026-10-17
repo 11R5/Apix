@@ -3,7 +3,7 @@ resolver = "3"
 members = ["crates/*"]
 # The desktop app pulls in the whole GPU stack; keep `cargo build` / `cargo test`
 # fast by default. Build it explicitly with `cargo run -p apix-desktop`.
-default-members = ["crates/apix-core", "crates/apix-http", "crates/apix-cli"]
+default-members = ["crates/apix-core", "crates/apix-http", "crates/apix-import", "crates/apix-cli"]
 
 [workspace.package]
 version = "0.1.0"
@@ -14,6 +14,7 @@ repository = "https://github.com/11R5/Apix"
 [workspace.dependencies]
 apix-core = { path = "crates/apix-core" }
 apix-http = { path = "crates/apix-http" }
+apix-import = { path = "crates/apix-import" }
 
 anyhow = "1"
 bytes = "1"

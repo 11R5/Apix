@@ -253,6 +253,7 @@ dependencies = [
  "anyhow",
  "apix-core",
  "apix-http",
+ "apix-import",
  "clap",
  "tokio",
 ]
@@ -286,6 +287,16 @@ dependencies = [
  "serde_json",
  "thiserror 2.0.21",
  "tokio",
+]
+
+[[package]]
+name = "apix-import"
+version = "0.1.0"
+dependencies = [
+ "apix-core",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
 ]
 
 [[package]]

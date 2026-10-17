@@ -33,6 +33,17 @@ enum Command {
         #[command(flatten)]
         vars: VarArgs,
     },
+    /// Import a Postman collection (v2.0/v2.1) or environment export
+    Import {
+        /// A Postman `.postman_collection.json` or `.postman_environment.json` file
+        file: PathBuf,
+        /// Folder to create for a collection (default: ./<collection-name>)
+        #[arg(long)]
+        out: Option<PathBuf>,
+        /// Collection to add an environment to (default: the collection around the current folder)
+        #[arg(long)]
+        into: Option<PathBuf>,
+    },
 }
 
 #[derive(Args)]
@@ -150,7 +161,52 @@ async fn run(cli: Cli) -> Result<bool> {
             println!("\n{passed} passed, {failed} failed");
             Ok(failed == 0)
         }
+        Command::Import { file, out, into } => import(&style, &file, out, into),
     }
+}
+
+fn import(style: &Style, file: &Path, out: Option<PathBuf>, into: Option<PathBuf>) -> Result<bool> {
+    use apix_import::postman::{self, Kind};
+
+    let json =
+        std::fs::read_to_string(file).with_context(|| format!("reading {}", file.display()))?;
+    match postman::detect(&json)? {
+        Kind::Collection => {
+            let plan = postman::convert_collection(&json)?;
+            let root = out
+                .unwrap_or_else(|| PathBuf::from(apix_import::slug(&plan.meta.name, "collection")));
+            plan.write(&root)?;
+            print!("{}", plan.report);
+            println!("{}Created {}{}", style.green, root.display(), style.reset);
+            println!("Try: apix run {}", root.display());
+        }
+        Kind::Environment | Kind::Globals => {
+            let start = into.unwrap_or_else(|| PathBuf::from("."));
+            let root = Collection::find_root(&start).with_context(|| {
+                format!(
+                    "no apix.toml found in {} or its parents; pass --into <collection>",
+                    start.display()
+                )
+            })?;
+            let env = postman::convert_environment(&json)?;
+            let written = env.write(&root)?;
+            println!(
+                "Imported environment \"{}\" as `{}`: {} variables, {} secrets ({} disabled skipped).",
+                env.title,
+                env.name,
+                env.vars.len(),
+                env.secrets.len(),
+                env.skipped_disabled
+            );
+            for path in written {
+                println!("{}Created {}{}", style.green, path.display(), style.reset);
+            }
+            if !env.secrets.is_empty() {
+                println!("Secrets are in the .local.toml file, which is gitignored.");
+            }
+        }
+    }
+    Ok(true)
 }
 
 async fn send_file(client: &HttpClient, path: &Path, vars: &Variables) -> Result<Response> {
