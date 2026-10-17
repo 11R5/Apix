@@ -3,13 +3,42 @@
 # Apix
 🚀 The high-performance, minimalist API client crafted with Rust and GPUI. Built for speed, designed for humans.
 
-> **Status:** early development. The engine and CLI work; the desktop UI is a shell.
+> **Status:** early development, not released yet. The desktop app and the CLI can
+> already open projects and collections, send requests and import from Postman.
 > See the [roadmap](Docs/ROADMAP.md) and [architecture](Docs/ARCHITECTURE.md).
 
 ## Why Apix
 - **Native, GPU-rendered.** No Electron, no WebView. The UI is drawn with GPUI, the engine behind the Zed editor.
 - **Local-first.** Collections are plain TOML files in a folder. Commit them, diff them, review them.
 - **One engine everywhere.** The desktop app and the `apix` CLI send requests exactly the same way, so CI matches your machine.
+
+## What works today
+- **Requests:** GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS with params, headers,
+  JSON / Text / XML bodies and Bearer, Basic or API key auth (from files and Postman).
+- **Responses:** status, timing (TTFB and total), size, highlighted and foldable JSON,
+  raw and headers views. A 100 MB JSON response opens in about a third of a second.
+- **Collections and projects:** a sidebar built from the files on disk, with new,
+  rename, duplicate and delete (to the trash). Projects group collections, share
+  environments, and can show the sidebar as Project → Environment → Collections.
+- **Variables:** project, collection and environment layers, secrets kept out of git,
+  an in-app editor and dynamic values such as `{{$guid}}`.
+- **Postman:** collection v2.0/v2.1 and environment import, with a report.
+- **Copy as / paste:** copy a request as `curl`, `curl.exe` or PowerShell; paste a
+  `curl` command to fill the request.
+
+### Keyboard
+
+| Keys | Action |
+|---|---|
+| Ctrl+Enter | Send |
+| Esc | Cancel the request |
+| Ctrl+S | Save |
+| Ctrl+N | New GET request (the sidebar "+" offers every method) |
+| Ctrl+O | Open a folder, project or collection |
+| Ctrl+E | Variables and environments |
+| Alt+1…7 | Switch the method |
+
+On macOS, use ⌘ instead of Ctrl.
 
 ## Build
 

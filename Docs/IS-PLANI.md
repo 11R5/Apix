@@ -7,6 +7,17 @@
 **İşaretler:** ✅ yapıldı · 🔜 sıradaki · ⬜ planlandı · 💭 sonra karar verilecek
 **Boyut:** S = birkaç saat · M = 1–3 gün · L = 1 hafta ve üstü
 
+### Durum özeti (17 Ekim 2026)
+| Aşama | Durum |
+|---|---|
+| M0 Temel | ✅ |
+| M1 Arayüzden istek | ✅ 100 MB JSON ~0.33 s'de açılıyor |
+| M2 Koleksiyonlar, Postman içe aktarma | ✅ 8/10 · sekmeler ve sürükle-bırak M3'e taşındı |
+| M3 Simge, projeler, ortamlar, kopyalama, auth | 🔜 5/9 · bitti: simge, ortam seçici ve editörü, dinamik değişkenler, projeler, kabuk komutu olarak kopyalama, metotla yeni istek · sıradaki: değişken çipleri |
+| M4–M9 | ⬜ |
+
+Release ikili dosyası 27.7 MB (üst sınır ~40 MB). Testler: core 29, codegen 11, import 10, http 4 (hepsi geçiyor, clippy uyarısız).
+
 ### Kullanıcı notları (17 Ekim 2026) ve plana nasıl işlendikleri
 | # | Not | Nereye işlendi |
 |---|---|---|
@@ -128,26 +139,26 @@ Apix, Postman'in yaptığı her şeyi yapan bir API istemcisi olacak. Postman'de
 #### A1. HTTP metotları
 | Özellik | Açıklama | Durum |
 |---|---|---|
-| **GET** | Veri okuma. Gövde (body) gönderilmez. Query parametreleri URL ile iki yönlü senkron çalışır. | ✅ motor · 🔜 UI |
-| **POST** | Yeni kayıt oluşturma. Bütün gövde tiplerini destekler (§A4). | ✅ motor · 🔜 UI |
-| **PUT** | Kaydın tamamını değiştirme. Gövde tipleri POST ile aynıdır. | ✅ motor · 🔜 UI |
-| **PATCH** | Kaydın bir kısmını güncelleme. JSON Patch ve Merge Patch şablonları gelir. | ✅ motor · 🔜 UI |
-| **DELETE** | Kayıt silme. İsteğe bağlı gövde gönderilebilir. İstenirse "prod ortamında DELETE göndermeden önce onay iste" koruması açılabilir. | ✅ motor · 🔜 UI |
-| **HEAD** | Sadece başlıkları getirir. Yanıt panelinde gövde sekmesi gizlenir. | ✅ motor |
+| **GET** | Veri okuma. Gövde (body) gönderilmez. Query parametreleri URL ile iki yönlü senkron çalışır. | ✅ · ⬜ query senkronu |
+| **POST** | Yeni kayıt oluşturma. Bütün gövde tiplerini destekler (§A4). | ✅ |
+| **PUT** | Kaydın tamamını değiştirme. Gövde tipleri POST ile aynıdır. | ✅ |
+| **PATCH** | Kaydın bir kısmını güncelleme. JSON Patch ve Merge Patch şablonları gelir. | ✅ · ⬜ şablonlar |
+| **DELETE** | Kayıt silme. İsteğe bağlı gövde gönderilebilir. İstenirse "prod ortamında DELETE göndermeden önce onay iste" koruması açılabilir. | ✅ · ⬜ prod onayı |
+| **HEAD** | Sadece başlıkları getirir. Yanıt panelinde gövde sekmesi gizlenir. | ✅ · ⬜ gövde sekmesini gizleme |
 | **OPTIONS** | CORS preflight yardımcısı. İzin verilen metotları ve başlıkları tablo olarak gösterir. | ✅ motor · ⬜ yardımcı |
 | **Özel metot** | `PROPFIND`, `PURGE` gibi elle yazılan metotlar. | ⬜ S |
 | **Metot seçici** | Açılır liste. Ayrıca URL çubuğunda `Alt+1…7` ile hızlı seçim. | ✅ |
 
 #### A2. URL çubuğu
-- ⬜ Düzenlenebilir, tek satırlık bir kod editörü olacak. `{{değişken}}` çip olarak çizilir. Tanımsız değişkenin altı kırmızı çizilir. (🔜 M)
-- ⬜ Fareyle değişkenin üstüne gelince çözülmüş değer ve hangi kapsamdan geldiği görünür.
+- ✅ Düzenlenebilir URL alanı. 🔜 `{{değişken}}` çip olarak çizilir, tanımsız değişken kırmızı görünür. (M)
+- 🔜 Fareyle değişkenin üstüne gelince çözülmüş değer ve hangi kapsamdan geldiği görünür.
 - ⬜ **Path değişkenleri:** `/users/:id` yazılınca Params sekmesinde `id` alanı kendiliğinden açılır.
 - ⬜ **Query senkronu:** `?a=1&b=2` yazılınca tabloya, tabloya yazılınca URL'ye eklenir.
-- ⬜ **cURL yapıştırma:** URL çubuğuna bir cURL komutu yapıştırılırsa istek otomatik oluşturulur.
-- 🔜 **Ctrl/⌘+Enter** isteği gönderir. **Esc** devam eden isteği iptal eder.
+- ✅ **cURL yapıştırma:** URL çubuğuna bir cURL komutu yapıştırılırsa istek otomatik oluşturulur.
+- ✅ **Ctrl/⌘+Enter** isteği gönderir. **Esc** devam eden isteği iptal eder. **Alt+1…7** metodu seçer.
 
 #### A3. Params ve Headers
-- 🔜 Anahtar–değer tablosu. Her satırda aç/kapa kutucuğu, açıklama alanı ve sürükleyerek sıralama olur. Kayıt modelinde bu yapı hazır (✅).
+- ✅ Anahtar–değer tablosu, her satırda aç/kapa kutucuğu. ⬜ Açıklama alanı ve sürükleyerek sıralama.
 - ⬜ **Toplu düzenleme:** tablo ile `key: value` metin modu arasında geçiş.
 - ⬜ **Header otomatik tamamlama:** standart header adları ve yaygın değerleri önerilir (`Content-Type`, `Accept` ...).
 - ⬜ **Otomatik header'lar:** `Content-Type`, `User-Agent`, `Accept-Encoding` gibi otomatik eklenen başlıklar soluk renkte gösterilir. Kullanıcı bunları ezebilir. Motorda kullanıcının header'ını öne alma kuralı hazır (✅).
@@ -157,7 +168,7 @@ Apix, Postman'in yaptığı her şeyi yapan bir API istemcisi olacak. Postman'de
 | Tip | Ayrıntı | Durum |
 |---|---|---|
 | none | | ✅ |
-| raw / JSON | Renklendirme, biçimlendirme (Ctrl+Shift+F), anlık doğrulama, yorum satırı desteği (gönderirken silinir) | ✅ motor · 🔜 editör |
+| raw / JSON | Renklendirme, biçimlendirme (Ctrl+Shift+F), anlık doğrulama, yorum satırı desteği (gönderirken silinir) | ✅ renkli editör · ⬜ biçimlendirme, doğrulama, yorumlar |
 | raw / Text, XML, HTML, JavaScript | Her biri kendi renklendirmesiyle | ✅ Text, XML · ⬜ diğerleri |
 | x-www-form-urlencoded | Anahtar–değer tablosu | ✅ motor · ⬜ UI |
 | multipart/form-data | Metin ve dosya alanları, alan başına içerik tipi | ⬜ M |
@@ -185,15 +196,15 @@ Apix, Postman'in yaptığı her şeyi yapan bir API istemcisi olacak. Postman'de
 ### B. Yanıt paneli
 | Özellik | Açıklama | Durum |
 |---|---|---|
-| Durum satırı | Durum kodu (renkli), süre, boyut | ✅ CLI · 🔜 UI |
-| **Pretty** | JSON, XML ve HTML biçimlendirilmiş ve renkli gösterilir. JSON'da düğümler katlanabilir. | ✅ JSON metni · 🔜 görüntüleyici |
-| **Raw** | Ham metin | 🔜 |
+| Durum satırı | Durum kodu (renkli), süre, TTFB, boyut, HTTP sürümü | ✅ |
+| **Pretty** | JSON, XML ve HTML biçimlendirilmiş ve renkli gösterilir. JSON'da düğümler katlanabilir. | ✅ JSON · ⬜ XML, HTML |
+| **Raw** | Ham metin | ✅ |
 | **Preview** | HTML'i basit hâliyle, resim, PDF ve ses dosyalarını kendi görünümüyle gösterir. | ⬜ M |
 | **Hex** | İkili yanıtlar için onaltılık görünüm | ⬜ S |
-| **Headers** | Tablo, kopyala ve ara | 🔜 |
+| **Headers** | Tablo, kopyala ve ara | ✅ tablo · ⬜ kopyala, ara |
 | **Cookies** | Yanıtla gelen çerezler | ⬜ |
 | **Timing** | DNS, TCP, TLS, TTFB ve indirme sürelerini şelale grafiği olarak gösterir. Mockup'taki "Latency Visualizer" budur. | ✅ TTFB ve toplam · ⬜ ayrıntı L |
-| **Büyük yanıt** | 100 MB+ yanıtlarda sanal liste kullanılır, sadece ekrandaki satırlar çizilir. | 🔜 L |
+| **Büyük yanıt** | 100 MB+ yanıtlarda sanal liste kullanılır, sadece ekrandaki satırlar çizilir. | ✅ (100 MB JSON ~0.33 s) |
 | **Gövdede arama** | Ctrl+F, regex desteğiyle | ⬜ |
 | **Filtre** | JSONPath ve jq ile yanıtı süzme | ⬜ M |
 | **Örnek olarak kaydet** | Yanıtı isteğin yanına "example" olarak kaydeder. Mock sunucu ve dokümantasyon bunu kullanır. | ⬜ |
@@ -229,7 +240,7 @@ Her istek için "Network" sekmesi: istek gerçekte nasıl ve nereden geçti?
 | **Dokümantasyon** | Her koleksiyon, klasör ve istek için Markdown açıklama | ⬜ S |
 | **Örnekler (examples)** | Kaydedilmiş istek ve yanıt çiftleri | ⬜ M |
 | **Filtre ve arama** | Kenar çubuğunda anlık filtre, komut paletinde bulanık (fuzzy) arama | ⬜ S |
-| **Çoklu koleksiyon** | Bir çalışma alanında birden fazla koleksiyon açılabilir. | ⬜ M |
+| **Çoklu koleksiyon** | Bir çalışma alanında birden fazla koleksiyon açılabilir. | ✅ projelerle (§C1) |
 | **Dosya izleme** | Dosya diskte değişirse (git pull veya başka bir editör) uygulama anında günceller. | ✅ |
 | **Git durumu** | Kenar çubuğunda değişen dosyalar işaretlenir. Durum çubuğunda branch adı görünür. | ⬜ M |
 | **Sekmeler** | Birden çok istek sekmede açık durur. Kaydedilmemiş değişiklik işareti olur. Ctrl+Tab ile sekmeler arası geçilir. | ⬜ M |
@@ -251,7 +262,7 @@ A Projesi/                      apix-project.toml  (ad, renk, koleksiyon sıras�
 | Özellik | Ayrıntı | Durum |
 |---|---|---|
 | **Aç / Yeni koleksiyon / Yeni proje** | Başlangıç ekranı ve komut paletinde üç seçenek. "Yeni proje" sihirbazı ad, klasör ve ilk ortamları (Test, Prod) sorar. | ✅ Kenar çubuğundaki proje/koleksiyon menüsünden (yeni proje Test ve Prod ortamlarıyla oluşur). Komut paleti M3'te. |
-| **Son açılanlar** | Projeler ve koleksiyonlar, son açılma sırasıyla. Koleksiyonlar için ✅ (boş ekranda "RECENT" listesi, kullanıcı ayarlarında `state.toml`); projeler C1 ile gelecek. | ✅ |
+| **Son açılanlar** | Projeler ve koleksiyonlar, son açılma sırasıyla. Boş ekranda "RECENT" listesi ve proje menüsünde "Recent"; kullanıcı ayarlarında `state.toml`. | ✅ |
 | **Proje seçici** | Kenar çubuğunun üstündeki "Shop ▾" menüsü: son açılanlar, Aç, Yeni proje. Windows'ta başlık çubuğu sürükleme alanı olduğu için oraya konmadı. | ✅ |
 | **Proje ortamları** | Projenin `environments/` klasörü, içindeki tüm koleksiyonlara uygulanır. Koleksiyonun kendi ortamı varsa onun üstüne eklenir. Katman sırası: proje → koleksiyon → ortam → yerel. | ✅ (CLI `--env` de aynı katmanları kullanıyor) |
 | **Özelleştirilebilir gruplama** | Kenar çubuğu iki şekilde gösterilebilir: "Proje → Ortam → Koleksiyonlar" ya da "Proje → Koleksiyonlar". Bir koleksiyon belirli ortamlara bağlanabilir, örneğin "Raporlar sadece Test'te". Gruplara renk ve sıra verilebilir. | ✅ gruplama ve "Show in environment" sabitleme · ⬜ renk ve sürükleyerek sıra |
@@ -279,7 +290,7 @@ Bir koleksiyon (veya proje) parola ile şifrelenir. Parolayı bilmeyen hiçbir a
 |---|---|---|
 | **Postman Collection v2.1 ve v2.0 içe aktarma** | Klasörler, istekler, header'lar, raw/urlencoded/graphql gövdeleri, bearer/basic/API key auth (miras dahil), koleksiyon değişkenleri, açıklamalar, path değişkenleri. Multipart dosyaları, OAuth 2.0 ve örnek yanıtlar raporda listelenir. | ✅ |
 | **Postman Environment içe aktarma** | `*.postman_environment.json`. `secret` tipindeki değerler `*.local.toml` dosyasına yazılır, git'e girmez. | ✅ |
-| **Postman Globals içe aktarma** | Tanınıyor, ortam olarak aktarılıyor. Proje genelinde değişken olarak kullanılması C1 ile gelecek. | ✅ tanıma · ⬜ S |
+| **Postman Globals içe aktarma** | Tanınıyor, ortam olarak aktarılıyor. Projenin `[vars]` bölümüne aktarma seçeneği eklenecek. | ✅ tanıma · ⬜ S |
 | **Postman scriptleri** | İsteklerin yanına `.js` olarak kaydediliyor ✅. `pm.*` uyumlu API ile çalıştırılması M5'te (§F). | ⬜ L |
 | **İçe aktarma raporu** | Neyin aktarıldığı, neyin desteklenmediği ve hangi istekte olduğu listelenir. Hiçbir şey sessizce kaybolmaz. | ✅ |
 | **Sürükle-bırak ile içe aktarma** | `.json` dosyasını pencereye bırakmak yeterli. | ✅ kod · ⬜ elle test |
@@ -291,7 +302,7 @@ Bir koleksiyon (veya proje) parola ile şifrelenir. Parolayı bilmeyen hiçbir a
 | Insomnia v4, Bruno, Hoppscotch | | ⬜ M her biri |
 | OpenAPI 3 / Swagger 2 | İçe aktarma ve koleksiyon üretme | ⬜ L |
 | HAR | Tarayıcı kayıtlarını içe aktarma | ⬜ M |
-| cURL | İçe ve dışa aktarma | ⬜ S |
+| cURL | İçe ve dışa aktarma | ✅ (yapıştırma ve "Copy as", §I) |
 
 ### E. Ortamlar ve değişkenler
 | Özellik | Durum |
@@ -380,8 +391,8 @@ Bir koleksiyon (veya proje) parola ile şifrelenir. Parolayı bilmeyen hiçbir a
 | Özellik | Durum |
 |---|---|
 | Şeffaf ve blur'lu pencere, kendi başlık çubuğu | ✅ |
-| **Uygulama simgesi** (not 4): kaynak `Logo/LogoFirst.jpg` (2048×2048). Windows için `.ico` (16–256 px, exe içine gömülü), macOS için `.icns` (16–1024 px, @2x dahil), Linux için hicolor PNG'leri ve `.desktop` dosyası. Ayrıca başlık çubuğundaki işaret, README ve GitHub sosyal önizlemesi. Ayrıntılar M3'te. | ⬜ M |
-| Komut paleti (Ctrl/⌘+K) | 🔜 M |
+| **Uygulama simgesi** (not 4): kaynak `Logo/LogoFirst.jpg` (2048×2048). Windows için `.ico` (16–256 px, exe içine gömülü), macOS için `.icns` (16–1024 px, @2x dahil), Linux için hicolor PNG'leri ve `.desktop` dosyası. Ayrıca başlık çubuğundaki işaret, README ve GitHub sosyal önizlemesi. Ayrıntılar M3'te. | ✅ · ⬜ GitHub sosyal önizlemesi |
+| Komut paleti (Ctrl/⌘+K) | ⬜ M (M3) |
 | Kısayol tablosu ve kısayolları özelleştirme | ⬜ M |
 | Ayarlar ekranı (tema, cam ayarı, font, proxy, güncelleme) | ⬜ M |
 | Türkçe ve İngilizce arayüz (`rust-i18n`, gpui-kit zaten destekliyor) | ⬜ M |
@@ -440,8 +451,8 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 
 **Bitti sayılması için:** jsonplaceholder'a arayüzden GET ve POST gönderilip yanıt renkli olarak görülebilmeli.
 
-### M2 — Koleksiyonlar ve Postman içe aktarma ⭐ 🔜 (10 maddeden 8'i bitti)
-1. [x] Klasör açma (Ctrl+O). Apix olmayan bir klasör seçilirse orada yeni koleksiyon oluşturmayı önerir. Klasör pencereye sürüklenince de açılır. "En son açılanlar" listesi henüz yok. (S)
+### M2 — Koleksiyonlar ve Postman içe aktarma ⭐ (10 maddeden 8'i bitti; kalan ikisi M3'ün 9. maddesine taşındı)
+1. [x] Klasör açma (Ctrl+O). Apix olmayan bir klasör seçilirse orada yeni koleksiyon oluşturmayı önerir. Klasör pencereye sürüklenince de açılır. "En son açılanlar" listesi M3'te eklendi. (S)
 2. [x] Kenar çubuğu ağacı: gerçek dosyalardan, iç içe ve açılıp kapanan klasörler, metot rozetleri (M)
 3. [x] İstek seçme, düzenleme ve kaydetme (Ctrl+S). Kaydedilmemiş değişiklik işareti var. Başka isteğe geçerken "Kaydet / Kaydetme / Vazgeç" sorusu çıkar. (M)
 4. [x] Yeni istek (Ctrl+N) ve yeni klasör, yeniden adlandırma, çoğaltma, çöp kutusuna silme. Sağ tık menüsünden yapılır. Scriptler istekle birlikte taşınır. (M)
@@ -454,7 +465,7 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 
 **Bitti sayılması için:** gerçek bir Postman koleksiyonu içe aktarılıp arayüzden gezilebilmeli ve istekleri çalıştırılabilmeli.
 
-### M3 — Simge, projeler, ortamlar, kopyalama, auth
+### M3 — Simge, projeler, ortamlar, kopyalama, auth 🔜 (9 maddeden 5'i bitti)
 1. [x] **Uygulama simgesi** (not 4) (M). `tools/icongen` aracı logodan PNG, ICO, ICNS ve Linux hicolor dosyalarını üretir. Simge exe'ye gömülü, başlık çubuğunda da görünüyor.
    - `Logo/LogoFirst.jpg` kırpılır: alttaki yansıma atılır, zemin squircle dışında saydam yapılır.
    - 16–32 px için sadeleştirilmiş bir sürüm hazırlanır (sadece kuş ve X). Küçük boyutta ince çizgiler kaybolur.
@@ -464,7 +475,7 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 3. [x] **Projeler (§C1):** proje modeli (`apix-project.toml`), Yeni proje / Yeni koleksiyon / Aç, son açılanlar, proje menüsü, proje genelinde ortamlar (proje → koleksiyon → proje ortamı → koleksiyon ortamı), "Proje → Ortam → Koleksiyonlar" gruplaması, koleksiyonu ortamlara sabitleme, prod çizgisi. Kalanlar: renkler, koleksiyonu sürükleyerek projeye taşıma, prod onay penceresi. (L)
 4. [x] **Kabuk komutu olarak kopyala** (§I): bash `curl`, cmd `curl.exe`, PowerShell `Invoke-RestMethod`; URL çubuğundaki kopyala menüsü, sağ tık ve `apix shell` CLI komutu. Yapıştırılan `curl` komutu isteği doldurur. Kalanlar: fish, HTTPie, wget. (M)
 5. [x] **Metot seçerek yeni istek** (§C): kenar çubuğundaki "+" menüsü, klasör ve koleksiyon menülerinde "New request ▸". POST, PUT ve PATCH JSON gövdeyle açılır. URL çubuğunda Alt+1…7 metodu değiştirir. (S)
-6. [ ] Değişken çipleri ve fareyle üstüne gelince değer gösterme (M)
+6. [ ] 🔜 Değişken çipleri ve fareyle üstüne gelince değer gösterme (M)
 7. [ ] Auth sekmesi: temel tipler ve miras alma, OAuth 2.0 akışları (L)
 8. [ ] Komut paleti (Ctrl/⌘+K) (M)
 9. [ ] M2'den kalanlar: sekmeler, sürükle-bırak ile taşıma ve sıralama (M)

@@ -13,7 +13,7 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [x] `apix` CLI: `apix send <file>`, `apix run <dir>` with `--env` / `--var`
 - [x] `apix-desktop`: blurred, transparent window with its own title bar and window controls
 
-## M1 — Send a request from the UI
+## M1 — Send a request from the UI ✅
 - [x] Design tokens (Obsidian and Cyber themes; `APIX_THEME=cyber`)
 - [x] Embedded Inter 4.1 and JetBrains Mono 2.304 fonts (OFL 1.1)
 - [x] tokio runtime bridged into GPUI, with cancellable requests (Esc)
@@ -33,7 +33,7 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [x] **Postman Collection v2.1/v2.0 and environment import**, with an import report (sidebar button, drag and drop, CLI)
 - [x] `apix import <file> [--out dir] [--into collection]`
 
-## M3 — Icon, projects, environments, copy-as, auth
+## M3 — Icon, projects, environments, copy-as, auth (in progress)
 - [x] App icon from `Logo/LogoFirst.jpg` (`cargo run -p icongen --release`): transparent squircle, tighter crop at 32 px and below; `.ico` embedded in the exe, `.icns`, Linux hicolor PNGs + `.desktop`
 - [x] Environment switcher in the sidebar, remembered per collection, with `*.local.toml` secrets; red line for prod
 - [x] Variables dialog (Ctrl+E): edit shared variables and environments, add, rename and delete environments, secrets kept in `*.local.toml` (added to `.gitignore` automatically)

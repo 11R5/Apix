@@ -26,13 +26,24 @@ no WebView and no Electron.
 
 ```
 crates/
-├── apix-core     request model, {{variables}}, on-disk format, tree and file operations
+├── apix-core     request model, {{variables}} and {{$dynamic}} values, on-disk format,
+│                 projects, environments and secrets, tree and file operations
 ├── apix-http     HTTP engine: reqwest + rustls, timings, response capture
 ├── apix-import   Postman v2.0/v2.1 collections and environments → Apix collections
 ├── apix-codegen  requests ↔ shell commands: curl (bash), curl.exe (cmd), PowerShell; parses pasted curl
 ├── apix-cli      `apix` binary: send / run / import / shell from terminal & CI
 └── apix-desktop  GPUI desktop app (Windows, macOS and Linux from one crate)
+tools/
+└── icongen       builds every app icon (ico, icns, hicolor PNGs) from Logo/LogoFirst.jpg
 ```
+
+Inside `apix-desktop/src`: `workspace.rs` (request editor, response panel,
+actions and key bindings), `workspace/collections.rs` (sidebar, projects,
+file operations, import, file watching), `workspace/env_editor.rs` (the
+variables dialog), `workspace/shell_copy.rs` (copy as / paste curl),
+`large_view.rs` (row-based viewer for huge bodies), `net.rs` (tokio bridge),
+`state.rs` (recent items and per-folder environment in the user's config
+folder), `theme.rs` and `fonts.rs`.
 
 Planned crates:
 
