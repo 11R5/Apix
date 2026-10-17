@@ -143,6 +143,7 @@ impl Request {
                 Body::Form(rows) => Body::Form(pairs(rows, &mut s)),
             },
             auth: match &self.auth {
+                Auth::Inherit => Auth::Inherit,
                 Auth::None => Auth::None,
                 Auth::Bearer { token } => Auth::Bearer { token: s(token) },
                 Auth::Basic { username, password } => Auth::Basic {

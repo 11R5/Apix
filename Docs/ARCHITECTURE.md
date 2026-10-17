@@ -40,7 +40,8 @@ tools/
 Inside `apix-desktop/src`: `workspace.rs` (request editor, response panel,
 actions and key bindings), `workspace/collections.rs` (sidebar, projects,
 file operations, import, file watching), `workspace/env_editor.rs` (the
-variables dialog), `workspace/shell_copy.rs` (copy as / paste curl), `workspace/var_chips.rs`
+variables dialog), `workspace/auth_editor.rs` (the Auth tab and the folder/collection/project
+Auth dialog), `workspace/shell_copy.rs` (copy as / paste curl), `workspace/var_chips.rs`
 (`{{variable}}` chips in the URL bar and their hover card),
 `large_view.rs` (row-based viewer for huge bodies), `net.rs` (tokio bridge),
 `state.rs` (recent items and per-folder environment in the user's config
@@ -94,15 +95,22 @@ and the CLI can refuse to send.
 
 ```
 my-api/
-├── apix.toml               name + collection-level [vars]
+├── apix.toml               name + collection-level [vars] and [auth]
 ├── environments/
 │   ├── dev.toml            [vars] base_url = "http://localhost:8080"
 │   └── prod.toml
 ├── users/
+│   ├── folder.toml         optional: [auth] for the requests in this folder
 │   ├── list-users.apix
 │   └── create-user.apix
 └── health.apix
 ```
+
+**Auth inheritance.** A request without `auth` inherits it from the nearest
+folder whose `folder.toml` sets one, then the collection (`apix.toml`), then the
+project (`apix-project.toml`); with none, nothing is sent. `auth = "none"` in a
+request (or folder) stops inheritance. `apix_core::project::inherited_auth`
+does the lookup for the desktop app, the CLI and "Copy as" alike.
 
 A request file:
 

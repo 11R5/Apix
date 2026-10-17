@@ -8,7 +8,7 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
-use apix_core::store::{self, CollectionMeta, VarMap};
+use apix_core::store::{self, CollectionMeta, FolderMeta, VarMap};
 use apix_core::{ApiKeyLocation, Auth, Body, KeyValue, Method, Request};
 use serde::Deserialize;
 use serde_json::Value;
@@ -326,7 +326,9 @@ pub fn convert_collection(json: &str) -> Result<Plan, ImportError> {
         files: &mut files,
     };
     ctx.scripts(&pm.event, Path::new(""), "_collection", "");
-    ctx.items(&pm.item, Path::new(""), "", pm.auth.as_ref());
+    ctx.items(&pm.item, Path::new(""), "");
+    // Auth stays where Postman set it; requests without their own inherit it.
+    let auth = ctx.auth(pm.auth.as_ref(), "Collection");
 
     let meta = CollectionMeta {
         name: if pm.info.name.is_empty() {
@@ -341,6 +343,7 @@ pub fn convert_collection(json: &str) -> Result<Plan, ImportError> {
             .map(PmDescription::text)
             .unwrap_or_default(),
         vars,
+        auth,
     };
     Ok(Plan {
         meta,
@@ -356,7 +359,7 @@ struct Converter<'a> {
 
 impl Converter<'_> {
     /// `trail` is the folder path for messages, like `Users / Admin`.
-    fn items(&mut self, items: &[PmItem], dir: &Path, trail: &str, inherited: Option<&PmAuth>) {
+    fn items(&mut self, items: &[PmItem], dir: &Path, trail: &str) {
         let mut used: HashSet<String> = HashSet::new();
         for item in items {
             let label = if trail.is_empty() {
@@ -380,11 +383,18 @@ impl Converter<'_> {
                     );
                 }
                 self.scripts(&item.event, &sub, "_folder", &label);
-                let auth = item.auth.as_ref().or(inherited);
-                self.items(children, &sub, &label, auth);
+                let auth = self.auth(item.auth.as_ref(), &label);
+                if !auth.is_inherit() {
+                    let meta = FolderMeta { auth };
+                    self.files.push(PlannedFile::Folder {
+                        path: sub.clone(),
+                        meta,
+                    });
+                }
+                self.items(children, &sub, &label);
             } else if let Some(request) = &item.request {
                 let stem = unique(slug(&item.name, "request"), &mut used);
-                let request = self.request(item, request, inherited, &label);
+                let request = self.request(item, request, &label);
                 self.files.push(PlannedFile::Request {
                     path: dir.join(request_file(&stem)),
                     request,
@@ -419,13 +429,7 @@ impl Converter<'_> {
         }
     }
 
-    fn request(
-        &mut self,
-        item: &PmItem,
-        request: &PmRequest,
-        inherited: Option<&PmAuth>,
-        label: &str,
-    ) -> Request {
+    fn request(&mut self, item: &PmItem, request: &PmRequest, label: &str) -> Request {
         let mut out = Request {
             name: item.name.clone(),
             description: item
@@ -438,7 +442,6 @@ impl Converter<'_> {
         let full = match request {
             PmRequest::Url(url) => {
                 out.url = url.clone();
-                out.auth = self.auth(inherited, label);
                 return out;
             }
             PmRequest::Full(full) => full,
@@ -479,7 +482,7 @@ impl Converter<'_> {
         if let Some(body) = &full.body {
             out.body = self.body(body, &out.headers, label);
         }
-        out.auth = self.auth(full.auth.as_ref().or(inherited), label);
+        out.auth = self.auth(full.auth.as_ref(), label);
         out
     }
 
@@ -651,11 +654,13 @@ impl Converter<'_> {
         }
     }
 
+    /// No `auth` in Postman means "inherit from parent"; `noauth` means none.
     fn auth(&mut self, auth: Option<&PmAuth>, label: &str) -> Auth {
         let Some(auth) = auth else {
-            return Auth::None;
+            return Auth::Inherit;
         };
         match auth.kind.as_str() {
+            "inherit" => Auth::Inherit,
             "noauth" => Auth::None,
             "bearer" => Auth::Bearer {
                 token: auth.param("token"),

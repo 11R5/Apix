@@ -14,7 +14,8 @@
 
 ## What works today
 - **Requests:** GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS with params, headers,
-  JSON / Text / XML bodies and Bearer, Basic or API key auth (from files and Postman).
+  JSON / Text / XML bodies and an Auth tab (Bearer, Basic, API key). Folders,
+  collections and projects can set auth once; requests inherit it.
 - **Responses:** status, timing (TTFB and total), size, highlighted and foldable JSON,
   raw and headers views. A 100 MB JSON response opens in about a third of a second.
 - **Collections and projects:** a sidebar built from the files on disk, with new,
@@ -100,6 +101,10 @@ Variables come from the project, the collection and the active environment
 (edit them in the app with Ctrl+E). Secrets live in `environments/<name>.local.toml`,
 which is gitignored. Dynamic variables such as `{{$guid}}`, `{{$timestamp}}`,
 `{{$isoTimestamp}}` and `{{$randomEmail}}` get a new value every time they are used.
+
+A request without `auth` inherits it from the nearest folder that sets one in its
+`folder.toml`, then from the collection's `apix.toml`, then from the project.
+`auth = "none"` sends no auth at all.
 
 ## License
 

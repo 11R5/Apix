@@ -4,7 +4,7 @@ use std::process::ExitCode;
 
 use anyhow::{Context, Result, bail};
 use apix_core::store::load_request;
-use apix_core::{Collection, Project, Variables};
+use apix_core::{Collection, Project, Request, Variables};
 use apix_http::{HttpClient, Response, human_size};
 use clap::{Args, Parser, Subcommand};
 
@@ -91,17 +91,50 @@ fn parse_var(raw: &str) -> Result<(String, String), String> {
         .ok_or_else(|| format!("expected KEY=VALUE, got `{raw}`"))
 }
 
-impl VarArgs {
-    /// project vars < collection vars < project environment < collection
-    /// environment < --var overrides
-    fn build(&self, collection: Option<&Collection>) -> Result<Variables> {
+/// The collection, and the project around it, that a file or folder belongs to.
+struct Scope {
+    collection: Option<Collection>,
+    project: Option<Project>,
+}
+
+impl Scope {
+    fn find(start: &Path) -> Result<Self> {
+        let collection = Collection::find_root(start)
+            .map(Collection::open)
+            .transpose()?;
         let project = collection
+            .as_ref()
             .and_then(|c| c.root.parent())
             .and_then(Project::find_root)
             .map(Project::open)
             .transpose()?;
+        Ok(Self {
+            collection,
+            project,
+        })
+    }
+
+    /// Loads a request and fills in the auth it inherits from its folders,
+    /// collection or project.
+    fn load(&self, path: &Path) -> Result<Request> {
+        let mut request = load_request(path)?;
+        apix_core::project::apply_inherited_auth(
+            &mut request,
+            path,
+            self.collection.as_ref(),
+            self.project.as_ref(),
+        )?;
+        Ok(request)
+    }
+}
+
+impl VarArgs {
+    /// project vars < collection vars < project environment < collection
+    /// environment < --var overrides
+    fn build(&self, scope: &Scope) -> Result<Variables> {
+        let (project, collection) = (&scope.project, scope.collection.as_ref());
         if let Some(name) = &self.env {
-            let available = match (&project, collection) {
+            let available = match (project, collection) {
                 (Some(p), Some(c)) => p.environment_names(std::slice::from_ref(c)),
                 (None, Some(c)) => c.environment_names(),
                 _ => bail!("--env {name} given, but no apix.toml was found above the request"),
@@ -144,11 +177,9 @@ async fn run(cli: Cli) -> Result<bool> {
             vars,
             include_headers,
         } => {
-            let collection = Collection::find_root(&file)
-                .map(Collection::open)
-                .transpose()?;
-            let vars = vars.build(collection.as_ref())?;
-            let response = send_file(&client, &file, &vars).await?;
+            let scope = Scope::find(&file)?;
+            let vars = vars.build(&scope)?;
+            let response = send_file(&client, &scope, &file, &vars).await?;
             print_status(&style, &response);
             if include_headers {
                 for (k, v) in &response.headers {
@@ -163,8 +194,9 @@ async fn run(cli: Cli) -> Result<bool> {
             let root = Collection::find_root(&dir).with_context(|| {
                 format!("no apix.toml found in {} or its parents", dir.display())
             })?;
+            let scope = Scope::find(&root)?;
             let collection = Collection::open(&root)?;
-            let vars = vars.build(Some(&collection))?;
+            let vars = vars.build(&scope)?;
             let (mut passed, mut failed) = (0, 0);
             for path in collection.request_paths() {
                 let label = path
@@ -172,7 +204,7 @@ async fn run(cli: Cli) -> Result<bool> {
                     .unwrap_or(&path)
                     .display()
                     .to_string();
-                match send_file(&client, &path, &vars).await {
+                match send_file(&client, &scope, &path, &vars).await {
                     Ok(response) => {
                         if response.is_success() {
                             passed += 1
@@ -198,14 +230,12 @@ async fn run(cli: Cli) -> Result<bool> {
             raw,
             vars,
         } => {
-            let request = load_request(&file)?;
+            let scope = Scope::find(&file)?;
+            let request = scope.load(&file)?;
             let request = if raw {
                 request
             } else {
-                let collection = Collection::find_root(&file)
-                    .map(Collection::open)
-                    .transpose()?;
-                let resolved = request.resolve(&vars.build(collection.as_ref())?);
+                let resolved = request.resolve(&vars.build(&scope)?);
                 if !resolved.missing.is_empty() {
                     let names: Vec<_> = resolved.missing.into_iter().collect();
                     eprintln!("note: left as-is, not defined: {}", names.join(", "));
@@ -262,8 +292,13 @@ fn import(style: &Style, file: &Path, out: Option<PathBuf>, into: Option<PathBuf
     Ok(true)
 }
 
-async fn send_file(client: &HttpClient, path: &Path, vars: &Variables) -> Result<Response> {
-    let request = load_request(path)?;
+async fn send_file(
+    client: &HttpClient,
+    scope: &Scope,
+    path: &Path,
+    vars: &Variables,
+) -> Result<Response> {
+    let request = scope.load(path)?;
     let resolved = request.resolve(vars);
     if !resolved.missing.is_empty() {
         let names: Vec<_> = resolved.missing.into_iter().collect();

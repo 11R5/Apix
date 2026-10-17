@@ -13,10 +13,10 @@
 | M0 Temel | ✅ |
 | M1 Arayüzden istek | ✅ 100 MB JSON ~0.33 s'de açılıyor |
 | M2 Koleksiyonlar, Postman içe aktarma | ✅ 8/10 · sekmeler ve sürükle-bırak M3'e taşındı |
-| M3 Simge, projeler, ortamlar, kopyalama, auth | 🔜 6/9 · bitti: simge, ortam seçici ve editörü, dinamik değişkenler, projeler, kabuk komutu olarak kopyalama, metotla yeni istek, değişken çipleri · sıradaki: Auth sekmesi |
+| M3 Simge, projeler, ortamlar, kopyalama, auth | 🔜 7/9 · bitti: simge, ortam seçici ve editörü, dinamik değişkenler, projeler, kabuk komutu olarak kopyalama, metotla yeni istek, değişken çipleri, Auth sekmesi ve miras · sıradaki: komut paleti |
 | M4–M9 | ⬜ |
 
-Release ikili dosyası 27.7 MB (üst sınır ~40 MB). Testler: core 30, desktop 2, codegen 11, import 10, http 4 (hepsi geçiyor, clippy uyarısız).
+Release ikili dosyası 27.7 MB (üst sınır ~40 MB). Testler: core 32, desktop 2, codegen 11, import 10, http 4 (hepsi geçiyor, clippy uyarısız).
 
 ### Kullanıcı notları (17 Ekim 2026) ve plana nasıl işlendikleri
 | # | Not | Nereye işlendi |
@@ -178,7 +178,7 @@ Apix, Postman'in yaptığı her şeyi yapan bir API istemcisi olacak. Postman'de
 #### A5. Kimlik doğrulama (Auth)
 | Tip | Durum |
 |---|---|
-| No Auth / Inherit from parent (klasörden veya koleksiyondan miras al) | ✅ none · ⬜ miras |
+| No Auth / Inherit from parent (klasörden, koleksiyondan veya projeden miras al). Auth sekmesinde "Inherit" seçiliyken neyin, nereden geldiği yazar. | ✅ |
 | Bearer Token | ✅ |
 | Basic Auth | ✅ |
 | API Key (header veya query) | ✅ |
@@ -236,7 +236,7 @@ Her istek için "Network" sekmesi: istek gerçekte nasıl ve nereden geçti?
 | **Oluştur / yeniden adlandır / çoğalt / sil** | Sağ tık menüsünden ve kısayollardan. Silinen dosyalar çöp kutusuna gider, hemen kalıcı silinmez. | ✅ |
 | **Metot seçerek yeni istek** (not 7) | "+" menüsünde GET, POST, PUT, PATCH, DELETE … seçilir; istek o metotla ve uygun gövde tipiyle açılır (POST/PUT/PATCH için JSON). | ✅ |
 | **Sürükle-bırak** | İstekleri ve klasörleri taşıma ve sıralama | ⬜ M |
-| **Miras alma** | Klasör ve koleksiyon seviyesinde auth, header, değişken ve script tanımlanabilir. Alt öğeler bunları devralır. | ⬜ M |
+| **Miras alma** | Klasör ve koleksiyon seviyesinde auth, header, değişken ve script tanımlanabilir. Alt öğeler bunları devralır. Auth için klasörde `folder.toml`, koleksiyonda `apix.toml`, projede `apix-project.toml` kullanılır (sağ tık → Auth…). | ✅ auth · ⬜ header ve script M |
 | **Dokümantasyon** | Her koleksiyon, klasör ve istek için Markdown açıklama | ⬜ S |
 | **Örnekler (examples)** | Kaydedilmiş istek ve yanıt çiftleri | ⬜ M |
 | **Filtre ve arama** | Kenar çubuğunda anlık filtre, komut paletinde bulanık (fuzzy) arama | ⬜ S |
@@ -288,7 +288,7 @@ Bir koleksiyon (veya proje) parola ile şifrelenir. Parolayı bilmeyen hiçbir a
 ### D. Postman uyumluluğu ve içe/dışa aktarma ⭐ (öncelikli)
 | Özellik | Ayrıntı | Durum |
 |---|---|---|
-| **Postman Collection v2.1 ve v2.0 içe aktarma** | Klasörler, istekler, header'lar, raw/urlencoded/graphql gövdeleri, bearer/basic/API key auth (miras dahil), koleksiyon değişkenleri, açıklamalar, path değişkenleri. Multipart dosyaları, OAuth 2.0 ve örnek yanıtlar raporda listelenir. | ✅ |
+| **Postman Collection v2.1 ve v2.0 içe aktarma** | Klasörler, istekler, header'lar, raw/urlencoded/graphql gövdeleri, bearer/basic/API key auth (klasör ve koleksiyon auth'u olduğu yerde kalır, istekler miras alır), koleksiyon değişkenleri, açıklamalar, path değişkenleri. Multipart dosyaları, OAuth 2.0 ve örnek yanıtlar raporda listelenir. | ✅ |
 | **Postman Environment içe aktarma** | `*.postman_environment.json`. `secret` tipindeki değerler `*.local.toml` dosyasına yazılır, git'e girmez. | ✅ |
 | **Postman Globals içe aktarma** | Tanınıyor, ortam olarak aktarılıyor. Projenin `[vars]` bölümüne aktarma seçeneği eklenecek. | ✅ tanıma · ⬜ S |
 | **Postman scriptleri** | İsteklerin yanına `.js` olarak kaydediliyor ✅. `pm.*` uyumlu API ile çalıştırılması M5'te (§F). | ⬜ L |
@@ -465,7 +465,7 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 
 **Bitti sayılması için:** gerçek bir Postman koleksiyonu içe aktarılıp arayüzden gezilebilmeli ve istekleri çalıştırılabilmeli.
 
-### M3 — Simge, projeler, ortamlar, kopyalama, auth 🔜 (9 maddeden 6'sı bitti)
+### M3 — Simge, projeler, ortamlar, kopyalama, auth 🔜 (9 maddeden 7'si bitti)
 1. [x] **Uygulama simgesi** (not 4) (M). `tools/icongen` aracı logodan PNG, ICO, ICNS ve Linux hicolor dosyalarını üretir. Simge exe'ye gömülü, başlık çubuğunda da görünüyor.
    - `Logo/LogoFirst.jpg` kırpılır: alttaki yansıma atılır, zemin squircle dışında saydam yapılır.
    - 16–32 px için sadeleştirilmiş bir sürüm hazırlanır (sadece kuş ve X). Küçük boyutta ince çizgiler kaybolur.
@@ -476,14 +476,14 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 4. [x] **Kabuk komutu olarak kopyala** (§I): bash `curl`, cmd `curl.exe`, PowerShell `Invoke-RestMethod`; URL çubuğundaki kopyala menüsü, sağ tık ve `apix shell` CLI komutu. Yapıştırılan `curl` komutu isteği doldurur. Kalanlar: fish, HTTPie, wget. (M)
 5. [x] **Metot seçerek yeni istek** (§C): kenar çubuğundaki "+" menüsü, klasör ve koleksiyon menülerinde "New request ▸". POST, PUT ve PATCH JSON gövdeyle açılır. URL çubuğunda Alt+1…7 metodu değiştirir. (S)
 6. [x] **Değişken çipleri** (§A2): URL çubuğunda renkli çipler, üstüne gelince değer, kapsam ve gizlilik bilgisi. Kalan: Params, Headers ve Body alanları. (M)
-7. [ ] Auth sekmesi: temel tipler ve miras alma, OAuth 2.0 akışları (L)
+7. [x] **Auth sekmesi:** Inherit, No auth, Bearer, Basic, API key. Klasör, koleksiyon ve proje auth'u (sağ tık → Auth…, proje menüsü), istekler en yakın üst öğeden miras alır; masaüstü, CLI ve "Copy as" aynı kuralı kullanır. Postman içe aktarma auth'u olduğu yerde bırakır. OAuth 2.0 M4'e taşındı. (L)
 8. [ ] Komut paleti (Ctrl/⌘+K) (M)
 9. [ ] M2'den kalanlar: sekmeler, sürükle-bırak ile taşıma ve sıralama (M)
 
 ### M4 — Günlük kullanıma hazır
 - **Şifreli koleksiyonlar (§C2)** (not 2): oluşturma, şifreleme ve şifreyi kaldırma, kilit açma ve otomatik kilit, kurtarma anahtarı, CLI desteği (L)
 - **Ağ denetçisi (§B2)** (not 9): yerel ağ bilgisi, DNS, TCP, TLS ve sertifika zinciri, zaman şelalesi, yönlendirmeler (L)
-- multipart, binary ve GraphQL gövdeleri. Digest, AWS SigV4 ve OAuth 1.0 auth tipleri.
+- multipart, binary ve GraphQL gövdeleri. OAuth 2.0 (M3'ten taşındı), Digest, AWS SigV4 ve OAuth 1.0 auth tipleri.
 - İstek ayarları (timeout, SSL, proxy, sertifikalar), çerez yöneticisi
 - Kod üretici (diller), geçmiş
 - Postman otomatik tanıma ve toplu dışa aktarma, Insomnia, OpenAPI ve HAR içe aktarma, Postman'e dışa aktarma

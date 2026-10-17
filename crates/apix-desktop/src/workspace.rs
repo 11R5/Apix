@@ -1,5 +1,6 @@
 //! The main window: collection sidebar, request editor and response viewer.
 
+mod auth_editor;
 mod collections;
 mod env_editor;
 mod shell_copy;
@@ -244,8 +245,9 @@ pub struct Workspace {
     app_state: AppState,
     /// The request as last loaded or saved; edits are compared to it.
     base: Request,
-    /// Edited values the editor has no widgets for yet (Auth tab, form bodies).
-    auth: Auth,
+    /// The Auth tab.
+    auth_editor: Entity<auth_editor::AuthEditor>,
+    /// Edited values the editor has no widgets for yet (form bodies).
     kept_body: Body,
     /// URL length before the last change, to tell a paste from typing.
     last_url_len: usize,
@@ -301,7 +303,10 @@ impl Workspace {
             state
         });
 
+        let auth_editor = cx.new(|cx| auth_editor::AuthEditor::new(palette, "request", window, cx));
         let subscriptions = vec![
+            // Typing in the Auth tab changes the unsaved marker.
+            cx.observe(&auth_editor, |_, _, cx| cx.notify()),
             cx.subscribe_in(
                 &url,
                 window,
@@ -358,7 +363,7 @@ impl Workspace {
             env_select,
             app_state: AppState::load(),
             base: Request::default(),
-            auth: Auth::None,
+            auth_editor,
             kept_body: Body::None,
             last_url_len: 0,
             last_chipped: None,
@@ -444,8 +449,11 @@ impl Workspace {
         self.set_body_kind(kind, cx);
         self.body
             .update(cx, |state, cx| state.set_value(text, window, cx));
-        self.request_tab = if request.body.is_none() { 0 } else { 2 };
-        self.auth = request.auth.clone();
+        self.request_tab = if request.body.is_none() { 0 } else { 3 };
+        let auth = request.auth.clone();
+        self.auth_editor
+            .update(cx, |editor, cx| editor.set_auth(&auth, window, cx));
+        self.refresh_inherited_auth(cx);
         self.kept_body = match &request.body {
             Body::Form(_) => request.body.clone(),
             _ => Body::None,
@@ -470,7 +478,7 @@ impl Workspace {
 
     fn build_request(&self, cx: &App) -> Request {
         let mut request = self.base.clone();
-        request.auth = self.auth.clone();
+        request.auth = self.auth_editor.read(cx).auth(cx);
         request.method = self.current_method(cx);
         request.url = self.url.read(cx).value().trim().to_string();
         request.query = self
@@ -495,7 +503,7 @@ impl Workspace {
     }
 
     fn send(&mut self, window: &mut Window, cx: &mut Context<Self>) {
-        let request = self.build_request(cx);
+        let request = self.with_inherited_auth(self.build_request(cx), self.selected.as_deref());
         if request.url.is_empty() {
             self.fail("Enter a URL to send a request.", cx);
             return;
@@ -745,9 +753,21 @@ impl Workspace {
             kind => format!("Body · {}", kind.label()).into(),
         };
 
+        let auth_label: SharedString = match self.auth_editor.read(cx).auth(cx) {
+            Auth::Inherit => "Auth".into(),
+            Auth::None => "Auth · none".into(),
+            Auth::Bearer { .. } => "Auth · Bearer".into(),
+            Auth::Basic { .. } => "Auth · Basic".into(),
+            Auth::ApiKey { .. } => "Auth · API key".into(),
+        };
+
         let content = match self.request_tab {
             0 => self.render_table(Table::Params, cx).into_any_element(),
             1 => self.render_table(Table::Headers, cx).into_any_element(),
+            2 => div()
+                .p_2()
+                .child(self.auth_editor.clone())
+                .into_any_element(),
             _ => self.render_body(cx).into_any_element(),
         };
 
@@ -764,6 +784,7 @@ impl Workspace {
                     .selected_index(self.request_tab)
                     .child(Tab::new().label(label("Params", params)))
                     .child(Tab::new().label(label("Headers", headers)))
+                    .child(Tab::new().label(auth_label))
                     .child(Tab::new().label(body_label))
                     .on_click(cx.listener(|this, ix: &usize, _, cx| {
                         this.request_tab = *ix;
