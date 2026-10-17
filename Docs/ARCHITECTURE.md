@@ -18,17 +18,19 @@ no WebView and no Electron.
 4. **Scale to huge responses.** A 100 MB JSON response has to scroll smoothly.
    Only the visible rows are laid out (virtual lists), and the body is parsed
    lazily.
-5. **Small and fast to start.** The target is a release binary under about 15 MB
-   that opens a window in under 150 ms.
+5. **Light and fast to start.** Speed and features come before size. The release
+   binary stays under about 40 MB (27.7 MB today; Electron apps are 300 MB+) and
+   opens a window in under 150 ms.
 
 ## Crates
 
 ```
 crates/
-├── apix-core     request model, {{variables}}, on-disk format   (no I/O deps beyond std/serde)
+├── apix-core     request model, {{variables}}, on-disk format, tree and file operations
 ├── apix-http     HTTP engine: reqwest + rustls, timings, response capture
-├── apix-cli      `apix` binary: send / run collections from terminal & CI
-└── apix-desktop  GPUI desktop app
+├── apix-import   Postman v2.0/v2.1 collections and environments → Apix collections
+├── apix-cli      `apix` binary: send / run / import from terminal & CI
+└── apix-desktop  GPUI desktop app (Windows, macOS and Linux from one crate)
 ```
 
 Planned crates:
@@ -37,9 +39,19 @@ Planned crates:
 |----------------|--------------------------------------------------------------------|
 | `apix-script`  | Pre-request and test scripts (`pm.*`-compatible API) on QuickJS via `rquickjs` |
 | `apix-proto`   | GraphQL, WebSocket (`tokio-tungstenite`), gRPC (`tonic` + reflection), SSE |
-| `apix-import`  | Importers for Postman v2.1, Insomnia, OpenAPI 3, HAR and cURL      |
-| `apix-codegen` | Code snippet generation (curl, fetch, Python, Go, Rust, and others) |
+| `apix-codegen` | Copy as shell command (bash `curl`, cmd `curl.exe`, PowerShell, fish, HTTPie, wget) and code snippets |
+| `apix-vault`   | Encrypted collections: XChaCha20-Poly1305 per file, Argon2id key derivation, opaque file names |
 | `apix-mock`    | A local mock server that serves saved examples (`hyper`)           |
+
+### One desktop crate for three operating systems
+
+GPUI and gpui-kit run on Windows, macOS and Linux from the same code, which is
+how Zed ships. So there are no per-OS UI folders. Code that really differs per OS
+goes behind `cfg` in `crates/apix-desktop/src/platform/{windows,macos,linux}.rs`:
+title bar and window controls, blur/vibrancy, the macOS menu bar, file
+associations for `.apix`, and keychain access. Installers and icons live in
+`packaging/{windows,macos,linux}/`. A separate UI would only be split out if one
+OS ever needs a genuinely different interface.
 
 Dependency direction: `core` ← `http`/`script`/`proto` ← `cli`/`desktop`.
 Nothing depends on `desktop`.
@@ -108,6 +120,30 @@ Open questions:
 - **Ordering in the sidebar.** Folders and files are sorted by name for now. An
   optional `order` field may be added later.
 
+### Planned: projects (M3)
+
+A project groups collections and owns environments shared by all of them:
+
+```
+shop/
+├── apix-project.toml       name, colour, collection order, sidebar grouping
+├── environments/           test.toml, prod.toml (+ *.local.toml secrets)
+├── users/                  a collection (apix.toml + .apix files)
+└── payments/               a collection; may be pinned to some environments
+```
+
+Variable layers then become: project → collection → environment → local overrides.
+
+### Planned: encrypted collections (M4)
+
+An encrypted collection keeps the same folder layout, but every file is an
+encrypted blob (XChaCha20-Poly1305, random nonce per file). File and folder names
+are random IDs, and the real names live in an encrypted index. The key is derived
+from a password with Argon2id. Its salt and parameters sit in a small plaintext
+header in `apix.toml`, which reveals only that the collection is encrypted. Git
+still sees which file changed, but not what is inside it. Security comes from the
+cipher and the password, not from the format being secret; Apix is open source.
+
 ## Threading model (desktop)
 
 - GPUI owns the main thread, which runs the event loop and rendering.
@@ -146,7 +182,7 @@ about 407 MB with the body loaded, against 69 MB idle.
 |-------------------------------------|-------------------|-----------------------------|
 | Cold start to first frame           | < 150 ms          | window handle at ~340 ms, not yet profiled |
 | Idle RAM                            | < 60 MB           | 69 MB |
-| Release binary                      | < 15 MB           | 27.7 MB |
+| Release binary                      | < 40 MB           | 27.7 MB |
 | Input to paint latency              | 1 frame (≤ 8 ms at 120 Hz) | not measured |
 | Open and scroll a 100 MB JSON body  | no dropped frames | opens in ~0.33 s; frame times not measured |
 

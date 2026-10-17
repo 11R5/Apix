@@ -4,8 +4,22 @@
 > Özet İngilizce yol haritası [ROADMAP.md](ROADMAP.md), teknik mimari [ARCHITECTURE.md](ARCHITECTURE.md) dosyasındadır.
 > Tasarım referansı: [design/mockup-v1.webp](design/mockup-v1.webp).
 
-**İşaretler:** ✅ yapıldı · 🔜 sıradaki · ⬜ planlandı
+**İşaretler:** ✅ yapıldı · 🔜 sıradaki · ⬜ planlandı · 💭 sonra karar verilecek
 **Boyut:** S = birkaç saat · M = 1–3 gün · L = 1 hafta ve üstü
+
+### Kullanıcı notları (17 Ekim 2026) ve plana nasıl işlendikleri
+| # | Not | Nereye işlendi |
+|---|---|---|
+| 1 | Postman koleksiyonlarını tanıyabilmeli | §2-D. İçe aktarma ✅ yapıldı. Otomatik tanıma ve toplu dışa aktarma desteği eklendi. |
+| 2 | Şifreli koleksiyonlar oluşturulup açılabilmeli, dışarıdan açılamamalı | §2-C2 (yeni), M4 |
+| 3 | Tailscale ile ekip modu | §7 💭. Tüm geliştirme bitince hatırlatılacak. |
+| 4 | Logo: `Logo/` klasöründeki görselden Windows, macOS ve Linux simgeleri | §2-M, M3 (ilk iş), M9 |
+| 5 | Her işletim sistemi için ayrı klasör mü, tek klasör mü | §6, karar 6: tek masaüstü crate'i, işletim sistemine özel kısımlar `platform/` altında |
+| 6 | Aç, yeni koleksiyon, yeni proje; Proje → Ortam → Koleksiyonlar gruplaması | §2-C1 (yeni), M3 |
+| 7 | Koleksiyona metot seçerek istek eklemek gibi temel özellikler | §2-C |
+| 8 | İsteği bash/sh, terminal, PowerShell ve cURL olarak kopyalamak | §2-I, M3'e öne alındı |
+| 9 | Hem yerel tarafın hem hedefin ayrıntılı ağ bilgisi ve haritası | §2-B2 (yeni), M4 ve M7 |
+| 10 | Program boyutu 15 MB'ı geçebilir | §0 ve M9 güncellendi: üst sınır yaklaşık 40 MB |
 
 ---
 
@@ -16,7 +30,7 @@ Apix, Postman'in yaptığı her şeyi yapan bir API istemcisi olacak. Postman'de
 | Kural | Ne anlama geliyor |
 |---|---|
 | **Minimalist** | Ekranda sadece o an gereken şey görünür. Gerisi Ctrl/⌘+K komut paletinde durur. |
-| **Tiny** | Kurulum dosyası 15 MB'ın altında kalır. Açılış 150 ms'nin, boşta bellek kullanımı 60 MB'ın altında kalır. |
+| **Hafif** | Hız ve özellik boyuttan önce gelir. Program dosyası için üst sınır yaklaşık 40 MB (şu an 27.7 MB; Postman ve Electron uygulamaları 300 MB'ı aşıyor). Açılış 150 ms'nin, boşta bellek kullanımı 60 MB'ın altında kalır (şu an 69 MB ölçüldü). |
 | **Hızlı** | Arayüz hiç donmaz. 100 MB'lık bir yanıt bile kare kaybetmeden kaydırılır. |
 | **Local-first** | Hesap ve bulut zorunlu değildir. Koleksiyonlar düz dosya olarak durur ve git ile versiyonlanır. |
 | **Postman'den kolay geçiş** | Postman koleksiyonları, ortamları ve scriptleri içe aktarılınca çalışır. |
@@ -186,34 +200,94 @@ Apix, Postman'in yaptığı her şeyi yapan bir API istemcisi olacak. Postman'de
 | **Dosyaya kaydet ve kopyala** | | ⬜ S |
 | **Visualizer** | Yanıtı tablo veya grafik olarak gösterme (Postman Visualizer karşılığı) | ⬜ L |
 
+### B2. Ağ denetçisi ve ağ haritası (not 9)
+Her istek için "Network" sekmesi: istek gerçekte nasıl ve nereden geçti?
+
+| Özellik | Ayrıntı | Durum |
+|---|---|---|
+| **Yerel taraf** | Kullanılan ağ arayüzü, yerel IP (IPv4/IPv6), varsayılan ağ geçidi, DNS sunucuları, kullanılan proxy, VPN/tünel olup olmadığı | ⬜ M |
+| **DNS** | Çözülen tüm A/AAAA kayıtları, bağlanılan IP, DNS süresi | ⬜ M |
+| **Bağlantı** | TCP bağlantı süresi, bağlantının yeniden kullanılıp kullanılmadığı, HTTP sürümü ve ALPN | ⬜ M |
+| **TLS** | Sürüm, şifre takımı, sertifika zinciri (veren, geçerlilik ve kalan gün, SAN listesi). Süresi yaklaşan sertifika için uyarı. | ⬜ M |
+| **Zaman şelalesi** | DNS → TCP → TLS → ilk bayt → indirme, çubuk grafik olarak (§B "Timing" ile aynı veri) | ⬜ M |
+| **Yönlendirmeler** | 301/302 zinciri, her adımın süresi ve adresi | ⬜ S |
+| **Boyut** | Sıkıştırılmış ve açılmış boyut, kullanılan sıkıştırma (gzip, br, zstd) | ⬜ S |
+| **Rota (traceroute)** | Hedefe giden atlamalar ve gecikmeleri. ICMP yönetici izni istediğinde TCP traceroute'a geçilir. | ⬜ L |
+| **Harita** | Atlamalar ve hedef, dünya haritası üzerinde çizgi olarak gösterilir. Konumlar çevrimdışı bir IP konum veritabanından gelir (ör. DB-IP Lite, CC-BY). Veritabanı isteğe bağlı indirilir. Çevrimiçi sorgu varsayılan olarak kapalıdır, gizlilik için. | ⬜ L |
+
+**Teknik not:** reqwest DNS, TCP ve TLS sürelerini ayrı ayrı vermiyor. Bunun için zamanlayan bir connector yazılacak (hyper-util ile). TLS sertifika bilgisi reqwest'in `tls_info` özelliğinden alınacak.
+
 ### C. Koleksiyonlar
 | Özellik | Açıklama | Durum |
 |---|---|---|
 | **Klasör = koleksiyon** | Bir klasör içindeki `apix.toml` ve istek dosyaları bir koleksiyon oluşturur. | ✅ |
-| **Ağaç görünümü** | Klasörler açılıp kapanır, her istekte metot rozeti görünür. | 🔜 M |
-| **Oluştur / yeniden adlandır / çoğalt / sil** | Sağ tık menüsünden ve kısayollardan. Silinen dosyalar çöp kutusuna gider, hemen kalıcı silinmez. | ⬜ M |
+| **Ağaç görünümü** | Klasörler açılıp kapanır, her istekte metot rozeti görünür. | ✅ |
+| **Oluştur / yeniden adlandır / çoğalt / sil** | Sağ tık menüsünden ve kısayollardan. Silinen dosyalar çöp kutusuna gider, hemen kalıcı silinmez. | ✅ |
+| **Metot seçerek yeni istek** (not 7) | "+" menüsünde GET, POST, PUT, PATCH, DELETE … seçilir; istek o metotla ve uygun gövde tipiyle açılır (POST/PUT/PATCH için JSON). | ⬜ S |
 | **Sürükle-bırak** | İstekleri ve klasörleri taşıma ve sıralama | ⬜ M |
 | **Miras alma** | Klasör ve koleksiyon seviyesinde auth, header, değişken ve script tanımlanabilir. Alt öğeler bunları devralır. | ⬜ M |
 | **Dokümantasyon** | Her koleksiyon, klasör ve istek için Markdown açıklama | ⬜ S |
 | **Örnekler (examples)** | Kaydedilmiş istek ve yanıt çiftleri | ⬜ M |
 | **Filtre ve arama** | Kenar çubuğunda anlık filtre, komut paletinde bulanık (fuzzy) arama | ⬜ S |
 | **Çoklu koleksiyon** | Bir çalışma alanında birden fazla koleksiyon açılabilir. | ⬜ M |
-| **Dosya izleme** | Dosya diskte değişirse (git pull veya başka bir editör) uygulama anında günceller. | ⬜ M |
+| **Dosya izleme** | Dosya diskte değişirse (git pull veya başka bir editör) uygulama anında günceller. | ✅ |
 | **Git durumu** | Kenar çubuğunda değişen dosyalar işaretlenir. Durum çubuğunda branch adı görünür. | ⬜ M |
 | **Sekmeler** | Birden çok istek sekmede açık durur. Kaydedilmemiş değişiklik işareti olur. Ctrl+Tab ile sekmeler arası geçilir. | ⬜ M |
 | **Geçmiş** | Gönderilen her istek yanıtıyla birlikte kaydedilir. Aranabilir ve tekrar gönderilebilir. | ⬜ M |
 
+### C1. Projeler: Proje → Ortam → Koleksiyonlar (not 6)
+Koleksiyonlar projeler altında toplanır, ortamlar projeye aittir.
+
+```
+A Projesi/                      apix-project.toml  (ad, renk, koleksiyon sırası)
+├── environments/
+│   ├── test.toml               ← projedeki tüm koleksiyonlarda geçerli
+│   └── prod.toml
+├── kullanicilar/               ← koleksiyon (apix.toml)
+├── odemeler/                   ← koleksiyon
+└── raporlar/                   ← koleksiyon; "sadece Test'te göster" ile işaretlenebilir
+```
+
+| Özellik | Ayrıntı | Durum |
+|---|---|---|
+| **Aç / Yeni koleksiyon / Yeni proje** | Başlangıç ekranı ve komut paletinde üç seçenek. "Yeni proje" sihirbazı ad, klasör ve ilk ortamları (Test, Prod) sorar. | ⬜ M |
+| **Son açılanlar** | Projeler ve koleksiyonlar, son açılma sırasıyla | ⬜ S |
+| **Proje seçici** | Başlık çubuğunda "A Projesi ▾"; projeler arası tek tıkla geçiş | ⬜ M |
+| **Proje ortamları** | Projenin `environments/` klasörü, içindeki tüm koleksiyonlara uygulanır. Koleksiyonun kendi ortamı varsa onun üstüne eklenir. Katman sırası: proje → koleksiyon → ortam → yerel. | ⬜ M |
+| **Özelleştirilebilir gruplama** | Kenar çubuğu iki şekilde gösterilebilir: "Proje → Ortam → Koleksiyonlar" ya da "Proje → Koleksiyonlar". Bir koleksiyon belirli ortamlara bağlanabilir, örneğin "Raporlar sadece Test'te". Gruplara renk ve sıra verilebilir. | ⬜ M |
+| **Var olan koleksiyonu projeye ekleme** | Sürükle-bırak ile ya da "Projeye taşı" menüsüyle | ⬜ S |
+| **Prod koruması** | Prod ortamı seçiliyken pencere kenarında kırmızı bir çizgi görünür. DELETE, PUT ve PATCH göndermeden önce onay istenir (açılıp kapatılabilir). | ⬜ S |
+
+### C2. Şifreli koleksiyonlar 🔐 (not 2)
+Bir koleksiyon (veya proje) parola ile şifrelenir. Parolayı bilmeyen hiçbir araç, dosyalar elinde olsa bile içeriği okuyamaz.
+
+| Özellik | Ayrıntı | Durum |
+|---|---|---|
+| **Şifreli koleksiyon oluşturma** | "Yeni koleksiyon" ekranında "Şifrele" seçeneği ve parola. Parola gücü göstergesi. | ⬜ M |
+| **Var olanı şifreleme / şifreyi kaldırma** | Sağ tık → "Şifrele…" / "Şifreyi kaldır…" (parola sorulur) | ⬜ S |
+| **Kilit açma** | Açarken parola sorulur. Anahtar sadece bellekte tutulur. İsteğe bağlı olarak işletim sistemi anahtarlığında hatırlanır. Belirli bir süre işlem yapılmazsa otomatik kilitlenir. | ⬜ M |
+| **Ne şifrelenir** | İstek dosyaları, ortamlar, scriptler ve klasör/istek adları. Dosya adları anlamsız kimliklere dönüşür, adlar şifreli bir dizinde tutulur. Diskte sadece "bu şifreli bir Apix koleksiyonudur" bilgisi açık kalır. | ⬜ L |
+| **Algoritma** | XChaCha20-Poly1305 (dosya başına rastgele nonce) ve Argon2id ile paroladan anahtar türetme (RustCrypto crate'leri) | ⬜ |
+| **Kurtarma anahtarı** | Oluştururken bir kez gösterilen kurtarma anahtarı. Parola ve kurtarma anahtarı ikisi birden kaybolursa veri açılamaz; bu, arayüzde açıkça yazar. | ⬜ S |
+| **CLI ve CI** | `apix run --password-env APIX_PASSWORD` | ⬜ S |
+| **Git** | Her dosya ayrı şifrelendiği için git hâlâ hangi isteğin değiştiğini görür, ama içeriğini göremez. | ⬜ |
+
+**Dürüst sınır:** Apix açık kaynak olduğu için güvenlik, formatın gizli olmasından değil algoritmadan ve parolanın gücünden gelir. Kilidi açık koleksiyonun ekran görüntüsü veya panoya kopyalanan bir değer elbette korunmaz.
+
 ### D. Postman uyumluluğu ve içe/dışa aktarma ⭐ (öncelikli)
 | Özellik | Ayrıntı | Durum |
 |---|---|---|
-| **Postman Collection v2.1 ve v2.0 içe aktarma** | Klasörler, istekler, header'lar, tüm body modları (raw, urlencoded, formdata, file, graphql), tüm auth tipleri, koleksiyon değişkenleri, açıklamalar ve örnek yanıtlar | 🔜 L |
-| **Postman Environment içe aktarma** | `*.postman_environment.json`. `secret` tipindeki değerler `*.local.toml` dosyasına yazılır, git'e girmez. | 🔜 S |
-| **Postman Globals içe aktarma** | | ⬜ S |
-| **Postman scriptleri** | Pre-request ve test scriptleri olduğu gibi taşınır, `pm.*` uyumlu API ile çalışır (§F). | ⬜ L |
-| **İçe aktarma raporu** | Neyin aktarıldığı, neyin desteklenmediği ve hangi satırda olduğu listelenir. Hiçbir şey sessizce kaybolmaz. | 🔜 S |
-| **Sürükle-bırak ile içe aktarma** | `.json` dosyasını pencereye bırakmak yeterli. | ⬜ S |
+| **Postman Collection v2.1 ve v2.0 içe aktarma** | Klasörler, istekler, header'lar, raw/urlencoded/graphql gövdeleri, bearer/basic/API key auth (miras dahil), koleksiyon değişkenleri, açıklamalar, path değişkenleri. Multipart dosyaları, OAuth 2.0 ve örnek yanıtlar raporda listelenir. | ✅ |
+| **Postman Environment içe aktarma** | `*.postman_environment.json`. `secret` tipindeki değerler `*.local.toml` dosyasına yazılır, git'e girmez. | ✅ |
+| **Postman Globals içe aktarma** | Tanınıyor, ortam olarak aktarılıyor. Proje genelinde değişken olarak kullanılması C1 ile gelecek. | ✅ tanıma · ⬜ S |
+| **Postman scriptleri** | İsteklerin yanına `.js` olarak kaydediliyor ✅. `pm.*` uyumlu API ile çalıştırılması M5'te (§F). | ⬜ L |
+| **İçe aktarma raporu** | Neyin aktarıldığı, neyin desteklenmediği ve hangi istekte olduğu listelenir. Hiçbir şey sessizce kaybolmaz. | ✅ |
+| **Sürükle-bırak ile içe aktarma** | `.json` dosyasını pencereye bırakmak yeterli. | ✅ kod · ⬜ elle test |
+| **Otomatik tanıma** (not 1) | Postman export'u içeren bir klasör açıldığında ya da sürüklendiğinde Apix bunu fark eder ve "Postman koleksiyonu bulundu, içe aktarılsın mı?" diye sorar. Dosya adına değil içeriğe bakarak tanır (v1, v2.0, v2.1, ortam, globals). | ⬜ S |
+| **Postman toplu dışa aktarma** | Postman "Export data" ile verilen, tüm koleksiyon ve ortamları içeren klasör veya zip tek seferde bir projeye (§C1) dönüştürülür. | ⬜ M |
+| **Postman v1** | Tanınıyor; kullanıcıya v2.1 olarak yeniden dışa aktarması söyleniyor. | ✅ |
 | **Postman'e dışa aktarma** | Apix koleksiyonu Postman v2.1 formatına dönüştürülür, böylece ekip arkadaşı Postman kullanmaya devam edebilir. | ⬜ M |
-| **CLI ile içe aktarma** | `apix import postman koleksiyon.json --out ./api` | 🔜 S |
+| **CLI ile içe aktarma** | `apix import <dosya> [--out klasör] [--into koleksiyon]` | ✅ |
 | Insomnia v4, Bruno, Hoppscotch | | ⬜ M her biri |
 | OpenAPI 3 / Swagger 2 | İçe aktarma ve koleksiyon üretme | ⬜ L |
 | HAR | Tarayıcı kayıtlarını içe aktarma | ⬜ M |
@@ -269,7 +343,9 @@ Apix, Postman'in yaptığı her şeyi yapan bir API istemcisi olacak. Postman'de
 ### I. Geliştirici araçları
 | Özellik | Durum |
 |---|---|
-| **Kod üretici:** cURL, fetch, axios, Python requests, Go, **Rust reqwest**, C#, Java, PHP, Swift, Kotlin, Node | ⬜ M |
+| **Kabuk komutu olarak kopyala** (not 8): sağ tık ve URL çubuğundaki "Kopyala ▾" menüsü. Değişkenler çözülmüş veya `{{değişken}}` olarak bırakılabilir. Gizli değerler maskelenip maskelenmeyeceği sorulur. Seçenekler: **bash/zsh/sh** için `curl` (tek tırnak kaçışlı) · **Windows cmd** için `curl.exe` (`^` satır devamı) · **PowerShell** için `Invoke-RestMethod` ve `Invoke-WebRequest` ile `curl.exe` sürümü · **fish** · **HTTPie** · **wget** | ⬜ M (M3'e alındı) |
+| **Kabuk komutundan içe aktar:** URL çubuğuna yapıştırılan `curl` (bash veya cmd biçimi) ve PowerShell `Invoke-RestMethod` komutları isteğe dönüşür | ⬜ M |
+| **Kod üretici:** fetch, axios, Python requests, Go, **Rust reqwest**, C#, Java, PHP, Swift, Kotlin, Node | ⬜ M |
 | Çerez yöneticisi: alan adına göre listeleme, düzenleme, silme | ⬜ M |
 | **Yakalama proxy'si:** tarayıcı veya telefon trafiğini kaydedip koleksiyona dönüştürme | ⬜ L |
 | Sertifika yöneticisi | ⬜ S |
@@ -304,6 +380,7 @@ Apix, Postman'in yaptığı her şeyi yapan bir API istemcisi olacak. Postman'de
 | Özellik | Durum |
 |---|---|
 | Şeffaf ve blur'lu pencere, kendi başlık çubuğu | ✅ |
+| **Uygulama simgesi** (not 4): kaynak `Logo/LogoFirst.jpg` (2048×2048). Windows için `.ico` (16–256 px, exe içine gömülü), macOS için `.icns` (16–1024 px, @2x dahil), Linux için hicolor PNG'leri ve `.desktop` dosyası. Ayrıca başlık çubuğundaki işaret, README ve GitHub sosyal önizlemesi. Ayrıntılar M3'te. | ⬜ M |
 | Komut paleti (Ctrl/⌘+K) | 🔜 M |
 | Kısayol tablosu ve kısayolları özelleştirme | ⬜ M |
 | Ayarlar ekranı (tema, cam ayarı, font, proxy, güncelleme) | ⬜ M |
@@ -326,14 +403,16 @@ Apix, Postman'in yaptığı her şeyi yapan bir API istemcisi olacak. Postman'de
 | Collection Runner / Newman | Runner arayüzü + `apix run` | M5 (CLI ✅) |
 | Console | Ağ ve script konsolu | M5 |
 | GraphQL / WebSocket / gRPC / MQTT / SOAP | `apix-proto` | M6 |
-| Code snippets | `apix-codegen` | M4 |
+| Code snippets | Kabuk komutu olarak kopyala (bash, cmd, PowerShell) M3 · `apix-codegen` (diller) M4 | M3–M4 |
 | Cookies / Certificates / Proxy | Yöneticiler + yakalama proxy'si | M4–M7 |
 | Mock servers | `apix mock` (yerel) | M7 |
 | Documentation | `apix docs` | M7 |
 | Monitors | Yerel zamanlayıcı veya CI | M7 |
 | Flows | Düğüm editörü | M8 |
 | Visualizer | Tablo ve grafik görünümü | M7 |
-| Workspaces / Team | Git tabanlı işbirliği | M7 |
+| Workspaces / Team | Projeler (§C1) M3 · git tabanlı işbirliği M7 · Tailscale ekip modu 💭 | M3–M7 |
+| — (Postman'da yok) | Şifreli koleksiyonlar (§C2) | M4 |
+| Console / zamanlama | Ağ denetçisi ve harita (§B2) | M4–M7 |
 | Postbot (AI) | İsteğe bağlı AI yardımcısı + MCP | M8 |
 
 ---
@@ -375,17 +454,28 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 
 **Bitti sayılması için:** gerçek bir Postman koleksiyonu içe aktarılıp arayüzden gezilebilmeli ve istekleri çalıştırılabilmeli.
 
-### M3 — Ortamlar, değişkenler, auth
-- Ortam seçici ve ortam editörü, gizli değerler ve OS anahtarlığı, dinamik değişkenler
-- Değişken çipleri ve fareyle üstüne gelince değer gösterme
-- Auth sekmesi: tüm temel tipler ve miras alma, OAuth 2.0 akışları
-- Komut paleti (Ctrl/⌘+K)
+### M3 — Simge, projeler, ortamlar, kopyalama, auth
+1. [ ] **Uygulama simgesi** (not 4) (M)
+   - `Logo/LogoFirst.jpg` kırpılır: alttaki yansıma atılır, zemin squircle dışında saydam yapılır.
+   - 16–32 px için sadeleştirilmiş bir sürüm hazırlanır (sadece kuş ve X). Küçük boyutta ince çizgiler kaybolur.
+   - Windows için `.ico` exe'ye gömülür, macOS için `.icns`, Linux için hicolor PNG'leri ve `.desktop` dosyası.
+   - Mümkünse saydam zeminli PNG veya vektör (SVG) bir ana dosya edinilir. JPG zemini sabit olduğu için en temiz sonuç bundan alınır.
+2. [ ] **Ortam seçici ve ortam editörü:** üst çubukta "Test ▾". Gizli değerler, OS anahtarlığı, dinamik değişkenler (`{{$guid}}` …). (M)
+3. [ ] **Projeler (§C1):** Aç / Yeni koleksiyon / Yeni proje, son açılanlar, proje seçici, proje ortamları, Proje → Ortam → Koleksiyonlar gruplaması, prod koruması (L)
+4. [ ] **Kabuk komutu olarak kopyala** (§I): bash/sh `curl`, cmd `curl.exe`, PowerShell `Invoke-RestMethod`, fish, HTTPie, wget. Yapıştırılan `curl` komutunu isteğe çevirme. (M)
+5. [ ] **Metot seçerek yeni istek** (§C) (S)
+6. [ ] Değişken çipleri ve fareyle üstüne gelince değer gösterme (M)
+7. [ ] Auth sekmesi: temel tipler ve miras alma, OAuth 2.0 akışları (L)
+8. [ ] Komut paleti (Ctrl/⌘+K) (M)
+9. [ ] M2'den kalanlar: sekmeler, sürükle-bırak ile taşıma ve sıralama (M)
 
 ### M4 — Günlük kullanıma hazır
+- **Şifreli koleksiyonlar (§C2)** (not 2): oluşturma, şifreleme ve şifreyi kaldırma, kilit açma ve otomatik kilit, kurtarma anahtarı, CLI desteği (L)
+- **Ağ denetçisi (§B2)** (not 9): yerel ağ bilgisi, DNS, TCP, TLS ve sertifika zinciri, zaman şelalesi, yönlendirmeler (L)
 - multipart, binary ve GraphQL gövdeleri. Digest, AWS SigV4 ve OAuth 1.0 auth tipleri.
 - İstek ayarları (timeout, SSL, proxy, sertifikalar), çerez yöneticisi
-- Kod üretici, cURL içe ve dışa aktarma, geçmiş
-- Insomnia, OpenAPI ve HAR içe aktarma, Postman'e dışa aktarma
+- Kod üretici (diller), geçmiş
+- Postman otomatik tanıma ve toplu dışa aktarma, Insomnia, OpenAPI ve HAR içe aktarma, Postman'e dışa aktarma
 
 ### M5 — Scriptler, testler, runner
 - `apix-script` (QuickJS) ve `pm.*` uyumluluğu, hazır kütüphaneler, kodsuz testler
@@ -396,6 +486,7 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 - WebSocket, SSE, GraphQL introspection, gRPC, Socket.IO, MQTT, SOAP
 
 ### M7 — İleri özellikler
+- **Rota ve ağ haritası (§B2)** (not 9): traceroute, çevrimdışı IP konum veritabanı ile dünya haritası
 - Mock sunucu, dokümantasyon üretme, monitörler, visualizer, yakalama proxy'si
 - Git entegrasyonu, açık tema, i18n, ayarlar ekranı, otomatik güncelleme
 
@@ -405,9 +496,9 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 ### M9 — Yayın
 - GitHub Actions: Windows, macOS ve Linux'ta test ve derleme
 - Kurulum paketleri: `.msi` ve winget, `.dmg` ve Homebrew, AppImage, Flatpak ve `.deb`
-- İkili boyutunu 15 MB hedefine indirmek (şu an release 27.7 MB; içinde 2.2 MB font, simgeler ve tree-sitter var)
+- İkili boyutunu izlemek: üst sınır yaklaşık 40 MB (not 10). Şu an release 27.7 MB; içinde 2.2 MB font, simgeler ve tree-sitter var. Kolay kazançlar alınır (`panic = "abort"`, kullanılmayan özellikleri kapatmak), ama hız ve özellikten ödün verilmez.
 - **İmzalı sürümler:** Windows kod imzası (Akıllı Uygulama Denetimi engellemesin diye) ve macOS notarization
-- Logo, web sitesi, tanıtım (r/rust, Hacker News)
+- Kurulum paketlerinde M3'te hazırlanan simgelerin kullanılması, web sitesi, tanıtım (r/rust, Hacker News)
 
 ---
 
@@ -428,3 +519,15 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 | 3 | Postman script uyumluluğu ne kadar olsun | Tam `pm.*` veya kendi API'miz | `pm.*` ile uyumlu ve `apix.*` takma adı. Geçişi kolaylaştırır. |
 | 4 | Arayüz dili | Sadece İngilizce veya TR + EN | TR + EN (M7). Kod ve dokümanlar İngilizce kalır. |
 | 5 | Sürüm numarası | `0.x` ile başla | M2 sonunda `0.1.0` ilk açık sürüm. |
+| 6 | İşletim sistemleri için klasör yapısı (not 5) | (a) Windows, macOS ve Linux için ayrı UI klasörleri · (b) tek masaüstü crate'i | **(b) Tek crate.** GPUI ve gpui-kit üç sistemi aynı kodla destekliyor; Zed de böyle çalışıyor. Ortak kısımlar zaten ayrı crate'lerde: `apix-core`, `apix-http`, `apix-import`. Sisteme özel parçalar `crates/apix-desktop/src/platform/{windows,macos,linux}.rs` altına girer: pencere düğmeleri ve başlık çubuğu, blur/vibrancy, macOS menü çubuğu, dosya ilişkilendirme, anahtarlık. Kurulum dosyaları `packaging/{windows,macos,linux}/` altına girer. Bir sistemin gerçekten ayrı bir arayüze ihtiyacı çıkarsa o zaman ayrılır. |
+| 7 | Şifreli koleksiyonun diskteki biçimi | (a) Tek bir şifreli dosya (kasa) · (b) Her dosya ayrı şifreli, dosya adları anlamsız | **(b).** Git hangi isteğin değiştiğini görmeye devam eder (içeriği değil), birleştirme çakışmaları küçük kalır. (a) daha basit ama her değişiklikte tüm dosya değişir. |
+| 8 | Ortam ile koleksiyon ilişkisi (not 6) | Ortam = değişken seti (Postman gibi) · Ortam = koleksiyonları gruplayan klasör | **İkisi birden:** ortamlar değişken setidir, ama bir koleksiyon belirli ortamlara bağlanabilir. Kenar çubuğu istenirse "Proje → Ortam → Koleksiyonlar" olarak gruplanır. |
+
+---
+
+## 7. 💭 Sonra karar verilecek fikirler
+Bu fikirler planın dışında tutuluyor. Ana geliştirme (M9'a kadar) bitince tekrar ele alınacak.
+
+| Fikir | Not | Ne zaman hatırlatılacak |
+|---|---|---|
+| **Tailscale ile ekip modu** (not 3) | Bulut kullanmadan, ekibin tailnet'i üzerinden projeleri ve koleksiyonları paylaşmak. Örnek: bir makinedeki proje diğerlerine canlı açılır, değişiklikler eşlenir. Seçenekler: Tailscale yerel API'si veya `tsnet`, ya da sadece git + Tailscale üzerinden paylaşılan bir klasör. Önce git tabanlı işbirliği (§L) tamamlanacak, sonra ihtiyaç değerlendirilecek. | M9 bitince |

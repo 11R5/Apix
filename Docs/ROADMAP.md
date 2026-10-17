@@ -33,17 +33,24 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [x] **Postman Collection v2.1/v2.0 and environment import**, with an import report (sidebar button, drag and drop, CLI)
 - [x] `apix import <file> [--out dir] [--into collection]`
 
-## M3 — Environments, variables, auth
-- [ ] Environment switcher and editor, secrets in `*.local.toml` and the OS keychain
-- [ ] Dynamic variables (`{{$guid}}`, `{{$timestamp}}`, …), variable chips with hover preview
+## M3 — Icon, projects, environments, copy-as, auth
+- [ ] App icon from `Logo/LogoFirst.jpg`: transparent squircle, simplified 16–32 px glyph; `.ico` (embedded in the exe), `.icns`, Linux hicolor PNGs + `.desktop`
+- [ ] Environment switcher and editor, secrets in `*.local.toml` and the OS keychain, dynamic variables (`{{$guid}}`, …)
+- [ ] Projects: Open / New collection / New project, recent items, project switcher, project-wide environments, grouping as Project → Environment → Collections, prod guard
+- [ ] Copy request as a shell command: bash/sh `curl`, cmd `curl.exe`, PowerShell `Invoke-RestMethod`, fish, HTTPie, wget; paste a `curl` command to create a request
+- [ ] New request with a chosen method
+- [ ] Variable chips with hover preview
 - [ ] Auth tab with inheritance from folder or collection; OAuth 2.0 flows
 - [ ] Command palette (Ctrl/⌘+K)
+- [ ] From M2: tabs, drag to reorder
 
 ## M4 — Daily driver
+- [ ] **Encrypted collections**: password-protected (XChaCha20-Poly1305, Argon2id), per-file encryption with opaque file names, unlock prompt and auto-lock, recovery key, `--password-env` for CI
+- [ ] **Network inspector**: local interface/IP/DNS/proxy, DNS answers, TCP/TLS details and certificate chain, timing waterfall, redirects
 - [ ] multipart, binary and GraphQL bodies; Digest, AWS SigV4 and OAuth 1.0 auth
 - [ ] Request settings (timeout, TLS, proxy, client certificates), cookie manager
-- [ ] Code snippets, cURL import/export, history
-- [ ] Insomnia, OpenAPI 3 and HAR import; export to Postman
+- [ ] Code snippets in other languages, history
+- [ ] Postman auto-detection and full data-dump import; Insomnia, OpenAPI 3 and HAR import; export to Postman
 
 ## M5 — Scripting, testing, runner
 - [ ] `apix-script` on QuickJS with a `pm.*`-compatible API
@@ -55,6 +62,7 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [ ] WebSocket, SSE, GraphQL introspection, gRPC, Socket.IO, MQTT, SOAP
 
 ## M7 — Advanced
+- [ ] Route (traceroute) and network map, with an offline IP-geolocation database
 - [ ] Local mock server, docs generation, monitors, visualizer, capture proxy
 - [ ] Git integration, light theme, Turkish and English UI, settings, auto-update
 
@@ -64,7 +72,10 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 
 ## M9 — Release & distribution
 - [ ] GitHub Actions: test and build on Windows, macOS and Linux
-- [ ] Installers: `.msi`/winget, `.dmg`/Homebrew cask, AppImage/Flatpak/`.deb`
-- [ ] Shrink the release binary to the 15 MB target (27.7 MB today)
+- [ ] Installers: `.msi`/winget, `.dmg`/Homebrew cask, AppImage/Flatpak/`.deb`, using the M3 icons
+- [ ] Keep the release binary under ~40 MB (27.7 MB today); take easy wins, never at the cost of speed or features
 - [ ] Signed Windows builds (so Smart App Control allows them) and notarized macOS builds
-- [ ] Docs site, logo, and a launch post (r/rust, Hacker News)
+- [ ] Docs site and a launch post (r/rust, Hacker News)
+
+## Later (decide after M9)
+- [ ] Team mode over Tailscale: share projects across a tailnet without a cloud; to be weighed against git-based collaboration
