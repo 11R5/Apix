@@ -120,19 +120,23 @@ Open questions:
 - **Ordering in the sidebar.** Folders and files are sorted by name for now. An
   optional `order` field may be added later.
 
-### Planned: projects (M3)
+### Projects
 
 A project groups collections and owns environments shared by all of them:
 
 ```
 shop/
-├── apix-project.toml       name, colour, collection order, sidebar grouping
+├── apix-project.toml       name, shared [vars], collection order, group_by, pins
 ├── environments/           test.toml, prod.toml (+ *.local.toml secrets)
 ├── users/                  a collection (apix.toml + .apix files)
 └── payments/               a collection; may be pinned to some environments
 ```
 
-Variable layers then become: project → collection → environment → local overrides.
+Variable layers, later wins: project vars → collection vars → the project's environment
+→ the collection's environment of the same name (each with its `.local.toml` secrets).
+The CLI (`apix run --env`) and the desktop app use the same function,
+`apix_core::project::variables`. `group_by = "environment"` lays the sidebar out as
+Project → Environment → Collections, and `[pins]` limits a collection to some environments.
 
 ### Planned: encrypted collections (M4)
 

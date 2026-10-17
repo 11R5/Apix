@@ -250,11 +250,11 @@ A Projesi/                      apix-project.toml  (ad, renk, koleksiyon sıras�
 
 | Özellik | Ayrıntı | Durum |
 |---|---|---|
-| **Aç / Yeni koleksiyon / Yeni proje** | Başlangıç ekranı ve komut paletinde üç seçenek. "Yeni proje" sihirbazı ad, klasör ve ilk ortamları (Test, Prod) sorar. | ⬜ M |
-| **Son açılanlar** | Projeler ve koleksiyonlar, son açılma sırasıyla. Koleksiyonlar için ✅ (boş ekranda "RECENT" listesi, kullanıcı ayarlarında `state.toml`); projeler C1 ile gelecek. | ✅ koleksiyon · ⬜ proje |
-| **Proje seçici** | Başlık çubuğunda "A Projesi ▾"; projeler arası tek tıkla geçiş | ⬜ M |
-| **Proje ortamları** | Projenin `environments/` klasörü, içindeki tüm koleksiyonlara uygulanır. Koleksiyonun kendi ortamı varsa onun üstüne eklenir. Katman sırası: proje → koleksiyon → ortam → yerel. | ⬜ M |
-| **Özelleştirilebilir gruplama** | Kenar çubuğu iki şekilde gösterilebilir: "Proje → Ortam → Koleksiyonlar" ya da "Proje → Koleksiyonlar". Bir koleksiyon belirli ortamlara bağlanabilir, örneğin "Raporlar sadece Test'te". Gruplara renk ve sıra verilebilir. | ⬜ M |
+| **Aç / Yeni koleksiyon / Yeni proje** | Başlangıç ekranı ve komut paletinde üç seçenek. "Yeni proje" sihirbazı ad, klasör ve ilk ortamları (Test, Prod) sorar. | ✅ Kenar çubuğundaki proje/koleksiyon menüsünden (yeni proje Test ve Prod ortamlarıyla oluşur). Komut paleti M3'te. |
+| **Son açılanlar** | Projeler ve koleksiyonlar, son açılma sırasıyla. Koleksiyonlar için ✅ (boş ekranda "RECENT" listesi, kullanıcı ayarlarında `state.toml`); projeler C1 ile gelecek. | ✅ |
+| **Proje seçici** | Kenar çubuğunun üstündeki "Shop ▾" menüsü: son açılanlar, Aç, Yeni proje. Windows'ta başlık çubuğu sürükleme alanı olduğu için oraya konmadı. | ✅ |
+| **Proje ortamları** | Projenin `environments/` klasörü, içindeki tüm koleksiyonlara uygulanır. Koleksiyonun kendi ortamı varsa onun üstüne eklenir. Katman sırası: proje → koleksiyon → ortam → yerel. | ✅ (CLI `--env` de aynı katmanları kullanıyor) |
+| **Özelleştirilebilir gruplama** | Kenar çubuğu iki şekilde gösterilebilir: "Proje → Ortam → Koleksiyonlar" ya da "Proje → Koleksiyonlar". Bir koleksiyon belirli ortamlara bağlanabilir, örneğin "Raporlar sadece Test'te". Gruplara renk ve sıra verilebilir. | ✅ gruplama ve "Show in environment" sabitleme · ⬜ renk ve sürükleyerek sıra |
 | **Var olan koleksiyonu projeye ekleme** | Sürükle-bırak ile ya da "Projeye taşı" menüsüyle | ⬜ S |
 | **Prod koruması** | Prod ortamı seçiliyken pencere kenarında kırmızı bir çizgi görünür. DELETE, PUT ve PATCH göndermeden önce onay istenir (açılıp kapatılabilir). | Kırmızı çizgi ✅ (adında "prod" geçen ortamlar) · onay ⬜ S |
 
@@ -461,7 +461,7 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
    - Windows için `.ico` exe'ye gömülür, macOS için `.icns`, Linux için hicolor PNG'leri ve `.desktop` dosyası.
    - Mümkünse saydam zeminli PNG veya vektör (SVG) bir ana dosya edinilir. JPG zemini sabit olduğu için en temiz sonuç bundan alınır.
 2. [ ] **Ortam seçici ve ortam editörü:** Seçici ✅ (kenar çubuğunda; Windows'ta başlık çubuğu sürükleme alanı olduğu için oraya konmadı). Koleksiyon başına hatırlanıyor, `.local.toml` gizli değerleri dahil. Kalanlar: ortam editörü, OS anahtarlığı, dinamik değişkenler (`{{$guid}}` …). (M)
-3. [ ] **Projeler (§C1):** Aç / Yeni koleksiyon / Yeni proje, son açılanlar, proje seçici, proje ortamları, Proje → Ortam → Koleksiyonlar gruplaması, prod koruması (L)
+3. [x] **Projeler (§C1):** proje modeli (`apix-project.toml`), Yeni proje / Yeni koleksiyon / Aç, son açılanlar, proje menüsü, proje genelinde ortamlar (proje → koleksiyon → proje ortamı → koleksiyon ortamı), "Proje → Ortam → Koleksiyonlar" gruplaması, koleksiyonu ortamlara sabitleme, prod çizgisi. Kalanlar: renkler, koleksiyonu sürükleyerek projeye taşıma, prod onay penceresi. (L)
 4. [x] **Kabuk komutu olarak kopyala** (§I): bash `curl`, cmd `curl.exe`, PowerShell `Invoke-RestMethod`; URL çubuğundaki kopyala menüsü, sağ tık ve `apix shell` CLI komutu. Yapıştırılan `curl` komutu isteği doldurur. Kalanlar: fish, HTTPie, wget. (M)
 5. [ ] **Metot seçerek yeni istek** (§C) (S)
 6. [ ] Değişken çipleri ve fareyle üstüne gelince değer gösterme (M)

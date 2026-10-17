@@ -37,7 +37,8 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [x] App icon from `Logo/LogoFirst.jpg` (`cargo run -p icongen --release`): transparent squircle, tighter crop at 32 px and below; `.ico` embedded in the exe, `.icns`, Linux hicolor PNGs + `.desktop`
 - [x] Environment switcher in the sidebar, remembered per collection, with `*.local.toml` secrets; red line for prod
 - [ ] Environment editor, OS keychain, dynamic variables (`{{$guid}}`, …)
-- [ ] Projects: Open / New collection / New project, recent items, project switcher, project-wide environments, grouping as Project → Environment → Collections, prod guard
+- [x] Projects (`apix-project.toml`): New project / New collection / Open from the sidebar menu, recent items, project-wide environments layered under collection ones, grouping as Project → Environment → Collections, pin collections to environments
+- [ ] Projects: colours, drag a collection into a project, prod confirmation dialog
 - [x] Copy as bash `curl`, cmd `curl.exe` or PowerShell `Invoke-RestMethod` (URL bar menu, sidebar, `apix shell`); pasting a `curl` command fills the request
 - [ ] Copy as fish, HTTPie, wget
 - [ ] New request with a chosen method

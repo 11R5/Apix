@@ -3,10 +3,12 @@
 //! frontend (desktop, CLI, future TUI) shares exactly the same behaviour.
 
 pub mod model;
+pub mod project;
 pub mod store;
 pub mod text;
 pub mod vars;
 
 pub use model::{ApiKeyLocation, Auth, Body, KeyValue, Method, Request};
+pub use project::{GroupBy, Project};
 pub use store::{Collection, Environment, StoreError};
 pub use vars::{Resolved, Variables};

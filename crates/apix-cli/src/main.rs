@@ -4,7 +4,7 @@ use std::process::ExitCode;
 
 use anyhow::{Context, Result, bail};
 use apix_core::store::load_request;
-use apix_core::{Collection, Variables};
+use apix_core::{Collection, Project, Variables};
 use apix_http::{HttpClient, Response, human_size};
 use clap::{Args, Parser, Subcommand};
 
@@ -92,28 +92,29 @@ fn parse_var(raw: &str) -> Result<(String, String), String> {
 }
 
 impl VarArgs {
-    /// collection vars < environment vars < --var overrides
+    /// project vars < collection vars < project environment < collection
+    /// environment < --var overrides
     fn build(&self, collection: Option<&Collection>) -> Result<Variables> {
-        let mut vars = Variables::new();
-        match (collection, &self.env) {
-            (Some(c), env) => {
-                vars = vars.with_layer(&c.meta.vars);
-                if let Some(name) = env {
-                    let available = c.environment_names();
-                    if !available.contains(name) {
-                        bail!(
-                            "unknown environment `{name}` (available: {})",
-                            available.join(", ")
-                        );
-                    }
-                    vars = vars.with_layer(&c.environment(name)?.vars);
-                }
+        let project = collection
+            .and_then(|c| c.root.parent())
+            .and_then(Project::find_root)
+            .map(Project::open)
+            .transpose()?;
+        if let Some(name) = &self.env {
+            let available = match (&project, collection) {
+                (Some(p), Some(c)) => p.environment_names(std::slice::from_ref(c)),
+                (None, Some(c)) => c.environment_names(),
+                _ => bail!("--env {name} given, but no apix.toml was found above the request"),
+            };
+            if !available.contains(name) {
+                bail!(
+                    "unknown environment `{name}` (available: {})",
+                    available.join(", ")
+                );
             }
-            (None, Some(name)) => {
-                bail!("--env {name} given, but no apix.toml was found above the request")
-            }
-            (None, None) => {}
         }
+        let mut vars =
+            apix_core::project::variables(project.as_ref(), collection, self.env.as_deref())?;
         for (k, v) in &self.vars {
             vars.set(k, v);
         }

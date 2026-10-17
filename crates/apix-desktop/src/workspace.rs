@@ -204,9 +204,14 @@ enum ResponseState {
 pub struct Workspace {
     focus: FocusHandle,
     palette: Palette,
+    /// The open project, if the folder belongs to one.
+    project: Option<apix_core::Project>,
+    /// Every open collection: the project's, or the single one opened.
+    collections: Vec<Collection>,
+    /// The collection of the open request; its variables apply when sending.
     collection: Option<Collection>,
-    /// The collection's folders and request files, as shown in the sidebar.
-    tree: Vec<TreeNode>,
+    /// Each collection's folders and request files, by collection root.
+    trees: Vec<(PathBuf, Vec<TreeNode>)>,
     /// Every request as saved on disk, by path.
     requests: BTreeMap<PathBuf, Request>,
     collapsed: HashSet<PathBuf>,
@@ -314,8 +319,10 @@ impl Workspace {
         let mut this = Self {
             focus: cx.focus_handle(),
             palette,
+            project: None,
+            collections: Vec::new(),
             collection: None,
-            tree: Vec::new(),
+            trees: Vec::new(),
             requests: BTreeMap::new(),
             collapsed: HashSet::new(),
             load_errors: Vec::new(),
@@ -608,11 +615,12 @@ fn describe(err: &dyn std::error::Error) -> String {
 impl Workspace {
     fn render_title_bar(&self) -> impl IntoElement {
         let p = self.palette;
-        let name = self
-            .collection
-            .as_ref()
-            .map(|c| c.meta.name.clone())
-            .unwrap_or_default();
+        let name = match (&self.project, &self.collection) {
+            (Some(project), Some(c)) => format!("{}  ›  {}", project.meta.name, c.meta.name),
+            (Some(project), None) => project.meta.name.clone(),
+            (None, Some(c)) => c.meta.name.clone(),
+            (None, None) => String::new(),
+        };
         TitleBar::new()
             .bg(transparent_black())
             .border_color(p.hairline)
@@ -1010,9 +1018,20 @@ impl Workspace {
                     .and_then(|path| path.strip_prefix(&c.root).ok())
                     .map(|rel| format!("  ·  {}", rel.display()))
                     .unwrap_or_default();
-                format!("{}  ·  {} requests{file}", c.meta.name, self.requests.len())
+                let scope = match &self.project {
+                    Some(project) => format!(
+                        "{}  ·  {} collections",
+                        project.meta.name,
+                        self.collections.len()
+                    ),
+                    None => c.meta.name.clone(),
+                };
+                format!("{scope}  ·  {} requests{file}", self.requests.len())
             }
-            None => "No collection".to_string(),
+            None => match &self.project {
+                Some(project) => format!("{}  ·  no collections yet", project.meta.name),
+                None => "No collection".to_string(),
+            },
         };
         let environment = self.environment.as_ref().map(|name| {
             div()

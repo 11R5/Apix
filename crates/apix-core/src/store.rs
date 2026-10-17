@@ -46,9 +46,11 @@ pub enum StoreError {
     },
     #[error("could not serialize: {0}")]
     Serialize(#[from] toml::ser::Error),
+    #[error("no environment named `{0}`")]
+    UnknownEnvironment(String),
 }
 
-fn read_toml<T: for<'de> Deserialize<'de>>(path: &Path) -> Result<T, StoreError> {
+pub(crate) fn read_toml<T: for<'de> Deserialize<'de>>(path: &Path) -> Result<T, StoreError> {
     let text = fs::read_to_string(path).map_err(|source| StoreError::Io {
         path: path.to_owned(),
         source,
@@ -71,7 +73,7 @@ pub fn save_request(path: &Path, request: &Request) -> Result<(), StoreError> {
     write_toml(path, request)
 }
 
-fn write_toml(path: &Path, value: &impl Serialize) -> Result<(), StoreError> {
+pub(crate) fn write_toml(path: &Path, value: &impl Serialize) -> Result<(), StoreError> {
     let text = toml::to_string_pretty(value)?;
     fs::write(path, text).map_err(|source| StoreError::Io {
         path: path.to_owned(),
@@ -87,7 +89,7 @@ pub struct CollectionMeta {
     pub name: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub description: String,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "VarMap::is_empty")]
     pub vars: VarMap,
 }
 
@@ -154,30 +156,22 @@ impl Collection {
 
     /// Loads `environments/<name>.toml` with `<name>.local.toml` (if present) layered on top.
     pub fn environment(&self, name: &str) -> Result<Environment, StoreError> {
-        let dir = self.root.join(ENVIRONMENTS_DIR);
-        let mut env: Environment = read_toml(&dir.join(format!("{name}.toml")))?;
-        let local = dir.join(format!("{name}{LOCAL_SUFFIX}.toml"));
-        if local.is_file() {
-            let secrets: Environment = read_toml(&local)?;
-            env.vars.extend(secrets.vars);
-        }
-        env.name = name.to_owned();
-        Ok(env)
+        let path = self
+            .root
+            .join(ENVIRONMENTS_DIR)
+            .join(format!("{name}.toml"));
+        let vars = environment_vars_at(&self.root, name)?.ok_or_else(|| StoreError::Io {
+            path,
+            source: std::io::Error::new(std::io::ErrorKind::NotFound, "no such environment"),
+        })?;
+        Ok(Environment {
+            name: name.to_owned(),
+            vars,
+        })
     }
 
     pub fn environment_names(&self) -> Vec<String> {
-        let Ok(entries) = fs::read_dir(self.root.join(ENVIRONMENTS_DIR)) else {
-            return Vec::new();
-        };
-        let mut names: Vec<String> = entries
-            .filter_map(Result::ok)
-            .map(|e| e.path())
-            .filter(|p| p.extension().is_some_and(|ext| ext == "toml"))
-            .filter_map(|p| p.file_stem().map(|s| s.to_string_lossy().into_owned()))
-            .filter(|name| !name.ends_with(LOCAL_SUFFIX))
-            .collect();
-        names.sort();
-        names
+        environment_names_at(&self.root)
     }
 
     /// Every request file in the collection, in a stable (sorted) order.
@@ -186,6 +180,41 @@ impl Collection {
         collect_requests(&self.root, &mut out);
         out
     }
+}
+
+/// Environment names in `<root>/environments/`, without the `.local` secret files.
+pub fn environment_names_at(root: &Path) -> Vec<String> {
+    let Ok(entries) = fs::read_dir(root.join(ENVIRONMENTS_DIR)) else {
+        return Vec::new();
+    };
+    let mut names: Vec<String> = entries
+        .filter_map(Result::ok)
+        .map(|e| e.path())
+        .filter(|p| p.extension().is_some_and(|ext| ext == "toml"))
+        .filter_map(|p| p.file_stem().map(|s| s.to_string_lossy().into_owned()))
+        .filter(|name| !name.ends_with(LOCAL_SUFFIX))
+        .collect();
+    names.sort();
+    names
+}
+
+/// `<root>/environments/<name>.toml` with its `.local.toml` secrets on top,
+/// or `None` when neither file exists.
+pub fn environment_vars_at(root: &Path, name: &str) -> Result<Option<VarMap>, StoreError> {
+    let dir = root.join(ENVIRONMENTS_DIR);
+    let base = dir.join(format!("{name}.toml"));
+    let local = dir.join(format!("{name}{LOCAL_SUFFIX}.toml"));
+    if !base.is_file() && !local.is_file() {
+        return Ok(None);
+    }
+    let mut vars = VarMap::new();
+    for path in [base, local] {
+        if path.is_file() {
+            let env: Environment = read_toml(&path)?;
+            vars.extend(env.vars);
+        }
+    }
+    Ok(Some(vars))
 }
 
 fn collect_requests(dir: &Path, out: &mut Vec<PathBuf>) {
@@ -319,7 +348,7 @@ pub fn unique_path(dir: &Path, stem: &str, ext: &str) -> PathBuf {
         .expect("an unused name always exists")
 }
 
-fn io_error(path: &Path) -> impl FnOnce(std::io::Error) -> StoreError + '_ {
+pub(crate) fn io_error(path: &Path) -> impl FnOnce(std::io::Error) -> StoreError + '_ {
     move |source| StoreError::Io {
         path: path.to_owned(),
         source,

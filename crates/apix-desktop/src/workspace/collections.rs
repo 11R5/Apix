@@ -10,14 +10,15 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
-use apix_core::store::{self, CollectionMeta, TreeNode};
-use apix_core::{Collection, Method, Request, Variables};
+use apix_core::project::{self, GroupBy, Project};
+use apix_core::store::{self, CollectionMeta, StoreError, TreeNode};
+use apix_core::{Collection, Method, Request};
 use apix_import::postman::{self, Kind};
 use gpui_kit::component::IndexPath;
 use gpui_kit::component::button::{Button, ButtonVariants as _};
 use gpui_kit::component::dialog::AlertDialog;
 use gpui_kit::component::input::{Input, InputState};
-use gpui_kit::component::menu::{ContextMenuExt as _, PopupMenu, PopupMenuItem};
+use gpui_kit::component::menu::{ContextMenuExt as _, DropdownMenu as _, PopupMenu, PopupMenuItem};
 use gpui_kit::component::notification::Notification;
 use gpui_kit::component::select::Select;
 use gpui_kit::component::{Icon, IconName, Sizable, WindowExt as _, h_flex, v_flex};
@@ -41,57 +42,130 @@ impl Workspace {
     // Opening and reloading
     // -----------------------------------------------------------------------
 
+    /// Opens what `dir` belongs to: the whole project if it is inside one,
+    /// otherwise the collection around it.
     pub(super) fn open_collection_dir(
         &mut self,
         dir: &Path,
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
-        let Some(root) = Collection::find_root(dir) else {
-            self.notify_error(
-                format!("No apix.toml in {} or its parents.", dir.display()),
-                window,
-                cx,
-            );
-            return;
+        let project = match Project::find_root(dir).map(Project::open).transpose() {
+            Ok(project) => project,
+            Err(e) => {
+                self.notify_error(describe(&e), window, cx);
+                return;
+            }
         };
-        match Collection::open(&root) {
-            Ok(collection) => {
-                self.collection = Some(collection);
-                self.environment = self.app_state.environment_for(&root);
-                self.app_state.remember_collection(&root);
-                self.watcher = watch(&root, window, cx);
-                self.collapsed.clear();
-                self.selected = None;
-                self.reload(window, cx);
-                match first_request(&self.tree) {
-                    Some(path) => self.open_path(path, window, cx),
-                    None => self.show_request(Request::default(), window, cx),
+        let collection = Collection::find_root(dir);
+        let root = match (&project, &collection) {
+            (Some(p), _) => p.root.clone(),
+            (None, Some(c)) => c.clone(),
+            (None, None) => {
+                self.notify_error(
+                    format!(
+                        "No apix.toml or apix-project.toml in {} or its parents.",
+                        dir.display()
+                    ),
+                    window,
+                    cx,
+                );
+                return;
+            }
+        };
+
+        self.project = project;
+        self.collections.clear();
+        self.collection = None;
+        if self.project.is_none() {
+            match Collection::open(&root) {
+                Ok(c) => self.collections.push(c),
+                Err(e) => {
+                    self.notify_error(describe(&e), window, cx);
+                    return;
                 }
             }
-            Err(e) => self.notify_error(describe(&e), window, cx),
+        }
+        self.environment = self.app_state.environment_for(&root);
+        self.app_state.remember_collection(&root);
+        self.watcher = watch(&root, window, cx);
+        self.collapsed.clear();
+        self.selected = None;
+        self.reload(window, cx);
+
+        // Inside a project, start in the collection that was opened, if any.
+        let start = collection
+            .and_then(|c| self.collections.iter().position(|x| x.root == c))
+            .unwrap_or(0);
+        self.collection = self.collections.get(start).cloned();
+        let first = self
+            .collection
+            .as_ref()
+            .and_then(|c| self.trees.iter().find(|(root, _)| *root == c.root))
+            .and_then(|(_, tree)| first_request(tree));
+        match first {
+            Some(path) => self.open_path(path, window, cx),
+            None => {
+                self.rebuild_vars(window, cx);
+                self.show_request(Request::default(), window, cx);
+            }
         }
     }
 
-    /// Re-reads the collection from disk. If the open request changed on
-    /// disk and has no unsaved edits, the editor follows the file.
+    /// The project root, or the collection root when no project is open.
+    pub(super) fn workspace_root(&self) -> Option<PathBuf> {
+        self.project
+            .as_ref()
+            .map(|p| p.root.clone())
+            .or_else(|| self.collections.first().map(|c| c.root.clone()))
+    }
+
+    fn collection_for(&self, path: &Path) -> Option<&Collection> {
+        self.collections
+            .iter()
+            .filter(|c| path.starts_with(&c.root))
+            .max_by_key(|c| c.root.components().count())
+    }
+
+    /// Re-reads the project and its collections from disk. If the open
+    /// request changed on disk and has no unsaved edits, the editor follows.
     fn reload(&mut self, window: &mut Window, cx: &mut Context<Self>) {
-        let Some(collection) = &mut self.collection else {
-            return;
-        };
-        if let Ok(fresh) = Collection::open(&collection.root) {
-            *collection = fresh;
-        }
-        self.refresh_environments(window, cx);
-        let Some(collection) = &self.collection else {
-            return;
-        };
-        let root = collection.root.clone();
-        self.tree = collection.tree();
-        self.requests.clear();
         self.load_errors.clear();
+        if let Some(project) = &self.project {
+            match Project::open(&project.root) {
+                Ok(fresh) => {
+                    let (collections, errors) = fresh.collections();
+                    self.collections = collections;
+                    self.load_errors.extend(errors);
+                    self.project = Some(fresh);
+                }
+                Err(e) => self.load_errors.push(describe(&e)),
+            }
+        } else if let Some(root) = self.collections.first().map(|c| c.root.clone()) {
+            match Collection::open(&root) {
+                Ok(fresh) => self.collections = vec![fresh],
+                Err(e) => self.load_errors.push(describe(&e)),
+            }
+        }
+        // Keep the active collection if it still exists.
+        self.collection = self
+            .collection
+            .as_ref()
+            .and_then(|active| self.collections.iter().find(|c| c.root == active.root))
+            .or_else(|| self.collections.first())
+            .cloned();
+
+        self.trees = self
+            .collections
+            .iter()
+            .map(|c| (c.root.clone(), c.tree()))
+            .collect();
+        self.requests.clear();
         let mut paths = Vec::new();
-        request_paths(&self.tree, &mut paths);
+        for (_, tree) in &self.trees {
+            request_paths(tree, &mut paths);
+        }
+        let root = self.workspace_root().unwrap_or_default();
         for path in paths {
             match store::load_request(&path) {
                 Ok(mut request) => {
@@ -113,6 +187,7 @@ impl Workspace {
                 }
             }
         }
+        self.refresh_environments(window, cx);
 
         if let Some(path) = self.selected.clone() {
             let dirty = self.is_dirty(cx);
@@ -138,11 +213,7 @@ impl Workspace {
     /// Re-reads `environments/`, keeps the choice if it still exists, and
     /// rebuilds the variables used for sending.
     fn refresh_environments(&mut self, window: &mut Window, cx: &mut Context<Self>) {
-        let names = self
-            .collection
-            .as_ref()
-            .map(Collection::environment_names)
-            .unwrap_or_default();
+        let names = self.environment_names();
         if self
             .environment
             .as_ref()
@@ -175,28 +246,53 @@ impl Workspace {
             return;
         }
         self.environment = name;
-        if let Some(root) = self.collection.as_ref().map(|c| c.root.clone()) {
+        if let Some(root) = self.workspace_root() {
             self.app_state
                 .set_environment(&root, self.environment.as_deref());
         }
+        // The env picker and the "group by environment" headers both set this.
+        let names = self.environment_names();
+        let selected = self
+            .environment
+            .as_ref()
+            .and_then(|current| names.iter().position(|n| n == current))
+            .map_or(0, |ix| ix + 1);
+        self.env_select.update(cx, |state, cx| {
+            state.set_selected_index(Some(IndexPath::new(selected)), window, cx)
+        });
         self.rebuild_vars(window, cx);
         cx.notify();
     }
 
-    /// Collection variables, with the active environment (and its `.local.toml` secrets) on top.
-    fn rebuild_vars(&mut self, window: &mut Window, cx: &mut Context<Self>) {
-        let Some(collection) = &self.collection else {
-            self.vars = Variables::new();
-            return;
-        };
-        let mut vars = Variables::new().with_layer(&collection.meta.vars);
-        if let Some(name) = &self.environment {
-            match collection.environment(name) {
-                Ok(env) => vars = vars.with_layer(&env.vars),
-                Err(e) => self.notify_error(describe(&e), window, cx),
-            }
+    /// Environments of the project and all its collections, or of the open collection.
+    pub(super) fn environment_names(&self) -> Vec<String> {
+        match &self.project {
+            Some(project) => project.environment_names(&self.collections),
+            None => self
+                .collections
+                .first()
+                .map(Collection::environment_names)
+                .unwrap_or_default(),
         }
-        self.vars = vars;
+    }
+
+    /// Project → collection → project environment → collection environment,
+    /// for the collection of the open request.
+    fn rebuild_vars(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        match project::variables(
+            self.project.as_ref(),
+            self.collection.as_ref(),
+            self.environment.as_deref(),
+        ) {
+            Ok(vars) => self.vars = vars,
+            // The environment exists elsewhere in the project, just not here: use the shared layers.
+            Err(StoreError::UnknownEnvironment(_)) => {
+                self.vars =
+                    project::variables(self.project.as_ref(), self.collection.as_ref(), None)
+                        .unwrap_or_default();
+            }
+            Err(e) => self.notify_error(describe(&e), window, cx),
+        }
     }
 
     /// Production environments get a red line under the title bar.
@@ -222,8 +318,25 @@ impl Workspace {
         let Some(request) = self.requests.get(&path).cloned() else {
             return;
         };
+        self.set_active_collection(&path, window, cx);
         self.selected = Some(path);
         self.show_request(request, window, cx);
+    }
+
+    /// Makes the collection that holds `path` the one whose variables apply.
+    fn set_active_collection(&mut self, path: &Path, window: &mut Window, cx: &mut Context<Self>) {
+        let Some(found) = self.collection_for(path).cloned() else {
+            return;
+        };
+        if self
+            .collection
+            .as_ref()
+            .is_some_and(|c| c.root == found.root)
+        {
+            return;
+        }
+        self.collection = Some(found);
+        self.rebuild_vars(window, cx);
     }
 
     pub(super) fn is_dirty(&self, cx: &App) -> bool {
@@ -749,9 +862,10 @@ impl Workspace {
     }
 
     fn import_environment(&mut self, json: &str, window: &mut Window, cx: &mut Context<Self>) {
-        let Some(root) = self.collection.as_ref().map(|c| c.root.clone()) else {
+        // In a project the environment is shared by all its collections.
+        let Some(root) = self.workspace_root() else {
             self.notify_error(
-                "Open the collection this environment belongs to first, then import it.",
+                "Open the collection or project this environment belongs to first, then import it.",
                 window,
                 cx,
             );
@@ -795,78 +909,127 @@ impl Workspace {
 
     pub(super) fn render_sidebar(&self, cx: &mut Context<Self>) -> impl IntoElement {
         let p = self.palette;
-        let has_collection = self.collection.is_some();
+        let open = !self.collections.is_empty() || self.project.is_some();
+        let by_environment = self
+            .project
+            .as_ref()
+            .is_some_and(|pr| pr.meta.group_by == GroupBy::Environment);
         let icon_button = |id: &'static str, icon: IconName, tooltip: String| {
             Button::new(id).ghost().xsmall().icon(icon).tooltip(tooltip)
         };
 
-        let header = h_flex()
+        let (kind, title) = match (&self.project, self.collections.first()) {
+            (Some(project), _) => ("PROJECT", project.meta.name.clone()),
+            (None, Some(c)) => ("COLLECTION", c.meta.name.clone()),
+            (None, None) => ("APIX", "Open or create…".to_owned()),
+        };
+        let menu_state = WorkspaceMenu {
+            view: cx.entity().downgrade(),
+            has_project: self.project.is_some(),
+            group_by: self.project.as_ref().map(|p| p.meta.group_by),
+            recent: self
+                .app_state
+                .recent_collections()
+                .filter(|r| Some(*r) != self.workspace_root().as_ref())
+                .take(6)
+                .cloned()
+                .collect(),
+        };
+        let header = v_flex()
             .px_3()
-            .pt_3()
+            .pt_2()
             .pb_1()
-            .gap_1()
-            .items_center()
+            .child(div().px_1().text_xs().text_color(p.text_muted).child(kind))
             .child(
-                div()
-                    .flex_1()
-                    .text_xs()
-                    .text_color(p.text_muted)
-                    .child("COLLECTION"),
-            )
-            .when(has_collection, |bar| {
-                bar.child(
-                    icon_button(
-                        "sidebar-new",
-                        IconName::Plus,
-                        format!("New request ({})", key_hint("N")),
+                h_flex()
+                    .gap_1()
+                    .items_center()
+                    .child(
+                        div().flex_1().min_w_0().child(
+                            Button::new("workspace-menu")
+                                .ghost()
+                                .small()
+                                .label(title)
+                                .dropdown_caret(true)
+                                .dropdown_menu(move |menu, _, _| menu_state.build(menu)),
+                        ),
                     )
-                    .on_click(cx.listener(
-                        |this, _: &ClickEvent, window, cx| this.new_request(None, window, cx),
-                    )),
-                )
-                .child(
-                    icon_button(
-                        "sidebar-folder",
-                        IconName::FolderClosed,
-                        "New folder".into(),
-                    )
-                    .on_click(cx.listener(
-                        |this, _: &ClickEvent, window, cx| this.new_folder(None, window, cx),
-                    )),
-                )
-            })
-            .child(
-                icon_button(
-                    "sidebar-import",
-                    IconName::Inbox,
-                    "Import from Postman".into(),
-                )
-                .on_click(
-                    cx.listener(|this, _: &ClickEvent, window, cx| this.prompt_import(window, cx)),
-                ),
-            )
-            .child(
-                icon_button(
-                    "sidebar-open",
-                    IconName::FolderOpen,
-                    format!("Open collection ({})", key_hint("O")),
-                )
-                .on_click(cx.listener(|this, _: &ClickEvent, window, cx| {
-                    this.prompt_open_collection(window, cx)
-                })),
+                    .when(open, |bar| {
+                        bar.child(
+                            icon_button(
+                                "sidebar-new",
+                                IconName::Plus,
+                                format!("New request ({})", key_hint("N")),
+                            )
+                            .on_click(cx.listener(
+                                |this, _: &ClickEvent, window, cx| {
+                                    this.new_request(None, window, cx)
+                                },
+                            )),
+                        )
+                        .child(
+                            icon_button(
+                                "sidebar-folder",
+                                IconName::FolderClosed,
+                                "New folder".into(),
+                            )
+                            .on_click(cx.listener(
+                                |this, _: &ClickEvent, window, cx| {
+                                    this.new_folder(None, window, cx)
+                                },
+                            )),
+                        )
+                    }),
             );
 
-        let body = if has_collection {
+        let env_row = (open && !by_environment).then(|| {
+            h_flex()
+                .px_3()
+                .pb_2()
+                .gap_2()
+                .items_center()
+                .child(
+                    div()
+                        .w(px(8.))
+                        .h(px(8.))
+                        .flex_none()
+                        .rounded_full()
+                        .bg(self.environment_dot(self.environment.as_deref())),
+                )
+                .child(
+                    div()
+                        .flex_1()
+                        .min_w_0()
+                        .child(Select::new(&self.env_select).small()),
+                )
+        });
+
+        let body = if !open {
+            self.render_empty_state(cx).into_any_element()
+        } else {
             let mut rows = Vec::new();
-            self.render_nodes(&self.tree, 0, &mut rows, cx);
+            if by_environment {
+                self.render_environment_groups(&mut rows, cx);
+            } else if self.project.is_some() || self.collections.len() > 1 {
+                for collection in &self.collections {
+                    self.render_collection(collection, 0, &mut rows, cx);
+                }
+            } else if let Some((_, tree)) = self.trees.first() {
+                self.render_nodes(tree, 0, &mut rows, cx);
+            }
             if rows.is_empty() {
+                let hint = if self.project.is_some() && self.collections.is_empty() {
+                    "No collections yet. Use the menu above: New collection…".to_owned()
+                } else {
+                    format!("No requests yet. {} creates one.", key_hint("N"))
+                };
                 rows.push(
                     div()
                         .px_4()
                         .py_2()
                         .text_xs()
                         .text_color(p.text_muted)
-                        .child(format!("No requests yet. {} creates one.", key_hint("N")))
+                        .child(hint)
                         .into_any_element(),
                 );
             }
@@ -876,33 +1039,7 @@ impl Workspace {
                 .pb_2()
                 .children(rows)
                 .into_any_element()
-        } else {
-            self.render_empty_state(cx).into_any_element()
         };
-
-        let env_row =
-            has_collection.then(|| {
-                h_flex()
-                    .px_3()
-                    .pb_2()
-                    .gap_2()
-                    .items_center()
-                    .child(div().w(px(8.)).h(px(8.)).flex_none().rounded_full().bg(
-                        if self.is_prod() {
-                            p.err
-                        } else if self.environment.is_some() {
-                            p.ok
-                        } else {
-                            p.text_muted.opacity(0.4)
-                        },
-                    ))
-                    .child(
-                        div()
-                            .flex_1()
-                            .min_w_0()
-                            .child(Select::new(&self.env_select).small()),
-                    )
-            });
 
         v_flex()
             .w(px(248.))
@@ -930,6 +1067,163 @@ impl Workspace {
             }))
     }
 
+    /// Green for an active environment, red for production, grey for none.
+    fn environment_dot(&self, name: Option<&str>) -> Hsla {
+        let p = self.palette;
+        match name {
+            Some(n) if n.to_lowercase().contains("prod") => p.err,
+            Some(_) => p.ok,
+            None => p.text_muted.opacity(0.4),
+        }
+    }
+
+    /// One collection as a collapsible header with its tree below.
+    fn render_collection(
+        &self,
+        collection: &Collection,
+        depth: usize,
+        out: &mut Vec<AnyElement>,
+        cx: &mut Context<Self>,
+    ) {
+        let p = self.palette;
+        let collapsed = self.collapsed.contains(&collection.root);
+        let active = self
+            .collection
+            .as_ref()
+            .is_some_and(|c| c.root == collection.root);
+        let view = cx.entity().downgrade();
+        let toggle = collection.root.clone();
+        let menu_root = collection.root.clone();
+        let pins = self.project.as_ref().map(|project| {
+            let all = self.environment_names();
+            let shown: Vec<bool> = all
+                .iter()
+                .map(|env| project.shows(&collection.root, env))
+                .collect();
+            (all, shown)
+        });
+        out.push(
+            row_base(&collection.root, depth)
+                .font_weight(FontWeight::SEMIBOLD)
+                .text_color(if active { p.text } else { p.text_muted })
+                .on_click(cx.listener(move |this, _: &ClickEvent, _, cx| {
+                    if !this.collapsed.remove(&toggle) {
+                        this.collapsed.insert(toggle.clone());
+                    }
+                    cx.notify();
+                }))
+                .child(
+                    Icon::new(if collapsed {
+                        IconName::ChevronRight
+                    } else {
+                        IconName::ChevronDown
+                    })
+                    .xsmall(),
+                )
+                .child(
+                    div()
+                        .flex_1()
+                        .min_w_0()
+                        .truncate()
+                        .child(collection.meta.name.clone()),
+                )
+                .context_menu(move |menu: PopupMenu, _, _| {
+                    collection_menu(menu, view.clone(), menu_root.clone(), pins.clone())
+                })
+                .into_any_element(),
+        );
+        if !collapsed
+            && let Some((_, tree)) = self.trees.iter().find(|(root, _)| *root == collection.root)
+        {
+            let before = out.len();
+            self.render_nodes(tree, depth + 1, out, cx);
+            if out.len() == before {
+                out.push(
+                    div()
+                        .pl(px(8. + 14. * (depth + 1) as f32))
+                        .py_1()
+                        .text_xs()
+                        .text_color(p.text_muted)
+                        .child("Empty")
+                        .into_any_element(),
+                );
+            }
+        }
+    }
+
+    /// Project → Environment → Collections. Clicking an environment makes it
+    /// active and lists the collections shown in it.
+    fn render_environment_groups(&self, out: &mut Vec<AnyElement>, cx: &mut Context<Self>) {
+        let p = self.palette;
+        let Some(project) = &self.project else {
+            return;
+        };
+        let names = self.environment_names();
+        if names.is_empty() {
+            out.push(
+                div()
+                    .px_2()
+                    .py_2()
+                    .text_xs()
+                    .text_color(p.text_muted)
+                    .child("This project has no environments yet. Add test.toml or prod.toml to its environments/ folder.")
+                    .into_any_element(),
+            );
+            for collection in &self.collections {
+                self.render_collection(collection, 0, out, cx);
+            }
+            return;
+        }
+        for (ix, name) in names.iter().enumerate() {
+            let active = self.environment.as_deref() == Some(name.as_str());
+            let shown: Vec<&Collection> = self
+                .collections
+                .iter()
+                .filter(|c| project.shows(&c.root, name))
+                .collect();
+            let pick = name.clone();
+            out.push(
+                div()
+                    .id(("env-group", ix))
+                    .flex()
+                    .items_center()
+                    .gap_2()
+                    .px_2()
+                    .py_1()
+                    .mt_1()
+                    .rounded_md()
+                    .text_sm()
+                    .font_weight(FontWeight::SEMIBOLD)
+                    .cursor_pointer()
+                    .hover(|s| s.bg(hsla(0., 0., 1., 0.05)))
+                    .when(active, |row| row.bg(p.accent.opacity(0.10)))
+                    .on_click(cx.listener(move |this, _: &ClickEvent, window, cx| {
+                        this.set_environment(Some(pick.clone()), window, cx)
+                    }))
+                    .child(
+                        div()
+                            .w(px(8.))
+                            .h(px(8.))
+                            .flex_none()
+                            .rounded_full()
+                            .bg(self.environment_dot(Some(name))),
+                    )
+                    .child(div().flex_1().min_w_0().truncate().child(name.clone()))
+                    .child(
+                        div()
+                            .text_xs()
+                            .text_color(p.text_muted)
+                            .child(shown.len().to_string()),
+                    )
+                    .into_any_element(),
+            );
+            if active {
+                for collection in shown {
+                    self.render_collection(collection, 1, out, cx);
+                }
+            }
+        }
+    }
     fn render_empty_state(&self, cx: &mut Context<Self>) -> impl IntoElement {
         let p = self.palette;
         v_flex()
@@ -1227,6 +1521,272 @@ fn folder_menu(menu: PopupMenu, view: WeakEntity<Workspace>, path: PathBuf) -> P
     .item(item("Move to trash", |this, path, window, cx| {
         this.confirm_delete(path, true, window, cx)
     }))
+}
+
+/// What the workspace menu (the project or collection name at the top of
+/// the sidebar) needs; built fresh each time the menu opens.
+#[derive(Clone)]
+struct WorkspaceMenu {
+    view: WeakEntity<Workspace>,
+    has_project: bool,
+    group_by: Option<GroupBy>,
+    recent: Vec<PathBuf>,
+}
+
+impl WorkspaceMenu {
+    fn build(&self, menu: PopupMenu) -> PopupMenu {
+        let item = |label: &str, f: fn(&mut Workspace, &mut Window, &mut Context<Workspace>)| {
+            let view = self.view.clone();
+            PopupMenuItem::new(label.to_owned()).on_click(move |_, window, cx| {
+                view.update(cx, |this, cx| f(this, window, cx)).ok();
+            })
+        };
+        let mut menu = menu
+            .item(item("New collection…", Workspace::prompt_new_collection))
+            .item(item("New project…", Workspace::prompt_new_project))
+            .separator()
+            .item(item(
+                &format!("Open… ({})", key_hint("O")),
+                Workspace::prompt_open_collection,
+            ))
+            .item(item("Import from Postman…", Workspace::prompt_import));
+
+        if self.has_project {
+            let group = |label: &str, by: GroupBy, current: Option<GroupBy>| {
+                let view = self.view.clone();
+                PopupMenuItem::new(label.to_owned())
+                    .checked(current == Some(by))
+                    .on_click(move |_, window, cx| {
+                        view.update(cx, |this, cx| this.set_group_by(by, window, cx))
+                            .ok();
+                    })
+            };
+            menu = menu
+                .separator()
+                .label("Group the sidebar by")
+                .item(group("Collection", GroupBy::Collection, self.group_by))
+                .item(group("Environment", GroupBy::Environment, self.group_by));
+        }
+
+        if !self.recent.is_empty() {
+            menu = menu.separator().label("Recent");
+            for root in &self.recent {
+                let (view, dir) = (self.view.clone(), root.clone());
+                let name = root
+                    .file_name()
+                    .map(|n| n.to_string_lossy().into_owned())
+                    .unwrap_or_else(|| root.display().to_string());
+                menu = menu.item(PopupMenuItem::new(name).on_click(move |_, window, cx| {
+                    view.update(cx, |this, cx| this.open_or_create(dir.clone(), window, cx))
+                        .ok();
+                }));
+            }
+        }
+        menu
+    }
+}
+
+/// The context menu of a collection header. `pins` lists the project's
+/// environments and whether the collection is shown in each.
+fn collection_menu(
+    menu: PopupMenu,
+    view: WeakEntity<Workspace>,
+    root: PathBuf,
+    pins: Option<(Vec<String>, Vec<bool>)>,
+) -> PopupMenu {
+    let item =
+        |label: &'static str,
+         f: fn(&mut Workspace, PathBuf, &mut Window, &mut Context<Workspace>)| {
+            let (view, root) = (view.clone(), root.clone());
+            PopupMenuItem::new(label).on_click(move |_, window, cx| {
+                view.update(cx, |this, cx| f(this, root.clone(), window, cx))
+                    .ok();
+            })
+        };
+    let mut menu = menu
+        .item(item("New request", |this, root, window, cx| {
+            this.new_request(Some(root), window, cx)
+        }))
+        .item(item("New folder…", |this, root, window, cx| {
+            this.new_folder(Some(root), window, cx)
+        }))
+        .item(item("Rename…", |this, root, window, cx| {
+            this.rename_collection(root, window, cx)
+        }));
+    if let Some((envs, shown)) = pins.filter(|(envs, _)| !envs.is_empty()) {
+        menu = menu.separator().label("Show in environment");
+        for (env, is_shown) in envs.into_iter().zip(shown) {
+            let (view, root) = (view.clone(), root.clone());
+            menu = menu.item(PopupMenuItem::new(env.clone()).checked(is_shown).on_click(
+                move |_, window, cx| {
+                    view.update(cx, |this, cx| {
+                        this.set_collection_shown(&root, &env, !is_shown, window, cx)
+                    })
+                    .ok();
+                },
+            ));
+        }
+    }
+    menu.separator()
+        .item(item("Move to trash", |this, root, window, cx| {
+            this.confirm_delete(root, true, window, cx)
+        }))
+}
+
+impl Workspace {
+    /// Asks for a name and a parent folder, then creates and opens a project
+    /// with Test and Prod environments.
+    fn prompt_new_project(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        self.prompt_name(
+            "New project",
+            String::new(),
+            "Choose folder…",
+            window,
+            cx,
+            |_, name, window, cx| {
+                let picked = cx.prompt_for_paths(PathPromptOptions {
+                    files: false,
+                    directories: true,
+                    multiple: false,
+                    prompt: Some("Create the project in".into()),
+                });
+                cx.spawn_in(window, async move |this, cx| {
+                    if let Ok(Ok(Some(paths))) = picked.await
+                        && let Some(parent) = paths.into_iter().next()
+                    {
+                        this.update_in(cx, |this, window, cx| {
+                            match project::create_project(&parent, &name, &["test", "prod"]) {
+                                Ok(root) => this.guard_unsaved(
+                                    window,
+                                    cx,
+                                    Rc::new(move |this, window, cx| {
+                                        this.open_collection_dir(&root, window, cx)
+                                    }),
+                                ),
+                                Err(e) => this.notify_error(describe(&e), window, cx),
+                            }
+                        })
+                        .ok();
+                    }
+                })
+                .detach();
+            },
+        );
+    }
+
+    /// In a project, adds a collection to it; otherwise asks where to create one.
+    fn prompt_new_collection(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let project_root = self.project.as_ref().map(|p| p.root.clone());
+        let label = if project_root.is_some() {
+            "Create"
+        } else {
+            "Choose folder…"
+        };
+        self.prompt_name(
+            "New collection",
+            String::new(),
+            label,
+            window,
+            cx,
+            move |this, name, window, cx| {
+                if let Some(root) = &project_root {
+                    match project::create_collection(root, &name) {
+                        Ok(created) => {
+                            this.reload(window, cx);
+                            this.collection =
+                                this.collections.iter().find(|c| c.root == created).cloned();
+                            this.rebuild_vars(window, cx);
+                            cx.notify();
+                        }
+                        Err(e) => this.notify_error(describe(&e), window, cx),
+                    }
+                    return;
+                }
+                let picked = cx.prompt_for_paths(PathPromptOptions {
+                    files: false,
+                    directories: true,
+                    multiple: false,
+                    prompt: Some("Create the collection in".into()),
+                });
+                cx.spawn_in(window, async move |this, cx| {
+                    if let Ok(Ok(Some(paths))) = picked.await
+                        && let Some(parent) = paths.into_iter().next()
+                    {
+                        this.update_in(cx, |this, window, cx| {
+                            match project::create_collection(&parent, &name) {
+                                Ok(root) => this.guard_unsaved(
+                                    window,
+                                    cx,
+                                    Rc::new(move |this, window, cx| {
+                                        this.open_collection_dir(&root, window, cx)
+                                    }),
+                                ),
+                                Err(e) => this.notify_error(describe(&e), window, cx),
+                            }
+                        })
+                        .ok();
+                    }
+                })
+                .detach();
+            },
+        );
+    }
+
+    fn rename_collection(&mut self, root: PathBuf, window: &mut Window, cx: &mut Context<Self>) {
+        let current = self
+            .collections
+            .iter()
+            .find(|c| c.root == root)
+            .map(|c| c.meta.name.clone())
+            .unwrap_or_default();
+        self.prompt_name(
+            "Rename collection",
+            current,
+            "Rename",
+            window,
+            cx,
+            move |this, name, window, cx| {
+                let result = Collection::open(&root).and_then(|mut c| {
+                    c.meta.name = name.clone();
+                    store::save_collection_meta(&root, &c.meta)
+                });
+                match result {
+                    Ok(()) => this.reload(window, cx),
+                    Err(e) => this.notify_error(describe(&e), window, cx),
+                }
+            },
+        );
+    }
+
+    fn set_group_by(&mut self, group_by: GroupBy, window: &mut Window, cx: &mut Context<Self>) {
+        let Some(project) = &mut self.project else {
+            return;
+        };
+        project.meta.group_by = group_by;
+        if let Err(e) = project.save() {
+            self.notify_error(describe(&e), window, cx);
+        }
+        cx.notify();
+    }
+
+    fn set_collection_shown(
+        &mut self,
+        root: &Path,
+        environment: &str,
+        shown: bool,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let all = self.environment_names();
+        let Some(project) = &mut self.project else {
+            return;
+        };
+        project.set_shown(root, environment, shown, &all);
+        if let Err(e) = project.save() {
+            self.notify_error(describe(&e), window, cx);
+        }
+        cx.notify();
+    }
 }
 
 /// Watches the collection folder and reloads shortly after anything changes.
