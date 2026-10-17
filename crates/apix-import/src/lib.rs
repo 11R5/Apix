@@ -167,40 +167,7 @@ impl Plan {
     }
 }
 
-/// A file or folder name made from a free-form title: lowercase, words
-/// joined by `-`, safe on every OS. `Create User (v2)` → `create-user-v2`.
-pub fn slug(name: &str, fallback: &str) -> String {
-    let mut out = String::new();
-    let mut dash = false;
-    for c in name.chars().flat_map(char::to_lowercase) {
-        // `İ` lowercases to `i` + U+0307 (combining dot); drop the mark.
-        if c == '\u{0307}' {
-            continue;
-        }
-        if c.is_alphanumeric() {
-            out.push(c);
-            dash = false;
-        } else if !out.is_empty() && !dash {
-            out.push('-');
-            dash = true;
-        }
-    }
-    let mut out: String = out.chars().take(80).collect();
-    while out.ends_with('-') {
-        out.pop();
-    }
-    if out.is_empty() {
-        out = fallback.to_owned();
-    }
-    const RESERVED: [&str; 4] = ["con", "prn", "aux", "nul"];
-    let reserved_numbered = (out.starts_with("com") || out.starts_with("lpt"))
-        && out.len() == 4
-        && out.as_bytes()[3].is_ascii_digit();
-    if RESERVED.contains(&out.as_str()) || reserved_numbered {
-        out.push_str("-1");
-    }
-    out
-}
+pub use apix_core::store::slug;
 
 /// Makes `name` unique among the names already handed out in one folder.
 fn unique(name: String, used: &mut HashSet<String>) -> String {
@@ -220,15 +187,6 @@ fn request_file(stem: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn slugs_are_readable_and_safe() {
-        assert_eq!(slug("Create User (v2)", "x"), "create-user-v2");
-        assert_eq!(slug("  ** ", "request"), "request");
-        assert_eq!(slug("İstanbul Şube/Çıkış", "x"), "istanbul-şube-çıkış");
-        assert_eq!(slug("CON", "x"), "con-1");
-        assert_eq!(slug("com1", "x"), "com1-1");
-    }
 
     #[test]
     fn unique_names_get_a_counter() {

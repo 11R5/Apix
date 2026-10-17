@@ -1,10 +1,13 @@
 //! The main window: collection sidebar, request editor and response viewer.
 
-use std::path::{Path, PathBuf};
+mod collections;
+
+use std::collections::{BTreeMap, HashSet};
+use std::path::PathBuf;
 use std::rc::Rc;
 use std::sync::Arc;
 
-use apix_core::store::load_request;
+use apix_core::store::TreeNode;
 use apix_core::{Body, Collection, KeyValue, Method, Request, Variables};
 use apix_http::{Response, group_digits, human_duration, human_size};
 use gpui_kit::component::button::{Button, ButtonVariants};
@@ -14,7 +17,8 @@ use gpui_kit::component::select::{Select, SelectEvent, SelectState};
 use gpui_kit::component::spinner::Spinner;
 use gpui_kit::component::tab::{Tab, TabBar};
 use gpui_kit::component::{
-    IconName, IndexPath, Sizable, TitleBar, h_flex, h_resizable, resizable_panel, v_flex,
+    IconName, IndexPath, Sizable, TitleBar, WindowExt as _, h_flex, h_resizable, resizable_panel,
+    v_flex,
 };
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
@@ -23,7 +27,17 @@ use crate::large_view::{Document, LARGE_BODY_BYTES, LargeView};
 use crate::net;
 use crate::theme::{self, Palette};
 
-actions!(apix, [SendRequest, CancelRequest]);
+actions!(
+    apix,
+    [
+        SendRequest,
+        CancelRequest,
+        SaveRequest,
+        NewRequest,
+        OpenCollection,
+        ImportFile
+    ]
+);
 
 const CONTEXT: &str = "ApixWorkspace";
 
@@ -31,6 +45,9 @@ pub fn bind_keys(cx: &mut App) {
     cx.bind_keys([
         KeyBinding::new("secondary-enter", SendRequest, Some(CONTEXT)),
         KeyBinding::new("escape", CancelRequest, Some(CONTEXT)),
+        KeyBinding::new("secondary-s", SaveRequest, Some(CONTEXT)),
+        KeyBinding::new("secondary-n", NewRequest, Some(CONTEXT)),
+        KeyBinding::new("secondary-o", OpenCollection, Some(CONTEXT)),
     ]);
 }
 
@@ -177,21 +194,21 @@ enum ResponseState {
     Cancelled,
 }
 
-struct SidebarItem {
-    path: PathBuf,
-    /// Folder relative to the collection root, `/`-separated; empty at the root.
-    folder: String,
-    request: Request,
-}
-
 pub struct Workspace {
     focus: FocusHandle,
     palette: Palette,
     collection: Option<Collection>,
-    items: Vec<SidebarItem>,
+    /// The collection's folders and request files, as shown in the sidebar.
+    tree: Vec<TreeNode>,
+    /// Every request as saved on disk, by path.
+    requests: BTreeMap<PathBuf, Request>,
+    collapsed: HashSet<PathBuf>,
     load_errors: Vec<String>,
-    selected: Option<usize>,
-    /// The request as loaded; fields the editor does not cover yet (auth, form bodies) come from here.
+    /// The request file open in the editor.
+    selected: Option<PathBuf>,
+    watcher: Option<collections::Watcher>,
+    /// The request as last loaded or saved. Fields the editor does not cover
+    /// yet (auth, form bodies) come from here, and edits are compared to it.
     base: Request,
     vars: Variables,
     method: Entity<MethodSelect>,
@@ -255,21 +272,18 @@ impl Workspace {
             ),
         ];
 
-        let (collection, items, load_errors) = load_collection(dir.as_deref());
-        let vars = match &collection {
-            Some(c) => Variables::new().with_layer(&c.meta.vars),
-            None => Variables::new(),
-        };
-
         let mut this = Self {
             focus: cx.focus_handle(),
             palette,
-            collection,
-            items,
-            load_errors,
+            collection: None,
+            tree: Vec::new(),
+            requests: BTreeMap::new(),
+            collapsed: HashSet::new(),
+            load_errors: Vec::new(),
             selected: None,
+            watcher: None,
             base: Request::default(),
-            vars,
+            vars: Variables::new(),
             method,
             url,
             params: Vec::new(),
@@ -286,20 +300,15 @@ impl Workspace {
             task: None,
             _subscriptions: subscriptions,
         };
-        if !this.items.is_empty() {
-            this.open_request(0, window, cx);
+        if let Some(dir) = dir {
+            this.open_collection_dir(&dir, window, cx);
         }
         this.url.update(cx, |state, cx| state.focus(window, cx));
         this
     }
 
-    fn open_request(&mut self, ix: usize, window: &mut Window, cx: &mut Context<Self>) {
-        let Some(item) = self.items.get(ix) else {
-            return;
-        };
-        let request = item.request.clone();
-        self.selected = Some(ix);
-
+    /// Puts `request` into the editor, replacing whatever was there.
+    fn show_request(&mut self, request: Request, window: &mut Window, cx: &mut Context<Self>) {
         let method_ix = Method::ALL
             .iter()
             .position(|m| *m == request.method)
@@ -526,52 +535,12 @@ impl Workspace {
     }
 }
 
-fn load_collection(dir: Option<&Path>) -> (Option<Collection>, Vec<SidebarItem>, Vec<String>) {
-    let Some(dir) = dir else {
-        return (None, Vec::new(), Vec::new());
-    };
-    let Some(root) = Collection::find_root(dir) else {
-        return (
-            None,
-            Vec::new(),
-            vec![format!("No apix.toml found in {}", dir.display())],
-        );
-    };
-    let collection = match Collection::open(&root) {
-        Ok(c) => c,
-        Err(e) => return (None, Vec::new(), vec![format!("{e}: {}", source_of(&e))]),
-    };
-
-    let mut items = Vec::new();
-    let mut errors = Vec::new();
-    for path in collection.request_paths() {
-        match load_request(&path) {
-            Ok(mut request) => {
-                if request.name.is_empty() {
-                    request.name = path
-                        .file_stem()
-                        .map(|s| s.to_string_lossy().into_owned())
-                        .unwrap_or_default();
-                }
-                let folder = path
-                    .parent()
-                    .and_then(|p| p.strip_prefix(&root).ok())
-                    .map(|p| p.to_string_lossy().replace('\\', "/"))
-                    .unwrap_or_default();
-                items.push(SidebarItem {
-                    path,
-                    folder,
-                    request,
-                });
-            }
-            Err(e) => errors.push(format!("{e}: {}", source_of(&e))),
-        }
+/// `error: cause`, for messages shown to the user.
+fn describe(err: &dyn std::error::Error) -> String {
+    match err.source() {
+        Some(source) => format!("{err}: {source}"),
+        None => err.to_string(),
     }
-    (Some(collection), items, errors)
-}
-
-fn source_of(err: &dyn std::error::Error) -> String {
-    err.source().map(|s| s.to_string()).unwrap_or_default()
 }
 
 // ---------------------------------------------------------------------------
@@ -602,99 +571,6 @@ impl Workspace {
                     )
                     .child(div().text_xs().text_color(p.text_muted).child(name)),
             )
-    }
-
-    fn render_sidebar(&self, cx: &mut Context<Self>) -> impl IntoElement {
-        let p = self.palette;
-        let mut list = v_flex().gap_px().px_2().pb_2();
-        let mut folder: Option<&str> = None;
-        for (ix, item) in self.items.iter().enumerate() {
-            if folder != Some(item.folder.as_str()) {
-                folder = Some(item.folder.as_str());
-                if !item.folder.is_empty() {
-                    list = list.child(
-                        div()
-                            .px_2()
-                            .pt_3()
-                            .pb_1()
-                            .text_xs()
-                            .text_color(p.text_muted)
-                            .child(item.folder.clone()),
-                    );
-                }
-            }
-            let selected = self.selected == Some(ix);
-            let method = item.request.method;
-            list = list.child(
-                div()
-                    .id(("request", ix))
-                    .flex()
-                    .items_center()
-                    .gap_2()
-                    .px_2()
-                    .py_1()
-                    .rounded_md()
-                    .text_sm()
-                    .cursor_pointer()
-                    .hover(|s| s.bg(p.hairline))
-                    .when(selected, |d| d.bg(p.accent.opacity(0.14)))
-                    .on_click(cx.listener(move |this, _: &ClickEvent, window, cx| {
-                        this.open_request(ix, window, cx)
-                    }))
-                    .child(
-                        div()
-                            .w(px(52.))
-                            .flex_none()
-                            .text_xs()
-                            .font_weight(FontWeight::BOLD)
-                            .text_color(theme::method_color(method))
-                            .child(method.as_str()),
-                    )
-                    .child(div().truncate().child(item.request.name.clone())),
-            );
-        }
-
-        let empty_hint = (self.collection.is_none()).then(|| {
-            div()
-                .px_4()
-                .py_2()
-                .text_xs()
-                .text_color(p.text_muted)
-                .child("Start with a collection folder: apix-desktop <folder>")
-        });
-
-        v_flex()
-            .w(px(248.))
-            .flex_none()
-            .h_full()
-            .border_r_1()
-            .border_color(p.hairline)
-            .child(
-                div()
-                    .px_4()
-                    .pt_3()
-                    .pb_1()
-                    .text_xs()
-                    .text_color(p.text_muted)
-                    .child("COLLECTION"),
-            )
-            .children(empty_hint)
-            .child(
-                div()
-                    .id("sidebar-list")
-                    .flex_1()
-                    .min_h_0()
-                    .overflow_y_scroll()
-                    .child(list),
-            )
-            .children(self.load_errors.iter().map(|e| {
-                div()
-                    .px_4()
-                    .py_1()
-                    .text_xs()
-                    .text_color(p.err)
-                    .child(e.clone())
-            }))
     }
 
     fn render_url_bar(&self, cx: &mut Context<Self>) -> impl IntoElement {
@@ -1052,22 +928,28 @@ impl Workspace {
             }))
     }
 
-    fn render_status_bar(&self) -> impl IntoElement {
+    fn render_status_bar(&self, cx: &App) -> impl IntoElement {
         let p = self.palette;
         let location = match &self.collection {
             Some(c) => {
                 let file = self
                     .selected
-                    .and_then(|ix| self.items.get(ix))
-                    .and_then(|item| item.path.strip_prefix(&c.root).ok())
+                    .as_ref()
+                    .and_then(|path| path.strip_prefix(&c.root).ok())
                     .map(|rel| format!("  ·  {}", rel.display()))
                     .unwrap_or_default();
-                format!("{}  ·  {} requests{file}", c.meta.name, self.items.len())
+                format!("{}  ·  {} requests{file}", c.meta.name, self.requests.len())
             }
             None => "No collection".to_string(),
         };
+        let unsaved = self.is_dirty(cx).then(|| {
+            div()
+                .text_color(p.warn)
+                .child(format!("Unsaved changes · {} save", key_hint("S")))
+        });
         h_flex()
             .justify_between()
+            .gap_3()
             .px_3()
             .h(px(26.))
             .flex_none()
@@ -1075,27 +957,67 @@ impl Workspace {
             .border_color(p.hairline)
             .text_xs()
             .text_color(p.text_muted)
-            .child(div().truncate().child(location))
-            .child(format!("{}  ·  Esc cancel", send_hint()))
+            .child(div().flex_1().min_w_0().truncate().child(location))
+            .children(unsaved)
+            .child(format!("{} send  ·  Esc cancel", key_hint("Enter")))
     }
 }
 
-fn send_hint() -> &'static str {
+/// `Ctrl+S`, or `⌘S` on macOS.
+fn key_hint(key: &str) -> String {
     if cfg!(target_os = "macos") {
-        "⌘↩ send"
+        let key = if key == "Enter" { "↩" } else { key };
+        format!("⌘{key}")
     } else {
-        "Ctrl+Enter send"
+        format!("Ctrl+{key}")
     }
+}
+
+fn send_hint() -> String {
+    format!("{} send", key_hint("Enter"))
 }
 
 impl Render for Workspace {
-    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let p = self.palette;
+        // Shortcuts dispatch along the focus path. When a dialog closes, focus
+        // is left nowhere, so take it back or Ctrl+S / Ctrl+N would stop working.
+        if window.focused(cx).is_none() && !window.has_active_dialog(cx) {
+            self.focus.focus(window, cx);
+        }
         v_flex()
             .key_context(CONTEXT)
             .track_focus(&self.focus)
             .on_action(cx.listener(|this, _: &SendRequest, window, cx| this.send(window, cx)))
             .on_action(cx.listener(|this, _: &CancelRequest, _, cx| this.cancel(cx)))
+            .on_action(cx.listener(|this, _: &SaveRequest, window, cx| {
+                this.save(window, cx);
+            }))
+            .on_action(
+                cx.listener(|this, _: &NewRequest, window, cx| this.new_request(None, window, cx)),
+            )
+            .on_action(cx.listener(|this, _: &OpenCollection, window, cx| {
+                this.prompt_open_collection(window, cx)
+            }))
+            .on_action(
+                cx.listener(|this, _: &ImportFile, window, cx| this.prompt_import(window, cx)),
+            )
+            // A click anywhere brings focus back inside the workspace (inputs
+            // focus themselves first, so they keep it), so shortcuts keep working.
+            .on_mouse_down(
+                MouseButton::Left,
+                cx.listener(|this, _: &MouseDownEvent, window, cx| {
+                    if !this.focus.contains_focused(window, cx) {
+                        this.focus.focus(window, cx);
+                    }
+                }),
+            )
+            // Drop a Postman export to import it, or a folder to open it.
+            .id("workspace")
+            .drag_over::<ExternalPaths>(move |style, _, _, _| style.bg(p.accent.opacity(0.06)))
+            .on_drop(cx.listener(|this, paths: &ExternalPaths, window, cx| {
+                this.handle_dropped(paths.paths().to_vec(), window, cx)
+            }))
             .size_full()
             .bg(p.background())
             .text_color(p.text)
@@ -1139,6 +1061,6 @@ impl Render for Workspace {
                             ),
                     ),
             )
-            .child(self.render_status_bar())
+            .child(self.render_status_bar(cx))
     }
 }

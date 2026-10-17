@@ -361,17 +361,17 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 
 **Bitti sayılması için:** jsonplaceholder'a arayüzden GET ve POST gönderilip yanıt renkli olarak görülebilmeli.
 
-### M2 — Koleksiyonlar ve Postman içe aktarma ⭐
-1. [ ] Klasör açma: "Open Folder" ve en son açılanlar listesi (S)
-2. [ ] Kenar çubuğu ağacı: gerçek dosyalardan, metot rozetleriyle (M)
-3. [ ] İstek seçme, düzenleme ve kaydetme (Ctrl+S), kaydedilmemiş değişiklik işareti (M)
-4. [ ] Yeni istek ve klasör oluşturma, yeniden adlandırma, çoğaltma, silme (çöp kutusuna) (M)
+### M2 — Koleksiyonlar ve Postman içe aktarma ⭐ 🔜 (10 maddeden 8'i bitti)
+1. [x] Klasör açma (Ctrl+O). Apix olmayan bir klasör seçilirse orada yeni koleksiyon oluşturmayı önerir. Klasör pencereye sürüklenince de açılır. "En son açılanlar" listesi henüz yok. (S)
+2. [x] Kenar çubuğu ağacı: gerçek dosyalardan, iç içe ve açılıp kapanan klasörler, metot rozetleri (M)
+3. [x] İstek seçme, düzenleme ve kaydetme (Ctrl+S). Kaydedilmemiş değişiklik işareti var. Başka isteğe geçerken "Kaydet / Kaydetme / Vazgeç" sorusu çıkar. (M)
+4. [x] Yeni istek (Ctrl+N) ve yeni klasör, yeniden adlandırma, çoğaltma, çöp kutusuna silme. Sağ tık menüsünden yapılır. Scriptler istekle birlikte taşınır. (M)
 5. [ ] Sürükle-bırak ile taşıma ve sıralama (M)
 6. [ ] Sekmeler (M)
-7. [ ] **Postman v2.1/v2.0 koleksiyon içe aktarma** ve içe aktarma raporu (L)
-8. [ ] **Postman environment içe aktarma** (S)
-9. [ ] `apix import postman` CLI komutu (S)
-10. [ ] Dosya izleme: diskteki değişiklikleri anında yansıtma (M)
+7. [x] **Postman v2.1/v2.0 koleksiyon içe aktarma** ve içe aktarma raporu (L). Kenar çubuğu düğmesi, sürükle-bırak ve CLI ile yapılabilir.
+8. [x] **Postman environment içe aktarma** (S). `secret` değerler git'e girmeyen `*.local.toml` dosyasına yazılır.
+9. [x] `apix import <dosya> [--out klasör] [--into koleksiyon]` CLI komutu, dosya türünü kendisi algılar (S)
+10. [x] Dosya izleme: diskteki değişiklikler (git pull, başka editör) yarım saniye içinde yansır. Açık istek kaydedilmemiş değişiklik içermiyorsa editör de güncellenir. (M)
 
 **Bitti sayılması için:** gerçek bir Postman koleksiyonu içe aktarılıp arayüzden gezilebilmeli ve istekleri çalıştırılabilmeli.
 

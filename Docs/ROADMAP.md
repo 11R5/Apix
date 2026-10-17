@@ -24,11 +24,14 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [x] Params / Headers tables with enable toggles; JSON / Text / XML body editor
 
 ## M2 — Collections and Postman import
-- [ ] Open folder, recent folders, sidebar tree built from files on disk
-- [ ] Edit and save (Ctrl+S), create / rename / duplicate / delete (to trash), drag to reorder
-- [ ] Tabs, file watching
-- [ ] **Postman Collection v2.1/v2.0 and environment import**, with an import report
-- [ ] `apix import postman <file> --out <dir>`
+- [x] Open folder (Ctrl+O, or drop it on the window; offers to start a collection), sidebar tree built from files on disk
+- [ ] Recent folders
+- [x] Edit and save (Ctrl+S) with an unsaved marker and a save/discard prompt; new (Ctrl+N), rename, duplicate, delete to trash from a context menu
+- [ ] Drag to reorder
+- [x] File watching (outside edits show up within ~0.5 s)
+- [ ] Tabs
+- [x] **Postman Collection v2.1/v2.0 and environment import**, with an import report (sidebar button, drag and drop, CLI)
+- [x] `apix import <file> [--out dir] [--into collection]`
 
 ## M3 — Environments, variables, auth
 - [ ] Environment switcher and editor, secrets in `*.local.toml` and the OS keychain

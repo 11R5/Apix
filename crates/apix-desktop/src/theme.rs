@@ -7,7 +7,8 @@ use apix_core::Method;
 use apix_core::text::JsonToken;
 use gpui_kit::component::{Theme, ThemeMode};
 use gpui_kit::{
-    App, Background, Hsla, Rgba, linear_color_stop, linear_gradient, rgb, rgba, transparent_black,
+    App, Background, Hsla, Rgba, hsla, linear_color_stop, linear_gradient, rgb, rgba,
+    transparent_black,
 };
 
 /// Points gpui-kit's component theme at our palette so built-in inputs,
@@ -21,7 +22,10 @@ pub fn apply(palette: &Palette, embedded_fonts: bool, cx: &mut App) {
             t.font_family = crate::fonts::UI.into();
             t.mono_font_family = crate::fonts::MONO.into();
         }
-        t.background = p.surface;
+        // Dialogs and inputs paint with this, so it stays nearly opaque;
+        // our own panels use the translucent `surface` directly.
+        t.background = p.surface_raised;
+        t.overlay = hsla(0., 0., 0., 0.45);
         t.foreground = p.text;
         t.muted_foreground = p.text_muted;
         t.border = p.hairline;

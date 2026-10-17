@@ -209,6 +209,228 @@ fn collect_requests(dir: &Path, out: &mut Vec<PathBuf>) {
     }
 }
 
+/// The collection as the sidebar shows it: folders first, then requests,
+/// each sorted by name. Paths are absolute. Empty folders are included so a
+/// folder you just created shows up.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TreeNode {
+    Folder {
+        name: String,
+        path: PathBuf,
+        children: Vec<TreeNode>,
+    },
+    Request {
+        path: PathBuf,
+    },
+}
+
+impl Collection {
+    pub fn tree(&self) -> Vec<TreeNode> {
+        tree_of(&self.root, true)
+    }
+}
+
+fn tree_of(dir: &Path, is_root: bool) -> Vec<TreeNode> {
+    let Ok(entries) = fs::read_dir(dir) else {
+        return Vec::new();
+    };
+    let mut folders = Vec::new();
+    let mut requests = Vec::new();
+    for path in entries.filter_map(Result::ok).map(|e| e.path()) {
+        let name = path
+            .file_name()
+            .map(|n| n.to_string_lossy().into_owned())
+            .unwrap_or_default();
+        if name.starts_with('.') || (is_root && name == ENVIRONMENTS_DIR) {
+            continue;
+        }
+        if path.is_dir() {
+            folders.push((name, path));
+        } else if is_request_file(&path) {
+            requests.push(path);
+        }
+    }
+    folders.sort_by_key(|(name, _)| name.to_lowercase());
+    requests.sort_by_key(|p| p.to_string_lossy().to_lowercase());
+
+    let mut out: Vec<TreeNode> = folders
+        .into_iter()
+        .map(|(name, path)| TreeNode::Folder {
+            children: tree_of(&path, false),
+            name,
+            path,
+        })
+        .collect();
+    out.extend(requests.into_iter().map(|path| TreeNode::Request { path }));
+    out
+}
+
+/// A file or folder name made from a free-form title: lowercase, words
+/// joined by `-`, safe on every OS. `Create User (v2)` → `create-user-v2`.
+pub fn slug(name: &str, fallback: &str) -> String {
+    let mut out = String::new();
+    let mut dash = false;
+    for c in name.chars().flat_map(char::to_lowercase) {
+        // `İ` lowercases to `i` + U+0307 (combining dot); drop the mark.
+        if c == '\u{0307}' {
+            continue;
+        }
+        if c.is_alphanumeric() {
+            out.push(c);
+            dash = false;
+        } else if !out.is_empty() && !dash {
+            out.push('-');
+            dash = true;
+        }
+    }
+    let mut out: String = out.chars().take(80).collect();
+    while out.ends_with('-') {
+        out.pop();
+    }
+    if out.is_empty() {
+        out = fallback.to_owned();
+    }
+    const RESERVED: [&str; 4] = ["con", "prn", "aux", "nul"];
+    let reserved_numbered = (out.starts_with("com") || out.starts_with("lpt"))
+        && out.len() == 4
+        && out.as_bytes()[3].is_ascii_digit();
+    if RESERVED.contains(&out.as_str()) || reserved_numbered {
+        out.push_str("-1");
+    }
+    out
+}
+
+/// `dir/stem.ext`, or `dir/stem-2.ext`, `-3`, ... if that is taken.
+pub fn unique_path(dir: &Path, stem: &str, ext: &str) -> PathBuf {
+    let with_ext = |s: &str| {
+        if ext.is_empty() {
+            dir.join(s)
+        } else {
+            dir.join(format!("{s}.{ext}"))
+        }
+    };
+    let first = with_ext(stem);
+    if !first.exists() {
+        return first;
+    }
+    (2..)
+        .map(|n| with_ext(&format!("{stem}-{n}")))
+        .find(|p| !p.exists())
+        .expect("an unused name always exists")
+}
+
+fn io_error(path: &Path) -> impl FnOnce(std::io::Error) -> StoreError + '_ {
+    move |source| StoreError::Io {
+        path: path.to_owned(),
+        source,
+    }
+}
+
+fn stem_of(path: &Path) -> String {
+    path.file_stem()
+        .map(|s| s.to_string_lossy().into_owned())
+        .unwrap_or_default()
+}
+
+/// Script files that belong to a request: `<stem>.prerequest.js`, `<stem>.test.js`.
+fn sidecars(path: &Path) -> Vec<PathBuf> {
+    let (Some(dir), stem) = (path.parent(), stem_of(path)) else {
+        return Vec::new();
+    };
+    let prefix = format!("{stem}.");
+    let Ok(entries) = fs::read_dir(dir) else {
+        return Vec::new();
+    };
+    let mut out: Vec<PathBuf> = entries
+        .filter_map(Result::ok)
+        .map(|e| e.path())
+        .filter(|p| {
+            let name = p.file_name().unwrap_or_default().to_string_lossy();
+            name.starts_with(&prefix) && name.ends_with(".js")
+        })
+        .collect();
+    out.sort();
+    out
+}
+
+/// The request file and its scripts, e.g. for moving them to the trash together.
+pub fn request_files(path: &Path) -> Vec<PathBuf> {
+    let mut files = vec![path.to_owned()];
+    files.extend(sidecars(path));
+    files
+}
+
+/// Saves a new request in `dir`, named after `request.name`. Returns its path.
+pub fn create_request(dir: &Path, request: &Request) -> Result<PathBuf, StoreError> {
+    let path = unique_path(dir, &slug(&request.name, "request"), REQUEST_EXTENSION);
+    save_request(&path, request)?;
+    Ok(path)
+}
+
+pub fn create_folder(parent: &Path, name: &str) -> Result<PathBuf, StoreError> {
+    let path = unique_path(parent, &slug(name, "folder"), "");
+    fs::create_dir_all(&path).map_err(io_error(&path))?;
+    Ok(path)
+}
+
+/// Renames a folder to the slug of `name`. Returns the new path.
+pub fn rename_folder(path: &Path, name: &str) -> Result<PathBuf, StoreError> {
+    let parent = path.parent().unwrap_or(Path::new("."));
+    let stem = slug(name, "folder");
+    if path
+        .file_name()
+        .is_some_and(|n| n.to_string_lossy() == stem)
+    {
+        return Ok(path.to_owned());
+    }
+    let target = unique_path(parent, &stem, "");
+    fs::rename(path, &target).map_err(io_error(path))?;
+    Ok(target)
+}
+
+/// Renames a request: its `name`, and its file (plus scripts) to match.
+pub fn rename_request(path: &Path, new_name: &str) -> Result<PathBuf, StoreError> {
+    let mut request = load_request(path)?;
+    request.name = new_name.trim().to_owned();
+    let dir = path.parent().unwrap_or(Path::new("."));
+    let old_stem = stem_of(path);
+    let new_stem = slug(new_name, "request");
+    if new_stem == old_stem {
+        save_request(path, &request)?;
+        return Ok(path.to_owned());
+    }
+
+    let new_path = unique_path(dir, &new_stem, REQUEST_EXTENSION);
+    let final_stem = stem_of(&new_path);
+    save_request(&new_path, &request)?;
+    for script in sidecars(path) {
+        let name = script.file_name().unwrap_or_default().to_string_lossy();
+        let target = dir.join(format!("{final_stem}{}", &name[old_stem.len()..]));
+        if !target.exists() {
+            fs::rename(&script, &target).map_err(io_error(&script))?;
+        }
+    }
+    fs::remove_file(path).map_err(io_error(path))?;
+    Ok(new_path)
+}
+
+/// Copies a request (and its scripts) next to it as "<name> copy".
+pub fn duplicate_request(path: &Path) -> Result<PathBuf, StoreError> {
+    let mut request = load_request(path)?;
+    request.name = format!("{} copy", request.name);
+    let dir = path.parent().unwrap_or(Path::new("."));
+    let old_stem = stem_of(path);
+    let new_path = unique_path(dir, &format!("{old_stem}-copy"), REQUEST_EXTENSION);
+    let new_stem = stem_of(&new_path);
+    save_request(&new_path, &request)?;
+    for script in sidecars(path) {
+        let name = script.file_name().unwrap_or_default().to_string_lossy();
+        let target = dir.join(format!("{new_stem}{}", &name[old_stem.len()..]));
+        fs::copy(&script, &target).map_err(io_error(&script))?;
+    }
+    Ok(new_path)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -263,6 +485,84 @@ mod tests {
         assert_eq!(load_request(&path).unwrap().method, Method::Post);
 
         fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn tree_lists_folders_first_and_skips_environments() {
+        let root = temp_collection("tree");
+        fs::create_dir_all(root.join("empty")).unwrap();
+        fs::create_dir_all(root.join(".git")).unwrap();
+        save_request(&root.join("users/b.apix"), &Request::new(Method::Get, "x")).unwrap();
+        save_request(&root.join("users/a.apix"), &Request::new(Method::Get, "x")).unwrap();
+
+        let tree = Collection::open(&root).unwrap().tree();
+        let shape: Vec<String> = tree
+            .iter()
+            .map(|n| match n {
+                TreeNode::Folder { name, children, .. } => format!("{name}/{}", children.len()),
+                TreeNode::Request { path } => stem_of(path),
+            })
+            .collect();
+        assert_eq!(shape, ["empty/0", "users/2", "health"]);
+        let TreeNode::Folder { children, .. } = &tree[1] else {
+            panic!("users is a folder")
+        };
+        assert_eq!(
+            children[0],
+            TreeNode::Request {
+                path: root.join("users/a.apix")
+            }
+        );
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn creates_renames_and_duplicates_with_scripts() {
+        let root = temp_collection("ops");
+        let mut request = Request::new(Method::Post, "https://x/login");
+        request.name = "Log in".into();
+        let path = create_request(&root, &request).unwrap();
+        assert_eq!(path, root.join("log-in.apix"));
+        assert_eq!(
+            create_request(&root, &request).unwrap(),
+            root.join("log-in-2.apix")
+        );
+        fs::write(root.join("log-in.test.js"), "pm.test()").unwrap();
+
+        let renamed = rename_request(&path, "Sign in").unwrap();
+        assert_eq!(renamed, root.join("sign-in.apix"));
+        assert!(!path.exists());
+        assert_eq!(load_request(&renamed).unwrap().name, "Sign in");
+        assert!(
+            root.join("sign-in.test.js").is_file(),
+            "scripts follow the request"
+        );
+
+        let copy = duplicate_request(&renamed).unwrap();
+        assert_eq!(copy, root.join("sign-in-copy.apix"));
+        assert_eq!(load_request(&copy).unwrap().name, "Sign in copy");
+        assert!(root.join("sign-in-copy.test.js").is_file());
+        assert_eq!(
+            request_files(&renamed),
+            [renamed.clone(), root.join("sign-in.test.js")]
+        );
+
+        // Renaming to the same slug only updates the name.
+        assert_eq!(rename_request(&renamed, "sign IN").unwrap(), renamed);
+        let folder = create_folder(&root, "Admin Tools").unwrap();
+        assert_eq!(folder, root.join("admin-tools"));
+        assert_eq!(rename_folder(&folder, "Admin").unwrap(), root.join("admin"));
+        assert!(root.join("admin").is_dir() && !folder.exists());
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn slugs_are_readable_and_safe() {
+        assert_eq!(slug("Create User (v2)", "x"), "create-user-v2");
+        assert_eq!(slug("  ** ", "request"), "request");
+        assert_eq!(slug("İstanbul Şube/Çıkış", "x"), "istanbul-şube-çıkış");
+        assert_eq!(slug("CON", "x"), "con-1");
+        assert_eq!(slug("com1", "x"), "com1-1");
     }
 
     #[test]

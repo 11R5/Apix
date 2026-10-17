@@ -30,6 +30,20 @@ apix run examples/jsonplaceholder
 
 `apix run` exits with a non-zero code if any request fails, so it can be used as a CI step.
 
+### Coming from Postman
+
+```sh
+apix import "My API.postman_collection.json"              # creates ./my-api
+apix import "Staging.postman_environment.json" --into my-api
+apix run my-api --env staging
+```
+
+Collection v2.0 and v2.1 are supported. Anything Apix cannot carry over yet (multipart
+files, OAuth 2.0, saved examples) is listed in the import report. Pre-request and test
+scripts are kept as `.js` files next to their requests. Secrets from Postman
+environments go to a gitignored `*.local.toml`. In the desktop app, use the sidebar's
+import button or drop the export onto the window.
+
 ## Collection format
 
 ```toml
