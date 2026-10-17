@@ -257,11 +257,20 @@ name = "apix-cli"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "apix-codegen",
  "apix-core",
  "apix-http",
  "apix-import",
  "clap",
  "tokio",
+]
+
+[[package]]
+name = "apix-codegen"
+version = "0.1.0"
+dependencies = [
+ "apix-core",
+ "url",
 ]
 
 [[package]]
@@ -277,6 +286,7 @@ dependencies = [
 name = "apix-desktop"
 version = "0.1.0"
 dependencies = [
+ "apix-codegen",
  "apix-core",
  "apix-http",
  "apix-import",

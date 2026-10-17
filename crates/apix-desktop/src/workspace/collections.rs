@@ -1175,16 +1175,33 @@ fn request_menu(menu: PopupMenu, view: WeakEntity<Workspace>, path: PathBuf) -> 
                     .ok();
             })
         };
-    menu.item(item("Rename…", |this, path, window, cx| {
-        this.rename_request(path, window, cx)
-    }))
-    .item(item("Duplicate", |this, path, window, cx| {
-        this.duplicate(path, window, cx)
-    }))
-    .separator()
-    .item(item("Move to trash", |this, path, window, cx| {
-        this.confirm_delete(path, false, window, cx)
-    }))
+    let menu = menu
+        .item(item("Rename…", |this, path, window, cx| {
+            this.rename_request(path, window, cx)
+        }))
+        .item(item("Duplicate", |this, path, window, cx| {
+            this.duplicate(path, window, cx)
+        }))
+        .separator();
+    let menu = apix_codegen::Shell::ALL
+        .into_iter()
+        .fold(menu, |menu, shell| {
+            let (view, path) = (view.clone(), path.clone());
+            menu.item(
+                PopupMenuItem::new(format!("Copy as {}", shell.label())).on_click(
+                    move |_, window, cx| {
+                        view.update(cx, |this, cx| {
+                            this.copy_saved_as(path.clone(), shell, window, cx)
+                        })
+                        .ok();
+                    },
+                ),
+            )
+        });
+    menu.separator()
+        .item(item("Move to trash", |this, path, window, cx| {
+            this.confirm_delete(path, false, window, cx)
+        }))
 }
 
 fn folder_menu(menu: PopupMenu, view: WeakEntity<Workspace>, path: PathBuf) -> PopupMenu {

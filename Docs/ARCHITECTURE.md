@@ -29,7 +29,8 @@ crates/
 ├── apix-core     request model, {{variables}}, on-disk format, tree and file operations
 ├── apix-http     HTTP engine: reqwest + rustls, timings, response capture
 ├── apix-import   Postman v2.0/v2.1 collections and environments → Apix collections
-├── apix-cli      `apix` binary: send / run / import from terminal & CI
+├── apix-codegen  requests ↔ shell commands: curl (bash), curl.exe (cmd), PowerShell; parses pasted curl
+├── apix-cli      `apix` binary: send / run / import / shell from terminal & CI
 └── apix-desktop  GPUI desktop app (Windows, macOS and Linux from one crate)
 ```
 
@@ -39,7 +40,6 @@ Planned crates:
 |----------------|--------------------------------------------------------------------|
 | `apix-script`  | Pre-request and test scripts (`pm.*`-compatible API) on QuickJS via `rquickjs` |
 | `apix-proto`   | GraphQL, WebSocket (`tokio-tungstenite`), gRPC (`tonic` + reflection), SSE |
-| `apix-codegen` | Copy as shell command (bash `curl`, cmd `curl.exe`, PowerShell, fish, HTTPie, wget) and code snippets |
 | `apix-vault`   | Encrypted collections: XChaCha20-Poly1305 per file, Argon2id key derivation, opaque file names |
 | `apix-mock`    | A local mock server that serves saved examples (`hyper`)           |
 

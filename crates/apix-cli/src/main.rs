@@ -33,6 +33,18 @@ enum Command {
         #[command(flatten)]
         vars: VarArgs,
     },
+    /// Print a request as a shell command (curl for bash, curl.exe for cmd, or PowerShell)
+    Shell {
+        file: PathBuf,
+        /// Which shell to write for
+        #[arg(long = "as", value_enum, default_value_t = ShellArg::Bash)]
+        shell: ShellArg,
+        /// Keep {{variables}} instead of filling them in
+        #[arg(long)]
+        raw: bool,
+        #[command(flatten)]
+        vars: VarArgs,
+    },
     /// Import a Postman collection (v2.0/v2.1) or environment export
     Import {
         /// A Postman `.postman_collection.json` or `.postman_environment.json` file
@@ -44,6 +56,23 @@ enum Command {
         #[arg(long)]
         into: Option<PathBuf>,
     },
+}
+
+#[derive(Clone, Copy, clap::ValueEnum)]
+enum ShellArg {
+    Bash,
+    Cmd,
+    Powershell,
+}
+
+impl From<ShellArg> for apix_codegen::Shell {
+    fn from(arg: ShellArg) -> Self {
+        match arg {
+            ShellArg::Bash => apix_codegen::Shell::Bash,
+            ShellArg::Cmd => apix_codegen::Shell::Cmd,
+            ShellArg::Powershell => apix_codegen::Shell::PowerShell,
+        }
+    }
 }
 
 #[derive(Args)]
@@ -162,6 +191,29 @@ async fn run(cli: Cli) -> Result<bool> {
             Ok(failed == 0)
         }
         Command::Import { file, out, into } => import(&style, &file, out, into),
+        Command::Shell {
+            file,
+            shell,
+            raw,
+            vars,
+        } => {
+            let request = load_request(&file)?;
+            let request = if raw {
+                request
+            } else {
+                let collection = Collection::find_root(&file)
+                    .map(Collection::open)
+                    .transpose()?;
+                let resolved = request.resolve(&vars.build(collection.as_ref())?);
+                if !resolved.missing.is_empty() {
+                    let names: Vec<_> = resolved.missing.into_iter().collect();
+                    eprintln!("note: left as-is, not defined: {}", names.join(", "));
+                }
+                resolved.request
+            };
+            println!("{}", apix_codegen::to_shell(&request, shell.into()));
+            Ok(true)
+        }
     }
 }
 

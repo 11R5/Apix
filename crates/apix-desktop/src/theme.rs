@@ -52,6 +52,10 @@ pub fn apply(palette: &Palette, embedded_fonts: bool, cx: &mut App) {
         t.title_bar = transparent_black();
         t.title_bar_border = p.hairline;
 
+        // Top-right toasts would cover the Send button; keep them above the status bar.
+        t.notification.placement = gpui_kit::Anchor::BottomRight;
+        t.notification.margins.bottom = gpui_kit::px(36.);
+
         // The code editor paints its own (opaque) background; let the panel show through.
         let mut highlight = (*t.highlight_theme).clone();
         highlight.style.editor_background = Some(transparent_black());

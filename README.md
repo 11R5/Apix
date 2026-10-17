@@ -28,7 +28,12 @@ cargo build --release          # optimized binaries in target/release
 apix send examples/jsonplaceholder/users/list-users.apix
 apix send examples/jsonplaceholder/health.apix --env local --var token=abc -i
 apix run examples/jsonplaceholder
+apix shell examples/jsonplaceholder/users/create-user.apix --as powershell   # or bash, cmd
 ```
+
+In the desktop app, the copy button next to Send copies the open request as a
+`curl` (bash), `curl.exe` (cmd) or PowerShell command. Pasting a `curl` command
+into the URL field fills in the whole request.
 
 `apix run` exits with a non-zero code if any request fails, so it can be used as a CI step.
 

@@ -38,7 +38,8 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [x] Environment switcher in the sidebar, remembered per collection, with `*.local.toml` secrets; red line for prod
 - [ ] Environment editor, OS keychain, dynamic variables (`{{$guid}}`, …)
 - [ ] Projects: Open / New collection / New project, recent items, project switcher, project-wide environments, grouping as Project → Environment → Collections, prod guard
-- [ ] Copy request as a shell command: bash/sh `curl`, cmd `curl.exe`, PowerShell `Invoke-RestMethod`, fish, HTTPie, wget; paste a `curl` command to create a request
+- [x] Copy as bash `curl`, cmd `curl.exe` or PowerShell `Invoke-RestMethod` (URL bar menu, sidebar, `apix shell`); pasting a `curl` command fills the request
+- [ ] Copy as fish, HTTPie, wget
 - [ ] New request with a chosen method
 - [ ] Variable chips with hover preview
 - [ ] Auth tab with inheritance from folder or collection; OAuth 2.0 flows

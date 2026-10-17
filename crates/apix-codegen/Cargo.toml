@@ -1,0 +1,12 @@
+[package]
+name = "apix-codegen"
+description = "Turn Apix requests into shell commands (curl, PowerShell) and back"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+apix-core.workspace = true
+# Query strings are encoded and decoded exactly like the HTTP engine does.
+url = "2"

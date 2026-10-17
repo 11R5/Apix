@@ -1,6 +1,7 @@
 //! The main window: collection sidebar, request editor and response viewer.
 
 mod collections;
+mod shell_copy;
 
 use std::collections::{BTreeMap, HashSet};
 use std::path::PathBuf;
@@ -8,11 +9,12 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 use apix_core::store::TreeNode;
-use apix_core::{Body, Collection, KeyValue, Method, Request, Variables};
+use apix_core::{Auth, Body, Collection, KeyValue, Method, Request, Variables};
 use apix_http::{Response, group_digits, human_duration, human_size};
 use gpui_kit::component::button::{Button, ButtonVariants};
 use gpui_kit::component::checkbox::Checkbox;
 use gpui_kit::component::input::{Editor, EditorState, Input, InputEvent, InputState};
+use gpui_kit::component::menu::DropdownMenu as _;
 use gpui_kit::component::select::{Select, SelectEvent, SelectState};
 use gpui_kit::component::spinner::Spinner;
 use gpui_kit::component::tab::{Tab, TabBar};
@@ -216,9 +218,13 @@ pub struct Workspace {
     environment: Option<String>,
     env_select: Entity<EnvSelect>,
     app_state: AppState,
-    /// The request as last loaded or saved. Fields the editor does not cover
-    /// yet (auth, form bodies) come from here, and edits are compared to it.
+    /// The request as last loaded or saved; edits are compared to it.
     base: Request,
+    /// Edited values the editor has no widgets for yet (Auth tab, form bodies).
+    auth: Auth,
+    kept_body: Body,
+    /// URL length before the last change, to tell a paste from typing.
+    last_url_len: usize,
     vars: Variables,
     method: Entity<MethodSelect>,
     url: Entity<InputState>,
@@ -268,11 +274,15 @@ impl Workspace {
         });
 
         let subscriptions = vec![
-            cx.subscribe_in(&url, window, |this, _, event: &InputEvent, window, cx| {
-                if let InputEvent::PressEnter { .. } = event {
-                    this.send(window, cx);
-                }
-            }),
+            cx.subscribe_in(
+                &url,
+                window,
+                |this, _, event: &InputEvent, window, cx| match event {
+                    InputEvent::PressEnter { .. } => this.send(window, cx),
+                    InputEvent::Change => this.on_url_changed(window, cx),
+                    _ => {}
+                },
+            ),
             // The editor keeps Ctrl+Enter for itself, so it is handled here too.
             cx.subscribe_in(&body, window, |this, _, event: &InputEvent, window, cx| {
                 if let InputEvent::PressEnter {
@@ -315,6 +325,9 @@ impl Workspace {
             env_select,
             app_state: AppState::load(),
             base: Request::default(),
+            auth: Auth::None,
+            kept_body: Body::None,
+            last_url_len: 0,
             vars: Variables::new(),
             method,
             url,
@@ -339,8 +352,21 @@ impl Workspace {
         this
     }
 
-    /// Puts `request` into the editor, replacing whatever was there.
+    /// Opens `request` in the editor as the saved state (no unsaved changes).
     fn show_request(&mut self, request: Request, window: &mut Window, cx: &mut Context<Self>) {
+        self.fill_editor(&request, window, cx);
+        self.base = request;
+        self.task = None;
+        self.raw_task = None;
+        self.raw_doc = None;
+        self.large_view = None;
+        self.response = ResponseState::Idle;
+        cx.notify();
+    }
+
+    /// Puts `request`'s fields into the editor without touching the saved
+    /// state, so the change shows as unsaved (used when pasting a curl command).
+    fn fill_editor(&mut self, request: &Request, window: &mut Window, cx: &mut Context<Self>) {
         let method_ix = Method::ALL
             .iter()
             .position(|m| *m == request.method)
@@ -349,6 +375,7 @@ impl Workspace {
             state.set_selected_index(Some(IndexPath::new(method_ix)), window, cx)
         });
         let url = request.url.clone();
+        self.last_url_len = url.chars().count();
         self.url
             .update(cx, |state, cx| state.set_value(url, window, cx));
         self.params = request
@@ -373,13 +400,11 @@ impl Workspace {
         self.body
             .update(cx, |state, cx| state.set_value(text, window, cx));
         self.request_tab = if request.body.is_none() { 0 } else { 2 };
-
-        self.base = request;
-        self.task = None;
-        self.raw_task = None;
-        self.raw_doc = None;
-        self.large_view = None;
-        self.response = ResponseState::Idle;
+        self.auth = request.auth.clone();
+        self.kept_body = match &request.body {
+            Body::Form(_) => request.body.clone(),
+            _ => Body::None,
+        };
         cx.notify();
     }
 
@@ -400,6 +425,7 @@ impl Workspace {
 
     fn build_request(&self, cx: &App) -> Request {
         let mut request = self.base.clone();
+        request.auth = self.auth.clone();
         request.method = self.current_method(cx);
         request.url = self.url.read(cx).value().trim().to_string();
         request.query = self
@@ -418,7 +444,7 @@ impl Workspace {
             BodyKind::Json => Body::Json(text),
             BodyKind::Text => Body::Text(text),
             BodyKind::Xml => Body::Xml(text),
-            BodyKind::Kept => self.base.body.clone(),
+            BodyKind::Kept => self.kept_body.clone(),
         };
         request
     }
@@ -644,6 +670,19 @@ impl Workspace {
                     .flex_1()
                     .min_w_0()
                     .child(Input::new(&self.url).small()),
+            )
+            .child(
+                Button::new("copy-as")
+                    .ghost()
+                    .small()
+                    .icon(IconName::Copy)
+                    .tooltip("Copy as cURL or PowerShell")
+                    .dropdown_menu({
+                        let view = cx.entity().downgrade();
+                        move |menu, _, _| {
+                            shell_copy::copy_items(menu, view.clone(), Workspace::copy_current_as)
+                        }
+                    }),
             )
             .child(div().w(px(92.)).flex_none().child(action))
     }

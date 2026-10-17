@@ -11,6 +11,7 @@ name = "apix-desktop"
 path = "src/main.rs"
 
 [dependencies]
+apix-codegen.workspace = true
 apix-core.workspace = true
 apix-http.workspace = true
 apix-import.workspace = true
