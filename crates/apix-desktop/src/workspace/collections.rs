@@ -12,7 +12,7 @@ use std::time::Duration;
 
 use apix_core::project::{self, GroupBy, Project};
 use apix_core::store::{self, CollectionMeta, StoreError, TreeNode};
-use apix_core::{Collection, Method, Request};
+use apix_core::{Body, Collection, Method, Request};
 use apix_import::postman::{self, Kind};
 use gpui_kit::component::IndexPath;
 use gpui_kit::component::button::{Button, ButtonVariants as _};
@@ -460,9 +460,12 @@ impl Workspace {
         )
     }
 
+    /// Creates a request in `dir` (or next to the open one) and opens it.
+    /// POST, PUT and PATCH start with an empty JSON body.
     pub(super) fn new_request(
         &mut self,
         dir: Option<PathBuf>,
+        method: Method,
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
@@ -478,9 +481,14 @@ impl Workspace {
             window,
             cx,
             Rc::new(move |this, window, cx| {
+                let body = match method {
+                    Method::Post | Method::Put | Method::Patch => Body::Json("{\n  \n}".into()),
+                    _ => Body::None,
+                };
                 let request = Request {
                     name: "New request".into(),
-                    ..Request::new(Method::Get, "")
+                    body,
+                    ..Request::new(method, "")
                 };
                 match store::create_request(&dir, &request) {
                     Ok(path) => {
@@ -959,13 +967,12 @@ impl Workspace {
                             icon_button(
                                 "sidebar-new",
                                 IconName::Plus,
-                                format!("New request ({})", key_hint("N")),
+                                format!("New request ({} for GET)", key_hint("N")),
                             )
-                            .on_click(cx.listener(
-                                |this, _: &ClickEvent, window, cx| {
-                                    this.new_request(None, window, cx)
-                                },
-                            )),
+                            .dropdown_menu({
+                                let view = cx.entity().downgrade();
+                                move |menu, _, _| method_items(menu, view.clone(), None)
+                            }),
                         )
                         .child(
                             icon_button(
@@ -1137,8 +1144,15 @@ impl Workspace {
                         .truncate()
                         .child(collection.meta.name.clone()),
                 )
-                .context_menu(move |menu: PopupMenu, _, _| {
-                    collection_menu(menu, view.clone(), menu_root.clone(), pins.clone())
+                .context_menu(move |menu: PopupMenu, window, cx| {
+                    collection_menu(
+                        menu,
+                        view.clone(),
+                        menu_root.clone(),
+                        pins.clone(),
+                        window,
+                        cx,
+                    )
                 })
                 .into_any_element(),
         );
@@ -1396,8 +1410,8 @@ impl Workspace {
                 .xsmall(),
             )
             .child(div().truncate().child(name.to_owned()))
-            .context_menu(move |menu: PopupMenu, _, _| {
-                folder_menu(menu, view.clone(), menu_path.clone())
+            .context_menu(move |menu: PopupMenu, window, cx| {
+                folder_menu(menu, view.clone(), menu_path.clone(), window, cx)
             })
     }
 
@@ -1522,7 +1536,41 @@ fn request_menu(menu: PopupMenu, view: WeakEntity<Workspace>, path: PathBuf) -> 
         }))
 }
 
-fn folder_menu(menu: PopupMenu, view: WeakEntity<Workspace>, path: PathBuf) -> PopupMenu {
+/// One item per HTTP method; picking one creates a request with it in `dir`.
+fn method_items(menu: PopupMenu, view: WeakEntity<Workspace>, dir: Option<PathBuf>) -> PopupMenu {
+    Method::ALL.into_iter().fold(menu, |menu, method| {
+        let (view, dir) = (view.clone(), dir.clone());
+        menu.item(
+            PopupMenuItem::new(method.as_str()).on_click(move |_, window, cx| {
+                view.update(cx, |this, cx| {
+                    this.new_request(dir.clone(), method, window, cx)
+                })
+                .ok();
+            }),
+        )
+    })
+}
+
+/// "New request ▸" with a submenu of methods, for the folder and collection menus.
+fn new_request_submenu(
+    menu: PopupMenu,
+    view: WeakEntity<Workspace>,
+    dir: PathBuf,
+    window: &mut Window,
+    cx: &mut Context<PopupMenu>,
+) -> PopupMenu {
+    menu.submenu("New request", window, cx, move |menu, _, _| {
+        method_items(menu, view.clone(), Some(dir.clone()))
+    })
+}
+
+fn folder_menu(
+    menu: PopupMenu,
+    view: WeakEntity<Workspace>,
+    path: PathBuf,
+    window: &mut Window,
+    cx: &mut Context<PopupMenu>,
+) -> PopupMenu {
     let item =
         |label: &'static str,
          f: fn(&mut Workspace, PathBuf, &mut Window, &mut Context<Workspace>)| {
@@ -1532,19 +1580,17 @@ fn folder_menu(menu: PopupMenu, view: WeakEntity<Workspace>, path: PathBuf) -> P
                     .ok();
             })
         };
-    menu.item(item("New request", |this, path, window, cx| {
-        this.new_request(Some(path), window, cx)
-    }))
-    .item(item("New folder…", |this, path, window, cx| {
-        this.new_folder(Some(path), window, cx)
-    }))
-    .item(item("Rename…", |this, path, window, cx| {
-        this.rename_folder(path, window, cx)
-    }))
-    .separator()
-    .item(item("Move to trash", |this, path, window, cx| {
-        this.confirm_delete(path, true, window, cx)
-    }))
+    new_request_submenu(menu, view.clone(), path.clone(), window, cx)
+        .item(item("New folder…", |this, path, window, cx| {
+            this.new_folder(Some(path), window, cx)
+        }))
+        .item(item("Rename…", |this, path, window, cx| {
+            this.rename_folder(path, window, cx)
+        }))
+        .separator()
+        .item(item("Move to trash", |this, path, window, cx| {
+            this.confirm_delete(path, true, window, cx)
+        }))
 }
 
 /// What the workspace menu (the project or collection name at the top of
@@ -1622,6 +1668,8 @@ fn collection_menu(
     view: WeakEntity<Workspace>,
     root: PathBuf,
     pins: Option<(Vec<String>, Vec<bool>)>,
+    window: &mut Window,
+    cx: &mut Context<PopupMenu>,
 ) -> PopupMenu {
     let item =
         |label: &'static str,
@@ -1632,10 +1680,7 @@ fn collection_menu(
                     .ok();
             })
         };
-    let mut menu = menu
-        .item(item("New request", |this, root, window, cx| {
-            this.new_request(Some(root), window, cx)
-        }))
+    let mut menu = new_request_submenu(menu, view.clone(), root.clone(), window, cx)
         .item(item("New folder…", |this, root, window, cx| {
             this.new_folder(Some(root), window, cx)
         }))

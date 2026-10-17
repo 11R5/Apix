@@ -136,7 +136,7 @@ Apix, Postman'in yaptığı her şeyi yapan bir API istemcisi olacak. Postman'de
 | **HEAD** | Sadece başlıkları getirir. Yanıt panelinde gövde sekmesi gizlenir. | ✅ motor |
 | **OPTIONS** | CORS preflight yardımcısı. İzin verilen metotları ve başlıkları tablo olarak gösterir. | ✅ motor · ⬜ yardımcı |
 | **Özel metot** | `PROPFIND`, `PURGE` gibi elle yazılan metotlar. | ⬜ S |
-| **Metot seçici** | Açılır liste. Ayrıca URL çubuğunda `Alt+1…7` ile hızlı seçim. | 🔜 S |
+| **Metot seçici** | Açılır liste. Ayrıca URL çubuğunda `Alt+1…7` ile hızlı seçim. | ✅ |
 
 #### A2. URL çubuğu
 - ⬜ Düzenlenebilir, tek satırlık bir kod editörü olacak. `{{değişken}}` çip olarak çizilir. Tanımsız değişkenin altı kırmızı çizilir. (🔜 M)
@@ -223,7 +223,7 @@ Her istek için "Network" sekmesi: istek gerçekte nasıl ve nereden geçti?
 | **Klasör = koleksiyon** | Bir klasör içindeki `apix.toml` ve istek dosyaları bir koleksiyon oluşturur. | ✅ |
 | **Ağaç görünümü** | Klasörler açılıp kapanır, her istekte metot rozeti görünür. | ✅ |
 | **Oluştur / yeniden adlandır / çoğalt / sil** | Sağ tık menüsünden ve kısayollardan. Silinen dosyalar çöp kutusuna gider, hemen kalıcı silinmez. | ✅ |
-| **Metot seçerek yeni istek** (not 7) | "+" menüsünde GET, POST, PUT, PATCH, DELETE … seçilir; istek o metotla ve uygun gövde tipiyle açılır (POST/PUT/PATCH için JSON). | ⬜ S |
+| **Metot seçerek yeni istek** (not 7) | "+" menüsünde GET, POST, PUT, PATCH, DELETE … seçilir; istek o metotla ve uygun gövde tipiyle açılır (POST/PUT/PATCH için JSON). | ✅ |
 | **Sürükle-bırak** | İstekleri ve klasörleri taşıma ve sıralama | ⬜ M |
 | **Miras alma** | Klasör ve koleksiyon seviyesinde auth, header, değişken ve script tanımlanabilir. Alt öğeler bunları devralır. | ⬜ M |
 | **Dokümantasyon** | Her koleksiyon, klasör ve istek için Markdown açıklama | ⬜ S |
@@ -463,7 +463,7 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 2. [x] **Ortam seçici ve ortam editörü:** Seçici ✅ (kenar çubuğunda; Windows'ta başlık çubuğu sürükleme alanı olduğu için oraya konmadı). Koleksiyon başına hatırlanıyor, `.local.toml` gizli değerleri dahil. Ortam editörü ✅ (Ctrl+E). Dinamik değişkenler ✅ (`{{$guid}}` … 28 tane). Kalan: OS anahtarlığı. (M)
 3. [x] **Projeler (§C1):** proje modeli (`apix-project.toml`), Yeni proje / Yeni koleksiyon / Aç, son açılanlar, proje menüsü, proje genelinde ortamlar (proje → koleksiyon → proje ortamı → koleksiyon ortamı), "Proje → Ortam → Koleksiyonlar" gruplaması, koleksiyonu ortamlara sabitleme, prod çizgisi. Kalanlar: renkler, koleksiyonu sürükleyerek projeye taşıma, prod onay penceresi. (L)
 4. [x] **Kabuk komutu olarak kopyala** (§I): bash `curl`, cmd `curl.exe`, PowerShell `Invoke-RestMethod`; URL çubuğundaki kopyala menüsü, sağ tık ve `apix shell` CLI komutu. Yapıştırılan `curl` komutu isteği doldurur. Kalanlar: fish, HTTPie, wget. (M)
-5. [ ] **Metot seçerek yeni istek** (§C) (S)
+5. [x] **Metot seçerek yeni istek** (§C): kenar çubuğundaki "+" menüsü, klasör ve koleksiyon menülerinde "New request ▸". POST, PUT ve PATCH JSON gövdeyle açılır. URL çubuğunda Alt+1…7 metodu değiştirir. (S)
 6. [ ] Değişken çipleri ve fareyle üstüne gelince değer gösterme (M)
 7. [ ] Auth sekmesi: temel tipler ve miras alma, OAuth 2.0 akışları (L)
 8. [ ] Komut paleti (Ctrl/⌘+K) (M)

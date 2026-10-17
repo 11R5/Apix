@@ -40,7 +40,14 @@ actions!(
         NewRequest,
         OpenCollection,
         ImportFile,
-        EditVariables
+        EditVariables,
+        MethodGet,
+        MethodPost,
+        MethodPut,
+        MethodPatch,
+        MethodDelete,
+        MethodHead,
+        MethodOptions
     ]
 );
 
@@ -54,6 +61,14 @@ pub fn bind_keys(cx: &mut App) {
         KeyBinding::new("secondary-n", NewRequest, Some(CONTEXT)),
         KeyBinding::new("secondary-o", OpenCollection, Some(CONTEXT)),
         KeyBinding::new("secondary-e", EditVariables, Some(CONTEXT)),
+        // Alt+1…7 pick the method, in the order of the method picker.
+        KeyBinding::new("alt-1", MethodGet, Some(CONTEXT)),
+        KeyBinding::new("alt-2", MethodPost, Some(CONTEXT)),
+        KeyBinding::new("alt-3", MethodPut, Some(CONTEXT)),
+        KeyBinding::new("alt-4", MethodPatch, Some(CONTEXT)),
+        KeyBinding::new("alt-5", MethodDelete, Some(CONTEXT)),
+        KeyBinding::new("alt-6", MethodHead, Some(CONTEXT)),
+        KeyBinding::new("alt-7", MethodOptions, Some(CONTEXT)),
     ]);
 }
 
@@ -371,6 +386,14 @@ impl Workspace {
         self.raw_doc = None;
         self.large_view = None;
         self.response = ResponseState::Idle;
+        cx.notify();
+    }
+
+    /// Alt+1…7: sets the method to the `ix`-th entry of `Method::ALL`.
+    fn pick_method(&mut self, ix: usize, window: &mut Window, cx: &mut Context<Self>) {
+        self.method.update(cx, |state, cx| {
+            state.set_selected_index(Some(IndexPath::new(ix)), window, cx)
+        });
         cx.notify();
     }
 
@@ -1093,9 +1116,16 @@ impl Render for Workspace {
             .on_action(cx.listener(|this, _: &SaveRequest, window, cx| {
                 this.save(window, cx);
             }))
-            .on_action(
-                cx.listener(|this, _: &NewRequest, window, cx| this.new_request(None, window, cx)),
-            )
+            .on_action(cx.listener(|this, _: &NewRequest, window, cx| {
+                this.new_request(None, Method::Get, window, cx)
+            }))
+            .on_action(cx.listener(|this, _: &MethodGet, w, cx| this.pick_method(0, w, cx)))
+            .on_action(cx.listener(|this, _: &MethodPost, w, cx| this.pick_method(1, w, cx)))
+            .on_action(cx.listener(|this, _: &MethodPut, w, cx| this.pick_method(2, w, cx)))
+            .on_action(cx.listener(|this, _: &MethodPatch, w, cx| this.pick_method(3, w, cx)))
+            .on_action(cx.listener(|this, _: &MethodDelete, w, cx| this.pick_method(4, w, cx)))
+            .on_action(cx.listener(|this, _: &MethodHead, w, cx| this.pick_method(5, w, cx)))
+            .on_action(cx.listener(|this, _: &MethodOptions, w, cx| this.pick_method(6, w, cx)))
             .on_action(cx.listener(|this, _: &OpenCollection, window, cx| {
                 this.prompt_open_collection(window, cx)
             }))
