@@ -1,0 +1,305 @@
+//! `{{variable}}` chips in the URL bar. Every reference is one atomic token,
+//! coloured by how it resolves: defined, dynamic (`{{$guid}}`) or missing.
+//! Hovering a chip shows its value and the scope it comes from; secrets stay
+//! masked.
+
+use std::collections::HashMap;
+use std::ops::Range;
+use std::rc::Rc;
+
+use apix_core::dynamic::DYNAMIC_VARIABLES;
+use gpui_kit::component::input::{InlineToken, Input, InputContent};
+use gpui_kit::component::{ActiveTheme as _, Sizable, v_flex};
+use gpui_kit::*;
+
+use super::{Workspace, key_hint};
+
+/// The chip under the pointer, with its bounds in window coordinates.
+#[derive(Debug, Clone, PartialEq)]
+pub(super) struct HoveredVar {
+    name: String,
+    bounds: Bounds<Pixels>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Kind {
+    Defined,
+    Dynamic,
+    Missing,
+}
+
+/// Every `{{name}}` in `text`: its byte range and the trimmed name.
+fn references(text: &str) -> Vec<(Range<usize>, String)> {
+    let mut out = Vec::new();
+    let mut from = 0;
+    while let Some(start) = text[from..].find("{{").map(|i| from + i) {
+        let after = start + 2;
+        let Some(len) = text[after..].find("}}") else {
+            break;
+        };
+        let inner = &text[after..after + len];
+        let name = inner.trim();
+        // `{{{{x}}` or a stray `{{` before the real one: retry from the next brace.
+        if name.is_empty() || inner.contains('{') {
+            from = start + 1;
+            continue;
+        }
+        out.push((start..after + len + 2, name.to_owned()));
+        from = after + len + 2;
+    }
+    out
+}
+
+fn token(name: &str, text: &str) -> InlineToken {
+    InlineToken::new(name.to_owned(), text.to_owned()).with_label(name.to_owned())
+}
+
+/// `text` with every reference as a chip, for `InputState::set_value`.
+pub(super) fn chip_content(text: &str) -> InputContent {
+    references(text).into_iter().fold(
+        InputContent::new(text.to_owned()),
+        |content, (range, name)| {
+            let piece = text[range.clone()].to_owned();
+            match content.clone().with_token(range, token(&name, &piece)) {
+                Ok(next) => next,
+                Err(_) => content,
+            }
+        },
+    )
+}
+
+impl Workspace {
+    fn kind(&self, name: &str) -> Kind {
+        if self.vars.get(name).is_some() {
+            Kind::Defined
+        } else if name
+            .strip_prefix('$')
+            .is_some_and(|n| DYNAMIC_VARIABLES.iter().any(|(d, _)| *d == n))
+        {
+            Kind::Dynamic
+        } else {
+            Kind::Missing
+        }
+    }
+
+    fn chip_color(&self, kind: Kind) -> Hsla {
+        match kind {
+            Kind::Defined => self.palette.accent,
+            Kind::Dynamic => hsla(0.75, 0.75, 0.75, 1.),
+            Kind::Missing => self.palette.err,
+        }
+    }
+
+    /// Turns references typed or pasted into the URL into chips. Called on
+    /// every change; skips the text it just chipped, so undoing a chip works.
+    pub(super) fn chip_url(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let state = self.url.read(cx);
+        let text = state.value().to_string();
+        // Right after an undo of a chip the text is exactly what was chipped:
+        // leave it as text. Any other change forgets that text.
+        if self.last_chipped.as_deref() == Some(text.as_str()) {
+            return;
+        }
+        self.last_chipped = None;
+        let taken: Vec<Range<usize>> = state.tokens().iter().map(|s| s.range()).collect();
+        let fresh: Vec<(Range<usize>, String)> = references(&text)
+            .into_iter()
+            .filter(|(range, _)| {
+                !taken
+                    .iter()
+                    .any(|t| t.start < range.end && range.start < t.end)
+            })
+            .collect();
+        if fresh.is_empty() {
+            return;
+        }
+        self.last_chipped = Some(text.clone());
+        self.url.update(cx, |state, cx| {
+            // From the end, so earlier ranges stay valid.
+            for (range, name) in fresh.into_iter().rev() {
+                let piece = text[range.clone()].to_owned();
+                let _ = state.replace_range_with_token(range, token(&name, &piece), window, cx);
+            }
+        });
+    }
+
+    /// The URL field with chips and the hover card hook.
+    pub(super) fn url_input(&self, cx: &mut Context<Self>) -> Input {
+        let colors: Rc<HashMap<String, Hsla>> = Rc::new(
+            self.url
+                .read(cx)
+                .tokens()
+                .iter()
+                .map(|span| {
+                    let name = span.token().id().to_string();
+                    let color = self.chip_color(self.kind(&name));
+                    (name, color)
+                })
+                .collect(),
+        );
+        let view = cx.entity().downgrade();
+        Input::new(&self.url)
+            .small()
+            .token(move |chip, _, cx| {
+                let color = colors
+                    .get(chip.token().id().as_ref())
+                    .copied()
+                    .unwrap_or(cx.theme().muted_foreground);
+                div()
+                    .flex()
+                    .items_center()
+                    .h(chip.line_height())
+                    .max_w(chip.available_width())
+                    .px(px(5.))
+                    .rounded(px(4.))
+                    .border_1()
+                    .border_color(if chip.is_selected() {
+                        color
+                    } else {
+                        color.opacity(0.35)
+                    })
+                    .bg(color.opacity(if chip.is_selected() { 0.30 } else { 0.14 }))
+                    .text_color(color)
+                    .child(
+                        div()
+                            .min_w_0()
+                            .text_ellipsis()
+                            .child(chip.token().label().clone()),
+                    )
+            })
+            .on_token_hover(move |event, _, cx| {
+                let hovered = HoveredVar {
+                    name: event.token().id().to_string(),
+                    bounds: event.bounds(),
+                };
+                let entered = event.is_hovered();
+                view.update(cx, |this, cx| {
+                    if entered {
+                        this.hovered_var = Some(hovered);
+                    } else if this
+                        .hovered_var
+                        .as_ref()
+                        .is_some_and(|h| h.name == hovered.name)
+                    {
+                        this.hovered_var = None;
+                    }
+                    cx.notify();
+                })
+                .ok();
+            })
+    }
+
+    /// The card under a hovered chip: value, scope, or why it is missing.
+    pub(super) fn render_var_card(&self, cx: &mut Context<Self>) -> Option<AnyElement> {
+        let hovered = self.hovered_var.as_ref()?;
+        let p = self.palette;
+        let name = hovered.name.as_str();
+        let kind = self.kind(name);
+        let mono = cx.theme().mono_font_family.clone();
+        let line = |text: String, color: Hsla| div().text_xs().text_color(color).child(text);
+
+        let mut card = v_flex()
+            .gap_1()
+            .max_w(px(420.))
+            .px_3()
+            .py_2()
+            .rounded_md()
+            .border_1()
+            .border_color(p.hairline)
+            .bg(p.surface_raised)
+            .shadow_lg()
+            .child(
+                div()
+                    .text_sm()
+                    .font_family(mono.clone())
+                    .text_color(self.chip_color(kind))
+                    .child(format!("{{{{{name}}}}}")),
+            );
+        match kind {
+            Kind::Defined => {
+                let raw = self.vars.get(name).unwrap_or_default();
+                let origin = self.vars.origin(name);
+                let secret = origin.is_some_and(|o| o.secret);
+                let mut missing = Default::default();
+                let resolved = self.vars.interpolate(raw, &mut missing);
+                let shown = if secret {
+                    "•".repeat(resolved.chars().count().clamp(6, 24))
+                } else if resolved.is_empty() {
+                    "(empty)".to_owned()
+                } else {
+                    resolved.clone()
+                };
+                card = card.child(
+                    div()
+                        .text_sm()
+                        .font_family(mono)
+                        .text_color(p.text)
+                        .child(shown),
+                );
+                if raw != resolved && !secret {
+                    card = card.child(line(format!("= {raw}"), p.text_muted));
+                }
+                let scope = origin.map_or("Set for this run".to_owned(), |o| o.scope.clone());
+                let scope = if secret {
+                    format!("{scope} · secret (.local.toml)")
+                } else {
+                    scope
+                };
+                card = card.child(line(scope, p.text_muted));
+            }
+            Kind::Dynamic => {
+                let about = DYNAMIC_VARIABLES
+                    .iter()
+                    .find(|(d, _)| Some(*d) == name.strip_prefix('$'))
+                    .map_or("", |(_, about)| *about);
+                card = card.child(line(about.to_owned(), p.text)).child(line(
+                    "Dynamic: a new value on every send".into(),
+                    p.text_muted,
+                ));
+            }
+            Kind::Missing => {
+                let env = match &self.environment {
+                    Some(env) => format!("Not defined for environment \"{env}\"."),
+                    None => "Not defined, and no environment is selected.".to_owned(),
+                };
+                card = card.child(line(env, p.err)).child(line(
+                    format!("Add it with {} (Variables).", key_hint("E")),
+                    p.text_muted,
+                ));
+            }
+        }
+        let at = hovered.bounds.bottom_left() + point(px(0.), px(6.));
+        Some(
+            deferred(
+                anchored()
+                    .position(at)
+                    .snap_to_window_with_margin(px(8.))
+                    .child(card),
+            )
+            .with_priority(1)
+            .into_any_element(),
+        )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    // Not `super::*`: gpui's `test` macro would shadow the built-in `#[test]`.
+    use super::{chip_content, references};
+
+    #[test]
+    fn finds_references() {
+        let found = references("{{base}}/users/{{ id }}?x={{$guid}}&y={{}}&z={{open");
+        let names: Vec<&str> = found.iter().map(|(_, n)| n.as_str()).collect();
+        assert_eq!(names, ["base", "id", "$guid"]);
+        assert_eq!(found[1].0, 15..23);
+        assert_eq!(references("{{{{x}}")[0].0, 2..7);
+    }
+
+    #[test]
+    fn content_has_one_token_per_reference() {
+        let content = chip_content("{{a}}-{{b}}");
+        assert_eq!(content.tokens().len(), 2);
+        assert_eq!(content.tokens()[1].range(), 6..11);
+    }
+}

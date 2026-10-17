@@ -12,6 +12,17 @@ const MAX_DEPTH: usize = 8;
 #[derive(Debug, Clone, Default)]
 pub struct Variables {
     map: HashMap<String, String>,
+    /// Where each value came from, for the UI. Absent for unnamed layers.
+    origins: HashMap<String, Origin>,
+}
+
+/// The layer that set a variable's current value.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Origin {
+    /// Shown to the user, e.g. `Environment "test"`.
+    pub scope: String,
+    /// The value came from a gitignored `.local.toml` file.
+    pub secret: bool,
 }
 
 impl Variables {
@@ -24,17 +35,42 @@ impl Variables {
         layer: impl IntoIterator<Item = (&'a String, &'a String)>,
     ) -> Self {
         for (key, value) in layer {
+            self.origins.remove(key);
             self.map.insert(key.clone(), value.clone());
         }
         self
     }
 
+    /// Like [`Self::with_layer`], remembering `scope` as the origin of each value.
+    pub fn with_scope<'a>(
+        mut self,
+        layer: impl IntoIterator<Item = (&'a String, &'a String)>,
+        scope: &str,
+        secret: bool,
+    ) -> Self {
+        for (key, value) in layer {
+            self.map.insert(key.clone(), value.clone());
+            let origin = Origin {
+                scope: scope.to_owned(),
+                secret,
+            };
+            self.origins.insert(key.clone(), origin);
+        }
+        self
+    }
+
     pub fn set(&mut self, key: impl Into<String>, value: impl Into<String>) {
-        self.map.insert(key.into(), value.into());
+        let key = key.into();
+        self.origins.remove(&key);
+        self.map.insert(key, value.into());
     }
 
     pub fn get(&self, key: &str) -> Option<&str> {
         self.map.get(key).map(String::as_str)
+    }
+
+    pub fn origin(&self, key: &str) -> Option<&Origin> {
+        self.origins.get(key)
     }
 
     /// Replaces every `{{name}}` in `input`. Unknown names are left in place
@@ -201,6 +237,19 @@ mod tests {
         let env = HashMap::from([("host".to_string(), "staging".to_string())]);
         let v = Variables::new().with_layer(&collection).with_layer(&env);
         assert_eq!(v.get("host"), Some("staging"));
+    }
+
+    #[test]
+    fn remembers_where_values_came_from() {
+        let shared = HashMap::from([("host".to_string(), "a".to_string())]);
+        let secrets = HashMap::from([("token".to_string(), "t".to_string())]);
+        let mut v = Variables::new()
+            .with_scope(&shared, "Collection", false)
+            .with_scope(&secrets, "Environment \"dev\"", true);
+        assert_eq!(v.origin("host").unwrap().scope, "Collection");
+        assert!(v.origin("token").unwrap().secret);
+        v.set("host", "override");
+        assert!(v.origin("host").is_none(), "an override has no named scope");
     }
 
     #[test]

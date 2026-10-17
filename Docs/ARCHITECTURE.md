@@ -40,7 +40,8 @@ tools/
 Inside `apix-desktop/src`: `workspace.rs` (request editor, response panel,
 actions and key bindings), `workspace/collections.rs` (sidebar, projects,
 file operations, import, file watching), `workspace/env_editor.rs` (the
-variables dialog), `workspace/shell_copy.rs` (copy as / paste curl),
+variables dialog), `workspace/shell_copy.rs` (copy as / paste curl), `workspace/var_chips.rs`
+(`{{variable}}` chips in the URL bar and their hover card),
 `large_view.rs` (row-based viewer for huge bodies), `net.rs` (tokio bridge),
 `state.rs` (recent items and per-folder environment in the user's config
 folder), `theme.rs` and `fonts.rs`.

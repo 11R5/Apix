@@ -13,10 +13,10 @@
 | M0 Temel | ✅ |
 | M1 Arayüzden istek | ✅ 100 MB JSON ~0.33 s'de açılıyor |
 | M2 Koleksiyonlar, Postman içe aktarma | ✅ 8/10 · sekmeler ve sürükle-bırak M3'e taşındı |
-| M3 Simge, projeler, ortamlar, kopyalama, auth | 🔜 5/9 · bitti: simge, ortam seçici ve editörü, dinamik değişkenler, projeler, kabuk komutu olarak kopyalama, metotla yeni istek · sıradaki: değişken çipleri |
+| M3 Simge, projeler, ortamlar, kopyalama, auth | 🔜 6/9 · bitti: simge, ortam seçici ve editörü, dinamik değişkenler, projeler, kabuk komutu olarak kopyalama, metotla yeni istek, değişken çipleri · sıradaki: Auth sekmesi |
 | M4–M9 | ⬜ |
 
-Release ikili dosyası 27.7 MB (üst sınır ~40 MB). Testler: core 29, codegen 11, import 10, http 4 (hepsi geçiyor, clippy uyarısız).
+Release ikili dosyası 27.7 MB (üst sınır ~40 MB). Testler: core 30, desktop 2, codegen 11, import 10, http 4 (hepsi geçiyor, clippy uyarısız).
 
 ### Kullanıcı notları (17 Ekim 2026) ve plana nasıl işlendikleri
 | # | Not | Nereye işlendi |
@@ -150,8 +150,8 @@ Apix, Postman'in yaptığı her şeyi yapan bir API istemcisi olacak. Postman'de
 | **Metot seçici** | Açılır liste. Ayrıca URL çubuğunda `Alt+1…7` ile hızlı seçim. | ✅ |
 
 #### A2. URL çubuğu
-- ✅ Düzenlenebilir URL alanı. 🔜 `{{değişken}}` çip olarak çizilir, tanımsız değişken kırmızı görünür. (M)
-- 🔜 Fareyle değişkenin üstüne gelince çözülmüş değer ve hangi kapsamdan geldiği görünür.
+- ✅ Düzenlenebilir URL alanı. `{{değişken}}` çip olarak çizilir: tanımlı (camgöbeği), dinamik (mor), tanımsız (kırmızı). Çip tek parça silinir, Ctrl+Z ile metne geri döner.
+- ✅ Fareyle değişkenin üstüne gelince çözülmüş değer ve hangi kapsamdan geldiği görünür. Gizli değerler maskelenir. ⬜ Params, Headers ve Body alanlarında da çip.
 - ⬜ **Path değişkenleri:** `/users/:id` yazılınca Params sekmesinde `id` alanı kendiliğinden açılır.
 - ⬜ **Query senkronu:** `?a=1&b=2` yazılınca tabloya, tabloya yazılınca URL'ye eklenir.
 - ✅ **cURL yapıştırma:** URL çubuğuna bir cURL komutu yapıştırılırsa istek otomatik oluşturulur.
@@ -465,7 +465,7 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 
 **Bitti sayılması için:** gerçek bir Postman koleksiyonu içe aktarılıp arayüzden gezilebilmeli ve istekleri çalıştırılabilmeli.
 
-### M3 — Simge, projeler, ortamlar, kopyalama, auth 🔜 (9 maddeden 5'i bitti)
+### M3 — Simge, projeler, ortamlar, kopyalama, auth 🔜 (9 maddeden 6'sı bitti)
 1. [x] **Uygulama simgesi** (not 4) (M). `tools/icongen` aracı logodan PNG, ICO, ICNS ve Linux hicolor dosyalarını üretir. Simge exe'ye gömülü, başlık çubuğunda da görünüyor.
    - `Logo/LogoFirst.jpg` kırpılır: alttaki yansıma atılır, zemin squircle dışında saydam yapılır.
    - 16–32 px için sadeleştirilmiş bir sürüm hazırlanır (sadece kuş ve X). Küçük boyutta ince çizgiler kaybolur.
@@ -475,7 +475,7 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 3. [x] **Projeler (§C1):** proje modeli (`apix-project.toml`), Yeni proje / Yeni koleksiyon / Aç, son açılanlar, proje menüsü, proje genelinde ortamlar (proje → koleksiyon → proje ortamı → koleksiyon ortamı), "Proje → Ortam → Koleksiyonlar" gruplaması, koleksiyonu ortamlara sabitleme, prod çizgisi. Kalanlar: renkler, koleksiyonu sürükleyerek projeye taşıma, prod onay penceresi. (L)
 4. [x] **Kabuk komutu olarak kopyala** (§I): bash `curl`, cmd `curl.exe`, PowerShell `Invoke-RestMethod`; URL çubuğundaki kopyala menüsü, sağ tık ve `apix shell` CLI komutu. Yapıştırılan `curl` komutu isteği doldurur. Kalanlar: fish, HTTPie, wget. (M)
 5. [x] **Metot seçerek yeni istek** (§C): kenar çubuğundaki "+" menüsü, klasör ve koleksiyon menülerinde "New request ▸". POST, PUT ve PATCH JSON gövdeyle açılır. URL çubuğunda Alt+1…7 metodu değiştirir. (S)
-6. [ ] 🔜 Değişken çipleri ve fareyle üstüne gelince değer gösterme (M)
+6. [x] **Değişken çipleri** (§A2): URL çubuğunda renkli çipler, üstüne gelince değer, kapsam ve gizlilik bilgisi. Kalan: Params, Headers ve Body alanları. (M)
 7. [ ] Auth sekmesi: temel tipler ve miras alma, OAuth 2.0 akışları (L)
 8. [ ] Komut paleti (Ctrl/⌘+K) (M)
 9. [ ] M2'den kalanlar: sekmeler, sürükle-bırak ile taşıma ve sıralama (M)

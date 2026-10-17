@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::store::{
     self, COLLECTION_FILE, Collection, CollectionMeta, StoreError, VarMap, environment_names_at,
-    environment_vars_at, io_error, read_toml, slug, unique_path, write_toml,
+    io_error, read_toml, slug, unique_path, write_toml,
 };
 use crate::vars::Variables;
 
@@ -217,23 +217,38 @@ pub fn variables(
 ) -> Result<Variables, StoreError> {
     let mut vars = Variables::new();
     if let Some(p) = project {
-        vars = vars.with_layer(&p.meta.vars);
+        vars = vars.with_scope(&p.meta.vars, &format!("Project \"{}\"", p.meta.name), false);
     }
     if let Some(c) = collection {
-        vars = vars.with_layer(&c.meta.vars);
+        vars = vars.with_scope(
+            &c.meta.vars,
+            &format!("Collection \"{}\"", c.meta.name),
+            false,
+        );
     }
     let Some(name) = environment else {
         return Ok(vars);
     };
     let mut found = false;
-    for root in [project.map(|p| &p.root), collection.map(|c| &c.root)]
-        .into_iter()
-        .flatten()
-    {
-        if let Some(env) = environment_vars_at(root, name)? {
-            vars = vars.with_layer(&env);
-            found = true;
+    let layers = [
+        project.map(|p| (&p.root, format!("Environment \"{name}\""))),
+        collection.map(|c| {
+            let scope = match project {
+                Some(_) => format!("Environment \"{name}\" of \"{}\"", c.meta.name),
+                None => format!("Environment \"{name}\""),
+            };
+            (&c.root, scope)
+        }),
+    ];
+    for (root, scope) in layers.into_iter().flatten() {
+        if store::environment_files(root, name).is_empty() {
+            continue;
         }
+        let parts = store::EnvironmentParts::read(root, name)?;
+        vars = vars
+            .with_scope(&parts.vars, &scope, false)
+            .with_scope(&parts.secrets, &scope, true);
+        found = true;
     }
     if found {
         Ok(vars)
@@ -338,6 +353,11 @@ mod tests {
             Some("/v2/users"),
             "the collection's environment wins over the project's"
         );
+        let token = v.origin("token").unwrap();
+        assert!(token.secret);
+        assert_eq!(token.scope, "Environment \"test\"");
+        assert!(v.origin("path").unwrap().scope.ends_with("of \"Users\""));
+        assert!(!v.origin("team").unwrap().secret);
 
         assert!(variables(Some(&project), Some(&collection), Some("only-here")).is_ok());
         assert!(matches!(
