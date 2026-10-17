@@ -3,6 +3,7 @@
 mod collections;
 mod env_editor;
 mod shell_copy;
+mod var_chips;
 
 use std::collections::{BTreeMap, HashSet};
 use std::path::PathBuf;
@@ -248,6 +249,10 @@ pub struct Workspace {
     kept_body: Body,
     /// URL length before the last change, to tell a paste from typing.
     last_url_len: usize,
+    /// The URL text whose references were last turned into chips.
+    last_chipped: Option<String>,
+    /// The `{{variable}}` chip under the pointer, for the hover card.
+    hovered_var: Option<var_chips::HoveredVar>,
     vars: Variables,
     method: Entity<MethodSelect>,
     url: Entity<InputState>,
@@ -302,7 +307,10 @@ impl Workspace {
                 window,
                 |this, _, event: &InputEvent, window, cx| match event {
                     InputEvent::PressEnter { .. } => this.send(window, cx),
-                    InputEvent::Change => this.on_url_changed(window, cx),
+                    InputEvent::Change => {
+                        this.on_url_changed(window, cx);
+                        this.chip_url(window, cx);
+                    }
                     _ => {}
                 },
             ),
@@ -353,6 +361,8 @@ impl Workspace {
             auth: Auth::None,
             kept_body: Body::None,
             last_url_len: 0,
+            last_chipped: None,
+            hovered_var: None,
             vars: Variables::new(),
             method,
             url,
@@ -407,8 +417,10 @@ impl Workspace {
         self.method.update(cx, |state, cx| {
             state.set_selected_index(Some(IndexPath::new(method_ix)), window, cx)
         });
-        let url = request.url.clone();
-        self.last_url_len = url.chars().count();
+        let url = var_chips::chip_content(&request.url);
+        self.last_url_len = request.url.chars().count();
+        self.last_chipped = None;
+        self.hovered_var = None;
         self.url
             .update(cx, |state, cx| state.set_value(url, window, cx));
         self.params = request
@@ -493,8 +505,9 @@ impl Workspace {
             let names: Vec<_> = resolved.missing.into_iter().collect();
             self.fail(
                 format!(
-                    "Undefined variable(s): {}. Define them in apix.toml or an environment.",
-                    names.join(", ")
+                    "Undefined variable(s): {}. Define them with {} (Variables).",
+                    names.join(", "),
+                    key_hint("E")
                 ),
                 cx,
             );
@@ -699,12 +712,7 @@ impl Workspace {
                     .flex_none()
                     .child(Select::new(&self.method).small()),
             )
-            .child(
-                div()
-                    .flex_1()
-                    .min_w_0()
-                    .child(Input::new(&self.url).small()),
-            )
+            .child(div().flex_1().min_w_0().child(self.url_input(cx)))
             .child(
                 Button::new("copy-as")
                     .ghost()
@@ -1199,5 +1207,6 @@ impl Render for Workspace {
                     ),
             )
             .child(self.render_status_bar(cx))
+            .children(self.render_var_card(cx))
     }
 }

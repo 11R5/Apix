@@ -21,7 +21,8 @@
   rename, duplicate and delete (to the trash). Projects group collections, share
   environments, and can show the sidebar as Project → Environment → Collections.
 - **Variables:** project, collection and environment layers, secrets kept out of git,
-  an in-app editor and dynamic values such as `{{$guid}}`.
+  an in-app editor and dynamic values such as `{{$guid}}`. In the URL bar every
+  `{{variable}}` is a coloured chip; hover it to see its value and where it comes from.
 - **Postman:** collection v2.0/v2.1 and environment import, with a report.
 - **Copy as / paste:** copy a request as `curl`, `curl.exe` or PowerShell; paste a
   `curl` command to fill the request.
