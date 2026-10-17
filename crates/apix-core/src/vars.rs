@@ -57,15 +57,20 @@ impl Variables {
                 return out;
             };
             let name = after[..end].trim();
+            // A defined variable named `$x` wins; otherwise `$x` is a dynamic variable.
+            let dynamic = || name.strip_prefix('$').and_then(crate::dynamic::generate);
             match self.get(name) {
                 Some(value) if depth < MAX_DEPTH => {
                     out.push_str(&self.interpolate_at(value, missing, depth + 1))
                 }
                 Some(value) => out.push_str(value),
-                None => {
-                    missing.insert(name.to_owned());
-                    out.push_str(&rest[start..start + 2 + end + 2]);
-                }
+                None => match dynamic() {
+                    Some(value) => out.push_str(&value),
+                    None => {
+                        missing.insert(name.to_owned());
+                        out.push_str(&rest[start..start + 2 + end + 2]);
+                    }
+                },
             }
             rest = &after[end + 2..];
         }
@@ -169,6 +174,19 @@ mod tests {
         );
         assert_eq!(v.interpolate("{{loop}}", &mut missing), "{{loop}}");
         assert!(missing.is_empty());
+    }
+
+    #[test]
+    fn fills_dynamic_variables_freshly_each_time() {
+        let mut missing = BTreeSet::new();
+        let v = vars(&[("$fixed", "kept")]);
+        let out = v.interpolate("{{$guid}} {{$guid}} {{$fixed}} {{$nope}}", &mut missing);
+        let parts: Vec<&str> = out.split(' ').collect();
+        assert_eq!(parts[0].len(), 36);
+        assert_ne!(parts[0], parts[1], "every occurrence is new");
+        assert_eq!(parts[2], "kept", "a defined variable wins");
+        assert_eq!(parts[3], "{{$nope}}");
+        assert_eq!(missing.into_iter().collect::<Vec<_>>(), ["$nope"]);
     }
 
     #[test]

@@ -115,8 +115,14 @@ token = "{{token}}"
 
 Open questions:
 - **Secrets.** Environment values such as tokens should not be committed.
-  `environments/<name>.local.toml` (gitignored) is already layered over `<name>.toml`;
+  `environments/<name>.local.toml` is layered over `<name>.toml`. Writing one adds
+  `*.local.toml` to the `.gitignore` next to `environments/` if it is missing. A
+  secret may keep a placeholder in the shared file, so teammates see the name.
   OS keychain storage through the `keyring` crate comes next.
+- **Dynamic variables.** `{{$name}}` is filled by `apix_core::dynamic` when no
+  variable of that name is defined, with a new value for every occurrence
+  (`$guid`, `$timestamp`, `$isoTimestamp`, `$randomEmail`, …). No extra crates:
+  a small xorshift generator and a hand-written UTC date formatter.
 - **Ordering in the sidebar.** Folders and files are sorted by name for now. An
   optional `order` field may be added later.
 

@@ -129,7 +129,7 @@ impl Workspace {
 
     /// Re-reads the project and its collections from disk. If the open
     /// request changed on disk and has no unsaved edits, the editor follows.
-    fn reload(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+    pub(super) fn reload(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         self.load_errors.clear();
         if let Some(project) = &self.project {
             match Project::open(&project.root) {
@@ -1002,6 +1002,16 @@ impl Workspace {
                         .min_w_0()
                         .child(Select::new(&self.env_select).small()),
                 )
+                .child(
+                    icon_button(
+                        "sidebar-vars",
+                        IconName::Settings,
+                        format!("Edit variables ({})", key_hint("E")),
+                    )
+                    .on_click(cx.listener(
+                        |this, _: &ClickEvent, window, cx| this.open_env_editor(window, cx),
+                    )),
+                )
         });
 
         let body = if !open {
@@ -1200,6 +1210,18 @@ impl Workspace {
                     .on_click(cx.listener(move |this, _: &ClickEvent, window, cx| {
                         this.set_environment(Some(pick.clone()), window, cx)
                     }))
+                    .context_menu({
+                        let view = cx.entity().downgrade();
+                        move |menu, _, _| {
+                            let view = view.clone();
+                            menu.item(PopupMenuItem::new("Edit variables…").on_click(
+                                move |_, window, cx| {
+                                    view.update(cx, |this, cx| this.open_env_editor(window, cx))
+                                        .ok();
+                                },
+                            ))
+                        }
+                    })
                     .child(
                         div()
                             .w(px(8.))
@@ -1430,14 +1452,16 @@ impl Workspace {
 
 /// Closes the top dialog and gives focus back to the workspace, so keyboard
 /// shortcuts work right away.
-fn close_dialog(view: &WeakEntity<Workspace>, window: &mut Window, cx: &mut App) {
+pub(super) fn close_dialog(view: &WeakEntity<Workspace>, window: &mut Window, cx: &mut App) {
     window.close_dialog(cx);
     view.update(cx, |this, cx| this.focus.focus(window, cx))
         .ok();
 }
 
 /// For `on_close`: however a dialog is dismissed (Esc, ×, overlay), focus returns to the workspace.
-fn refocus(view: WeakEntity<Workspace>) -> impl Fn(&ClickEvent, &mut Window, &mut App) + 'static {
+pub(super) fn refocus(
+    view: WeakEntity<Workspace>,
+) -> impl Fn(&ClickEvent, &mut Window, &mut App) + 'static {
     move |_, window, cx| {
         view.update(cx, |this, cx| this.focus.focus(window, cx))
             .ok();
@@ -1549,7 +1573,12 @@ impl WorkspaceMenu {
                 &format!("Open… ({})", key_hint("O")),
                 Workspace::prompt_open_collection,
             ))
-            .item(item("Import from Postman…", Workspace::prompt_import));
+            .item(item("Import from Postman…", Workspace::prompt_import))
+            .separator()
+            .item(item(
+                &format!("Variables and environments… ({})", key_hint("E")),
+                Workspace::open_env_editor,
+            ));
 
         if self.has_project {
             let group = |label: &str, by: GroupBy, current: Option<GroupBy>| {

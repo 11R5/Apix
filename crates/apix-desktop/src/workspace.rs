@@ -1,6 +1,7 @@
 //! The main window: collection sidebar, request editor and response viewer.
 
 mod collections;
+mod env_editor;
 mod shell_copy;
 
 use std::collections::{BTreeMap, HashSet};
@@ -38,7 +39,8 @@ actions!(
         SaveRequest,
         NewRequest,
         OpenCollection,
-        ImportFile
+        ImportFile,
+        EditVariables
     ]
 );
 
@@ -51,6 +53,7 @@ pub fn bind_keys(cx: &mut App) {
         KeyBinding::new("secondary-s", SaveRequest, Some(CONTEXT)),
         KeyBinding::new("secondary-n", NewRequest, Some(CONTEXT)),
         KeyBinding::new("secondary-o", OpenCollection, Some(CONTEXT)),
+        KeyBinding::new("secondary-e", EditVariables, Some(CONTEXT)),
     ]);
 }
 
@@ -1098,6 +1101,9 @@ impl Render for Workspace {
             }))
             .on_action(
                 cx.listener(|this, _: &ImportFile, window, cx| this.prompt_import(window, cx)),
+            )
+            .on_action(
+                cx.listener(|this, _: &EditVariables, window, cx| this.open_env_editor(window, cx)),
             )
             // A click anywhere brings focus back inside the workspace (inputs
             // focus themselves first, so they keep it), so shortcuts keep working.

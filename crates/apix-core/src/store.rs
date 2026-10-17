@@ -119,7 +119,186 @@ pub fn save_environment(
     let suffix = if local { LOCAL_SUFFIX } else { "" };
     let path = dir.join(format!("{name}{suffix}.toml"));
     write_toml(&path, &EnvironmentFile { vars })?;
+    if local {
+        ensure_local_ignored(root)?;
+    }
     Ok(path)
+}
+
+const LOCAL_PATTERN: &str = "*.local.toml";
+
+/// Makes sure `<root>/.gitignore` ignores `*.local.toml`, so secrets are
+/// never committed. Returns whether the file had to be changed.
+pub fn ensure_local_ignored(root: &Path) -> Result<bool, StoreError> {
+    let path = root.join(".gitignore");
+    let text = match fs::read_to_string(&path) {
+        Ok(text) => text,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => String::new(),
+        Err(source) => return Err(StoreError::Io { path, source }),
+    };
+    let ignored = text
+        .lines()
+        .map(str::trim)
+        .any(|line| line == LOCAL_PATTERN || line == format!("**/{LOCAL_PATTERN}"));
+    if ignored {
+        return Ok(false);
+    }
+    let mut text = text;
+    if !text.is_empty() && !text.ends_with('\n') {
+        text.push('\n');
+    }
+    text.push_str("# Apix secrets\n");
+    text.push_str(LOCAL_PATTERN);
+    text.push('\n');
+    fs::write(&path, text).map_err(io_error(&path))?;
+    Ok(true)
+}
+
+/// One variable of an environment as an editor shows it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EnvVar {
+    pub key: String,
+    pub value: String,
+    /// Kept in `<name>.local.toml` instead of the shared file.
+    pub secret: bool,
+}
+
+/// An environment's two files: the shared values and the secrets layered over them.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct EnvironmentParts {
+    pub vars: VarMap,
+    pub secrets: VarMap,
+}
+
+impl EnvironmentParts {
+    /// Reads `environments/<name>.toml` and `<name>.local.toml`; missing files are empty.
+    pub fn read(root: &Path, name: &str) -> Result<Self, StoreError> {
+        let dir = root.join(ENVIRONMENTS_DIR);
+        let part = |file: String| -> Result<VarMap, StoreError> {
+            let path = dir.join(file);
+            if path.is_file() {
+                Ok(read_toml::<Environment>(&path)?.vars)
+            } else {
+                Ok(VarMap::new())
+            }
+        };
+        Ok(Self {
+            vars: part(format!("{name}.toml"))?,
+            secrets: part(format!("{name}{LOCAL_SUFFIX}.toml"))?,
+        })
+    }
+
+    /// One row per key, sorted. A key with a secret shows the secret.
+    pub fn rows(&self) -> Vec<EnvVar> {
+        let mut rows: Vec<EnvVar> = self
+            .vars
+            .iter()
+            .filter(|(key, _)| !self.secrets.contains_key(*key))
+            .map(|(key, value)| EnvVar {
+                key: key.clone(),
+                value: value.clone(),
+                secret: false,
+            })
+            .chain(self.secrets.iter().map(|(key, value)| EnvVar {
+                key: key.clone(),
+                value: value.clone(),
+                secret: true,
+            }))
+            .collect();
+        rows.sort_by(|a, b| a.key.cmp(&b.key));
+        rows
+    }
+
+    /// The files for edited `rows`. Rows without a key are dropped. A secret
+    /// keeps the placeholder it had in the shared file (so teammates still
+    /// see the name), but its value only goes to the secrets file.
+    pub fn with_rows(&self, rows: &[EnvVar]) -> Self {
+        let mut out = Self::default();
+        for row in rows {
+            let key = row.key.trim();
+            if key.is_empty() {
+                continue;
+            }
+            if row.secret {
+                out.secrets.insert(key.to_owned(), row.value.clone());
+                if let Some(placeholder) = self.vars.get(key) {
+                    out.vars.insert(key.to_owned(), placeholder.clone());
+                }
+            } else {
+                out.vars.insert(key.to_owned(), row.value.clone());
+            }
+        }
+        out
+    }
+
+    /// Writes both files. The secrets file is removed when there are no secrets.
+    pub fn write(&self, root: &Path, name: &str) -> Result<(), StoreError> {
+        save_environment(root, name, &self.vars, false)?;
+        if self.secrets.is_empty() {
+            let local = local_environment_path(root, name);
+            if local.is_file() {
+                fs::remove_file(&local).map_err(io_error(&local))?;
+            }
+        } else {
+            save_environment(root, name, &self.secrets, true)?;
+        }
+        Ok(())
+    }
+}
+
+fn local_environment_path(root: &Path, name: &str) -> PathBuf {
+    root.join(ENVIRONMENTS_DIR)
+        .join(format!("{name}{LOCAL_SUFFIX}.toml"))
+}
+
+/// The files of an environment that exist, shared file first.
+pub fn environment_files(root: &Path, name: &str) -> Vec<PathBuf> {
+    [
+        root.join(ENVIRONMENTS_DIR).join(format!("{name}.toml")),
+        local_environment_path(root, name),
+    ]
+    .into_iter()
+    .filter(|p| p.is_file())
+    .collect()
+}
+
+/// Creates an empty environment named after `title`. Returns its file name,
+/// or an `AlreadyExists` error if that environment is already there.
+pub fn create_environment(root: &Path, title: &str) -> Result<String, StoreError> {
+    let name = slug(title, "environment");
+    let path = root.join(ENVIRONMENTS_DIR).join(format!("{name}.toml"));
+    if !environment_files(root, &name).is_empty() {
+        return Err(already_exists(path));
+    }
+    save_environment(root, &name, &VarMap::new(), false)?;
+    Ok(name)
+}
+
+/// Renames both files of an environment. Returns the new name.
+pub fn rename_environment(root: &Path, old: &str, title: &str) -> Result<String, StoreError> {
+    let name = slug(title, "environment");
+    if name == old {
+        return Ok(name);
+    }
+    let dir = root.join(ENVIRONMENTS_DIR);
+    if !environment_files(root, &name).is_empty() {
+        return Err(already_exists(dir.join(format!("{name}.toml"))));
+    }
+    for suffix in ["", LOCAL_SUFFIX] {
+        let from = dir.join(format!("{old}{suffix}.toml"));
+        if from.is_file() {
+            let to = dir.join(format!("{name}{suffix}.toml"));
+            fs::rename(&from, &to).map_err(io_error(&from))?;
+        }
+    }
+    Ok(name)
+}
+
+fn already_exists(path: PathBuf) -> StoreError {
+    StoreError::Io {
+        path,
+        source: std::io::Error::new(std::io::ErrorKind::AlreadyExists, "already exists"),
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -604,6 +783,98 @@ mod tests {
         assert_eq!(dev.vars["host"], "localhost");
         assert_eq!(dev.vars["token"], "secret");
 
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn edits_environment_parts_and_keeps_secrets_out_of_git() {
+        let root = temp_collection("parts");
+        let parts = EnvironmentParts::read(&root, "dev").unwrap();
+        let mut rows = parts.rows();
+        assert_eq!(
+            rows,
+            [
+                EnvVar {
+                    key: "host".into(),
+                    value: "localhost".into(),
+                    secret: false
+                },
+                EnvVar {
+                    key: "token".into(),
+                    value: "secret".into(),
+                    secret: true
+                },
+            ]
+        );
+
+        // Make `host` secret, add a key, drop an empty row, rename the token.
+        rows[0].secret = true;
+        rows[1].value = "rotated".into();
+        rows.push(EnvVar {
+            key: " user ".into(),
+            value: "ada".into(),
+            secret: false,
+        });
+        rows.push(EnvVar {
+            key: "".into(),
+            value: "ignored".into(),
+            secret: false,
+        });
+        let edited = parts.with_rows(&rows);
+        assert_eq!(edited.vars["token"], "placeholder", "placeholder survives");
+        assert_eq!(edited.vars["host"], "localhost");
+        assert_eq!(edited.secrets["host"], "localhost");
+        assert_eq!(edited.vars["user"], "ada");
+        assert_eq!(edited.vars.len(), 3);
+        edited.write(&root, "dev").unwrap();
+        assert_eq!(EnvironmentParts::read(&root, "dev").unwrap(), edited);
+        let ignore = fs::read_to_string(root.join(".gitignore")).unwrap();
+        assert!(ignore.contains("*.local.toml"));
+        assert!(!ensure_local_ignored(&root).unwrap(), "added only once");
+
+        // No secrets left: the local file goes away.
+        let plain: Vec<EnvVar> = rows
+            .into_iter()
+            .map(|r| EnvVar { secret: false, ..r })
+            .collect();
+        parts.with_rows(&plain).write(&root, "dev").unwrap();
+        assert_eq!(
+            environment_files(&root, "dev"),
+            [root.join("environments/dev.toml")]
+        );
+
+        // Create, rename (with secrets), and refuse duplicates.
+        assert_eq!(
+            create_environment(&root, "Staging EU").unwrap(),
+            "staging-eu"
+        );
+        assert!(create_environment(&root, "staging eu").is_err());
+        save_environment(
+            &root,
+            "staging-eu",
+            &VarMap::from([("k".into(), "v".into())]),
+            true,
+        )
+        .unwrap();
+        assert_eq!(
+            rename_environment(&root, "staging-eu", "Stage").unwrap(),
+            "stage"
+        );
+        assert_eq!(environment_names_at(&root), ["dev", "stage"]);
+        assert_eq!(environment_files(&root, "stage").len(), 2);
+        assert!(rename_environment(&root, "stage", "dev").is_err());
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn gitignore_is_appended_not_replaced() {
+        let root = temp_collection("ignore");
+        fs::write(root.join(".gitignore"), "target/").unwrap();
+        assert!(ensure_local_ignored(&root).unwrap());
+        assert_eq!(
+            fs::read_to_string(root.join(".gitignore")).unwrap(),
+            "target/\n# Apix secrets\n*.local.toml\n"
+        );
         fs::remove_dir_all(root).unwrap();
     }
 }
