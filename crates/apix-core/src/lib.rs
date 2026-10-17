@@ -2,6 +2,7 @@
 //! plain-text collection format. No networking and no UI live here, so every
 //! frontend (desktop, CLI, future TUI) shares exactly the same behaviour.
 
+pub mod dynamic;
 pub mod model;
 pub mod project;
 pub mod store;

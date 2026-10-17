@@ -36,7 +36,9 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 ## M3 — Icon, projects, environments, copy-as, auth
 - [x] App icon from `Logo/LogoFirst.jpg` (`cargo run -p icongen --release`): transparent squircle, tighter crop at 32 px and below; `.ico` embedded in the exe, `.icns`, Linux hicolor PNGs + `.desktop`
 - [x] Environment switcher in the sidebar, remembered per collection, with `*.local.toml` secrets; red line for prod
-- [ ] Environment editor, OS keychain, dynamic variables (`{{$guid}}`, …)
+- [x] Variables dialog (Ctrl+E): edit shared variables and environments, add, rename and delete environments, secrets kept in `*.local.toml` (added to `.gitignore` automatically)
+- [x] Dynamic variables: `{{$guid}}`, `{{$timestamp}}`, `{{$isoTimestamp}}`, `{{$randomEmail}}` and 24 more, a fresh value for every use
+- [ ] Secrets in the OS keychain
 - [x] Projects (`apix-project.toml`): New project / New collection / Open from the sidebar menu, recent items, project-wide environments layered under collection ones, grouping as Project → Environment → Collections, pin collections to environments
 - [ ] Projects: colours, drag a collection into a project, prod confirmation dialog
 - [x] Copy as bash `curl`, cmd `curl.exe` or PowerShell `Invoke-RestMethod` (URL bar menu, sidebar, `apix shell`); pasting a `curl` command fills the request

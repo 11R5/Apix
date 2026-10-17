@@ -299,10 +299,10 @@ Bir koleksiyon (veya proje) parola ile şifrelenir. Parolayı bilmeyen hiçbir a
 | Kapsamlar: global → koleksiyon → ortam → yerel ve script. Sonraki kapsam öncekini ezer. | ✅ motor |
 | `{{değişken}}` çözümleme. İç içe değişkenler çalışır, döngüye girmez, eksikler raporlanır. | ✅ |
 | Ortam seçici (kenar çubuğunda, koleksiyon başına hatırlanır) | ✅ |
-| Ortam editörü: tablo, gizli değerler (••••), başlangıç ve güncel değer | ⬜ M |
-| **Gizli değerler:** `*.local.toml` (git'e girmez, ✅) ve işletim sistemi anahtarlığı (Keychain / Credential Manager / Secret Service) | ⬜ M |
-| **Dinamik değişkenler:** `{{$guid}}`, `{{$timestamp}}`, `{{$isoTimestamp}}`, `{{$randomInt}}`, `{{$randomEmail}}` ... (Postman'in tüm listesi) | ⬜ M |
-| Prod ortamı uyarısı: prod seçiliyken pencere kenarında kırmızı ince bir çizgi | ⬜ S |
+| Ortam editörü (Ctrl+E, "Değişkenler" penceresi): ortak değişkenler ve ortamlar tek yerde, ortam ekleme, yeniden adlandırma, silme (çöp kutusuna), gizli değerler (••••, göz düğmesiyle görünür). Kaydet'e basılana kadar diske hiçbir şey yazılmaz. | ✅ · ⬜ başlangıç ve güncel değer ayrımı |
+| **Gizli değerler:** `*.local.toml` (git'e girmez; `.gitignore` satırı kendiliğinden eklenir, ✅) ve işletim sistemi anahtarlığı (Keychain / Credential Manager / Secret Service) | ✅ `.local.toml` · ⬜ anahtarlık M |
+| **Dinamik değişkenler:** `{{$guid}}`, `{{$timestamp}}`, `{{$isoTimestamp}}`, `{{$randomInt}}`, `{{$randomEmail}}` ve 23 tane daha. Her kullanımda yeni değer; aynı adla tanımlanan değişken önce gelir. Listesi pencerede, tıklayınca kopyalanır. | ✅ |
+| Prod ortamı uyarısı: prod seçiliyken pencere kenarında kırmızı ince bir çizgi | ✅ |
 
 ### F. Scriptler ve testler
 | Özellik | Durum |
@@ -460,7 +460,7 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
    - 16–32 px için sadeleştirilmiş bir sürüm hazırlanır (sadece kuş ve X). Küçük boyutta ince çizgiler kaybolur.
    - Windows için `.ico` exe'ye gömülür, macOS için `.icns`, Linux için hicolor PNG'leri ve `.desktop` dosyası.
    - Mümkünse saydam zeminli PNG veya vektör (SVG) bir ana dosya edinilir. JPG zemini sabit olduğu için en temiz sonuç bundan alınır.
-2. [ ] **Ortam seçici ve ortam editörü:** Seçici ✅ (kenar çubuğunda; Windows'ta başlık çubuğu sürükleme alanı olduğu için oraya konmadı). Koleksiyon başına hatırlanıyor, `.local.toml` gizli değerleri dahil. Kalanlar: ortam editörü, OS anahtarlığı, dinamik değişkenler (`{{$guid}}` …). (M)
+2. [x] **Ortam seçici ve ortam editörü:** Seçici ✅ (kenar çubuğunda; Windows'ta başlık çubuğu sürükleme alanı olduğu için oraya konmadı). Koleksiyon başına hatırlanıyor, `.local.toml` gizli değerleri dahil. Ortam editörü ✅ (Ctrl+E). Dinamik değişkenler ✅ (`{{$guid}}` … 28 tane). Kalan: OS anahtarlığı. (M)
 3. [x] **Projeler (§C1):** proje modeli (`apix-project.toml`), Yeni proje / Yeni koleksiyon / Aç, son açılanlar, proje menüsü, proje genelinde ortamlar (proje → koleksiyon → proje ortamı → koleksiyon ortamı), "Proje → Ortam → Koleksiyonlar" gruplaması, koleksiyonu ortamlara sabitleme, prod çizgisi. Kalanlar: renkler, koleksiyonu sürükleyerek projeye taşıma, prod onay penceresi. (L)
 4. [x] **Kabuk komutu olarak kopyala** (§I): bash `curl`, cmd `curl.exe`, PowerShell `Invoke-RestMethod`; URL çubuğundaki kopyala menüsü, sağ tık ve `apix shell` CLI komutu. Yapıştırılan `curl` komutu isteği doldurur. Kalanlar: fish, HTTPie, wget. (M)
 5. [ ] **Metot seçerek yeni istek** (§C) (S)

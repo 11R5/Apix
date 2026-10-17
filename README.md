@@ -66,6 +66,11 @@ json = '{ "name": "Ada" }'
 token = "{{token}}"
 ```
 
+Variables come from the project, the collection and the active environment
+(edit them in the app with Ctrl+E). Secrets live in `environments/<name>.local.toml`,
+which is gitignored. Dynamic variables such as `{{$guid}}`, `{{$timestamp}}`,
+`{{$isoTimestamp}}` and `{{$randomEmail}}` get a new value every time they are used.
+
 ## License
 
 [Apache-2.0](LICENSE)
