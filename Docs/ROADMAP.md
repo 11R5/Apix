@@ -43,7 +43,7 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [ ] Projects: colours, drag a collection into a project, prod confirmation dialog
 - [x] Copy as bash `curl`, cmd `curl.exe` or PowerShell `Invoke-RestMethod` (URL bar menu, sidebar, `apix shell`); pasting a `curl` command fills the request
 - [ ] Copy as fish, HTTPie, wget
-- [ ] New request with a chosen method
+- [x] New request with a chosen method (sidebar "+" menu, "New request ▸" in folder and collection menus); POST, PUT and PATCH start with a JSON body. Alt+1…7 switch the method
 - [ ] Variable chips with hover preview
 - [ ] Auth tab with inheritance from folder or collection; OAuth 2.0 flows
 - [ ] Command palette (Ctrl/⌘+K)
