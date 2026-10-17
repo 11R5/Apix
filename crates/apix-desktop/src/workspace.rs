@@ -562,6 +562,7 @@ impl Workspace {
                 h_flex()
                     .gap_2()
                     .items_center()
+                    .child(img(theme::app_icon()).size(px(16.)).flex_none())
                     .child(
                         div()
                             .text_sm()

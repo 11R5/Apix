@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Apix
+GenericName=API Client
+Comment=Fast, native API client
+Exec=apix-desktop %F
+Icon=apix
+Terminal=false
+Categories=Development;Network;
+Keywords=api;http;rest;postman;graphql;
+MimeType=application/x-apix;
+StartupWMClass=apix-desktop

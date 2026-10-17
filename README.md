@@ -1,3 +1,5 @@
+<p align="center"><img src="packaging/icons/apix-128.png" width="128" height="128" alt="Apix logo"></p>
+
 # Apix
 🚀 The high-performance, minimalist API client crafted with Rust and GPUI. Built for speed, designed for humans.
 

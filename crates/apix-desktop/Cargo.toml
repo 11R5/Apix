@@ -14,10 +14,14 @@ path = "src/main.rs"
 apix-core.workspace = true
 apix-http.workspace = true
 apix-import.workspace = true
-# Same version gpui-component already builds, so it is not compiled twice.
-notify = "8.2.0"
-# Deleting from the sidebar moves files to the OS trash instead of removing them.
-trash = "5"
 # `tree-sitter` turns on syntax highlighting in the code editor (JSON is included).
 gpui-kit = { workspace = true, features = ["tree-sitter"] }
+# Same version gpui-component already builds, so it is not compiled twice.
+notify = "8.2.0"
 tokio.workspace = true
+# Deleting from the sidebar moves files to the OS trash instead of removing them.
+trash = "5"
+
+[build-dependencies]
+# Embeds the app icon and version info into the Windows exe.
+embed-resource = "3"

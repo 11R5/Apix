@@ -1,0 +1,36 @@
+// Windows resources for apix-desktop.exe. GPUI loads icon resource 1 for the
+// window and the taskbar; Explorer uses it for the file. Regenerate the .ico
+// with `cargo run -p icongen --release`.
+
+1 ICON "../../../packaging/windows/apix.ico"
+
+// Numeric values instead of <winver.h> names so no SDK include path is needed:
+// VOS_NT_WINDOWS32 = 0x40004, VFT_APP = 0x1.
+1 VERSIONINFO
+FILEVERSION     0,1,0,0
+PRODUCTVERSION  0,1,0,0
+FILEFLAGSMASK   0x3F
+FILEFLAGS       0x0
+FILEOS          0x40004
+FILETYPE        0x1
+FILESUBTYPE     0x0
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0"
+        BEGIN
+            VALUE "CompanyName",      "Apix contributors"
+            VALUE "FileDescription",  "Apix"
+            VALUE "FileVersion",      "0.1.0"
+            VALUE "InternalName",     "apix-desktop"
+            VALUE "LegalCopyright",   "Apache-2.0"
+            VALUE "OriginalFilename", "apix-desktop.exe"
+            VALUE "ProductName",      "Apix"
+            VALUE "ProductVersion",   "0.1.0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0409, 1200
+    END
+END
