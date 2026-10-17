@@ -37,6 +37,7 @@
 | Ctrl+S | Save |
 | Ctrl+N | New GET request (the sidebar "+" offers every method) |
 | Ctrl+O | Open a folder, project or collection |
+| Ctrl+K or Ctrl+P | Command palette: find any request or command |
 | Ctrl+E | Variables and environments |
 | Alt+1…7 | Switch the method |
 
