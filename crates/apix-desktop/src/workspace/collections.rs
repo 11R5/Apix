@@ -25,6 +25,7 @@ use gpui_kit::component::{Icon, IconName, Sizable, WindowExt as _, h_flex, v_fle
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
+use super::auth_editor::AuthOwner;
 use super::{NO_ENVIRONMENT, Workspace, describe, key_hint};
 use crate::theme;
 
@@ -120,7 +121,7 @@ impl Workspace {
             .or_else(|| self.collections.first().map(|c| c.root.clone()))
     }
 
-    fn collection_for(&self, path: &Path) -> Option<&Collection> {
+    pub(super) fn collection_for(&self, path: &Path) -> Option<&Collection> {
         self.collections
             .iter()
             .filter(|c| path.starts_with(&c.root))
@@ -188,6 +189,8 @@ impl Workspace {
             }
         }
         self.refresh_environments(window, cx);
+        // A folder.toml or apix.toml may have changed what the open request inherits.
+        self.refresh_inherited_auth(cx);
 
         if let Some(path) = self.selected.clone() {
             let dirty = self.is_dirty(cx);
@@ -907,7 +910,12 @@ impl Workspace {
         }
     }
 
-    fn notify_error(&self, message: impl Into<String>, window: &mut Window, cx: &mut App) {
+    pub(super) fn notify_error(
+        &self,
+        message: impl Into<String>,
+        window: &mut Window,
+        cx: &mut App,
+    ) {
         window.push_notification(Notification::error(message.into()), cx);
     }
 
@@ -1587,6 +1595,9 @@ fn folder_menu(
         .item(item("Rename…", |this, path, window, cx| {
             this.rename_folder(path, window, cx)
         }))
+        .item(item("Auth…", |this, path, window, cx| {
+            this.open_auth_dialog(AuthOwner::Folder(path), window, cx)
+        }))
         .separator()
         .item(item("Move to trash", |this, path, window, cx| {
             this.confirm_delete(path, true, window, cx)
@@ -1624,6 +1635,21 @@ impl WorkspaceMenu {
             .item(item(
                 &format!("Variables and environments… ({})", key_hint("E")),
                 Workspace::open_env_editor,
+            ))
+            .item(item(
+                if self.has_project {
+                    "Project auth…"
+                } else {
+                    "Collection auth…"
+                },
+                |this, window, cx| {
+                    let owner = match (&this.project, this.collections.first()) {
+                        (Some(p), _) => AuthOwner::Project(p.root.clone()),
+                        (None, Some(c)) => AuthOwner::Collection(c.root.clone()),
+                        (None, None) => return,
+                    };
+                    this.open_auth_dialog(owner, window, cx)
+                },
             ));
 
         if self.has_project {
@@ -1686,6 +1712,9 @@ fn collection_menu(
         }))
         .item(item("Rename…", |this, root, window, cx| {
             this.rename_collection(root, window, cx)
+        }))
+        .item(item("Auth…", |this, root, window, cx| {
+            this.open_auth_dialog(AuthOwner::Collection(root), window, cx)
         }));
     if let Some((envs, shown)) = pins.filter(|(envs, _)| !envs.is_empty()) {
         menu = menu.separator().label("Show in environment");

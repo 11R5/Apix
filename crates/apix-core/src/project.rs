@@ -17,6 +17,7 @@ use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 
+use crate::model::{Auth, Request};
 use crate::store::{
     self, COLLECTION_FILE, Collection, CollectionMeta, StoreError, VarMap, environment_names_at,
     io_error, read_toml, slug, unique_path, write_toml,
@@ -54,6 +55,9 @@ pub struct ProjectMeta {
     /// A collection without an entry is shown in every environment.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub pins: BTreeMap<String, Vec<String>>,
+    /// Auth for every request in the project that does not set its own.
+    #[serde(default, skip_serializing_if = "Auth::is_inherit")]
+    pub auth: Auth,
 }
 
 #[derive(Debug, Clone)]
@@ -208,6 +212,57 @@ pub fn create_collection(parent: &Path, name: &str) -> Result<PathBuf, StoreErro
     Ok(root)
 }
 
+/// What a request in `dir` gets when its auth is [`Auth::Inherit`]: the auth
+/// of the nearest folder between `dir` and the collection root that sets one
+/// (in its `folder.toml`), else the collection's, else the project's. Returns
+/// `Auth::None` and no source when nothing sets one. The source reads like
+/// `folder "users"` or `collection "Shop API"`.
+pub fn inherited_auth(
+    dir: &Path,
+    collection: Option<&Collection>,
+    project: Option<&Project>,
+) -> Result<(Auth, Option<String>), StoreError> {
+    if let Some(c) = collection {
+        let folders = dir
+            .ancestors()
+            .take_while(|d| d.starts_with(&c.root) && *d != c.root.as_path());
+        for folder in folders {
+            let meta = store::load_folder_meta(folder)?;
+            if !meta.auth.is_inherit() {
+                let name = folder.file_name().unwrap_or_default().to_string_lossy();
+                return Ok((meta.auth, Some(format!("folder \"{name}\""))));
+            }
+        }
+        if !c.meta.auth.is_inherit() {
+            return Ok((
+                c.meta.auth.clone(),
+                Some(format!("collection \"{}\"", c.meta.name)),
+            ));
+        }
+    }
+    if let Some(p) = project.filter(|p| !p.meta.auth.is_inherit()) {
+        return Ok((
+            p.meta.auth.clone(),
+            Some(format!("project \"{}\"", p.meta.name)),
+        ));
+    }
+    Ok((Auth::None, None))
+}
+
+/// Replaces [`Auth::Inherit`] in `request` (saved at `path`) with what it inherits.
+pub fn apply_inherited_auth(
+    request: &mut Request,
+    path: &Path,
+    collection: Option<&Collection>,
+    project: Option<&Project>,
+) -> Result<(), StoreError> {
+    if request.auth.is_inherit() {
+        let dir = path.parent().unwrap_or(Path::new("."));
+        request.auth = inherited_auth(dir, collection, project)?.0;
+    }
+    Ok(())
+}
+
 /// Every variable layer that applies to a request in `collection` under
 /// `environment`, in order. Fails if the environment is defined nowhere.
 pub fn variables(
@@ -306,6 +361,71 @@ mod tests {
             Some(root.as_path())
         );
         assert!(orders.join(COLLECTION_FILE).is_file());
+        fs::remove_dir_all(parent).unwrap();
+    }
+
+    #[test]
+    fn auth_comes_from_the_nearest_parent_that_sets_one() {
+        let parent = temp("auth");
+        let root = create_project(&parent, "Shop", &[]).unwrap();
+        let croot = create_collection(&root, "Users").unwrap();
+        let deep = croot.join("admin").join("audit");
+        fs::create_dir_all(&deep).unwrap();
+        let bearer = |t: &str| Auth::Bearer { token: t.into() };
+        let load = || {
+            (
+                Project::open(&root).unwrap(),
+                Collection::open(&croot).unwrap(),
+            )
+        };
+
+        let (p, c) = load();
+        assert_eq!(
+            inherited_auth(&deep, Some(&c), Some(&p)).unwrap(),
+            (Auth::None, None)
+        );
+
+        let mut p = p;
+        p.meta.auth = bearer("project");
+        p.save().unwrap();
+        let (p, c) = load();
+        let (auth, from) = inherited_auth(&deep, Some(&c), Some(&p)).unwrap();
+        assert_eq!(
+            (auth, from.as_deref()),
+            (bearer("project"), Some("project \"Shop\""))
+        );
+
+        let mut meta = c.meta.clone();
+        meta.auth = bearer("collection");
+        store::save_collection_meta(&croot, &meta).unwrap();
+        let admin = store::FolderMeta {
+            auth: bearer("admin"),
+        };
+        store::save_folder_meta(&croot.join("admin"), &admin).unwrap();
+        let (p, c) = load();
+        let (auth, from) = inherited_auth(&deep, Some(&c), Some(&p)).unwrap();
+        assert_eq!(
+            (auth, from.as_deref()),
+            (bearer("admin"), Some("folder \"admin\""))
+        );
+        let (auth, _) = inherited_auth(&croot, Some(&c), Some(&p)).unwrap();
+        assert_eq!(
+            auth,
+            bearer("collection"),
+            "the collection root is not a folder"
+        );
+
+        // A request's own auth, including an explicit "none", is kept.
+        let mut request = Request::new(Method::Get, "x");
+        apply_inherited_auth(&mut request, &deep.join("r.apix"), Some(&c), Some(&p)).unwrap();
+        assert_eq!(request.auth, bearer("admin"));
+        request.auth = Auth::None;
+        apply_inherited_auth(&mut request, &deep.join("r.apix"), Some(&c), Some(&p)).unwrap();
+        assert_eq!(request.auth, Auth::None);
+
+        // Back to the default: folder.toml goes away.
+        store::save_folder_meta(&croot.join("admin"), &store::FolderMeta::default()).unwrap();
+        assert!(!croot.join("admin").join(store::FOLDER_FILE).exists());
         fs::remove_dir_all(parent).unwrap();
     }
 

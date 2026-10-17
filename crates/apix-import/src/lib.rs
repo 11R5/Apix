@@ -13,7 +13,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use apix_core::Request;
-use apix_core::store::{self, CollectionMeta, REQUEST_EXTENSION, StoreError};
+use apix_core::store::{self, CollectionMeta, FolderMeta, REQUEST_EXTENSION, StoreError};
 
 #[derive(Debug, thiserror::Error)]
 pub enum ImportError {
@@ -119,8 +119,19 @@ fn count(n: usize, one: &str, many: &str) -> String {
 /// A file the importer wants to create, relative to the collection root.
 #[derive(Debug, Clone, PartialEq)]
 pub enum PlannedFile {
-    Request { path: PathBuf, request: Request },
-    Script { path: PathBuf, text: String },
+    Request {
+        path: PathBuf,
+        request: Request,
+    },
+    Script {
+        path: PathBuf,
+        text: String,
+    },
+    /// `folder.toml` for the folder at `path` (folder-level auth).
+    Folder {
+        path: PathBuf,
+        meta: FolderMeta,
+    },
 }
 
 /// A converted collection, ready to be written.
@@ -144,9 +155,15 @@ impl Plan {
         fs::create_dir_all(root).map_err(io_err(root))?;
         store::save_collection_meta(root, &self.meta)?;
         for file in &self.files {
-            let (PlannedFile::Request { path, .. } | PlannedFile::Script { path, .. }) = file;
+            let (PlannedFile::Request { path, .. }
+            | PlannedFile::Script { path, .. }
+            | PlannedFile::Folder { path, .. }) = file;
             let target = root.join(path);
-            if let Some(dir) = target.parent() {
+            let dir = match file {
+                PlannedFile::Folder { .. } => Some(target.as_path()),
+                _ => target.parent(),
+            };
+            if let Some(dir) = dir {
                 fs::create_dir_all(dir).map_err(io_err(dir))?;
             }
             match file {
@@ -154,6 +171,7 @@ impl Plan {
                 PlannedFile::Script { text, .. } => {
                     fs::write(&target, text).map_err(io_err(&target))?
                 }
+                PlannedFile::Folder { meta, .. } => store::save_folder_meta(&target, meta)?,
             }
         }
         Ok(())

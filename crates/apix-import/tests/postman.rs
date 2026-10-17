@@ -66,7 +66,7 @@ fn converts_collection_metadata_and_counts() {
 }
 
 #[test]
-fn keeps_query_headers_and_inherited_auth() {
+fn keeps_query_headers_and_auth_where_postman_set_it() {
     let plan = convert_collection(SHOP).unwrap();
     let list = request(&plan, "users/list-users.apix");
     assert_eq!(list.method, Method::Get);
@@ -87,7 +87,12 @@ fn keeps_query_headers_and_inherited_auth() {
         ]
     );
     assert_eq!(list.description, "Paginated list.");
-    assert_eq!(list.auth, bearer());
+    assert_eq!(list.auth, Auth::Inherit, "no auth of its own");
+    assert_eq!(
+        plan.meta.auth,
+        bearer(),
+        "the collection keeps Postman's bearer"
+    );
 }
 
 #[test]
@@ -123,14 +128,22 @@ fn converts_every_body_mode() {
         form.body,
         Body::Form(vec![kv("sku", "A-1", true), kv("qty", "2", true)])
     );
+    assert_eq!(form.auth, Auth::Inherit);
+    let folder = plan
+        .files
+        .iter()
+        .find_map(|f| match f {
+            PlannedFile::Folder { path, meta } if path == Path::new("orders") => Some(meta),
+            _ => None,
+        })
+        .expect("the orders folder keeps its auth in folder.toml");
     assert_eq!(
-        form.auth,
+        folder.auth,
         Auth::ApiKey {
             key: "api_key".into(),
             value: "{{apiKey}}".into(),
             location: ApiKeyLocation::Query
-        },
-        "folder auth is inherited"
+        }
     );
 
     let upload = request(&plan, "orders/upload-invoice.apix");
@@ -168,7 +181,7 @@ fn reports_what_it_cannot_carry_over() {
     // Same name twice in one folder: the second file gets a suffix.
     let head = request(&plan, "health-2.apix");
     assert_eq!(head.method, Method::Head);
-    assert_eq!(head.auth, bearer());
+    assert_eq!(head.auth, Auth::Inherit);
 }
 
 #[test]
@@ -217,7 +230,8 @@ fn reads_postman_v2_0_shapes() {
 
     let ping = request(&plan, "ping.apix");
     assert_eq!(ping.url, "https://legacy.example.com/ping");
-    assert_eq!(ping.auth, basic);
+    assert_eq!(ping.auth, Auth::Inherit);
+    assert_eq!(plan.meta.auth, basic);
 
     let echo = request(&plan, "echo.apix");
     assert_eq!(echo.method, Method::Post);
@@ -230,7 +244,7 @@ fn reads_postman_v2_0_shapes() {
         ]
     );
     assert_eq!(echo.body, Body::Text("hello".into()));
-    assert_eq!(echo.auth, basic);
+    assert_eq!(echo.auth, Auth::Inherit);
 }
 
 #[test]
@@ -263,6 +277,13 @@ fn writes_a_collection_apix_can_open() {
     let paths = collection.request_paths();
     assert_eq!(paths.len(), 9);
     assert!(root.join("users/list-users.test.js").is_file());
+
+    // Auth is resolved the way Postman would: folder, then collection.
+    assert_eq!(collection.meta.auth, bearer());
+    let (form_auth, from) =
+        apix_core::project::inherited_auth(&root.join("orders"), Some(&collection), None).unwrap();
+    assert!(matches!(form_auth, Auth::ApiKey { .. }));
+    assert_eq!(from.as_deref(), Some("folder \"orders\""));
 
     // What is on disk is exactly what was planned.
     for file in &plan.files {

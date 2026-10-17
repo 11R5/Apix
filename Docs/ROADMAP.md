@@ -45,14 +45,15 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [ ] Copy as fish, HTTPie, wget
 - [x] New request with a chosen method (sidebar "+" menu, "New request ▸" in folder and collection menus); POST, PUT and PATCH start with a JSON body. Alt+1…7 switch the method
 - [x] Variable chips in the URL bar (defined, dynamic or missing, by colour); hovering one shows its value, with secrets masked, and the scope it comes from
-- [ ] Auth tab with inheritance from folder or collection; OAuth 2.0 flows
+- [x] Auth tab (inherit, none, Bearer, Basic, API key); folders (`folder.toml`), collections and projects can set auth that requests inherit, in the app and the CLI; Postman imports keep auth where it was set
+- [ ] OAuth 2.0 flows (moved to M4)
 - [ ] Command palette (Ctrl/⌘+K)
 - [ ] From M2: tabs, drag to reorder
 
 ## M4 — Daily driver
 - [ ] **Encrypted collections**: password-protected (XChaCha20-Poly1305, Argon2id), per-file encryption with opaque file names, unlock prompt and auto-lock, recovery key, `--password-env` for CI
 - [ ] **Network inspector**: local interface/IP/DNS/proxy, DNS answers, TCP/TLS details and certificate chain, timing waterfall, redirects
-- [ ] multipart, binary and GraphQL bodies; Digest, AWS SigV4 and OAuth 1.0 auth
+- [ ] multipart, binary and GraphQL bodies; OAuth 2.0 (moved from M3), Digest, AWS SigV4 and OAuth 1.0 auth
 - [ ] Request settings (timeout, TLS, proxy, client certificates), cookie manager
 - [ ] Code snippets in other languages, history
 - [ ] Postman auto-detection and full data-dump import; Insomnia, OpenAPI 3 and HAR import; export to Postman

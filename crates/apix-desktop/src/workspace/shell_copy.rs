@@ -47,7 +47,7 @@ impl Workspace {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
-        let request = self.build_request(cx);
+        let request = self.with_inherited_auth(self.build_request(cx), self.selected.as_deref());
         self.copy_as(request, shell, window, cx);
     }
 
@@ -62,6 +62,7 @@ impl Workspace {
         if self.selected.as_ref() == Some(&path) {
             self.copy_current_as(shell, window, cx);
         } else if let Some(request) = self.requests.get(&path).cloned() {
+            let request = self.with_inherited_auth(request, Some(&path));
             self.copy_as(request, shell, window, cx);
         }
     }

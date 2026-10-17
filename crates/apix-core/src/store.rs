@@ -20,7 +20,7 @@ use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 
-use crate::model::Request;
+use crate::model::{Auth, Request};
 
 pub const COLLECTION_FILE: &str = "apix.toml";
 pub const ENVIRONMENTS_DIR: &str = "environments";
@@ -91,11 +91,46 @@ pub struct CollectionMeta {
     pub description: String,
     #[serde(default, skip_serializing_if = "VarMap::is_empty")]
     pub vars: VarMap,
+    /// Auth for requests in the collection that do not set their own.
+    #[serde(default, skip_serializing_if = "Auth::is_inherit")]
+    pub auth: Auth,
 }
 
 /// Writes `apix.toml` into `root`.
 pub fn save_collection_meta(root: &Path, meta: &CollectionMeta) -> Result<(), StoreError> {
     write_toml(&root.join(COLLECTION_FILE), meta)
+}
+
+/// Settings of a folder inside a collection, kept in `<folder>/folder.toml`.
+pub const FOLDER_FILE: &str = "folder.toml";
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct FolderMeta {
+    /// Auth for requests in the folder that do not set their own.
+    #[serde(default, skip_serializing_if = "Auth::is_inherit")]
+    pub auth: Auth,
+}
+
+/// Reads `<dir>/folder.toml`; a folder without one has default settings.
+pub fn load_folder_meta(dir: &Path) -> Result<FolderMeta, StoreError> {
+    let path = dir.join(FOLDER_FILE);
+    if path.is_file() {
+        read_toml(&path)
+    } else {
+        Ok(FolderMeta::default())
+    }
+}
+
+/// Writes `<dir>/folder.toml`, or removes it when every setting is the default.
+pub fn save_folder_meta(dir: &Path, meta: &FolderMeta) -> Result<(), StoreError> {
+    let path = dir.join(FOLDER_FILE);
+    if *meta == FolderMeta::default() {
+        if path.is_file() {
+            fs::remove_file(&path).map_err(io_error(&path))?;
+        }
+        return Ok(());
+    }
+    write_toml(&path, meta)
 }
 
 #[derive(Serialize)]

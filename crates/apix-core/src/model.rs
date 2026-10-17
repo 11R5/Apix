@@ -123,7 +123,11 @@ pub enum ApiKeyLocation {
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Auth {
+    /// Use the auth of the nearest folder, collection or project that sets
+    /// one (Postman's "Inherit auth from parent"). Not written to files.
     #[default]
+    Inherit,
+    /// Send no auth, even if a parent sets one. Written as `auth = "none"`.
     None,
     Bearer {
         token: String,
@@ -142,8 +146,24 @@ pub enum Auth {
 }
 
 impl Auth {
+    /// Whether nothing is sent: `None`, or `Inherit` left unresolved.
     pub fn is_none(&self) -> bool {
-        matches!(self, Auth::None)
+        matches!(self, Auth::None | Auth::Inherit)
+    }
+
+    pub fn is_inherit(&self) -> bool {
+        matches!(self, Auth::Inherit)
+    }
+
+    /// A short name for the UI, e.g. "Bearer token".
+    pub fn label(&self) -> &'static str {
+        match self {
+            Auth::Inherit => "Inherit",
+            Auth::None => "No auth",
+            Auth::Bearer { .. } => "Bearer token",
+            Auth::Basic { .. } => "Basic auth",
+            Auth::ApiKey { .. } => "API key",
+        }
     }
 }
 
@@ -163,7 +183,7 @@ pub struct Request {
     pub headers: Vec<KeyValue>,
     #[serde(default, skip_serializing_if = "Body::is_none")]
     pub body: Body,
-    #[serde(default, skip_serializing_if = "Auth::is_none")]
+    #[serde(default, skip_serializing_if = "Auth::is_inherit")]
     pub auth: Auth,
 }
 
@@ -239,6 +259,16 @@ token = "{{token}}"
         let req: Request =
             toml::from_str("name = \"Ping\"\nurl = \"https://example.com\"").unwrap();
         assert_eq!(req.method, Method::Get);
-        assert!(req.body.is_none() && req.auth.is_none());
+        assert!(req.body.is_none() && req.auth.is_inherit());
+    }
+
+    #[test]
+    fn no_auth_is_written_but_inherit_is_not() {
+        let mut req = Request::new(Method::Get, "x");
+        assert!(!toml::to_string(&req).unwrap().contains("auth"));
+        req.auth = Auth::None;
+        let text = toml::to_string(&req).unwrap();
+        assert!(text.contains("auth = \"none\""), "{text}");
+        assert_eq!(toml::from_str::<Request>(&text).unwrap().auth, Auth::None);
     }
 }

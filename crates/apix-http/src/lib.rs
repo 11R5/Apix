@@ -179,7 +179,8 @@ impl HttpClient {
         }
 
         builder = match &req.auth {
-            Auth::None => builder,
+            // Callers resolve `Inherit` first; left over, it sends nothing.
+            Auth::None | Auth::Inherit => builder,
             Auth::Bearer { token } => builder.bearer_auth(token),
             Auth::Basic { username, password } => builder.basic_auth(username, Some(password)),
             Auth::ApiKey {
