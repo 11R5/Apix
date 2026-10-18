@@ -66,7 +66,7 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
   - [x] Settings dialog (Ctrl+,): language, theme, auto-lock time for encrypted collections; saved to `settings.toml` at once
   - [x] Every UI text behind a key (about 414), nine languages, switch without restarting, first start follows the system language, a test for missing keys and placeholders
   - [ ] Right-to-left layout for Arabic (the text itself is already shaped right to left), translated engine error messages, native-speaker review
-- [ ] **Documentation and README**: per-language docs in `Docs/<lang>/` (user guide, architecture, technical, workflows), English and Turkish first; README section on how Apix differs from Postman, Insomnia, Bruno, Hoppscotch and HTTPie; reproducible performance numbers
+- [x] **Documentation and README**: per-language docs in `Docs/<lang>/` (user guide with screenshots, architecture, technical, workflows) in English and Turkish, `Docs/languages.toml`, `cargo run -p docs-check` for stale translations; README on how Apix differs from Postman, Insomnia, Bruno and Hoppscotch; `scripts/measure.ps1` for reproducible performance numbers
 - [ ] Request settings (timeout, TLS, proxy, client certificates), cookie manager
 - [ ] Code snippets in other languages, history
 - [ ] Postman auto-detection and full data-dump import; Insomnia, OpenAPI 3 and HAR import; export to Postman
