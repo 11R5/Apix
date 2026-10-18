@@ -51,9 +51,9 @@ impl AppState {
 
     /// Recent collections that still exist on disk.
     pub fn recent_collections(&self) -> impl Iterator<Item = &PathBuf> {
-        self.recent
-            .iter()
-            .filter(|p| p.join(apix_core::store::COLLECTION_FILE).is_file())
+        self.recent.iter().filter(|p| {
+            p.join(apix_core::store::COLLECTION_FILE).is_file() || apix_core::vfs::is_encrypted(p)
+        })
     }
 
     pub fn environment_for(&self, root: &Path) -> Option<String> {

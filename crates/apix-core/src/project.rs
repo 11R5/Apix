@@ -11,8 +11,8 @@
 //! Variables are layered, later wins: project → collection → the project's
 //! environment → the collection's environment of the same name.
 
+use crate::vfs;
 use std::collections::BTreeMap;
-use std::fs;
 use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
@@ -78,7 +78,7 @@ impl Project {
         let start = std::path::absolute(start).unwrap_or_else(|_| start.to_path_buf());
         start
             .ancestors()
-            .find(|dir| dir.join(PROJECT_FILE).is_file())
+            .find(|dir| vfs::is_file(&dir.join(PROJECT_FILE)))
             .map(Path::to_path_buf)
     }
 
@@ -86,16 +86,26 @@ impl Project {
         write_toml(&self.root.join(PROJECT_FILE), &self.meta)
     }
 
+    /// Encrypted collections directly inside the project that are still locked.
+    pub fn locked_collections(&self) -> Vec<PathBuf> {
+        let mut out: Vec<PathBuf> = vfs::read_dir(&self.root)
+            .unwrap_or_default()
+            .into_iter()
+            .filter(|dir| vfs::is_encrypted(dir) && !vfs::is_unlocked(dir))
+            .collect();
+        out.sort();
+        out
+    }
+
     /// The collections directly inside the project, in sidebar order.
     /// Folders whose `apix.toml` cannot be read are returned as errors.
     pub fn collections(&self) -> (Vec<Collection>, Vec<String>) {
-        let Ok(entries) = fs::read_dir(&self.root) else {
+        let Ok(entries) = vfs::read_dir(&self.root) else {
             return (Vec::new(), Vec::new());
         };
         let mut dirs: Vec<PathBuf> = entries
-            .filter_map(Result::ok)
-            .map(|e| e.path())
-            .filter(|p| p.join(COLLECTION_FILE).is_file())
+            .into_iter()
+            .filter(|p| vfs::is_file(&p.join(COLLECTION_FILE)))
             .collect();
         let rank = |dir: &Path| {
             let key = self.key(dir);
@@ -183,7 +193,7 @@ pub fn create_project(
     environments: &[&str],
 ) -> Result<PathBuf, StoreError> {
     let root = unique_path(parent, &slug(name, "project"), "");
-    fs::create_dir_all(&root).map_err(io_error(&root))?;
+    vfs::create_dir_all(&root).map_err(io_error(&root))?;
     let project = Project {
         root: root.clone(),
         meta: ProjectMeta {
@@ -201,7 +211,7 @@ pub fn create_project(
 /// Creates `parent/<slug of name>/apix.toml`. Returns the collection folder.
 pub fn create_collection(parent: &Path, name: &str) -> Result<PathBuf, StoreError> {
     let root = unique_path(parent, &slug(name, "collection"), "");
-    fs::create_dir_all(&root).map_err(io_error(&root))?;
+    vfs::create_dir_all(&root).map_err(io_error(&root))?;
     store::save_collection_meta(
         &root,
         &CollectionMeta {
@@ -317,6 +327,7 @@ mod tests {
     use super::*;
     use crate::store::{save_environment, save_request};
     use crate::{Method, Request};
+    use std::fs;
 
     fn temp(tag: &str) -> PathBuf {
         let dir = std::env::temp_dir().join(format!("apix-project-{tag}-{}", std::process::id()));

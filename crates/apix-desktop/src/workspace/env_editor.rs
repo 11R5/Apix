@@ -852,8 +852,7 @@ fn write_page(page: &Page, cx: &App) -> Result<Option<(String, String)>, String>
         Target::Environment { root, name } => {
             if page.deleted {
                 if !page.is_new {
-                    trash::delete_all(store::environment_files(root, name))
-                        .map_err(|e| format!("Could not move {name} to the trash: {e}"))?;
+                    super::vault_ui::discard(&store::environment_files(root, name))?;
                 }
                 return Ok(None);
             }

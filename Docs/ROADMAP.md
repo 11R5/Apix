@@ -55,7 +55,8 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 ## M4 — Daily driver
 - [ ] **Encrypted collections**: password-protected (XChaCha20-Poly1305, Argon2id), per-file encryption with opaque file names, unlock prompt and auto-lock, recovery key, `--password-env` for CI
   - [x] Format and engine (`apix-vault`): per-file XChaCha20-Poly1305 with opaque names and an encrypted index, Argon2id password key, recovery key, password change without re-encrypting, tamper detection, local secrets kept out of git
-  - [ ] Open and edit encrypted collections in the app and the CLI; encrypt or decrypt an existing collection
+  - [x] Open and edit encrypted collections in the app (unlock prompt, recovery key, lock, auto-lock after 15 idle minutes, encrypt or decrypt in place, change password, new encrypted collection) and the CLI (`--password-env`, `apix encrypt`, `apix decrypt`); nothing decrypted is written to disk
+  - [ ] Remember the password in the OS keychain
 - [ ] **Network inspector**: local interface/IP/DNS/proxy, DNS answers, TCP/TLS details and certificate chain, timing waterfall, redirects
 - [ ] multipart, binary and GraphQL bodies; OAuth 2.0 (moved from M3), Digest, AWS SigV4 and OAuth 1.0 auth
 - [ ] Request settings (timeout, TLS, proxy, client certificates), cookie manager

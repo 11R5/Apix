@@ -7,6 +7,7 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
+apix-vault.workspace = true
 serde.workspace = true
 thiserror.workspace = true
 toml.workspace = true

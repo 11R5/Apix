@@ -14,8 +14,8 @@
 //! └── health.apix
 //! ```
 
+use crate::vfs;
 use std::collections::BTreeMap;
-use std::fs;
 use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
@@ -51,7 +51,7 @@ pub enum StoreError {
 }
 
 pub(crate) fn read_toml<T: for<'de> Deserialize<'de>>(path: &Path) -> Result<T, StoreError> {
-    let text = fs::read_to_string(path).map_err(|source| StoreError::Io {
+    let text = vfs::read_to_string(path).map_err(|source| StoreError::Io {
         path: path.to_owned(),
         source,
     })?;
@@ -75,7 +75,7 @@ pub fn save_request(path: &Path, request: &Request) -> Result<(), StoreError> {
 
 pub(crate) fn write_toml(path: &Path, value: &impl Serialize) -> Result<(), StoreError> {
     let text = toml::to_string_pretty(value)?;
-    fs::write(path, text).map_err(|source| StoreError::Io {
+    vfs::write(path, text).map_err(|source| StoreError::Io {
         path: path.to_owned(),
         source,
     })
@@ -114,7 +114,7 @@ pub struct FolderMeta {
 /// Reads `<dir>/folder.toml`; a folder without one has default settings.
 pub fn load_folder_meta(dir: &Path) -> Result<FolderMeta, StoreError> {
     let path = dir.join(FOLDER_FILE);
-    if path.is_file() {
+    if vfs::is_file(&path) {
         read_toml(&path)
     } else {
         Ok(FolderMeta::default())
@@ -125,8 +125,8 @@ pub fn load_folder_meta(dir: &Path) -> Result<FolderMeta, StoreError> {
 pub fn save_folder_meta(dir: &Path, meta: &FolderMeta) -> Result<(), StoreError> {
     let path = dir.join(FOLDER_FILE);
     if *meta == FolderMeta::default() {
-        if path.is_file() {
-            fs::remove_file(&path).map_err(io_error(&path))?;
+        if vfs::is_file(&path) {
+            vfs::remove_file(&path).map_err(io_error(&path))?;
         }
         return Ok(());
     }
@@ -147,7 +147,7 @@ pub fn save_environment(
     local: bool,
 ) -> Result<PathBuf, StoreError> {
     let dir = root.join(ENVIRONMENTS_DIR);
-    fs::create_dir_all(&dir).map_err(|source| StoreError::Io {
+    vfs::create_dir_all(&dir).map_err(|source| StoreError::Io {
         path: dir.clone(),
         source,
     })?;
@@ -166,7 +166,7 @@ const LOCAL_PATTERN: &str = "*.local.toml";
 /// never committed. Returns whether the file had to be changed.
 pub fn ensure_local_ignored(root: &Path) -> Result<bool, StoreError> {
     let path = root.join(".gitignore");
-    let text = match fs::read_to_string(&path) {
+    let text = match vfs::read_to_string(&path) {
         Ok(text) => text,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => String::new(),
         Err(source) => return Err(StoreError::Io { path, source }),
@@ -185,7 +185,7 @@ pub fn ensure_local_ignored(root: &Path) -> Result<bool, StoreError> {
     text.push_str("# Apix secrets\n");
     text.push_str(LOCAL_PATTERN);
     text.push('\n');
-    fs::write(&path, text).map_err(io_error(&path))?;
+    vfs::write(&path, text).map_err(io_error(&path))?;
     Ok(true)
 }
 
@@ -211,7 +211,7 @@ impl EnvironmentParts {
         let dir = root.join(ENVIRONMENTS_DIR);
         let part = |file: String| -> Result<VarMap, StoreError> {
             let path = dir.join(file);
-            if path.is_file() {
+            if vfs::is_file(&path) {
                 Ok(read_toml::<Environment>(&path)?.vars)
             } else {
                 Ok(VarMap::new())
@@ -271,8 +271,8 @@ impl EnvironmentParts {
         save_environment(root, name, &self.vars, false)?;
         if self.secrets.is_empty() {
             let local = local_environment_path(root, name);
-            if local.is_file() {
-                fs::remove_file(&local).map_err(io_error(&local))?;
+            if vfs::is_file(&local) {
+                vfs::remove_file(&local).map_err(io_error(&local))?;
             }
         } else {
             save_environment(root, name, &self.secrets, true)?;
@@ -293,7 +293,7 @@ pub fn environment_files(root: &Path, name: &str) -> Vec<PathBuf> {
         local_environment_path(root, name),
     ]
     .into_iter()
-    .filter(|p| p.is_file())
+    .filter(|p| vfs::is_file(p))
     .collect()
 }
 
@@ -321,9 +321,9 @@ pub fn rename_environment(root: &Path, old: &str, title: &str) -> Result<String,
     }
     for suffix in ["", LOCAL_SUFFIX] {
         let from = dir.join(format!("{old}{suffix}.toml"));
-        if from.is_file() {
+        if vfs::is_file(&from) {
             let to = dir.join(format!("{name}{suffix}.toml"));
-            fs::rename(&from, &to).map_err(io_error(&from))?;
+            vfs::rename(&from, &to).map_err(io_error(&from))?;
         }
     }
     Ok(name)
@@ -364,7 +364,7 @@ impl Collection {
         let start = std::path::absolute(start).unwrap_or_else(|_| start.to_path_buf());
         start
             .ancestors()
-            .find(|dir| dir.join(COLLECTION_FILE).is_file())
+            .find(|dir| vfs::is_file(&dir.join(COLLECTION_FILE)))
             .map(Path::to_path_buf)
     }
 
@@ -398,12 +398,11 @@ impl Collection {
 
 /// Environment names in `<root>/environments/`, without the `.local` secret files.
 pub fn environment_names_at(root: &Path) -> Vec<String> {
-    let Ok(entries) = fs::read_dir(root.join(ENVIRONMENTS_DIR)) else {
+    let Ok(entries) = vfs::read_dir(&root.join(ENVIRONMENTS_DIR)) else {
         return Vec::new();
     };
     let mut names: Vec<String> = entries
-        .filter_map(Result::ok)
-        .map(|e| e.path())
+        .into_iter()
         .filter(|p| p.extension().is_some_and(|ext| ext == "toml"))
         .filter_map(|p| p.file_stem().map(|s| s.to_string_lossy().into_owned()))
         .filter(|name| !name.ends_with(LOCAL_SUFFIX))
@@ -418,12 +417,12 @@ pub fn environment_vars_at(root: &Path, name: &str) -> Result<Option<VarMap>, St
     let dir = root.join(ENVIRONMENTS_DIR);
     let base = dir.join(format!("{name}.toml"));
     let local = dir.join(format!("{name}{LOCAL_SUFFIX}.toml"));
-    if !base.is_file() && !local.is_file() {
+    if !vfs::is_file(&base) && !vfs::is_file(&local) {
         return Ok(None);
     }
     let mut vars = VarMap::new();
     for path in [base, local] {
-        if path.is_file() {
+        if vfs::is_file(&path) {
             let env: Environment = read_toml(&path)?;
             vars.extend(env.vars);
         }
@@ -432,10 +431,10 @@ pub fn environment_vars_at(root: &Path, name: &str) -> Result<Option<VarMap>, St
 }
 
 fn collect_requests(dir: &Path, out: &mut Vec<PathBuf>) {
-    let Ok(entries) = fs::read_dir(dir) else {
+    let Ok(entries) = vfs::read_dir(dir) else {
         return;
     };
-    let mut paths: Vec<PathBuf> = entries.filter_map(Result::ok).map(|e| e.path()).collect();
+    let mut paths: Vec<PathBuf> = entries;
     paths.sort();
     for path in paths {
         let hidden = path
@@ -444,7 +443,7 @@ fn collect_requests(dir: &Path, out: &mut Vec<PathBuf>) {
         if hidden {
             continue;
         }
-        if path.is_dir() {
+        if vfs::is_dir(&path) {
             collect_requests(&path, out);
         } else if is_request_file(&path) {
             out.push(path);
@@ -474,12 +473,12 @@ impl Collection {
 }
 
 fn tree_of(dir: &Path, is_root: bool) -> Vec<TreeNode> {
-    let Ok(entries) = fs::read_dir(dir) else {
+    let Ok(entries) = vfs::read_dir(dir) else {
         return Vec::new();
     };
     let mut folders = Vec::new();
     let mut requests = Vec::new();
-    for path in entries.filter_map(Result::ok).map(|e| e.path()) {
+    for path in entries {
         let name = path
             .file_name()
             .map(|n| n.to_string_lossy().into_owned())
@@ -487,7 +486,7 @@ fn tree_of(dir: &Path, is_root: bool) -> Vec<TreeNode> {
         if name.starts_with('.') || (is_root && name == ENVIRONMENTS_DIR) {
             continue;
         }
-        if path.is_dir() {
+        if vfs::is_dir(&path) {
             folders.push((name, path));
         } else if is_request_file(&path) {
             requests.push(path);
@@ -553,12 +552,12 @@ pub fn unique_path(dir: &Path, stem: &str, ext: &str) -> PathBuf {
         }
     };
     let first = with_ext(stem);
-    if !first.exists() {
+    if !vfs::exists(&first) {
         return first;
     }
     (2..)
         .map(|n| with_ext(&format!("{stem}-{n}")))
-        .find(|p| !p.exists())
+        .find(|p| !vfs::exists(p))
         .expect("an unused name always exists")
 }
 
@@ -581,12 +580,11 @@ fn sidecars(path: &Path) -> Vec<PathBuf> {
         return Vec::new();
     };
     let prefix = format!("{stem}.");
-    let Ok(entries) = fs::read_dir(dir) else {
+    let Ok(entries) = vfs::read_dir(dir) else {
         return Vec::new();
     };
     let mut out: Vec<PathBuf> = entries
-        .filter_map(Result::ok)
-        .map(|e| e.path())
+        .into_iter()
         .filter(|p| {
             let name = p.file_name().unwrap_or_default().to_string_lossy();
             name.starts_with(&prefix) && name.ends_with(".js")
@@ -612,7 +610,7 @@ pub fn create_request(dir: &Path, request: &Request) -> Result<PathBuf, StoreErr
 
 pub fn create_folder(parent: &Path, name: &str) -> Result<PathBuf, StoreError> {
     let path = unique_path(parent, &slug(name, "folder"), "");
-    fs::create_dir_all(&path).map_err(io_error(&path))?;
+    vfs::create_dir_all(&path).map_err(io_error(&path))?;
     Ok(path)
 }
 
@@ -627,7 +625,7 @@ pub fn rename_folder(path: &Path, name: &str) -> Result<PathBuf, StoreError> {
         return Ok(path.to_owned());
     }
     let target = unique_path(parent, &stem, "");
-    fs::rename(path, &target).map_err(io_error(path))?;
+    vfs::rename(path, &target).map_err(io_error(path))?;
     Ok(target)
 }
 
@@ -649,11 +647,11 @@ pub fn rename_request(path: &Path, new_name: &str) -> Result<PathBuf, StoreError
     for script in sidecars(path) {
         let name = script.file_name().unwrap_or_default().to_string_lossy();
         let target = dir.join(format!("{final_stem}{}", &name[old_stem.len()..]));
-        if !target.exists() {
-            fs::rename(&script, &target).map_err(io_error(&script))?;
+        if !vfs::exists(&target) {
+            vfs::rename(&script, &target).map_err(io_error(&script))?;
         }
     }
-    fs::remove_file(path).map_err(io_error(path))?;
+    vfs::remove_file(path).map_err(io_error(path))?;
     Ok(new_path)
 }
 
@@ -667,12 +665,12 @@ pub fn move_request(path: &Path, dir: &Path) -> Result<PathBuf, StoreError> {
     let target = unique_path(dir, &old_stem, REQUEST_EXTENSION);
     let new_stem = stem_of(&target);
     let scripts = sidecars(path);
-    fs::rename(path, &target).map_err(io_error(path))?;
+    vfs::rename(path, &target).map_err(io_error(path))?;
     for script in scripts {
         let name = script.file_name().unwrap_or_default().to_string_lossy();
         let to = dir.join(format!("{new_stem}{}", &name[old_stem.len()..]));
-        if !to.exists() {
-            fs::rename(&script, &to).map_err(io_error(&script))?;
+        if !vfs::exists(&to) {
+            vfs::rename(&script, &to).map_err(io_error(&script))?;
         }
     }
     Ok(target)
@@ -695,7 +693,7 @@ pub fn move_folder(path: &Path, dir: &Path) -> Result<PathBuf, StoreError> {
     }
     let name = path.file_name().unwrap_or_default().to_string_lossy();
     let target = unique_path(dir, &name, "");
-    fs::rename(path, &target).map_err(io_error(path))?;
+    vfs::rename(path, &target).map_err(io_error(path))?;
     Ok(target)
 }
 
@@ -711,7 +709,7 @@ pub fn duplicate_request(path: &Path) -> Result<PathBuf, StoreError> {
     for script in sidecars(path) {
         let name = script.file_name().unwrap_or_default().to_string_lossy();
         let target = dir.join(format!("{new_stem}{}", &name[old_stem.len()..]));
-        fs::copy(&script, &target).map_err(io_error(&script))?;
+        vfs::copy(&script, &target).map_err(io_error(&script))?;
     }
     Ok(new_path)
 }
@@ -720,6 +718,7 @@ pub fn duplicate_request(path: &Path) -> Result<PathBuf, StoreError> {
 mod tests {
     use super::*;
     use crate::model::Method;
+    use std::fs;
 
     fn temp_collection(tag: &str) -> PathBuf {
         let root = std::env::temp_dir().join(format!("apix-store-{tag}-{}", std::process::id()));

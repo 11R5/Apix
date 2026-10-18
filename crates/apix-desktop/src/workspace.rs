@@ -9,6 +9,7 @@ mod palette;
 mod shell_copy;
 mod tabs;
 mod var_chips;
+mod vault_ui;
 
 use std::collections::{BTreeMap, HashSet};
 use std::path::PathBuf;
@@ -285,6 +286,10 @@ pub struct Workspace {
     /// Raw view of a large body, built on first use.
     raw_doc: Option<Arc<Document>>,
     raw_task: Option<Task<()>>,
+    /// When the user last clicked or typed, for auto-lock.
+    last_input: std::cell::Cell<std::time::Instant>,
+    /// Locks idle encrypted collections.
+    _auto_lock: Option<Task<()>>,
     /// The in-flight request. Dropping it cancels the request.
     task: Option<Task<()>>,
     _subscriptions: Vec<Subscription>,
@@ -399,10 +404,16 @@ impl Workspace {
             raw_doc: None,
             raw_task: None,
             task: None,
+            last_input: std::cell::Cell::new(std::time::Instant::now()),
+            _auto_lock: None,
             _subscriptions: subscriptions,
         };
+        this._auto_lock = Some(Self::auto_lock_task(window, cx));
+        // After the window exists: an encrypted folder opens with a dialog.
         if let Some(dir) = dir {
-            this.open_collection_dir(&dir, window, cx);
+            cx.defer_in(window, move |this, window, cx| {
+                this.open_or_create(dir, window, cx)
+            });
         }
         this.url.update(cx, |state, cx| state.focus(window, cx));
         this
@@ -1204,11 +1215,13 @@ impl Render for Workspace {
             .on_mouse_down(
                 MouseButton::Left,
                 cx.listener(|this, _: &MouseDownEvent, window, cx| {
+                    this.touch();
                     if !this.focus.contains_focused(window, cx) {
                         this.focus.focus(window, cx);
                     }
                 }),
             )
+            .capture_key_down(cx.listener(|this, _: &KeyDownEvent, _, _| this.touch()))
             // Drop a Postman export to import it, or a folder to open it.
             .id("workspace")
             .drag_over::<ExternalPaths>(move |style, _, _, _| style.bg(p.accent.opacity(0.06)))

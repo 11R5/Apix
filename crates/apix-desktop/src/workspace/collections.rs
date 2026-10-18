@@ -12,6 +12,7 @@ use std::time::Duration;
 
 use apix_core::project::{self, GroupBy, Project};
 use apix_core::store::{self, CollectionMeta, StoreError, TreeNode};
+use apix_core::vfs;
 use apix_core::{Body, Collection, Method, Request};
 use apix_import::postman::{self, Kind};
 use gpui_kit::component::IndexPath;
@@ -113,6 +114,22 @@ impl Workspace {
                 self.show_request(Request::default(), window, cx);
             }
         }
+    }
+
+    /// Closes whatever is open (after its encrypted collection was locked).
+    pub(super) fn close_workspace(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        self.project = None;
+        self.collections.clear();
+        self.collection = None;
+        self.trees.clear();
+        self.requests.clear();
+        self.tabs.clear();
+        self.selected = None;
+        self.watcher = None;
+        self.load_errors.clear();
+        self.show_request(Request::default(), window, cx);
+        self.refresh_environments(window, cx);
+        cx.notify();
     }
 
     /// The project root, or the collection root when no project is open.
@@ -601,6 +618,8 @@ impl Workspace {
                 .unwrap_or_else(|| file_stem(&path))
         };
         let view = cx.entity().downgrade();
+        // Encrypted collections have no trash: nothing decrypted may land on disk.
+        let permanent = vfs::is_virtual(&path) && !vfs::is_encrypted(&path);
         window.open_alert_dialog(cx, move |alert: AlertDialog, _, _| {
             let (view, path) = (view.clone(), path.clone());
             let what = if folder {
@@ -608,17 +627,25 @@ impl Workspace {
             } else {
                 "Delete request?"
             };
-            let detail = if folder {
-                format!("\u{201c}{name}\u{201d} and everything in it will be moved to the trash.")
+            let (gone, ok) = if permanent {
+                (
+                    "will be deleted for good (encrypted collections have no trash)",
+                    "Delete",
+                )
             } else {
-                format!("\u{201c}{name}\u{201d} will be moved to the trash.")
+                ("will be moved to the trash", "Move to trash")
+            };
+            let detail = if folder {
+                format!("\u{201c}{name}\u{201d} and everything in it {gone}.")
+            } else {
+                format!("\u{201c}{name}\u{201d} {gone}.")
             };
             alert
                 .on_close(refocus(view.clone()))
                 .confirm()
                 .title(what)
                 .description(SharedString::from(detail))
-                .ok_text("Move to trash")
+                .ok_text(ok)
                 .on_ok(move |_, window, cx| {
                     view.update(cx, |this, cx| this.delete(path.clone(), folder, window, cx))
                         .ok();
@@ -633,8 +660,8 @@ impl Workspace {
         } else {
             store::request_files(&path)
         };
-        if let Err(e) = trash::delete_all(&files) {
-            self.notify_error(format!("Could not move to the trash: {e}"), window, cx);
+        if let Err(message) = super::vault_ui::discard(&files) {
+            self.notify_error(message, window, cx);
             return;
         }
         self.forget_tabs(&path, window, cx);
@@ -732,7 +759,20 @@ impl Workspace {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
-        if Collection::find_root(&dir).is_some() {
+        // A locked encrypted collection: ask for its password first.
+        if let Some(root) = vfs::encrypted_root(&dir)
+            && !vfs::is_unlocked(&root)
+        {
+            let open = root.clone();
+            self.prompt_unlock(
+                root,
+                Rc::new(move |this, window, cx| this.open_or_create(open.clone(), window, cx)),
+                window,
+                cx,
+            );
+            return;
+        }
+        if Collection::find_root(&dir).is_some() || Project::find_root(&dir).is_some() {
             self.guard_all_tabs(
                 window,
                 cx,
@@ -1032,6 +1072,11 @@ impl Workspace {
             } else if let Some((_, tree)) = self.trees.first() {
                 self.render_nodes(tree, 0, &mut rows, cx);
             }
+            if let Some(project) = &self.project {
+                for (ix, root) in project.locked_collections().into_iter().enumerate() {
+                    rows.push(self.render_locked(ix, root, cx));
+                }
+            }
             if rows.is_empty() {
                 let hint = if self.project.is_some() && self.collections.is_empty() {
                     "No collections yet. Use the menu above: New collection…".to_owned()
@@ -1151,6 +1196,14 @@ impl Workspace {
                     .truncate()
                     .child(collection.meta.name.clone()),
             )
+            // Unlocked and encrypted: decrypted only in memory.
+            .when(vfs::is_virtual(&collection.root), |row| {
+                row.child(
+                    Icon::new(gpui_kit::assets::IconName::LockOpen)
+                        .xsmall()
+                        .text_color(p.ok),
+                )
+            })
             .context_menu(move |menu: PopupMenu, window, cx| {
                 collection_menu(
                     menu,
@@ -1644,7 +1697,23 @@ fn collection_menu(
         }))
         .item(item("Auth…", |this, root, window, cx| {
             this.open_auth_dialog(AuthOwner::Collection(root), window, cx)
-        }));
+        }))
+        .separator();
+    menu = if vfs::is_virtual(&root) {
+        menu.item(item("Lock", |this, _, window, cx| {
+            this.lock_collections(window, cx)
+        }))
+        .item(item("Change password…", |this, root, window, cx| {
+            this.prompt_change_password(root, window, cx)
+        }))
+        .item(item("Remove encryption…", |this, root, window, cx| {
+            this.confirm_decrypt(root, window, cx)
+        }))
+    } else {
+        menu.item(item("Encrypt…", |this, root, window, cx| {
+            this.prompt_encrypt(root, window, cx)
+        }))
+    };
     if let Some((envs, shown)) = pins.filter(|(envs, _)| !envs.is_empty()) {
         menu = menu.separator().label("Show in environment");
         for (env, is_shown) in envs.into_iter().zip(shown) {
@@ -1848,7 +1917,13 @@ fn watch(root: &Path, window: &mut Window, cx: &mut Context<Workspace>) -> Optio
                 .await;
             if changed.swap(false, Ordering::Relaxed)
                 && this
-                    .update_in(cx, |this, window, cx| this.reload(window, cx))
+                    .update_in(cx, |this, window, cx| {
+                        // An encrypted collection changed on disk (a git pull): re-read its index.
+                        for root in vfs::unlocked_roots() {
+                            vfs::refresh(&root).ok();
+                        }
+                        this.reload(window, cx)
+                    })
                     .is_err()
             {
                 break;

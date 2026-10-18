@@ -1,6 +1,7 @@
 // No console window behind the app in release builds on Windows.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod assets;
 mod fonts;
 mod large_view;
 mod net;
@@ -28,9 +29,9 @@ fn collection_dir() -> Option<PathBuf> {
 fn main() {
     let dir = collection_dir();
 
-    // The bundled Lucide icons (window controls, inputs, menus) are embedded in the binary.
+    // The Lucide icons (window controls, inputs, menus, locks) are embedded in the binary.
     gpui_kit::application()
-        .with_assets(gpui_kit::assets::Assets)
+        .with_assets(assets::AppAssets)
         .run(move |cx| {
             gpui_kit::init(cx);
             let embedded_fonts = fonts::register(cx);

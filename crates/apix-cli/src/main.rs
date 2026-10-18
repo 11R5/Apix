@@ -4,6 +4,7 @@ use std::process::ExitCode;
 
 use anyhow::{Context, Result, bail};
 use apix_core::store::load_request;
+use apix_core::vfs::{self, KdfCost, Vault};
 use apix_core::{Collection, Project, Request, Variables};
 use apix_http::{HttpClient, Response, human_size};
 use clap::{Args, Parser, Subcommand};
@@ -13,6 +14,15 @@ use clap::{Args, Parser, Subcommand};
 struct Cli {
     #[command(subcommand)]
     command: Command,
+    /// Environment variable holding the password of an encrypted collection
+    /// (asked for on the terminal when it is not set)
+    #[arg(
+        long,
+        global = true,
+        value_name = "VAR",
+        default_value = "APIX_PASSWORD"
+    )]
+    password_env: String,
 }
 
 #[derive(Subcommand)]
@@ -56,6 +66,55 @@ enum Command {
         #[arg(long)]
         into: Option<PathBuf>,
     },
+    /// Make an encrypted copy of a collection; the original is left as it is
+    Encrypt {
+        /// The plain collection folder
+        dir: PathBuf,
+        /// Where to create the encrypted collection (default: <dir>-encrypted)
+        #[arg(long)]
+        out: Option<PathBuf>,
+    },
+    /// Write a decrypted copy of an encrypted collection
+    Decrypt {
+        /// The encrypted collection folder
+        dir: PathBuf,
+        /// Where to write the plain files (must not exist yet)
+        #[arg(long)]
+        out: PathBuf,
+        /// Unlock with the recovery key instead of the password
+        #[arg(long)]
+        recovery: bool,
+    },
+}
+
+/// The password from `$var`, or asked for on the terminal.
+fn password(var: &str, prompt: &str, confirm: bool) -> Result<String> {
+    if let Ok(value) = std::env::var(var) {
+        return Ok(value);
+    }
+    if !std::io::stdin().is_terminal() {
+        bail!("this collection is encrypted: set {var} to its password");
+    }
+    let first = rpassword::prompt_password(prompt)?;
+    if confirm && rpassword::prompt_password("Repeat the password: ")? != first {
+        bail!("the passwords do not match");
+    }
+    Ok(first)
+}
+
+/// Unlocks the encrypted collection around `path`, if there is one.
+fn unlock_around(path: &Path, var: &str) -> Result<()> {
+    let Some(root) = vfs::encrypted_root(path) else {
+        return Ok(());
+    };
+    if vfs::is_unlocked(&root) {
+        return Ok(());
+    }
+    let pw = password(var, &format!("Password for {}: ", root.display()), false)?;
+    let vault =
+        Vault::unlock(&root, &pw).with_context(|| format!("unlocking {}", root.display()))?;
+    vfs::unlock(vault);
+    Ok(())
 }
 
 #[derive(Clone, Copy, clap::ValueEnum)]
@@ -171,12 +230,14 @@ async fn main() -> ExitCode {
 async fn run(cli: Cli) -> Result<bool> {
     let client = HttpClient::new()?;
     let style = Style::detect();
+    let var = cli.password_env.clone();
     match cli.command {
         Command::Send {
             file,
             vars,
             include_headers,
         } => {
+            unlock_around(&file, &var)?;
             let scope = Scope::find(&file)?;
             let vars = vars.build(&scope)?;
             let response = send_file(&client, &scope, &file, &vars).await?;
@@ -191,6 +252,7 @@ async fn run(cli: Cli) -> Result<bool> {
             Ok(response.is_success())
         }
         Command::Run { dir, vars } => {
+            unlock_around(&dir, &var)?;
             let root = Collection::find_root(&dir).with_context(|| {
                 format!("no apix.toml found in {} or its parents", dir.display())
             })?;
@@ -224,12 +286,15 @@ async fn run(cli: Cli) -> Result<bool> {
             Ok(failed == 0)
         }
         Command::Import { file, out, into } => import(&style, &file, out, into),
+        Command::Encrypt { dir, out } => encrypt(&style, &dir, out, &var),
+        Command::Decrypt { dir, out, recovery } => decrypt(&style, &dir, &out, recovery, &var),
         Command::Shell {
             file,
             shell,
             raw,
             vars,
         } => {
+            unlock_around(&file, &var)?;
             let scope = Scope::find(&file)?;
             let request = scope.load(&file)?;
             let request = if raw {
@@ -246,6 +311,56 @@ async fn run(cli: Cli) -> Result<bool> {
             Ok(true)
         }
     }
+}
+
+fn encrypt(style: &Style, dir: &Path, out: Option<PathBuf>, var: &str) -> Result<bool> {
+    if !dir.join(apix_core::store::COLLECTION_FILE).is_file() {
+        bail!("{} is not an Apix collection (no apix.toml)", dir.display());
+    }
+    let out = out.unwrap_or_else(|| {
+        let name = dir
+            .file_name()
+            .map(|n| n.to_string_lossy().into_owned())
+            .unwrap_or_else(|| "collection".into());
+        dir.with_file_name(format!("{name}-encrypted"))
+    });
+    let pw = password(var, "New password: ", true)?;
+    let (vault, recovery) = Vault::encrypt_folder(dir, &out, &pw, KdfCost::default())?;
+    println!(
+        "{}Encrypted {} files into {}{}",
+        style.green,
+        vault.files().len(),
+        out.display(),
+        style.reset
+    );
+    println!("\nRecovery key (shown only now, keep it somewhere safe):\n\n    {recovery}\n");
+    println!(
+        "With neither the password nor this key, the collection cannot be opened.\n\
+         The original folder {} was left as it is; delete it when you are ready.",
+        dir.display()
+    );
+    Ok(true)
+}
+
+fn decrypt(style: &Style, dir: &Path, out: &Path, recovery: bool, var: &str) -> Result<bool> {
+    if !vfs::is_encrypted(dir) {
+        bail!("{} is not an encrypted Apix collection", dir.display());
+    }
+    let vault = if recovery {
+        let key = password(var, "Recovery key: ", false)?;
+        Vault::unlock_with_recovery(dir, &key)?
+    } else {
+        Vault::unlock(dir, &password(var, "Password: ", false)?)?
+    };
+    vault.export(out)?;
+    println!(
+        "{}Wrote {} files to {}{}",
+        style.green,
+        vault.files().len(),
+        out.display(),
+        style.reset
+    );
+    Ok(true)
 }
 
 fn import(style: &Style, file: &Path, out: Option<PathBuf>, into: Option<PathBuf>) -> Result<bool> {
