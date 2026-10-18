@@ -1,6 +1,7 @@
 //! The main window: collection sidebar, request editor and response viewer.
 
 mod auth_editor;
+mod body_editor;
 mod collections;
 mod drag;
 mod env_editor;
@@ -18,7 +19,7 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 use apix_core::store::TreeNode;
-use apix_core::{Auth, Body, Collection, KeyValue, Method, Request, Variables};
+use apix_core::{Auth, Collection, KeyValue, Method, Request, Variables};
 use apix_http::{Response, group_digits, human_duration, human_size};
 use gpui_kit::component::button::{Button, ButtonVariants};
 use gpui_kit::component::checkbox::Checkbox;
@@ -62,6 +63,8 @@ actions!(
         MethodOptions
     ]
 );
+
+pub use body_editor::register_graphql;
 
 const CONTEXT: &str = "ApixWorkspace";
 
@@ -143,42 +146,6 @@ impl Table {
         match self {
             Table::Params => ("param-on", "param-del", "param-add"),
             Table::Headers => ("header-on", "header-del", "header-add"),
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum BodyKind {
-    None,
-    Json,
-    Text,
-    Xml,
-    /// A body the editor cannot show yet (form fields); it is sent unchanged.
-    Kept,
-}
-
-impl BodyKind {
-    const PICKABLE: [BodyKind; 4] = [
-        BodyKind::None,
-        BodyKind::Json,
-        BodyKind::Text,
-        BodyKind::Xml,
-    ];
-
-    fn label(self) -> &'static str {
-        match self {
-            BodyKind::None => "None",
-            BodyKind::Json => "JSON",
-            BodyKind::Text => "Text",
-            BodyKind::Xml => "XML",
-            BodyKind::Kept => "Form",
-        }
-    }
-
-    fn language(self) -> &'static str {
-        match self {
-            BodyKind::Json => "json",
-            _ => "text",
         }
     }
 }
@@ -268,8 +235,8 @@ pub struct Workspace {
     base: Request,
     /// The Auth tab.
     auth_editor: Entity<auth_editor::AuthEditor>,
-    /// Edited values the editor has no widgets for yet (form bodies).
-    kept_body: Body,
+    /// The Body tab.
+    body_editor: Entity<body_editor::BodyEditor>,
     /// URL length before the last change, to tell a paste from typing.
     last_url_len: usize,
     /// The URL text whose references were last turned into chips.
@@ -281,8 +248,6 @@ pub struct Workspace {
     url: Entity<InputState>,
     params: Vec<KvRow>,
     headers: Vec<KvRow>,
-    body_kind: BodyKind,
-    body: Entity<EditorState>,
     request_tab: usize,
     response_tab: usize,
     response: ResponseState,
@@ -313,7 +278,8 @@ impl Workspace {
             InputState::new(window, cx)
                 .placeholder("https://api.example.com/users   or   {{base_url}}/users")
         });
-        let body = cx.new(|cx| EditorState::new(window, cx).language("json"));
+        let workspace = cx.weak_entity();
+        let body_editor = cx.new(|cx| body_editor::BodyEditor::new(palette, workspace, window, cx));
         let env_select = cx.new(|cx| {
             SelectState::new(
                 vec![SharedString::from(NO_ENVIRONMENT)],
@@ -344,15 +310,13 @@ impl Workspace {
                     _ => {}
                 },
             ),
-            // The editor keeps Ctrl+Enter for itself, so it is handled here too.
-            cx.subscribe_in(&body, window, |this, _, event: &InputEvent, window, cx| {
-                if let InputEvent::PressEnter {
-                    secondary: true, ..
-                } = event
-                {
-                    this.send(window, cx);
-                }
-            }),
+            cx.observe(&body_editor, |_, _, cx| cx.notify()),
+            // The body editors keep Ctrl+Enter for themselves and pass it on.
+            cx.subscribe_in(
+                &body_editor,
+                window,
+                |this, _, _: &body_editor::SendRequested, window, cx| this.send(window, cx),
+            ),
             cx.subscribe_in(
                 &method,
                 window,
@@ -390,7 +354,7 @@ impl Workspace {
             app_state: AppState::load(),
             base: Request::default(),
             auth_editor,
-            kept_body: Body::None,
+            body_editor,
             last_url_len: 0,
             last_chipped: None,
             hovered_var: None,
@@ -399,8 +363,6 @@ impl Workspace {
             url,
             params: Vec::new(),
             headers: Vec::new(),
-            body_kind: BodyKind::None,
-            body,
             request_tab: 0,
             response_tab: 0,
             response: ResponseState::Idle,
@@ -471,33 +433,26 @@ impl Workspace {
             .map(|kv| KvRow::new(kv, window, cx))
             .collect();
 
-        let (kind, text) = match &request.body {
-            Body::None => (BodyKind::None, String::new()),
-            Body::Json(text) => (BodyKind::Json, text.clone()),
-            Body::Text(text) => (BodyKind::Text, text.clone()),
-            Body::Xml(text) => (BodyKind::Xml, text.clone()),
-            Body::Form(_) => (BodyKind::Kept, String::new()),
-        };
-        self.set_body_kind(kind, cx);
-        self.body
-            .update(cx, |state, cx| state.set_value(text, window, cx));
+        self.body_editor
+            .update(cx, |editor, cx| editor.set_body(&request.body, window, cx));
         self.request_tab = if request.body.is_none() { 0 } else { 3 };
         let auth = request.auth.clone();
         self.auth_editor
             .update(cx, |editor, cx| editor.set_auth(&auth, window, cx));
         self.refresh_inherited_auth(cx);
-        self.kept_body = match &request.body {
-            Body::Form(_) => request.body.clone(),
-            _ => Body::None,
-        };
         cx.notify();
     }
 
-    fn set_body_kind(&mut self, kind: BodyKind, cx: &mut Context<Self>) {
-        self.body_kind = kind;
-        self.body
-            .update(cx, |state, cx| state.set_highlighter(kind.language(), cx));
-        cx.notify();
+    /// The open request's folder and its collection's root, which body
+    /// file paths are relative to.
+    fn body_location(&self) -> (Option<PathBuf>, Option<PathBuf>) {
+        let dir = self
+            .selected
+            .as_deref()
+            .and_then(|p| p.parent())
+            .map(PathBuf::from);
+        let root = self.collection.as_ref().map(|c| c.root.clone());
+        (dir, root)
     }
 
     fn current_method(&self, cx: &App) -> Method {
@@ -523,14 +478,7 @@ impl Workspace {
             .iter()
             .filter_map(|r| r.to_key_value(cx))
             .collect();
-        let text = self.body.read(cx).value().to_string();
-        request.body = match self.body_kind {
-            BodyKind::None => Body::None,
-            BodyKind::Json => Body::Json(text),
-            BodyKind::Text => Body::Text(text),
-            BodyKind::Xml => Body::Xml(text),
-            BodyKind::Kept => self.kept_body.clone(),
-        };
+        request.body = self.body_editor.read(cx).body(cx);
         request
     }
 
@@ -554,8 +502,13 @@ impl Workspace {
             return;
         }
 
+        // Body files are relative to the request file.
+        let request = match self.body_location().0 {
+            Some(dir) => resolved.request.with_files_relative_to(&dir),
+            None => resolved.request,
+        };
         self.response = ResponseState::Loading;
-        let pending = net::send(resolved.request);
+        let pending = net::send(request);
         // The tab may be in the back by the time the response arrives.
         let tab = self.selected.clone();
         // Replacing an older task drops it, which cancels that request.
@@ -787,8 +740,8 @@ impl Workspace {
                 format!("{name} {n}").into()
             }
         };
-        let body_label: SharedString = match self.body_kind {
-            BodyKind::None => "Body".into(),
+        let body_label: SharedString = match self.body_editor.read(cx).kind() {
+            body_editor::BodyKind::None => "Body".into(),
             kind => format!("Body · {}", kind.label()).into(),
         };
 
@@ -807,7 +760,7 @@ impl Workspace {
                 .p_2()
                 .child(self.auth_editor.clone())
                 .into_any_element(),
-            _ => self.render_body(cx).into_any_element(),
+            _ => self.body_editor.clone().into_any_element(),
         };
 
         v_flex()
@@ -906,47 +859,6 @@ impl Workspace {
                         }),
                 )
             })
-    }
-
-    fn render_body(&self, cx: &mut Context<Self>) -> impl IntoElement {
-        let p = self.palette;
-        let kinds = BodyKind::PICKABLE;
-        let selected = kinds.iter().position(|k| *k == self.body_kind);
-
-        let mut picker = TabBar::new("body-kind").segmented();
-        if let Some(ix) = selected {
-            picker = picker.selected_index(ix);
-        }
-        let picker = kinds
-            .iter()
-            .fold(picker, |bar, kind| {
-                bar.child(Tab::new().label(kind.label()))
-            })
-            .on_click(
-                cx.listener(move |this, ix: &usize, _, cx| this.set_body_kind(kinds[*ix], cx)),
-            );
-
-        let content = match self.body_kind {
-            BodyKind::None => div()
-                .pt_4()
-                .text_xs()
-                .text_color(p.text_muted)
-                .child("This request has no body.")
-                .into_any_element(),
-            BodyKind::Kept => div()
-                .pt_4()
-                .text_xs()
-                .text_color(p.text_muted)
-                .child("Form bodies are not editable yet. The saved fields are sent unchanged.")
-                .into_any_element(),
-            _ => Editor::new(&self.body).h_full().into_any_element(),
-        };
-
-        v_flex()
-            .size_full()
-            .gap_2()
-            .child(h_flex().child(picker))
-            .child(div().flex_1().min_h_0().child(content))
     }
 
     fn render_response_pane(&self, cx: &mut Context<Self>) -> impl IntoElement {

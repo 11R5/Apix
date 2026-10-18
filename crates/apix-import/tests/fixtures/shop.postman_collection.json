@@ -135,7 +135,8 @@
 							"mode": "formdata",
 							"formdata": [
 								{ "key": "note", "value": "march", "type": "text" },
-								{ "key": "file", "type": "file", "src": "/tmp/invoice.pdf" }
+								{ "key": "meta", "value": "{}", "type": "text", "contentType": "application/json", "disabled": true },
+								{ "key": "file", "type": "file", "src": ["/tmp/invoice.pdf", "/tmp/receipt.pdf"] }
 							]
 						},
 						"url": "{{baseUrl}}/orders/invoice"

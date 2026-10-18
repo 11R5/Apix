@@ -1,8 +1,8 @@
 use std::iter::repeat_n;
 
-use apix_core::{Auth, Method, Request};
+use apix_core::{Auth, Body, Method, Request};
 
-use crate::{effective_headers, form_fields, full_url, text_body};
+use crate::{effective_headers, form_fields, full_url, multipart_parts, text_body};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Shell {
@@ -57,7 +57,7 @@ fn curl(request: &Request, program: &str, quote: fn(&str) -> String, newline: &s
         parts.push(format!("-u {}", quote(&format!("{username}:{password}"))));
     }
     if let Some(text) = text_body(&request.body) {
-        parts.push(format!("--data-raw {}", quote(text)));
+        parts.push(format!("--data-raw {}", quote(&text)));
     } else if let Some(fields) = form_fields(&request.body) {
         for field in fields {
             parts.push(format!(
@@ -65,8 +65,51 @@ fn curl(request: &Request, program: &str, quote: fn(&str) -> String, newline: &s
                 quote(&format!("{}={}", field.key, field.value))
             ));
         }
+    } else if let Some(fields) = multipart_parts(&request.body) {
+        for part in fields {
+            let mime = part
+                .content_type
+                .as_deref()
+                .filter(|m| !m.is_empty())
+                .map(|m| format!(";type={m}"))
+                .unwrap_or_default();
+            if part.file {
+                parts.push(format!(
+                    "-F {}",
+                    quote(&format!("{}=@{}{mime}", part.key, form_value(&part.value)))
+                ));
+            } else if mime.is_empty() {
+                // --form-string: a value starting with @ or < stays text.
+                parts.push(format!(
+                    "--form-string {}",
+                    quote(&format!("{}={}", part.key, part.value))
+                ));
+            } else {
+                // Quoted, so neither ';' nor a leading @ or < means anything.
+                let value = format!(
+                    "\"{}\"",
+                    part.value.replace('\\', "\\\\").replace('"', "\\\"")
+                );
+                parts.push(format!(
+                    "-F {}",
+                    quote(&format!("{}={value}{mime}", part.key))
+                ));
+            }
+        }
+    } else if let Body::Binary { file } = &request.body {
+        parts.push(format!("--data-binary {}", quote(&format!("@{file}"))));
     }
     parts.join(newline)
+}
+
+/// A file path for `-F name=@path`, quoted in curl's own syntax when `;`,
+/// `,` or `"` would otherwise be read as part of the field syntax.
+fn form_value(path: &str) -> String {
+    if path.contains([';', ',', '"']) {
+        format!("\"{}\"", path.replace('\\', "\\\\").replace('"', "\\\""))
+    } else {
+        path.to_owned()
+    }
 }
 
 /// POSIX single quotes: nothing inside is special; `'` becomes `'\''`.
@@ -176,7 +219,27 @@ fn powershell(request: &Request) -> String {
     }
 
     let mut has_body = true;
-    if let Some(text) = text_body(&request.body) {
+    let mut extra = String::new();
+    if let Some(parts) = multipart_parts(&request.body) {
+        // Invoke-RestMethod's -Form arrived in PowerShell 7.
+        out.insert_str(0, "# -Form needs PowerShell 7 or later\n");
+        out.push_str("$form = @{\n");
+        for part in parts {
+            let value = if part.file {
+                format!("Get-Item -LiteralPath {}", ps_quote(&part.value))
+            } else {
+                ps_quote(&part.value)
+            };
+            out.push_str(&format!("    {} = {value}\n", ps_quote(&part.key)));
+        }
+        out.push_str("}\n");
+        extra.push_str(" -Form $form");
+        has_body = false;
+    } else if let Body::Binary { file } = &request.body {
+        extra.push_str(&format!(" -InFile {}", ps_quote(file)));
+        has_body = false;
+    } else if let Some(text) = text_body(&request.body) {
+        let text = text.as_str();
         let here_string_safe = !text.lines().any(|l| l.starts_with("'@"));
         if text.contains('\n') && here_string_safe {
             out.push_str(&format!(
@@ -222,13 +285,14 @@ fn powershell(request: &Request) -> String {
     if has_body {
         out.push_str(" -Body $body");
     }
+    out.push_str(&extra);
     out
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apix_core::{ApiKeyLocation, Body, KeyValue};
+    use apix_core::{ApiKeyLocation, Body, FormPart, GraphQl, KeyValue};
 
     fn post_json() -> Request {
         let mut r = Request::new(Method::Post, "https://api.example.com/users");
@@ -313,6 +377,59 @@ mod tests {
         );
         assert!(ps.contains("$body = @{\n    'sku' = 'A-1'\n}"), "{ps}");
         assert!(ps.ends_with("-Method Put -Uri 'https://x.dev/it''s' -Headers $headers -ContentType 'application/x-www-form-urlencoded' -Body $body"), "{ps}");
+    }
+
+    #[test]
+    fn writes_multipart_binary_and_graphql_bodies() {
+        let mut r = Request::new(Method::Post, "https://x.dev/up");
+        r.body = Body::Multipart(vec![
+            FormPart::text("note", "@not a file"),
+            FormPart {
+                content_type: Some("application/json".into()),
+                ..FormPart::text("meta", "{\"a\";1}")
+            },
+            FormPart::file("photo", "C:\\pics\\a;b.png"),
+            FormPart {
+                enabled: false,
+                ..FormPart::text("off", "x")
+            },
+        ]);
+        assert_eq!(
+            to_shell(&r, Shell::Bash),
+            "curl -X POST 'https://x.dev/up' \\\n  \
+             --form-string 'note=@not a file' \\\n  \
+             -F 'meta=\"{\\\"a\\\";1}\";type=application/json' \\\n  \
+             -F 'photo=@\"C:\\\\pics\\\\a;b.png\"'"
+        );
+        let ps = to_shell(&r, Shell::PowerShell);
+        assert!(ps.starts_with("# -Form needs PowerShell 7"), "{ps}");
+        assert!(
+            ps.contains("    'photo' = Get-Item -LiteralPath 'C:\\pics\\a;b.png'\n"),
+            "{ps}"
+        );
+        assert!(ps.ends_with("-Uri 'https://x.dev/up' -Form $form"), "{ps}");
+
+        r.body = Body::Binary {
+            file: "data.bin".into(),
+        };
+        assert!(to_shell(&r, Shell::Bash).ends_with(
+            "-H 'Content-Type: application/octet-stream' \\\n  --data-binary '@data.bin'"
+        ));
+        assert!(
+            to_shell(&r, Shell::PowerShell)
+                .ends_with("-ContentType 'application/octet-stream' -InFile 'data.bin'")
+        );
+
+        r.body = Body::GraphQl(GraphQl {
+            query: "{ me { id } }".into(),
+            variables: String::new(),
+        });
+        assert!(
+            to_shell(&r, Shell::Bash)
+                .ends_with(r#"--data-raw '{"query":"{ me { id } }","variables":null}'"#),
+            "{}",
+            to_shell(&r, Shell::Bash)
+        );
     }
 
     #[test]

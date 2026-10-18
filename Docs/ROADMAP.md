@@ -60,7 +60,8 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [ ] **Network inspector**: local interface/IP/DNS/proxy, DNS answers, TCP/TLS details and certificate chain, timing waterfall, redirects
   - [x] Network tab and `apix send --network`: timing waterfall (DNS, connect, waiting, download), DNS answers, server and local address, interface and VPN hint, gateway, DNS servers, proxy from the environment, redirect chain, server certificate (issuer, validity, days left, names); every send uses a fresh traced connection
   - [ ] TLS version and cipher, the full certificate chain, separate TCP and TLS times, compressed size (moved to M7)
-- [ ] multipart, binary and GraphQL bodies; OAuth 2.0 (moved from M3), Digest, AWS SigV4 and OAuth 1.0 auth
+- [x] **Bodies**: editable URL-encoded form, multipart (text and file fields), binary file and GraphQL (highlighted query, JSON variables) in the app, the CLI, "Copy as", curl paste (`-F`, `--form-string`, `--data-binary @file`) and Postman import; relative file paths resolve against the request's folder
+- [ ] OAuth 2.0 (moved from M3), Digest, AWS SigV4 and OAuth 1.0 auth
 - [ ] **Settings and UI language** (moved from M7): settings screen; English, Turkish, Arabic, German, French, Russian, Japanese, Chinese and Spanish; right-to-left layout for Arabic; switch without restarting; a new language is one file plus one line
 - [ ] **Documentation and README**: per-language docs in `Docs/<lang>/` (user guide, architecture, technical, workflows), English and Turkish first; README section on how Apix differs from Postman, Insomnia, Bruno, Hoppscotch and HTTPie; reproducible performance numbers
 - [ ] Request settings (timeout, TLS, proxy, client certificates), cookie manager
@@ -89,7 +90,7 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 ## M9 — Release & distribution
 - [ ] GitHub Actions: test and build on Windows, macOS and Linux
 - [ ] Installers: `.msi`/winget, `.dmg`/Homebrew cask, AppImage/Flatpak/`.deb`, using the M3 icons
-- [ ] Keep the release binary under 100 MB (31.2 MB today); speed and smoothness come first
+- [ ] Keep the release binary under 100 MB (31.5 MB today); speed and smoothness come first
 - [ ] Signed Windows builds (so Smart App Control allows them) and notarized macOS builds
 - [ ] Documentation in all nine languages, an illustrated user guide with screenshots taken from each language's UI, a docs site with a language picker
 - [ ] Side-by-side performance numbers against Postman, Insomnia, Bruno and Hoppscotch, measured on one machine with one script

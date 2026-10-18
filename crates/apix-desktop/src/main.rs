@@ -38,6 +38,7 @@ fn main() {
             let palette = Palette::new(Variant::from_env());
             theme::apply(&palette, embedded_fonts, cx);
             workspace::bind_keys(cx);
+            workspace::register_graphql();
             large_view::bind_keys(cx);
 
             let options = WindowOptions {

@@ -426,7 +426,12 @@ async fn send_file(
         let names: Vec<_> = resolved.missing.into_iter().collect();
         bail!("undefined variable(s): {}", names.join(", "));
     }
-    Ok(client.send(&resolved.request).await?)
+    // Body files are relative to the request file.
+    let request = match path.parent() {
+        Some(dir) => resolved.request.with_files_relative_to(dir),
+        None => resolved.request,
+    };
+    Ok(client.send(&request).await?)
 }
 
 fn print_status(style: &Style, response: &Response) {

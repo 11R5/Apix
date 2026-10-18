@@ -1,4 +1,4 @@
-use apix_core::{Auth, Body, KeyValue, Method, Request};
+use apix_core::{Auth, Body, FormPart, KeyValue, Method, Request};
 
 /// A request read from a `curl` command, plus anything that was left out.
 #[derive(Debug, Clone, PartialEq)]
@@ -37,8 +37,10 @@ struct Parsed {
     method: Option<String>,
     headers: Vec<(String, String)>,
     data: Vec<String>,
+    /// `-d @file` / `--data-binary @file`.
+    data_files: Vec<String>,
     urlencoded: Vec<String>,
-    form: Vec<String>,
+    form: Vec<FormPart>,
     user: Option<String>,
     get: bool,
     head: bool,
@@ -118,16 +120,33 @@ fn build(args: &[String]) -> CurlImport {
             }
             "-d" | "--data" | "--data-ascii" | "--data-binary" | "--data-raw" => {
                 if let Some(d) = value(&mut i, arg, &mut p.warnings) {
-                    if d.starts_with('@') && arg != "--data-raw" {
-                        p.warnings
-                            .push(format!("Body from file ({d}) is not imported."));
+                    if let Some(file) = d.strip_prefix('@')
+                        && arg != "--data-raw"
+                    {
+                        p.data_files.push(file.to_owned());
                     } else {
                         p.data.push(d);
                     }
                 }
             }
             "--data-urlencode" => p.urlencoded.extend(value(&mut i, arg, &mut p.warnings)),
-            "-F" | "--form" => p.form.extend(value(&mut i, arg, &mut p.warnings)),
+            "-F" | "--form" => {
+                if let Some(f) = value(&mut i, arg, &mut p.warnings) {
+                    match form_part(&f) {
+                        Some((part, note)) => {
+                            p.warnings.extend(note);
+                            p.form.push(part);
+                        }
+                        None => p.warnings.push(format!("Form field {f} has no name.")),
+                    }
+                }
+            }
+            "--form-string" => {
+                if let Some(f) = value(&mut i, arg, &mut p.warnings) {
+                    let (k, v) = f.split_once('=').unwrap_or((&f, ""));
+                    p.form.push(FormPart::text(k, v));
+                }
+            }
             "-u" | "--user" => p.user = value(&mut i, arg, &mut p.warnings),
             "-A" | "--user-agent" => {
                 if let Some(v) = value(&mut i, arg, &mut p.warnings) {
@@ -233,20 +252,21 @@ fn finish(mut p: Parsed) -> CurlImport {
         .find(|h| h.key.eq_ignore_ascii_case("content-type"))
         .map(|h| h.value.to_ascii_lowercase());
 
-    if !p.form.is_empty() {
-        p.warnings.push(
-            "multipart/form-data (-F) is not supported yet; text fields were imported as a URL-encoded form and files were skipped."
-                .into(),
-        );
-        request.body = Body::Form(
-            p.form
-                .iter()
-                .filter(|f| !f.contains("=@") && !f.contains("=<"))
-                .filter_map(|f| f.split_once('='))
-                .map(|(k, v)| KeyValue::new(k, v.trim_matches('"')))
-                .collect(),
-        );
-        headers.retain(|h| !h.key.eq_ignore_ascii_case("content-type"));
+    if !p.data_files.is_empty() {
+        if p.data_files.len() > 1 || !p.data.is_empty() || !p.form.is_empty() {
+            p.warnings
+                .push("Only the first file body was imported; other data was dropped.".into());
+        }
+        request.body = Body::Binary {
+            file: p.data_files.swap_remove(0),
+        };
+    } else if !p.form.is_empty() {
+        request.body = Body::Multipart(std::mem::take(&mut p.form));
+        // The engine writes this header itself, with its own boundary.
+        headers.retain(|h| {
+            !(h.key.eq_ignore_ascii_case("content-type")
+                && h.value.to_ascii_lowercase().starts_with("multipart/"))
+        });
     } else if !p.urlencoded.is_empty() || (is_form(content_type.as_deref()) && !p.data.is_empty()) {
         let mut rows: Vec<KeyValue> = p
             .data
@@ -295,6 +315,67 @@ fn finish(mut p: Parsed) -> CurlImport {
         request,
         warnings: p.warnings,
     }
+}
+
+/// Reads one `-F` value: `name=text`, `name=@file` or `name=<file`, with an
+/// optional `;type=`. A note comes back for anything that changes on import.
+fn form_part(spec: &str) -> Option<(FormPart, Option<String>)> {
+    let (key, rest) = spec.split_once('=')?;
+    if key.is_empty() {
+        return None;
+    }
+    let (file, rest, mut note) = if let Some(path) = rest.strip_prefix('@') {
+        (true, path, None)
+    } else if let Some(path) = rest.strip_prefix('<') {
+        let note =
+            format!("Form field {key} read its text from {path}; it was imported as a file.");
+        (true, path, Some(note))
+    } else {
+        (false, rest, None)
+    };
+    // A quoted value may hold ';'. Otherwise ';' starts the parameters.
+    let (value, params) = if let Some(quoted) = rest.strip_prefix('"') {
+        let mut value = String::new();
+        let mut end = quoted.len();
+        let mut chars = quoted.char_indices();
+        while let Some((i, c)) = chars.next() {
+            match c {
+                '\\' => value.extend(chars.next().map(|(_, c)| c)),
+                '"' => {
+                    end = i + 1;
+                    break;
+                }
+                c => value.push(c),
+            }
+        }
+        (value, &quoted[end..])
+    } else {
+        match rest.find(';') {
+            Some(i) => (rest[..i].to_owned(), &rest[i..]),
+            None => (rest.to_owned(), ""),
+        }
+    };
+    let mut content_type = None;
+    for param in params.split(';').map(str::trim).filter(|p| !p.is_empty()) {
+        match param.split_once('=') {
+            Some(("type", t)) => content_type = Some(t.trim_matches('"').to_owned()),
+            _ => {
+                note.get_or_insert_with(|| format!("Form option {param} is not imported."));
+            }
+        }
+    }
+    let part = if file {
+        FormPart::file(key, value)
+    } else {
+        FormPart::text(key, value)
+    };
+    Some((
+        FormPart {
+            content_type,
+            ..part
+        },
+        note,
+    ))
 }
 
 fn is_form(content_type: Option<&str>) -> bool {
@@ -608,21 +689,66 @@ mod tests {
     #[test]
     fn reports_what_it_skips() {
         let imported = from_curl(
-            "curl -o out.json --proxy http://p:8080 -F 'f=@a.png' -F 'k=v' https://x.dev/up",
+            "curl -o out.json --proxy http://p:8080 -F 'f=@a.png;filename=b.png' -F 'k=<n.txt' https://x.dev/up",
         )
         .unwrap();
         assert_eq!(
             imported.request.body,
-            Body::Form(vec![KeyValue::new("k", "v")])
+            Body::Multipart(vec![
+                FormPart::file("f", "a.png"),
+                FormPart::file("k", "n.txt")
+            ])
         );
         let all = imported.warnings.join("\n");
         assert!(
             all.contains("-o is not imported") && all.contains("--proxy is not imported"),
             "{all}"
         );
-        assert!(all.contains("multipart/form-data"), "{all}");
+        assert!(all.contains("filename=b.png is not imported"), "{all}");
+        assert!(all.contains("imported as a file"), "{all}");
         assert!(from_curl("wget https://x.dev").is_err());
         assert!(from_curl("curl 'unterminated").is_err());
+    }
+
+    #[test]
+    fn reads_multipart_and_file_bodies() {
+        let r = from_curl(
+            "curl https://x.dev/up -H 'Content-Type: multipart/form-data; boundary=x' \
+             -F name=Ada -F 'meta=\"a;b\";type=application/json' --form-string 'at=@home' \
+             -F 'photo=@\"C:/my pics/a.png\";type=image/png'",
+        )
+        .unwrap();
+        assert!(r.warnings.is_empty(), "{:?}", r.warnings);
+        assert_eq!(r.request.method, Method::Post);
+        assert!(
+            r.request.headers.is_empty(),
+            "the boundary header is dropped"
+        );
+        assert_eq!(
+            r.request.body,
+            Body::Multipart(vec![
+                FormPart::text("name", "Ada"),
+                FormPart {
+                    content_type: Some("application/json".into()),
+                    ..FormPart::text("meta", "a;b")
+                },
+                FormPart::text("at", "@home"),
+                FormPart {
+                    content_type: Some("image/png".into()),
+                    ..FormPart::file("photo", "C:/my pics/a.png")
+                },
+            ])
+        );
+
+        let bin = from_curl("curl -X PUT https://x.dev/blob --data-binary @dump.bin").unwrap();
+        assert_eq!(bin.request.method, Method::Put);
+        assert_eq!(
+            bin.request.body,
+            Body::Binary {
+                file: "dump.bin".into()
+            }
+        );
+        assert!(bin.warnings.is_empty());
     }
 
     #[test]
@@ -643,6 +769,30 @@ mod tests {
             let back = from_curl(&command).unwrap_or_else(|e| panic!("{shell:?}: {e}\n{command}"));
             assert!(back.warnings.is_empty(), "{shell:?}: {:?}", back.warnings);
             assert_eq!(back.request, original, "{shell:?}\n{command}");
+        }
+
+        let mut upload = Request::new(Method::Post, "https://x.dev/up");
+        upload.body = Body::Multipart(vec![
+            FormPart::text("note", "<b> & 100% \"quoted\""),
+            FormPart {
+                content_type: Some("application/json".into()),
+                ..FormPart::text("meta", "{\"a\";\"@b\"}")
+            },
+            FormPart::file("photo", "C:\\pics\\a;b.png"),
+        ]);
+        let mut blob = Request::new(Method::Put, "https://x.dev/blob");
+        blob.headers
+            .push(KeyValue::new("Content-Type", "application/octet-stream"));
+        blob.body = Body::Binary {
+            file: "C:\\data\\dump 1.bin".into(),
+        };
+        for original in [upload, blob] {
+            for shell in [Shell::Bash, Shell::Cmd] {
+                let command = to_shell(&original, shell);
+                let back = from_curl(&command).unwrap();
+                assert!(back.warnings.is_empty(), "{shell:?}: {:?}", back.warnings);
+                assert_eq!(back.request, original, "{shell:?}\n{command}");
+            }
         }
 
         let mut keyed = Request::new(Method::Get, "https://x.dev/a");

@@ -14,10 +14,10 @@
 | M1 Arayüzden istek | ✅ 100 MB JSON ~0.33 s'de açılıyor |
 | M2 Koleksiyonlar, Postman içe aktarma | ✅ (sekmeler ve sürükle-bırak M3'te tamamlandı) |
 | M3 Simge, projeler, ortamlar, kopyalama, auth | ✅ 9/9 · bitti: simge, ortam seçici ve editörü, dinamik değişkenler, projeler, kabuk komutu olarak kopyalama, metotla yeni istek, değişken çipleri, Auth sekmesi ve miras, komut paleti, sekmeler, sürükle-bırak ile taşıma · küçük kalanlar M3 bölümünün sonunda |
-| M4 Günlük kullanım | 🔜 · bitti: menü çubuğu, şifreli koleksiyonlar (motor, uygulama, CLI), ağ denetçisi (Network sekmesi) · sıradaki: multipart/binary/GraphQL gövdeleri ve auth tipleri · ardından: ayarlar ve 9 dilli arayüz, dokümantasyon yapısı ve README karşılaştırması |
+| M4 Günlük kullanım | 🔜 · bitti: menü çubuğu, şifreli koleksiyonlar (motor, uygulama, CLI), ağ denetçisi (Network sekmesi) , multipart/binary/GraphQL gövdeleri · sıradaki: auth tipleri (OAuth 2.0, Digest, AWS SigV4, OAuth 1.0) · ardından: ayarlar ve 9 dilli arayüz, dokümantasyon yapısı ve README karşılaştırması |
 | M5–M9 | ⬜ |
 
-Release ikili dosyası 31.2 MB (üst sınır 100 MB). Testler: core 35, vault 7, desktop 4, codegen 11, import 10, http 8 (hepsi geçiyor, clippy uyarısız).
+Release ikili dosyası 31.5 MB (üst sınır 100 MB). Testler: core 38, vault 7, desktop 6, codegen 13, import 12, http 9 (hepsi geçiyor, clippy uyarısız).
 
 ### Kullanıcı notları (17 Ekim 2026) ve plana nasıl işlendikleri
 | # | Not | Nereye işlendi |
@@ -52,7 +52,7 @@ Apix, Postman'in yaptığı her şeyi yapan bir API istemcisi olacak. Postman'de
 | Kural | Ne anlama geliyor |
 |---|---|
 | **Minimalist** | Ekranda sadece o an gereken şey görünür. Gerisi Ctrl/⌘+K komut paletinde durur. |
-| **Hafif** | Hız, akıcılık ve özellik boyuttan önce gelir. Program dosyası için üst sınır 100 MB (not 11; şu an 31.2 MB; Postman ve Electron uygulamaları 300 MB'ı aşıyor). Açılış 150 ms'nin, boşta bellek kullanımı 60 MB'ın altında kalır (şu an 69 MB ölçüldü). |
+| **Hafif** | Hız, akıcılık ve özellik boyuttan önce gelir. Program dosyası için üst sınır 100 MB (not 11; şu an 31.5 MB; Postman ve Electron uygulamaları 300 MB'ı aşıyor). Açılış 150 ms'nin, boşta bellek kullanımı 60 MB'ın altında kalır (şu an 69 MB ölçüldü). |
 | **Hızlı** | Arayüz hiç donmaz. 100 MB'lık bir yanıt bile kare kaybetmeden kaydırılır. |
 | **Local-first** | Hesap ve bulut zorunlu değildir. Koleksiyonlar düz dosya olarak durur ve git ile versiyonlanır. |
 | **Postman'den kolay geçiş** | Postman koleksiyonları, ortamları ve scriptleri içe aktarılınca çalışır. |
@@ -181,10 +181,10 @@ Apix, Postman'in yaptığı her şeyi yapan bir API istemcisi olacak. Postman'de
 | none | | ✅ |
 | raw / JSON | Renklendirme, biçimlendirme (Ctrl+Shift+F), anlık doğrulama, yorum satırı desteği (gönderirken silinir) | ✅ renkli editör · ⬜ biçimlendirme, doğrulama, yorumlar |
 | raw / Text, XML, HTML, JavaScript | Her biri kendi renklendirmesiyle | ✅ Text, XML · ⬜ diğerleri |
-| x-www-form-urlencoded | Anahtar–değer tablosu | ✅ motor · ⬜ UI |
-| multipart/form-data | Metin ve dosya alanları, alan başına içerik tipi | ⬜ M |
-| binary | Dosya seçip ham olarak gönderme | ⬜ S |
-| GraphQL | Sorgu ve değişkenler editörü, şemadan otomatik tamamlama (§H1) | ⬜ L |
+| x-www-form-urlencoded | Anahtar–değer tablosu | ✅ |
+| multipart/form-data | Metin ve dosya alanları (alan başına Text/File), çoklu dosya seçimi, alan başına içerik tipi. Koleksiyon içindeki dosyalar isteğe göre göreli yolla kaydedilir. | ✅ · ⬜ içerik tipini arayüzde düzenleme |
+| binary | Dosya seçip ham olarak gönderme; boyut ve "dosya yok" uyarısı | ✅ |
+| GraphQL | Sorgu (renkli) ve değişkenler (JSON, anlık doğrulama) editörü · şemadan otomatik tamamlama (§H1) | ✅ editörler · ⬜ otomatik tamamlama (M6) |
 
 #### A5. Kimlik doğrulama (Auth)
 | Tip | Durum |
@@ -299,7 +299,7 @@ Bir koleksiyon (veya proje) parola ile şifrelenir. Parolayı bilmeyen hiçbir a
 ### D. Postman uyumluluğu ve içe/dışa aktarma ⭐ (öncelikli)
 | Özellik | Ayrıntı | Durum |
 |---|---|---|
-| **Postman Collection v2.1 ve v2.0 içe aktarma** | Klasörler, istekler, header'lar, raw/urlencoded/graphql gövdeleri, bearer/basic/API key auth (klasör ve koleksiyon auth'u olduğu yerde kalır, istekler miras alır), koleksiyon değişkenleri, açıklamalar, path değişkenleri. Multipart dosyaları, OAuth 2.0 ve örnek yanıtlar raporda listelenir. | ✅ |
+| **Postman Collection v2.1 ve v2.0 içe aktarma** | Klasörler, istekler, header'lar, raw, urlencoded, form-data (dosyalarla), binary ve GraphQL gövdeleri, bearer/basic/API key auth (klasör ve koleksiyon auth'u olduğu yerde kalır, istekler miras alır), koleksiyon değişkenleri, açıklamalar, path değişkenleri. OAuth 2.0 ve örnek yanıtlar raporda listelenir; dosyası seçilmemiş alanlar için uyarı verilir. | ✅ |
 | **Postman Environment içe aktarma** | `*.postman_environment.json`. `secret` tipindeki değerler `*.local.toml` dosyasına yazılır, git'e girmez. | ✅ |
 | **Postman Globals içe aktarma** | Tanınıyor, ortam olarak aktarılıyor. Projenin `[vars]` bölümüne aktarma seçeneği eklenecek. | ✅ tanıma · ⬜ S |
 | **Postman scriptleri** | İsteklerin yanına `.js` olarak kaydediliyor ✅. `pm.*` uyumlu API ile çalıştırılması M5'te (§F). | ⬜ L |
@@ -522,7 +522,8 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 ### M4 — Günlük kullanıma hazır
 - **Şifreli koleksiyonlar (§C2)** (not 2): oluşturma, şifreleme ve şifreyi kaldırma, kilit açma ve otomatik kilit, kurtarma anahtarı, CLI desteği (L). Motor ✅ (`apix-vault`), uygulama ✅ (kilit açma, kilitleme, 15 dk otomatik kilit, şifreleme ve şifreyi kaldırma, parola değiştirme, yeni şifreli koleksiyon), CLI ✅. Kalan: parolayı işletim sistemi anahtarlığında hatırlama.
 - **Ağ denetçisi (§B2)** (not 9): yerel ağ bilgisi, DNS, TCP, TLS ve sertifika zinciri, zaman şelalesi, yönlendirmeler (L) Network sekmesi ve `apix send --network` ✅; TLS sürümü/şifre takımı, tam zincir ve TCP/TLS ayrı süreler M7'de (not 12).
-- 🔜 multipart, binary ve GraphQL gövdeleri. OAuth 2.0 (M3'ten taşındı), Digest, AWS SigV4 ve OAuth 1.0 auth tipleri.
+- **Gövde tipleri (§A4)** ✅: düzenlenebilir urlencoded form, multipart (metin ve dosya alanları), binary ve GraphQL (renkli sorgu, JSON değişkenler). Motor, uygulama, CLI, "Copy as" (curl, cmd, PowerShell), curl yapıştırma (`-F`, `--form-string`, `--data-binary @dosya`) ve Postman içe aktarma hepsini taşır. Göreli dosya yolları isteğin klasörüne göre çözülür.
+- 🔜 OAuth 2.0 (M3'ten taşındı), Digest, AWS SigV4 ve OAuth 1.0 auth tipleri.
 - **Ayarlar ekranı ve arayüz dili (§M, not 13)** (L): çeviri altyapısı (`rust-i18n`, tüm metinler anahtarlı), 9 dil, Arapça için sağdan sola, CJK ve Arapça yazı tipi yedekleri, ayarlardan anında dil değişimi. M7'den öne alındı: her yeni ekran yeni metin getirdiği için altyapı ne kadar erken gelirse sonradan o kadar az iş çıkar.
 - **Dokümantasyon yapısı ve README (§N, not 14, 16)** (M): `Docs/<dil>/` yapısı, `languages.toml`, İngilizce ve Türkçe belgeler (kullanım kılavuzu, mimari, teknik altyapı, iş akışları), README'de "neden Apix" karşılaştırması ve Apix'in tekrarlanabilir performans ölçümleri.
 - İstek ayarları (timeout, SSL, proxy, sertifikalar), çerez yöneticisi
@@ -549,7 +550,7 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 ### M9 — Yayın
 - GitHub Actions: Windows, macOS ve Linux'ta test ve derleme
 - Kurulum paketleri: `.msi` ve winget, `.dmg` ve Homebrew, AppImage, Flatpak ve `.deb`
-- İkili boyutunu izlemek: üst sınır 100 MB (not 11). Şu an release 31.2 MB; içinde 2.2 MB font, simgeler ve tree-sitter var. CJK ve Arapça yazı tipleri eklenince büyür; sınır hız ve akıcılık için tanındı, boyut için ödün verilmez.
+- İkili boyutunu izlemek: üst sınır 100 MB (not 11). Şu an release 31.5 MB; içinde 2.2 MB font, simgeler ve tree-sitter var. CJK ve Arapça yazı tipleri eklenince büyür; sınır hız ve akıcılık için tanındı, boyut için ödün verilmez.
 - **Tüm dillerde dokümantasyon (§N, not 14, 15):** 9 dilde kullanım kılavuzu, mimari, teknik altyapı, iş akışları; her dilin kendi arayüzünden otomatik alınmış ekran görüntüleriyle görselli kılavuz; dokümantasyon sitesinde dil seçici
 - **Karşılaştırmalı performans (not 16):** Apix ile Postman, Insomnia, Bruno ve Hoppscotch aynı makinede, aynı betikle ölçülür; sonuçlar README'de
 - **İmzalı sürümler:** Windows kod imzası (Akıllı Uygulama Denetimi engellemesin diye) ve macOS notarization

@@ -1,6 +1,6 @@
 use std::collections::{BTreeSet, HashMap};
 
-use crate::model::{Auth, Body, KeyValue, Request};
+use crate::model::{Auth, Body, FormPart, GraphQl, KeyValue, Request};
 
 /// How deep `{{a}}` -> `{{b}}` -> ... chains are followed before giving up,
 /// which also stops self-referencing variables from looping forever.
@@ -141,6 +141,22 @@ impl Request {
                 Body::Text(text) => Body::Text(s(text)),
                 Body::Xml(text) => Body::Xml(s(text)),
                 Body::Form(rows) => Body::Form(pairs(rows, &mut s)),
+                Body::Multipart(parts) => Body::Multipart(
+                    parts
+                        .iter()
+                        .map(|p| FormPart {
+                            key: s(&p.key),
+                            value: s(&p.value),
+                            content_type: p.content_type.as_deref().map(&mut s),
+                            ..p.clone()
+                        })
+                        .collect(),
+                ),
+                Body::Binary { file } => Body::Binary { file: s(file) },
+                Body::GraphQl(gql) => Body::GraphQl(GraphQl {
+                    query: s(&gql.query),
+                    variables: s(&gql.variables),
+                }),
             },
             auth: match &self.auth {
                 Auth::Inherit => Auth::Inherit,

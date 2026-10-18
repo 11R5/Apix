@@ -2,7 +2,9 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use apix_core::store::load_request;
-use apix_core::{ApiKeyLocation, Auth, Body, Collection, KeyValue, Method, Request};
+use apix_core::{
+    ApiKeyLocation, Auth, Body, Collection, FormPart, GraphQl, KeyValue, Method, Request,
+};
 use apix_import::postman::{Kind, convert_collection, convert_environment, detect};
 use apix_import::{ImportError, PlannedFile};
 
@@ -147,22 +149,52 @@ fn converts_every_body_mode() {
     );
 
     let upload = request(&plan, "orders/upload-invoice.apix");
-    assert_eq!(upload.body, Body::Form(vec![kv("note", "march", true)]));
-    assert!(warned(
-        &plan,
-        "Orders / Upload invoice",
-        "1 file field(s) were skipped"
-    ));
-
-    let Body::Json(graphql) = &request(&plan, "orders/search-orders.apix").body else {
-        panic!("GraphQL should become a JSON body");
-    };
-    let value: serde_json::Value = serde_json::from_str(graphql).unwrap();
     assert_eq!(
-        value["query"],
-        "query ($q: String) { orders(q: $q) { id } }"
+        upload.body,
+        Body::Multipart(vec![
+            FormPart::text("note", "march"),
+            FormPart {
+                content_type: Some("application/json".into()),
+                enabled: false,
+                ..FormPart::text("meta", "{}")
+            },
+            FormPart::file("file", "/tmp/invoice.pdf"),
+            FormPart::file("file", "/tmp/receipt.pdf"),
+        ])
     );
-    assert_eq!(value["variables"]["q"], "open");
+
+    assert_eq!(
+        request(&plan, "orders/search-orders.apix").body,
+        Body::GraphQl(GraphQl {
+            query: "query ($q: String) { orders(q: $q) { id } }".into(),
+            variables: "{\"q\": \"open\"}".into(),
+        })
+    );
+}
+
+#[test]
+fn carries_over_file_bodies() {
+    let json = r#"{
+        "info": { "name": "Files", "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json" },
+        "item": [
+            { "name": "Put blob", "request": { "method": "PUT", "url": "https://x.dev/b",
+                "body": { "mode": "file", "file": { "src": "/data/dump.bin" } } } },
+            { "name": "Empty", "request": { "method": "PUT", "url": "https://x.dev/b",
+                "body": { "mode": "formdata", "formdata": [ { "key": "f", "type": "file" } ] } } }
+        ]
+    }"#;
+    let plan = convert_collection(json).unwrap();
+    assert_eq!(
+        request(&plan, "put-blob.apix").body,
+        Body::Binary {
+            file: "/data/dump.bin".into()
+        }
+    );
+    assert_eq!(
+        request(&plan, "empty.apix").body,
+        Body::Multipart(vec![FormPart::file("f", "")])
+    );
+    assert!(warned(&plan, "Empty", "no file chosen"));
 }
 
 #[test]

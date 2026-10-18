@@ -19,7 +19,7 @@ no WebView and no Electron.
    Only the visible rows are laid out (virtual lists), and the body is parsed
    lazily.
 5. **Light and fast to start.** Speed and features come before size. The release
-   binary stays under 100 MB (31.2 MB today; Electron apps are 300 MB+) and
+   binary stays under 100 MB (31.5 MB today; Electron apps are 300 MB+) and
    opens a window in under 150 ms.
 
 ## Crates
@@ -140,6 +140,17 @@ json = '''
 [auth.bearer]
 token = "{{token}}"
 ```
+
+**Bodies.** `[body]` holds one of `json`, `text`, `xml`, `form` (URL-encoded rows),
+`multipart` (rows with `file = true` for file fields and an optional
+`content_type`), `binary = { file = "…" }` or `graphql` (`query` and `variables`).
+File paths may contain variables and are relative to the request file;
+`Request::with_files_relative_to` makes them absolute after variables are
+resolved, in the app and the CLI alike. The engine reads files only when it
+sends, so a missing file is a send error, not a load error. A GraphQL body is
+sent as `{"query", "variables"}` JSON; invalid variables stop the send. With a
+multipart body, a `Content-Type: multipart/…` header without the engine's
+boundary (common in Postman exports) is dropped so the body stays readable.
 
 Open questions:
 - **Secrets.** Environment values such as tokens should not be committed.
@@ -262,7 +273,7 @@ about 407 MB with the body loaded, against 69 MB idle.
 |-------------------------------------|-------------------|-----------------------------|
 | Cold start to first frame           | < 150 ms          | window handle at ~340 ms, not yet profiled |
 | Idle RAM                            | < 60 MB           | 69 MB |
-| Release binary                      | < 100 MB          | 31.2 MB |
+| Release binary                      | < 100 MB          | 31.5 MB |
 | Input to paint latency              | 1 frame (≤ 8 ms at 120 Hz) | not measured |
 | Open and scroll a 100 MB JSON body  | no dropped frames | opens in ~0.33 s; frame times not measured |
 

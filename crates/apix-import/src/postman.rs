@@ -9,7 +9,7 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 use apix_core::store::{self, CollectionMeta, FolderMeta, VarMap};
-use apix_core::{ApiKeyLocation, Auth, Body, KeyValue, Method, Request};
+use apix_core::{ApiKeyLocation, Auth, Body, FormPart, GraphQl, KeyValue, Method, Request};
 use serde::Deserialize;
 use serde_json::Value;
 
@@ -162,6 +162,10 @@ struct PmKv {
     enabled: Option<bool>,
     #[serde(rename = "type")]
     kind: Option<String>,
+    /// Form-data file fields: a path, or a list of paths.
+    src: Option<Value>,
+    #[serde(rename = "contentType")]
+    content_type: Option<String>,
 }
 
 impl PmKv {
@@ -195,9 +199,15 @@ struct PmBody {
     #[serde(default)]
     formdata: Vec<PmKv>,
     graphql: Option<PmGraphql>,
+    file: Option<PmFile>,
     options: Option<Value>,
     #[serde(default)]
     disabled: bool,
+}
+
+#[derive(Deserialize)]
+struct PmFile {
+    src: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -597,53 +607,72 @@ impl Converter<'_> {
                     .collect(),
             ),
             Some("formdata") => {
-                let files = body
-                    .formdata
-                    .iter()
-                    .filter(|f| f.kind.as_deref() == Some("file"))
-                    .count();
-                let fields: Vec<KeyValue> = body
-                    .formdata
-                    .iter()
-                    .filter(|f| f.kind.as_deref() != Some("file") && !f.key().is_empty())
-                    .map(PmKv::to_key_value)
-                    .collect();
-                let mut message = String::from(
-                    "multipart/form-data is not supported yet; the text fields were imported as a URL-encoded form.",
-                );
-                if files > 0 {
-                    message.push_str(&format!(" {files} file field(s) were skipped."));
+                let mut parts = Vec::new();
+                for field in body.formdata.iter().filter(|f| !f.key().is_empty()) {
+                    let content_type = field.content_type.clone().filter(|c| !c.is_empty());
+                    if field.kind.as_deref() != Some("file") {
+                        parts.push(FormPart {
+                            content_type,
+                            enabled: field.is_enabled(),
+                            ..FormPart::text(field.key(), field.value())
+                        });
+                        continue;
+                    }
+                    // One part per file; Postman allows several under one key.
+                    let mut sources: Vec<String> = match &field.src {
+                        Some(Value::String(s)) if !s.is_empty() => vec![s.clone()],
+                        Some(Value::Array(items)) => items
+                            .iter()
+                            .filter_map(Value::as_str)
+                            .filter(|s| !s.is_empty())
+                            .map(str::to_owned)
+                            .collect(),
+                        _ => Vec::new(),
+                    };
+                    if sources.is_empty() {
+                        self.report.warn(
+                            label,
+                            format!(
+                                "Form field \"{}\" has no file chosen; pick one in Apix.",
+                                field.key()
+                            ),
+                        );
+                        sources.push(String::new());
+                    }
+                    for src in sources {
+                        parts.push(FormPart {
+                            content_type: content_type.clone(),
+                            enabled: field.is_enabled(),
+                            ..FormPart::file(field.key(), src)
+                        });
+                    }
                 }
-                self.report.warn(label, message);
-                Body::Form(fields)
+                Body::Multipart(parts)
             }
             Some("graphql") => {
-                // GraphQL over HTTP is a JSON body: {"query": ..., "variables": ...}.
                 let graphql = body.graphql.as_ref();
                 let query = graphql.and_then(|g| g.query.clone()).unwrap_or_default();
                 let variables = match graphql.and_then(|g| g.variables.clone()) {
-                    Some(Value::String(s)) if s.trim().is_empty() => Value::Null,
-                    Some(Value::String(s)) => serde_json::from_str(&s).unwrap_or(Value::String(s)),
-                    Some(v) => v,
-                    None => Value::Null,
+                    Some(Value::String(s)) => s,
+                    Some(Value::Null) | None => String::new(),
+                    Some(v) => {
+                        serde_json::to_string_pretty(&v).expect("a JSON value always serializes")
+                    }
                 };
-                let mut payload = serde_json::Map::new();
-                payload.insert("query".into(), Value::String(query));
-                if !variables.is_null() {
-                    payload.insert("variables".into(), variables);
+                Body::GraphQl(GraphQl { query, variables })
+            }
+            Some("file") => match body.file.as_ref().and_then(|f| f.src.clone()) {
+                Some(file) if !file.is_empty() => Body::Binary { file },
+                _ => {
+                    self.report.warn(
+                        label,
+                        "The binary body has no file chosen; pick one in Apix.",
+                    );
+                    Body::Binary {
+                        file: String::new(),
+                    }
                 }
-                Body::Json(
-                    serde_json::to_string_pretty(&Value::Object(payload))
-                        .expect("a JSON object always serializes"),
-                )
-            }
-            Some("file") => {
-                self.report.warn(
-                    label,
-                    "Binary file bodies are not supported yet; the body was skipped.",
-                );
-                Body::None
-            }
+            },
             Some(other) => {
                 self.report.warn(
                     label,

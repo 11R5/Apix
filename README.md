@@ -30,6 +30,8 @@
 - **Variables:** project, collection and environment layers, secrets kept out of git,
   an in-app editor and dynamic values such as `{{$guid}}`. In the URL bar every
   `{{variable}}` is a coloured chip; hover it to see its value and where it comes from.
+- **Bodies:** JSON, text, XML, URL-encoded form, multipart with files, a binary
+  file, and GraphQL with a highlighted query and JSON variables.
 - **Postman:** collection v2.0/v2.1 and environment import, with a report.
 - **Copy as / paste:** copy a request as `curl`, `curl.exe` or PowerShell; paste a
   `curl` command to fill the request.
@@ -103,8 +105,8 @@ apix import "Staging.postman_environment.json" --into my-api
 apix run my-api --env staging
 ```
 
-Collection v2.0 and v2.1 are supported. Anything Apix cannot carry over yet (multipart
-files, OAuth 2.0, saved examples) is listed in the import report. Pre-request and test
+Collection v2.0 and v2.1 are supported. Anything Apix cannot carry over yet (OAuth 2.0,
+saved examples) is listed in the import report. Pre-request and test
 scripts are kept as `.js` files next to their requests. Secrets from Postman
 environments go to a gitignored `*.local.toml`. In the desktop app, use the sidebar's
 import button or drop the export onto the window.
@@ -128,6 +130,32 @@ Variables come from the project, the collection and the active environment
 (edit them in the app with Ctrl+E). Secrets live in `environments/<name>.local.toml`,
 which is gitignored. Dynamic variables such as `{{$guid}}`, `{{$timestamp}}`,
 `{{$isoTimestamp}}` and `{{$randomEmail}}` get a new value every time they are used.
+
+Other bodies look like this. File paths are relative to the request file, so a
+collection that keeps its files inside works on every machine:
+
+```toml
+[[body.multipart]]
+key = "title"
+value = "Invoice"
+
+[[body.multipart]]
+key = "document"
+value = "../files/invoice.pdf"
+file = true
+content_type = "application/pdf"   # optional
+```
+
+```toml
+[body]
+binary = { file = "../files/dump.bin" }
+```
+
+```toml
+[body.graphql]
+query = "query ($id: ID!) { user(id: $id) { name } }"
+variables = '{ "id": "42" }'
+```
 
 A request without `auth` inherits it from the nearest folder that sets one in its
 `folder.toml`, then from the collection's `apix.toml`, then from the project.
