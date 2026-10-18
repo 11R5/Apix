@@ -95,7 +95,13 @@ impl Workspace {
                         .text_color(p.text_muted)
                         .child(label),
                 )
-                .child(div().flex_1().min_w_0().text_color(p.text).child(value))
+                .child(
+                    div()
+                        .flex_1()
+                        .min_w_0()
+                        .text_color(p.text)
+                        .child(bidi::para(value)),
+                )
         };
         let section = |title: SharedString| {
             div()
@@ -111,11 +117,17 @@ impl Workspace {
             .gap_1()
             .child(section(tr!("network.section.timing")))
             .children(waterfall)
-            .child(div().pt_1().text_xs().text_color(p.text_muted).child(tr!(
-                "network.timing.summary",
-                total = human_duration(response.timing.total),
-                ttfb = human_duration(response.timing.ttfb)
-            )))
+            .child(
+                div()
+                    .pt_1()
+                    .text_xs()
+                    .text_color(p.text_muted)
+                    .child(bidi::para(tr!(
+                        "network.timing.summary",
+                        total = human_duration(response.timing.total),
+                        ttfb = human_duration(response.timing.ttfb)
+                    ))),
+            )
             .child(section(tr!("network.section.connection")));
         if let Some(remote) = trace.remote_addr {
             body = body.child(row(
@@ -231,11 +243,11 @@ impl Workspace {
                                     .text_color(p.text_muted)
                                     .child(tr!("network.cert.valid")),
                             )
-                            .child(div().text_color(p.text).child(tr!(
+                            .child(div().text_color(p.text).child(bidi::para(tr!(
                                 "network.cert.valid_range",
                                 from = cert.not_before,
                                 to = cert.not_after
-                            )))
+                            ))))
                             .child(div().text_color(color).child(left)),
                     )
                     .when(!cert.names.is_empty(), |b| {
@@ -246,7 +258,7 @@ impl Workspace {
                             .pt_1()
                             .text_xs()
                             .text_color(p.text_muted)
-                            .child(tr!("network.cert.engine_note")),
+                            .child(bidi::para(tr!("network.cert.engine_note"))),
                     );
             }
             None if response.version.contains('2')

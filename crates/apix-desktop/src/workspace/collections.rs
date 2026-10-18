@@ -374,7 +374,7 @@ impl Workspace {
                 .child(
                     div()
                         .text_sm()
-                        .child(tr!("collection.unsaved_text", name = name)),
+                        .child(bidi::para(tr!("collection.unsaved_text", name = name))),
                 )
                 .footer(
                     h_flex()
@@ -643,7 +643,7 @@ impl Workspace {
                 .confirm()
                 .text_start()
                 .title(what)
-                .description(detail)
+                .description(bidi::para(detail))
                 .ok_text(ok)
                 .on_ok(move |_, window, cx| {
                     view.update(cx, |this, cx| this.delete(path.clone(), folder, window, cx))
@@ -794,7 +794,10 @@ impl Workspace {
                 .confirm()
                 .text_start()
                 .title(tr!("collection.start_here_title"))
-                .description(tr!("collection.start_here_text", path = dir.display()))
+                .description(bidi::para(tr!(
+                    "collection.start_here_text",
+                    path = dir.display()
+                )))
                 .ok_text(tr!("collection.create_collection"))
                 .on_ok(move |_, window, cx| {
                     let meta = CollectionMeta {
@@ -1109,7 +1112,7 @@ impl Workspace {
                         .py_2()
                         .text_xs()
                         .text_color(p.text_muted)
-                        .child(hint)
+                        .child(bidi::para(hint))
                         .into_any_element(),
                 );
             }
@@ -1148,7 +1151,7 @@ impl Workspace {
                     .py_1()
                     .text_xs()
                     .text_color(p.err)
-                    .child(e.clone())
+                    .child(bidi::para(e.clone()))
             }))
     }
 
@@ -1270,7 +1273,7 @@ impl Workspace {
                     .py_2()
                     .text_xs()
                     .text_color(p.text_muted)
-                    .child(tr!("sidebar.no_environments"))
+                    .child(bidi::para(tr!("sidebar.no_environments")))
                     .into_any_element(),
             );
             for collection in &self.collections {
@@ -1370,7 +1373,7 @@ impl Workspace {
                     .pt_1()
                     .text_xs()
                     .text_color(p.text_muted)
-                    .child(tr!("sidebar.drop_hint")),
+                    .child(bidi::para(tr!("sidebar.drop_hint"))),
             )
             .children(self.render_recent(cx))
     }

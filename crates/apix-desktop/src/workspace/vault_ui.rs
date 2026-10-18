@@ -23,7 +23,7 @@ use gpui_kit::*;
 
 use super::collections::{Then, close_dialog, refocus};
 use super::{Workspace, describe};
-use crate::bidi::{Bidi as _, DialogBidi as _};
+use crate::bidi::{self, Bidi as _, DialogBidi as _};
 use crate::theme::Palette;
 use crate::tr;
 
@@ -208,7 +208,7 @@ impl Render for PasswordForm {
                     div()
                         .text_sm()
                         .text_color(p.text_muted)
-                        .child(self.note.clone()),
+                        .child(bidi::para(self.note.clone())),
                 )
             })
             .children(self.name.as_ref().map(Input::new))
@@ -232,7 +232,7 @@ impl Render for PasswordForm {
                 )
             })
             .when_some(self.error.clone(), |col, error| {
-                col.child(div().text_sm().text_color(p.err).child(error))
+                col.child(div().text_sm().text_color(p.err).child(bidi::para(error)))
             })
             .when(self.busy, |col| {
                 col.child(
@@ -510,7 +510,7 @@ impl Workspace {
                 .confirm()
                 .text_start()
                 .title(tr!("vault.decrypt_title", name = name))
-                .description(tr!("vault.decrypt_description"))
+                .description(bidi::para(tr!("vault.decrypt_description")))
                 .ok_text(tr!("vault.decrypt"))
                 .on_ok(move |_, window, cx| {
                     view.update(cx, |ws, cx| match decrypt_in_place(&root) {
@@ -583,7 +583,11 @@ impl Workspace {
                 .child(
                     v_flex()
                         .gap_3()
-                        .child(div().text_sm().child(tr!("vault.recovery.intro")))
+                        .child(
+                            div()
+                                .text_sm()
+                                .child(bidi::para(tr!("vault.recovery.intro"))),
+                        )
                         .child(
                             h_flex()
                                 // The key is data: left to right in any language.
@@ -617,7 +621,7 @@ impl Workspace {
                             div()
                                 .text_sm()
                                 .text_color(p.warn)
-                                .child(tr!("vault.recovery.warning")),
+                                .child(bidi::para(tr!("vault.recovery.warning"))),
                         )
                         .child(
                             Checkbox::new("recovery-stored")

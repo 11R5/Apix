@@ -66,7 +66,8 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
   - [x] Settings dialog (Ctrl+,): language, theme, auto-lock time for encrypted collections; saved to `settings.toml` at once
   - [x] Every UI text behind a key (about 414), nine languages, switch without restarting, first start follows the system language, a test for missing keys and placeholders
   - [x] Right-to-left layout for Arabic: sidebar, panes, window controls, menus, tabs, form rows, dialogs and the status bar mirror; code, URLs and key–value tables stay left to right; switches at once
-  - [ ] Wrapping right-to-left paragraphs, translated engine error messages, native-speaker review
+  - [x] Wrapped right-to-left text (notes, hints, descriptions) breaks into lines in reading order
+  - [ ] Translated engine error messages, native-speaker review
 - [ ] **Documentation and README**: per-language docs in `Docs/<lang>/` (user guide, architecture, technical, workflows), English and Turkish first; README section on how Apix differs from Postman, Insomnia, Bruno, Hoppscotch and HTTPie; reproducible performance numbers
 - [ ] Request settings (timeout, TLS, proxy, client certificates), cookie manager
 - [ ] Code snippets in other languages, history

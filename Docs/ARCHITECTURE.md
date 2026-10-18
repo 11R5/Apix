@@ -252,8 +252,12 @@ platform's font fallback (DirectWrite, Core Text, fontconfig) next to the
 embedded Inter. Arabic text is shaped and placed right to left; on Windows
 that needs `vendor/gpui-pre-windows`, gpui 0.3.9's DirectWrite backend with its
 glyph-run placement fixed (patched in from the workspace `Cargo.toml`; drop it
-once upstream fixes it). Still to come: wrapping right-to-left paragraphs (gpui
-cuts a shaped line at glyph positions that assume left to right). Error
+once upstream fixes it). gpui cannot wrap right-to-left text: it shapes a
+paragraph as one line and cuts it at glyph x positions that it assumes grow
+from left to right. So text that may wrap (notes, hints, descriptions,
+messages) goes through `bidi::para`, which in RTL breaks the text at spaces in
+reading order, measuring each candidate line, and paints each line unwrapped
+(`src/bidi/paragraph.rs`). In other languages it is plain gpui text. Error
 messages from the engine crates stay English.
 
 In a right-to-left language (`Language::rtl`, Arabic) the window mirrors: the

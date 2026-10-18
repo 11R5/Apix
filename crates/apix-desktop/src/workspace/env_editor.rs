@@ -17,7 +17,7 @@ use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
 use super::{Workspace, describe};
-use crate::bidi::{Bidi as _, DialogBidi as _};
+use crate::bidi::{self, Bidi as _, DialogBidi as _};
 use crate::theme::Palette;
 use crate::tr;
 
@@ -691,9 +691,21 @@ impl Render for EnvEditor {
                     .h_full()
                     .child(self.render_header(page, cx))
                     .child(content)
-                    .child(div().pt_2().text_xs().text_color(p.text_muted).child(hint))
+                    .child(
+                        div()
+                            .pt_2()
+                            .text_xs()
+                            .text_color(p.text_muted)
+                            .child(bidi::para(hint)),
+                    )
                     .when_some(self.error.clone(), |col, error| {
-                        col.child(div().pt_1().text_xs().text_color(p.err).child(error))
+                        col.child(
+                            div()
+                                .pt_1()
+                                .text_xs()
+                                .text_color(p.err)
+                                .child(bidi::para(error)),
+                        )
                     }),
             )
             .into_any_element()

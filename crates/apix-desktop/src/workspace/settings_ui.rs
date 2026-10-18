@@ -6,7 +6,7 @@ use gpui_kit::component::{IndexPath, Sizable, WindowExt as _, h_flex, v_flex};
 use gpui_kit::*;
 
 use super::Workspace;
-use crate::bidi::{Bidi as _, DialogBidi as _};
+use crate::bidi::{self, Bidi as _, DialogBidi as _};
 use crate::i18n;
 use crate::settings::Settings;
 use crate::theme::{Palette, Variant};
@@ -171,7 +171,12 @@ impl SettingsView {
                     .min_w_0()
                     .gap_0p5()
                     .child(div().text_sm().text_color(p.text).child(title))
-                    .child(div().text_xs().text_color(p.text_muted).child(description)),
+                    .child(
+                        div()
+                            .text_xs()
+                            .text_color(p.text_muted)
+                            .child(bidi::para(description)),
+                    ),
             )
             .child(div().w(px(220.)).flex_none().child(control))
     }

@@ -19,9 +19,23 @@ use gpui_kit::*;
 
 use crate::i18n;
 
+mod paragraph;
+
 /// The interface reads right to left.
 pub fn rtl() -> bool {
     i18n::current().rtl
+}
+
+/// Text that may wrap onto several lines: notes, hints, descriptions,
+/// messages. gpui cannot wrap right-to-left text, so in RTL it is broken into
+/// lines by [`paragraph::Paragraph`]; otherwise it is plain text.
+pub fn para(text: impl Into<SharedString>) -> AnyElement {
+    let text = text.into();
+    if rtl() {
+        paragraph::Paragraph::new(text).into_any_element()
+    } else {
+        text.into_any_element()
+    }
 }
 
 /// Direction-aware styling. "Start" is the side reading starts from: left,

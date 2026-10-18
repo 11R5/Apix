@@ -370,7 +370,7 @@ impl BodyEditor {
             .pt_2()
             .text_xs()
             .text_color(self.palette.text_muted)
-            .child(text.into())
+            .child(bidi::para(text))
     }
 
     fn render_form(&self, cx: &mut Context<Self>) -> AnyElement {
@@ -557,7 +557,7 @@ impl BodyEditor {
                     ),
             )
             .child(match status {
-                Some((text, color)) => div().text_xs().text_color(color).child(text),
+                Some((text, color)) => div().text_xs().text_color(color).child(bidi::para(text)),
                 None => self.hint(tr!("body.binary_hint")),
             })
             .into_any_element()

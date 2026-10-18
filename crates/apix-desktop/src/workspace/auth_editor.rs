@@ -561,7 +561,7 @@ impl AuthEditor {
         div()
             .text_sm()
             .text_color(self.palette.text_muted)
-            .child(text.into())
+            .child(bidi::para(text))
             .into_any_element()
     }
 
@@ -712,7 +712,7 @@ impl AuthEditor {
                             .min_w_0()
                             .text_sm()
                             .text_color(color)
-                            .child(status),
+                            .child(bidi::para(status)),
                     )
                     .child(
                         Button::new("auth-get-token")
@@ -740,7 +740,7 @@ impl AuthEditor {
             div()
                 .text_xs()
                 .text_color(p.text_muted.opacity(0.8))
-                .child(tr!("auth.note.oauth2"))
+                .child(bidi::para(tr!("auth.note.oauth2")))
                 .into_any_element(),
         );
         out
@@ -802,7 +802,7 @@ impl Render for AuthEditor {
                         div()
                             .text_xs()
                             .text_color(p.text_muted.opacity(0.8))
-                            .child(detail)
+                            .child(bidi::para(detail))
                             .into_any_element(),
                     );
                 }
@@ -864,7 +864,7 @@ impl Render for AuthEditor {
                     div()
                         .text_xs()
                         .text_color(p.text_muted.opacity(0.8))
-                        .child(tr!("auth.note.variables")),
+                        .child(bidi::para(tr!("auth.note.variables"))),
                 )
             })
     }
@@ -1017,11 +1017,11 @@ impl super::Workspace {
                                 .flex_1()
                                 .text_xs()
                                 .text_color(palette.text_muted)
-                                .child(match label {
+                                .child(bidi::para(match label {
                                     "folder" => tr!("auth.dialog.folder_note"),
                                     "collection" => tr!("auth.dialog.collection_note"),
                                     _ => tr!("auth.dialog.project_note"),
-                                }),
+                                })),
                         )
                         .child(
                             Button::new("auth-cancel")

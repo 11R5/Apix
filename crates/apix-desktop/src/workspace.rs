@@ -901,10 +901,10 @@ impl Workspace {
                         .pt_2()
                         .text_xs()
                         .text_color(p.text_muted)
-                        .child(match table {
+                        .child(bidi::para(match table {
                             Table::Params => tr!("request.params_hint"),
                             Table::Headers => tr!("request.headers_hint"),
-                        }),
+                        })),
                 )
             })
     }
@@ -943,8 +943,8 @@ impl Workspace {
                     .gap_1()
                     .text_sm()
                     .text_color(p.text_muted)
-                    .child(tr!("response.empty"))
-                    .child(div().text_xs().child(send_hint()))
+                    .child(bidi::para(tr!("response.empty")))
+                    .child(div().text_xs().child(bidi::para(send_hint())))
                     .into_any_element(),
             )),
             ResponseState::Loading => shell.child(centered(
@@ -968,7 +968,11 @@ impl Workspace {
                             .text_color(p.err)
                             .child(tr!("response.failed")),
                     )
-                    .child(div().text_color(p.text_muted).child(message.clone()))
+                    .child(
+                        div()
+                            .text_color(p.text_muted)
+                            .child(bidi::para(message.clone())),
+                    )
                     .into_any_element(),
             )),
             ResponseState::Done(done) => {
