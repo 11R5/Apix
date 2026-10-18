@@ -14,9 +14,10 @@
 | M1 Arayüzden istek | ✅ 100 MB JSON ~0.33 s'de açılıyor |
 | M2 Koleksiyonlar, Postman içe aktarma | ✅ (sekmeler ve sürükle-bırak M3'te tamamlandı) |
 | M3 Simge, projeler, ortamlar, kopyalama, auth | ✅ 9/9 · bitti: simge, ortam seçici ve editörü, dinamik değişkenler, projeler, kabuk komutu olarak kopyalama, metotla yeni istek, değişken çipleri, Auth sekmesi ve miras, komut paleti, sekmeler, sürükle-bırak ile taşıma · küçük kalanlar M3 bölümünün sonunda · sıradaki: M4 |
-| M4–M9 | ⬜ |
+| M4 Günlük kullanım | 🔜 · bitti: menü çubuğu, şifreli koleksiyonlar (motor, uygulama, CLI) · sıradaki: ağ denetçisi |
+| M5–M9 | ⬜ |
 
-Release ikili dosyası 27.7 MB (üst sınır ~40 MB). Testler: core 33, desktop 4, codegen 11, import 10, http 4 (hepsi geçiyor, clippy uyarısız).
+Release ikili dosyası 27.7 MB (üst sınır ~40 MB). Testler: core 35, vault 7, desktop 4, codegen 11, import 10, http 4 (hepsi geçiyor, clippy uyarısız).
 
 ### Kullanıcı notları (17 Ekim 2026) ve plana nasıl işlendikleri
 | # | Not | Nereye işlendi |
@@ -274,13 +275,13 @@ Bir koleksiyon (veya proje) parola ile şifrelenir. Parolayı bilmeyen hiçbir a
 
 | Özellik | Ayrıntı | Durum |
 |---|---|---|
-| **Şifreli koleksiyon oluşturma** | "Yeni koleksiyon" ekranında "Şifrele" seçeneği ve parola. Parola gücü göstergesi. | ⬜ M |
-| **Var olanı şifreleme / şifreyi kaldırma** | Sağ tık → "Şifrele…" / "Şifreyi kaldır…" (parola sorulur) | ⬜ S |
-| **Kilit açma** | Açarken parola sorulur. Anahtar sadece bellekte tutulur. İsteğe bağlı olarak işletim sistemi anahtarlığında hatırlanır. Belirli bir süre işlem yapılmazsa otomatik kilitlenir. | ⬜ M |
+| **Şifreli koleksiyon oluşturma** | "Yeni koleksiyon" ekranında "Şifrele" seçeneği ve parola. Parola gücü göstergesi. | ✅ File › New encrypted collection… (projede) |
+| **Var olanı şifreleme / şifreyi kaldırma** | Sağ tık → "Şifrele…" / "Şifreyi kaldır…" (parola sorulur) | ✅ (düz dosyalar çöp kutusuna gider) |
+| **Kilit açma** | Açarken parola sorulur. Anahtar sadece bellekte tutulur. İsteğe bağlı olarak işletim sistemi anahtarlığında hatırlanır. Belirli bir süre işlem yapılmazsa otomatik kilitlenir. | ✅ parola veya kurtarma anahtarıyla, 15 dk otomatik kilit · ⬜ anahtarlıkta hatırlama |
 | **Ne şifrelenir** | İstek dosyaları, ortamlar, scriptler ve klasör/istek adları. Dosya adları anlamsız kimliklere dönüşür, adlar şifreli bir dizinde tutulur. Diskte sadece "bu şifreli bir Apix koleksiyonudur" bilgisi açık kalır. | ✅ motor (`apix-vault`) · ⬜ uygulamaya bağlama |
 | **Algoritma** | XChaCha20-Poly1305 (dosya başına rastgele nonce) ve Argon2id ile paroladan anahtar türetme (RustCrypto crate'leri) Veri anahtarı parola ve kurtarma anahtarıyla ayrı ayrı sarılır; parola değişince dosyalar yeniden şifrelenmez. | ✅ |
 | **Kurtarma anahtarı** | Oluştururken bir kez gösterilen kurtarma anahtarı. Parola ve kurtarma anahtarı ikisi birden kaybolursa veri açılamaz; bu, arayüzde açıkça yazar. | ✅ motor (160 bit, `XXXX-XXXX-…`) · ⬜ arayüz |
-| **CLI ve CI** | `apix run --password-env APIX_PASSWORD` | ⬜ S |
+| **CLI ve CI** | `apix run --password-env APIX_PASSWORD` (varsayılan `APIX_PASSWORD`; yoksa terminalde sorulur), `apix encrypt`, `apix decrypt` | ✅ |
 | **Git** | Her dosya ayrı şifrelendiği için git hâlâ hangi isteğin değiştiğini görür, ama içeriğini göremez. `.local.toml` gizli değerleri `objects/local/` altında ayrı tutulur ve git'e girmez. | ✅ motor |
 
 **Dürüst sınır:** Apix açık kaynak olduğu için güvenlik, formatın gizli olmasından değil algoritmadan ve parolanın gücünden gelir. Kilidi açık koleksiyonun ekran görüntüsü veya panoya kopyalanan bir değer elbette korunmaz.
@@ -484,7 +485,7 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 **M3'ten küçük kalanlar:** OS anahtarlığı, proje renkleri, koleksiyonu sürükleyerek projeye taşıma, prod onay penceresi, fish/HTTPie/wget kopyalama, Params/Headers/Body alanlarında değişken çipleri, sidebar'da elle sıralama, açık sekmeleri hatırlama.
 
 ### M4 — Günlük kullanıma hazır
-- **Şifreli koleksiyonlar (§C2)** (not 2): oluşturma, şifreleme ve şifreyi kaldırma, kilit açma ve otomatik kilit, kurtarma anahtarı, CLI desteği (L). Motor ✅ (`apix-vault`, 7 test); uygulama ve CLI entegrasyonu 🔜.
+- **Şifreli koleksiyonlar (§C2)** (not 2): oluşturma, şifreleme ve şifreyi kaldırma, kilit açma ve otomatik kilit, kurtarma anahtarı, CLI desteği (L). Motor ✅ (`apix-vault`), uygulama ✅ (kilit açma, kilitleme, 15 dk otomatik kilit, şifreleme ve şifreyi kaldırma, parola değiştirme, yeni şifreli koleksiyon), CLI ✅. Kalan: parolayı işletim sistemi anahtarlığında hatırlama.
 - **Ağ denetçisi (§B2)** (not 9): yerel ağ bilgisi, DNS, TCP, TLS ve sertifika zinciri, zaman şelalesi, yönlendirmeler (L)
 - multipart, binary ve GraphQL gövdeleri. OAuth 2.0 (M3'ten taşındı), Digest, AWS SigV4 ve OAuth 1.0 auth tipleri.
 - İstek ayarları (timeout, SSL, proxy, sertifikalar), çerez yöneticisi

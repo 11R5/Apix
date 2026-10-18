@@ -284,6 +284,41 @@ impl Workspace {
         );
     }
 
+    /// Like `guard_all_tabs`, for the tabs inside `roots` only (before locking them).
+    pub(super) fn guard_tabs_under(
+        &mut self,
+        roots: Vec<PathBuf>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+        then: super::collections::Then,
+    ) {
+        let dirty = self
+            .tabs
+            .iter()
+            .find(|t| roots.iter().any(|r| t.path.starts_with(r)) && self.tab_dirty(t, cx))
+            .map(|t| t.path.clone());
+        let Some(path) = dirty else {
+            return then(self, window, cx);
+        };
+        self.open_tab(path, window, cx);
+        self.guard_unsaved(
+            window,
+            cx,
+            Rc::new(move |this, window, cx| {
+                let base = this.base.clone();
+                this.show_request(base, window, cx);
+                this.guard_tabs_under(roots.clone(), window, cx, then.clone());
+            }),
+        );
+    }
+
+    /// Whether a tab inside `root` has unsaved edits.
+    pub(super) fn has_dirty_tab_under(&self, root: &Path, cx: &App) -> bool {
+        self.tabs
+            .iter()
+            .any(|t| t.path.starts_with(root) && self.tab_dirty(t, cx))
+    }
+
     pub(super) fn render_tabs(&self, cx: &mut Context<Self>) -> Option<impl IntoElement> {
         if self.tabs.is_empty() {
             return None;

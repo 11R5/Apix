@@ -386,6 +386,13 @@ impl Vault {
         Ok(vault)
     }
 
+    /// Re-reads the indexes from disk, e.g. after a `git pull` changed them.
+    pub fn reload(&mut self) -> Result<(), VaultError> {
+        self.index = self.load_index(false)?;
+        self.local = self.load_index(true).unwrap_or_default();
+        Ok(())
+    }
+
     /// Sets a new password. Files are not re-encrypted; only the wrapped key changes.
     pub fn change_password(&mut self, password: &str) -> Result<(), VaultError> {
         if password.is_empty() {
@@ -411,6 +418,11 @@ impl Vault {
 
     pub fn root(&self) -> &Path {
         &self.root
+    }
+
+    /// Points the unlocked vault at its folder's new place after the folder was moved.
+    pub fn relocate(&mut self, root: &Path) {
+        self.root = root.to_owned();
     }
 
     /// Every file, as logical paths (`users/get-user.apix`), sorted.
@@ -550,13 +562,54 @@ impl Vault {
         Ok(())
     }
 
-    /// Records a folder, so it exists even while empty.
+    /// Records a folder (and its parents), so it exists even while empty.
     pub fn create_dir(&mut self, path: &str) -> Result<(), VaultError> {
         let path = logical(path)?;
-        if self.index.dirs.insert(path) {
+        let mut changed = false;
+        let mut dir = path.as_str();
+        loop {
+            changed |= self.index.dirs.insert(dir.to_owned());
+            match dir.rsplit_once('/') {
+                Some((parent, _)) => dir = parent,
+                None => break,
+            }
+        }
+        if changed {
             self.save_index(false)?;
         }
         Ok(())
+    }
+
+    /// The names directly inside `dir` ("" for the top), each with whether it is a folder.
+    pub fn children(&self, dir: &str) -> Vec<(String, bool)> {
+        let dir = if dir.is_empty() {
+            String::new()
+        } else {
+            match logical(dir) {
+                Ok(d) => d,
+                Err(_) => return Vec::new(),
+            }
+        };
+        let direct = |path: &str| -> Option<String> {
+            let rest = if dir.is_empty() {
+                path
+            } else {
+                path.strip_prefix(dir.as_str())?.strip_prefix('/')?
+            };
+            (!rest.is_empty() && !rest.contains('/')).then(|| rest.to_owned())
+        };
+        let mut out: Vec<(String, bool)> = self
+            .dirs()
+            .iter()
+            .filter_map(|d| direct(d).map(|name| (name, true)))
+            .collect();
+        out.extend(
+            self.files()
+                .iter()
+                .filter_map(|f| direct(f).map(|name| (name, false))),
+        );
+        out.sort();
+        out
     }
 
     /// Deletes a file.

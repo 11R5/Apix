@@ -77,6 +77,20 @@ into the URL field fills in the whole request.
 
 `apix run` exits with a non-zero code if any request fails, so it can be used as a CI step.
 
+### Encrypted collections
+
+A collection can be encrypted with a password: every request, environment and
+file name is sealed on disk (XChaCha20-Poly1305, Argon2id), and git only sees which
+blob changed. In the app, right-click a collection and choose **Encrypt…**, or use
+**File › New encrypted collection…**; you get a one-time recovery key. Collections
+lock again after 15 idle minutes.
+
+```sh
+apix encrypt my-api --out my-api-encrypted        # asks for a new password
+APIX_PASSWORD=… apix run my-api-encrypted --env staging
+apix decrypt my-api-encrypted --out my-api-plain  # --recovery to use the recovery key
+```
+
 ### Coming from Postman
 
 ```sh

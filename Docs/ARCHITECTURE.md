@@ -43,6 +43,8 @@ actions and key bindings), `workspace/collections.rs` (sidebar, projects,
 file operations, import, file watching), `workspace/env_editor.rs` (the
 variables dialog), `workspace/auth_editor.rs` (the Auth tab and the folder/collection/project
 Auth dialog), `workspace/palette.rs` (the command palette and its fuzzy matcher),
+`workspace/vault_ui.rs` (unlock, lock and auto-lock, encrypt, decrypt, change
+password, recovery key), `assets.rs` (gpui-kit icons plus the two lock icons),
 `workspace/menu_bar.rs` (File/Request/Environment/View/Help in the title bar;
 the buttons `occlude()` the title bar's drag area so Windows hands them the
 click), `workspace/tabs.rs` (open requests; the front tab lives in the editor widgets,
@@ -169,10 +171,16 @@ The CLI (`apix run --env`) and the desktop app use the same function,
 `apix_core::project::variables`. `group_by = "environment"` lays the sidebar out as
 Project → Environment → Collections, and `[pins]` limits a collection to some environments.
 
-### Encrypted collections (M4, in progress)
+### Encrypted collections (M4)
 
-The format and engine live in `crates/apix-vault` (done, tested); the app and CLI
-integration comes next.
+The format and engine live in `crates/apix-vault`. The rest of Apix reaches them
+through `apix_core::vfs`, a thin layer with the same calls as `std::fs`: a path
+under the root of an unlocked vault is served from the vault, decrypted in
+memory; every other path goes to the disk. So the store, the sidebar, tabs and
+the CLI keep using ordinary paths, and nothing decrypted is ever written to disk.
+Unlocked vaults live in a process-wide registry; locking (by hand, after 15 idle
+minutes, or on quit) drops the vault and wipes its key. Deleting inside an
+encrypted collection is permanent: a system trash would hold decrypted files.
 
 ```
 my-api/

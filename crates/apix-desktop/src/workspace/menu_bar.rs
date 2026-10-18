@@ -9,6 +9,7 @@ use apix_core::GroupBy;
 use gpui_kit::component::button::{Button, ButtonVariants as _};
 use gpui_kit::component::menu::{DropdownMenu as _, PopupMenu, PopupMenuItem};
 use gpui_kit::component::{Sizable, h_flex};
+use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
 use super::auth_editor::AuthOwner;
@@ -28,6 +29,10 @@ struct MenuState {
     environment: Option<String>,
     environments: Vec<String>,
     recent: Vec<PathBuf>,
+    /// Some encrypted collection is unlocked.
+    unlocked: bool,
+    /// The open collection, when it is a single plain one that could be encrypted.
+    plain_collection: Option<PathBuf>,
 }
 
 impl MenuState {
@@ -59,6 +64,12 @@ impl MenuState {
         menu = menu
             .item(self.item("New collection…", Workspace::prompt_new_collection))
             .item(self.item("New project…", Workspace::prompt_new_project))
+            .when(self.has_project, |menu| {
+                menu.item(self.item(
+                    "New encrypted collection…",
+                    Workspace::prompt_new_encrypted_collection,
+                ))
+            })
             .separator()
             .menu("Open…", Box::new(OpenCollection));
         if !self.recent.is_empty() {
@@ -81,6 +92,18 @@ impl MenuState {
             });
         }
         menu = menu.menu("Import from Postman…", Box::new(ImportFile));
+        if let Some(root) = self.plain_collection.clone() {
+            menu = menu.separator().item(
+                self.item("Encrypt this collection…", move |ws, window, cx| {
+                    ws.prompt_encrypt(root.clone(), window, cx)
+                }),
+            );
+        }
+        if self.unlocked {
+            menu = menu
+                .separator()
+                .item(self.item("Lock encrypted collections", Workspace::lock_collections));
+        }
         if self.open {
             menu = menu
                 .separator()
@@ -217,6 +240,11 @@ impl Workspace {
             group_by: self.project.as_ref().map(|p| p.meta.group_by),
             environment: self.environment.clone(),
             environments: self.environment_names(),
+            unlocked: !apix_core::vfs::unlocked_roots().is_empty(),
+            plain_collection: match (&self.project, self.collections.first()) {
+                (None, Some(c)) if !apix_core::vfs::is_virtual(&c.root) => Some(c.root.clone()),
+                _ => None,
+            },
             recent: self
                 .app_state
                 .recent_collections()
