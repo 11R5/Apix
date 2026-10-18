@@ -10,7 +10,7 @@ app.status.requests: "%{count} istek"
 app.status.shortcuts: "%{palette} komutlar  ·  %{send} gönder  ·  Esc iptal"
 app.status.unsaved: Kaydedilmemiş değişiklikler · %{key} kaydet
 auth.add_to: Ekleneceği yer
-auth.client_auth: İstemci kimlik doğrulaması
+auth.client_auth: İstemci doğrulama
 auth.client_basic: Basic auth başlığı
 auth.client_body: Gövdede
 auth.describe.aws: "%{service}, bölge %{region}"
@@ -212,7 +212,7 @@ menu.cancel: İptal
 menu.close_tab: Sekmeyi kapat
 menu.collection_auth: Koleksiyon yetkilendirmesi…
 menu.command_palette: Komut paleti…
-menu.copy_as: Farklı kopyala
+menu.copy_as: Komut olarak kopyala
 menu.documentation: Belgeler
 menu.encrypt_collection: Bu koleksiyonu şifrele…
 menu.environment: Ortam

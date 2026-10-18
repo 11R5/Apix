@@ -1,7 +1,7 @@
 # Apix İş Planı
 
 > Bu belge Apix'in ayrıntılı ve Türkçe iş planıdır. Özellikler tek tek yazılmıştır.
-> Özet İngilizce yol haritası [ROADMAP.md](ROADMAP.md), teknik mimari [ARCHITECTURE.md](ARCHITECTURE.md) dosyasındadır.
+> Özet İngilizce yol haritası [ROADMAP.md](ROADMAP.md), teknik mimari [en/architecture.md](en/architecture.md) dosyasındadır; kullanıcı belgeleri dil başına [en/](en/) ve [tr/](tr/) klasörlerindedir.
 > Tasarım referansı: [design/mockup-v1.webp](design/mockup-v1.webp).
 
 **İşaretler:** ✅ yapıldı · 🔜 sıradaki · ⬜ planlandı · 💭 sonra karar verilecek
@@ -14,7 +14,7 @@
 | M1 Arayüzden istek | ✅ 100 MB JSON ~0.33 s'de açılıyor |
 | M2 Koleksiyonlar, Postman içe aktarma | ✅ (sekmeler ve sürükle-bırak M3'te tamamlandı) |
 | M3 Simge, projeler, ortamlar, kopyalama, auth | ✅ 9/9 · bitti: simge, ortam seçici ve editörü, dinamik değişkenler, projeler, kabuk komutu olarak kopyalama, metotla yeni istek, değişken çipleri, Auth sekmesi ve miras, komut paleti, sekmeler, sürükle-bırak ile taşıma · küçük kalanlar M3 bölümünün sonunda |
-| M4 Günlük kullanım | 🔜 · bitti: menü çubuğu, şifreli koleksiyonlar (motor, uygulama, CLI), ağ denetçisi (Network sekmesi), multipart/binary/GraphQL gövdeleri, auth tipleri (Digest, OAuth 1.0, OAuth 2.0, AWS SigV4), ayarlar ekranı ve 9 dilli arayüz · sıradaki: dokümantasyon yapısı ve README karşılaştırması · ardından: Arapça düzen aynalama |
+| M4 Günlük kullanım | 🔜 · bitti: menü çubuğu, şifreli koleksiyonlar (motor, uygulama, CLI), ağ denetçisi (Network sekmesi), multipart/binary/GraphQL gövdeleri, auth tipleri (Digest, OAuth 1.0, OAuth 2.0, AWS SigV4), ayarlar ekranı ve 9 dilli arayüz, dokümantasyon yapısı (İngilizce, Türkçe), README karşılaştırması ve performans ölçümü · sürüyor: Arapça düzen aynalama (ayrı oturum) · sıradaki: istek ayarları ve çerez yöneticisi |
 | M5–M9 | ⬜ |
 
 Release ikili dosyası 33.1 MB (üst sınır 100 MB). Testler: core 44, vault 7, desktop 9, codegen 15, import 13, http 14 (hepsi geçiyor, clippy uyarısız).
@@ -426,18 +426,18 @@ Docs/
 │   ├── technical.md         teknik altyapı: crate'ler, bağımlılıklar, derleme, performans bütçesi
 │   ├── workflows.md         iş akışları: istek gönderme, koleksiyon, ortam, şifreleme, içe aktarma, CI
 │   └── images/              bu dildeki arayüzün ekran görüntüleri
-├── tr/  ar/  de/  fr/  ru/  ja/  zh/  es/   aynı yapı
+├── tr/  ar/  de/  fr/  ru/  ja/  zh-CN/  es/   aynı yapı
 └── IS-PLANI.md, ROADMAP.md  (plan; dokümantasyonun parçası değil)
 ```
 
 | Özellik | Ayrıntı | Durum |
 |---|---|---|
-| **Dil başına belge seti** | Kullanım kılavuzu, mimari, teknik altyapı, iş akışları; 9 dilde ayrı dosyalar | ⬜ M4 (yapı, İngilizce, Türkçe) · M9 (tüm diller) |
-| **Dil sürümleri** | Her çeviri hangi İngilizce sürümden çevrildiğini başında yazar; İngilizce değişince eskiyen çeviriler CI'da listelenir | ⬜ S |
-| **Yeni dil ekleme** | `languages.toml`'a bir satır, yeni klasör, arayüz için `locales/<kod>.yml`. Kod değişikliği gerekmez. | ⬜ S |
-| **Görselli kullanım kılavuzu** (not 15) | Her dilde, o dilin arayüzünden alınmış ekran görüntüleri. Görüntüler bir betikle otomatik alınır (uygulama örnek projeyle, ilgili dilde açılır), böylece arayüz değişince kılavuz bir komutla yenilenir. | ⬜ M9 |
-| **README: neden Apix** (not 16) | Postman, Insomnia, Bruno, Hoppscotch ve HTTPie ile karşılaştırma: yerel GPU arayüzü (Electron yok), dosya tabanlı koleksiyonlar, hesap zorunluluğu yok, şifreli koleksiyonlar, ağ denetçisi, CLI ile birebir aynı motor. Sadece doğrulanabilir iddialar. | ⬜ M4 |
-| **Performans ölçümleri** (not 16) | Açılış süresi, boşta bellek, ikili boyutu, 100 MB JSON açma ve kaydırma; ölçüm betiği repoda, sonuçlar README'de ve her sürümde güncellenir. Rakip uygulamalar aynı makinede, aynı betikle ölçülür. | ⬜ M4 (Apix) · M9 (karşılaştırmalı) |
+| **Dil başına belge seti** | Kullanım kılavuzu, mimari, teknik altyapı, iş akışları; 9 dilde ayrı dosyalar | ✅ yapı, İngilizce, Türkçe (M4) · ⬜ diğer 7 dil (M9) |
+| **Dil sürümleri** | Her çeviri hangi İngilizce sürümden çevrildiğini başında yazar; İngilizce değişince eskiyen çeviriler CI'da listelenir | ✅ `cargo run -p docs-check` eskiyen ve eksik çevirileri listeler; yapı testi `cargo test` içinde |
+| **Yeni dil ekleme** | `languages.toml`'a bir satır, yeni klasör, arayüz için `locales/<kod>.yml`. Kod değişikliği gerekmez. | ✅ |
+| **Görselli kullanım kılavuzu** (not 15) | Her dilde, o dilin arayüzünden alınmış ekran görüntüleri. Görüntüler bir betikle otomatik alınır (uygulama örnek projeyle, ilgili dilde açılır), böylece arayüz değişince kılavuz bir komutla yenilenir. | ✅ İngilizce ve Türkçe, 7 ekran görüntüsü (elle alındı) · ⬜ betikle otomatik çekim ve diğer diller (M9) |
+| **README: neden Apix** (not 16) | Postman, Insomnia, Bruno, Hoppscotch ve HTTPie ile karşılaştırma: yerel GPU arayüzü (Electron yok), dosya tabanlı koleksiyonlar, hesap zorunluluğu yok, şifreli koleksiyonlar, ağ denetçisi, CLI ile birebir aynı motor. Sadece doğrulanabilir iddialar. | ✅ (Postman, Insomnia, Bruno, Hoppscotch; HTTPie notu) |
+| **Performans ölçümleri** (not 16) | Açılış süresi, boşta bellek, ikili boyutu, 100 MB JSON açma ve kaydırma; ölçüm betiği repoda, sonuçlar README'de ve her sürümde güncellenir. Rakip uygulamalar aynı makinede, aynı betikle ölçülür. | ✅ Apix: `scripts/measure.ps1` (ikili 33.1 MB, ilk kare 274 ms, boşta 83 MB, 100 MB JSON 325 ms) · ⬜ karşılaştırmalı (M9) |
 
 ## 3. Postman → Apix karşılık tablosu
 | Postman | Apix | Aşama |
@@ -525,7 +525,7 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 - **Gövde tipleri (§A4)** ✅: düzenlenebilir urlencoded form, multipart (metin ve dosya alanları), binary ve GraphQL (renkli sorgu, JSON değişkenler). Motor, uygulama, CLI, "Copy as" (curl, cmd, PowerShell), curl yapıştırma (`-F`, `--form-string`, `--data-binary @dosya`) ve Postman içe aktarma hepsini taşır. Göreli dosya yolları isteğin klasörüne göre çözülür.
 - **Auth tipleri (§A5)** ✅: Digest, OAuth 1.0, OAuth 2.0 (client credentials, password, authorization code + PKCE) ve AWS SigV4. İmzalar `apix_core::sign` içinde (AWS test paketi, RFC 7616, RFC 7636 ve OAuth 1.0 örnek değerleriyle sınanır); motor, CLI, "Copy as" (curl `--digest`, `--aws-sigv4`; PowerShell için kopyalarken imzalanır), curl yapıştırma ve Postman içe aktarma hepsini taşır. Gerçek sunucularda denendi: httpbin Digest (MD5, SHA-256), Postman Echo OAuth 1.0, yerel OAuth 2.0 sunucusu (`cargo run -p apix-http --example oauth_server`).
 - **Ayarlar ekranı ve arayüz dili (§M, not 13)** (L) ✅ (Arapça düzen aynalama hariç): çeviri altyapısı (`rust-i18n`, tüm metinler anahtarlı), 9 dil, Arapça için sağdan sola, CJK ve Arapça yazı tipi yedekleri, ayarlardan anında dil değişimi. M7'den öne alındı: her yeni ekran yeni metin getirdiği için altyapı ne kadar erken gelirse sonradan o kadar az iş çıkar.
-- **Dokümantasyon yapısı ve README (§N, not 14, 16)** (M): `Docs/<dil>/` yapısı, `languages.toml`, İngilizce ve Türkçe belgeler (kullanım kılavuzu, mimari, teknik altyapı, iş akışları), README'de "neden Apix" karşılaştırması ve Apix'in tekrarlanabilir performans ölçümleri.
+- **Dokümantasyon yapısı ve README (§N, not 14, 16)** (M) ✅: `Docs/<dil>/` yapısı, `languages.toml`, İngilizce ve Türkçe belgeler (kullanım kılavuzu, mimari, teknik altyapı, iş akışları), README'de "neden Apix" karşılaştırması ve Apix'in tekrarlanabilir performans ölçümleri.
 - İstek ayarları (timeout, SSL, proxy, sertifikalar), çerez yöneticisi
 - Kod üretici (diller), geçmiş
 - Postman otomatik tanıma ve toplu dışa aktarma, Insomnia, OpenAPI ve HAR içe aktarma, Postman'e dışa aktarma

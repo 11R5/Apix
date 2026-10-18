@@ -2,6 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod assets;
+mod bench;
 mod fonts;
 mod i18n;
 mod large_view;
@@ -32,7 +33,12 @@ fn collection_dir() -> Option<PathBuf> {
 }
 
 fn main() {
-    let dir = collection_dir();
+    bench::mark_start();
+    // The JSON benchmark runs without a collection, so opening one cannot reset its request.
+    let dir = match bench::mode() {
+        Some(bench::Bench::Json(_)) => None,
+        _ => collection_dir(),
+    };
 
     // The Lucide icons (window controls, inputs, menus, locks) are embedded in the binary.
     gpui_kit::application()
