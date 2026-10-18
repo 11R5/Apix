@@ -1745,6 +1745,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "docs-check"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "sha2 0.10.9",
+ "toml 0.8.23",
+]
+
+[[package]]
 name = "document-features"
 version = "0.2.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"

@@ -271,6 +271,8 @@ pub struct Workspace {
     raw_task: Option<Task<()>>,
     /// When the user last clicked or typed, for auto-lock.
     last_input: std::cell::Cell<std::time::Instant>,
+    /// When the `APIX_BENCH=json` request was sent.
+    bench_sent: Option<std::time::Instant>,
     /// Locks idle encrypted collections.
     _auto_lock: Option<Task<()>>,
     /// The in-flight request. Dropping it cancels the request.
@@ -382,10 +384,26 @@ impl Workspace {
             raw_task: None,
             task: None,
             last_input: std::cell::Cell::new(std::time::Instant::now()),
+            bench_sent: None,
             _auto_lock: None,
             _subscriptions: subscriptions,
         };
         this._auto_lock = Some(Self::auto_lock_task(window, cx));
+        match crate::bench::mode() {
+            Some(crate::bench::Bench::Startup) => window.on_next_frame(|_, cx| {
+                crate::bench::report("startup_first_frame_ms", crate::bench::since_start_ms());
+                cx.quit();
+            }),
+            Some(crate::bench::Bench::Json(target)) => {
+                cx.defer_in(window, move |this, window, cx| {
+                    this.url
+                        .update(cx, |state, cx| state.set_value(target, window, cx));
+                    this.bench_sent = Some(std::time::Instant::now());
+                    this.send(window, cx);
+                })
+            }
+            None => {}
+        }
         // After the window exists: an encrypted folder opens with a dialog.
         if let Some(dir) = dir {
             cx.defer_in(window, move |this, window, cx| {
@@ -570,6 +588,10 @@ impl Workspace {
     fn fail(&mut self, message: impl Into<String>, cx: &mut Context<Self>) {
         self.task = None;
         self.response = ResponseState::Failed(message.into());
+        if let Some(sent) = self.bench_sent.take() {
+            crate::bench::report("json_failed_ms", sent.elapsed().as_secs_f64() * 1000.0);
+            cx.quit();
+        }
         cx.notify();
     }
 
@@ -588,6 +610,19 @@ impl Workspace {
                 self.set_response_tab(0, window, cx);
             }
             Err(message) => self.fail(message, cx),
+        }
+        // `APIX_BENCH=json:<url>`: time until this response is on screen.
+        if let Some(sent) = self.bench_sent.take() {
+            let ok = matches!(self.response, ResponseState::Done(_));
+            window.on_next_frame(move |_, cx| {
+                let name = if ok {
+                    "json_on_screen_ms"
+                } else {
+                    "json_failed_ms"
+                };
+                crate::bench::report(name, sent.elapsed().as_secs_f64() * 1000.0);
+                cx.quit();
+            });
         }
         cx.notify();
     }

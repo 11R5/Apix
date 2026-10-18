@@ -530,7 +530,7 @@ impl AuthEditor {
             .items_center()
             .child(
                 div()
-                    .w(px(124.))
+                    .w(px(150.))
                     .flex_none()
                     .text_sm()
                     .text_color(self.palette.text_muted)
@@ -591,7 +591,7 @@ impl AuthEditor {
             .items_center()
             .child(
                 div()
-                    .w(px(124.))
+                    .w(px(150.))
                     .flex_none()
                     .text_sm()
                     .text_color(self.palette.text_muted)
@@ -761,7 +761,7 @@ fn human_minutes(secs: u64) -> SharedString {
     }
 }
 
-/// "Uses … from the folder "orders"." The source comes from apix-core as
+/// "Uses â€¦ from the folder "orders"." The source comes from apix-core as
 /// `folder "orders"`, `collection "Shop"` or `project "Shop"`.
 fn inherited_note(what: SharedString, from: &str) -> SharedString {
     let (kind, name) = from.split_once(' ').unwrap_or((from, ""));

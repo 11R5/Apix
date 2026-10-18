@@ -138,6 +138,8 @@ mod tests {
     fn entries(code: &str) -> BTreeMap<String, String> {
         let path = format!("{}/locales/{code}.yml", env!("CARGO_MANIFEST_DIR"));
         let text = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{path}: {e}"));
+        // Some Windows editors add a byte-order mark.
+        let text = text.trim_start_matches('\u{feff}');
         text.lines()
             .filter(|l| !l.starts_with('#') && !l.starts_with('_') && !l.trim().is_empty())
             .map(|l| {

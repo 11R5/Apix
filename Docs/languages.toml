@@ -1,0 +1,70 @@
+# Documentation languages.
+#
+# English (`source`) is written first; every other language folder holds
+# translations of the same documents. Each translated file starts with a stamp
+# naming the English text it was translated from:
+#
+#   <!-- translated from en/user-guide.md sha256:0123456789abcdef -->
+#
+# `cargo run -p docs-check` lists translations that are missing or older than
+# their English source, and prints the stamp to use after updating one.
+#
+# Adding a language: one [[language]] entry here, a folder Docs/<code>/ with
+# the documents, and the interface file crates/apix-desktop/locales/<code>.yml.
+
+source = "en"
+documents = ["user-guide.md", "architecture.md", "technical.md", "workflows.md"]
+
+[[language]]
+code = "en"
+name = "English"
+direction = "ltr"
+docs = true
+
+[[language]]
+code = "tr"
+name = "Türkçe"
+direction = "ltr"
+docs = true
+
+[[language]]
+code = "ar"
+name = "العربية"
+direction = "rtl"
+docs = false
+
+[[language]]
+code = "de"
+name = "Deutsch"
+direction = "ltr"
+docs = false
+
+[[language]]
+code = "fr"
+name = "Français"
+direction = "ltr"
+docs = false
+
+[[language]]
+code = "ru"
+name = "Русский"
+direction = "ltr"
+docs = false
+
+[[language]]
+code = "ja"
+name = "日本語"
+direction = "ltr"
+docs = false
+
+[[language]]
+code = "zh-CN"
+name = "简体中文"
+direction = "ltr"
+docs = false
+
+[[language]]
+code = "es"
+name = "Español"
+direction = "ltr"
+docs = false

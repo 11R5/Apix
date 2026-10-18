@@ -3,121 +3,111 @@
 # Apix
 🚀 The high-performance, minimalist API client crafted with Rust and GPUI. Built for speed, designed for humans.
 
-> **Status:** early development, not released yet. The desktop app and the CLI can
-> already open projects and collections, send requests and import from Postman.
-> See the [roadmap](Docs/ROADMAP.md) and [architecture](Docs/ARCHITECTURE.md).
+> **Status:** early development, not released yet. The desktop app and the CLI
+> already cover daily API work: requests, collections, environments, every common
+> auth type, encrypted collections, Postman import and a network inspector.
+> See the [roadmap](Docs/ROADMAP.md).
+
+**Documentation:** [English](Docs/en/user-guide.md) · [Türkçe](Docs/tr/user-guide.md)
+— user guide, workflows, architecture and technical notes in each language.
+
+![Apix](Docs/en/images/main.png)
 
 ## Why Apix
-- **Native, GPU-rendered.** No Electron, no WebView. The UI is drawn with GPUI, the engine behind the Zed editor.
-- **Local-first.** Collections are plain TOML files in a folder. Commit them, diff them, review them.
-- **One engine everywhere.** The desktop app and the `apix` CLI send requests exactly the same way, so CI matches your machine.
+
+- **Native and GPU-rendered.** No Electron, no web view: the interface is drawn
+  with GPUI, the engine of the Zed editor. It starts fast, stays light and
+  scrolls a 100 MB JSON response without effort.
+- **Your files, your git.** A collection is a folder of small TOML files. Commit,
+  diff and review them like code. No account, no cloud, nothing to sync.
+- **Secrets stay out of git.** Secret values live in a gitignored
+  `.local.toml`, OAuth 2.0 tokens only in memory, and a whole collection can be
+  **encrypted** with a password (XChaCha20-Poly1305, Argon2id), file names
+  included, so it can be shared in a repository.
+- **One engine everywhere.** The desktop app and the `apix` CLI send requests in
+  exactly the same way, so `apix run` in CI does what you saw on your machine.
+- **See the network.** A Network tab (and `apix send --network`) shows DNS,
+  connection, waiting and download time, addresses, VPN hints, redirects and the
+  server certificate.
+- **In your language.** English, Türkçe, العربية, Deutsch, Français, Русский,
+  日本語, 简体中文 and Español, switched at once in Settings; in Arabic the
+  window mirrors to right to left.
+
+### Compared with similar tools
+
+| | Apix | Postman | Insomnia | Bruno | Hoppscotch |
+|---|---|---|---|---|---|
+| Desktop app built on | GPUI (native, GPU) | Electron | Electron | Electron | Tauri (system web view) |
+| Collections as plain files you commit | ✅ TOML | ❌ cloud workspaces, export to JSON | ✅ with Git Sync (YAML) | ✅ `.bru` files | ❌ app storage, export to JSON |
+| Use without an account | ✅ everything | only the lightweight client: no collections or environments | ✅ Scratch Pad (local only) | ✅ everything | ✅ local data in the app |
+| Password-encrypted collection in a repository | ✅ | — | — | — | — |
+| Command-line runner | ✅ `apix`, the same engine | Postman CLI | Inso CLI | Bruno CLI | Hoppscotch CLI |
+
+Checked against each project's own documentation in October 2026. "—" means
+the tool has no such built-in feature that we know of; corrections are welcome.
+HTTPie is best known for its `http` command; its desktop app (Electron) is in beta.
+
+## Performance
+
+| Measure | Apix 0.1.0 |
+|---|---|
+| Release binary | 33.1 MB |
+| Start to first frame | 274 ms |
+| Memory when idle (working set) | 83 MB |
+| 100 MB JSON response on screen | 325 ms |
+
+Windows 11 (build 26300), AMD Ryzen 9 7900X, release build, median of 5 runs, 2026-10-18.
+
+Reproduce it with `scripts/measure.ps1` (see the [technical notes](Docs/en/technical.md#measuring-performance)).
+Measurements of the other tools on the same machine are planned.
 
 ## What works today
-- **Requests:** GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS with params, headers,
-  every common body type and an Auth tab: Bearer, Basic, API key, Digest, OAuth 1.0,
-  OAuth 2.0 (client credentials, password, authorization code with PKCE in the
-  browser) and AWS Signature V4. Folders, collections and projects can set auth
-  once; requests inherit it. OAuth 2.0 tokens stay in memory, never on disk.
-- **Responses:** status, timing (TTFB and total), size, highlighted and foldable JSON,
-  raw and headers views. A 100 MB JSON response opens in about a third of a second.
-- **Network tab:** where the time went (DNS, connect, waiting, download), the server
-  and local address, interface, gateway, DNS servers, proxy, redirects and the
-  server certificate with its days left.
-- **Collections and projects:** a sidebar built from the files on disk, with new,
-  rename, duplicate and delete (to the trash); drag a request or folder to move it.
-  Projects group collections, share environments, and can show the sidebar as
-  Project → Environment → Collections.
-- **Tabs:** open several requests at once. Each tab keeps its unsaved edits, its last
-  response and even a request still in flight.
-- **Variables:** project, collection and environment layers, secrets kept out of git,
-  an in-app editor and dynamic values such as `{{$guid}}`. In the URL bar every
-  `{{variable}}` is a coloured chip; hover it to see its value and where it comes from.
-- **Bodies:** JSON, text, XML, URL-encoded form, multipart with files, a binary
-  file, and GraphQL with a highlighted query and JSON variables.
-- **Postman:** collection v2.0/v2.1 and environment import, with a report.
-- **Copy as / paste:** copy a request as `curl`, `curl.exe` or PowerShell; paste a
-  `curl` command to fill the request.
-- **Nine languages:** English, Türkçe, العربية, Deutsch, Français, Русский, 日本語,
-  简体中文 and Español, switched in Settings (Ctrl+,) without a restart. In Arabic
-  the window mirrors to right to left.
 
-The menu bar at the top (File, Request, Environment, View, Help) holds every
-command: open, new collection or project, import, environments, auth and more.
-
-### Keyboard
-
-| Keys | Action |
-|---|---|
-| Ctrl+Enter | Send |
-| Esc | Cancel the request |
-| Ctrl+S | Save |
-| Ctrl+N | New GET request (the sidebar "+" offers every method) |
-| Ctrl+O | Open a folder, project or collection |
-| Ctrl+K or Ctrl+P | Command palette: find any request or command |
-| Ctrl+E | Variables and environments |
-| Ctrl+, | Settings: language, theme, auto-lock |
-| Alt+1…7 | Switch the method |
-| Ctrl+W | Close the tab (middle-click works too) |
-| Ctrl+Tab / Ctrl+Shift+Tab | Next / previous tab |
-
-On macOS, use ⌘ instead of Ctrl (Ctrl+Tab stays Ctrl).
+- **Requests:** GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS with params and
+  headers; JSON, text, XML, URL-encoded form, multipart with files, binary file
+  and GraphQL bodies.
+- **Auth:** Bearer, Basic, API key, Digest, OAuth 1.0, OAuth 2.0 (client
+  credentials, password, authorization code with PKCE in the browser) and AWS
+  Signature V4. Folders, collections and projects can set auth once; requests
+  inherit it.
+- **Responses:** status, timing, size, highlighted and foldable JSON, raw and
+  headers views, and the Network tab.
+- **Collections and projects:** a sidebar built from the files on disk, tabs that
+  keep their edits and responses, drag to move, projects that share
+  environments.
+- **Variables:** project, collection and environment layers, secrets kept out of
+  git, dynamic values such as `{{$guid}}`, coloured chips in the URL bar.
+- **Encrypted collections** with a recovery key and auto-lock.
+- **Postman import** of collections and environments, with a report.
+- **Copy as** `curl`, `curl.exe` or PowerShell; **paste** a `curl` command to fill
+  a request.
+- **Command palette** (Ctrl+K) and a menu bar that holds every command.
 
 ## Build
 
-Requirements: [Rust](https://rustup.rs) (stable). On Windows you also need the MSVC
-"Desktop development with C++" workload (Visual Studio or Build Tools).
+Requirements: [Rust](https://rustup.rs) (stable). On Windows you also need the
+MSVC "Desktop development with C++" workload.
 
 ```sh
-cargo test                     # engine + CLI
+cargo test                     # engine, CLI and tools
 cargo run -p apix-desktop      # desktop app
-cargo build --release          # optimized binaries in target/release
+cargo build --release          # optimized CLI in target/release
 ```
+
+More in the [technical notes](Docs/en/technical.md).
 
 ## CLI
 
 ```sh
 apix send examples/jsonplaceholder/users/list-users.apix
-apix send examples/jsonplaceholder/health.apix --env local --var token=abc -i
-apix send examples/jsonplaceholder/health.apix --network     # DNS, connection, TLS certificate, local side
-apix run examples/jsonplaceholder
-apix shell examples/jsonplaceholder/users/create-user.apix --as powershell   # or bash, cmd
-```
-
-In the desktop app, the copy button next to Send copies the open request as a
-`curl` (bash), `curl.exe` (cmd) or PowerShell command. Pasting a `curl` command
-into the URL field fills in the whole request.
-
-`apix run` exits with a non-zero code if any request fails, so it can be used as a CI step.
-
-### Encrypted collections
-
-A collection can be encrypted with a password: every request, environment and
-file name is sealed on disk (XChaCha20-Poly1305, Argon2id), and git only sees which
-blob changed. In the app, right-click a collection and choose **Encrypt…**, or use
-**File › New encrypted collection…**; you get a one-time recovery key. Collections
-lock again after 15 idle minutes.
-
-```sh
-apix encrypt my-api --out my-api-encrypted        # asks for a new password
+apix send examples/jsonplaceholder/health.apix --env local --network
+apix run examples/jsonplaceholder            # non-zero exit if any request fails
+apix shell examples/jsonplaceholder/users/create-user.apix --as powershell
+apix import "My API.postman_collection.json"
 APIX_PASSWORD=… apix run my-api-encrypted --env staging
-apix decrypt my-api-encrypted --out my-api-plain  # --recovery to use the recovery key
 ```
 
-### Coming from Postman
-
-```sh
-apix import "My API.postman_collection.json"              # creates ./my-api
-apix import "Staging.postman_environment.json" --into my-api
-apix run my-api --env staging
-```
-
-Collection v2.0 and v2.1 are supported. Anything Apix cannot carry over yet (NTLM, Hawk,
-saved examples) is listed in the import report. Pre-request and test
-scripts are kept as `.js` files next to their requests. Secrets from Postman
-environments go to a gitignored `*.local.toml`. In the desktop app, use the sidebar's
-import button or drop the export onto the window.
-
-## Collection format
+## A request file
 
 ```toml
 # users/create-user.apix
@@ -132,60 +122,9 @@ json = '{ "name": "Ada" }'
 token = "{{token}}"
 ```
 
-Variables come from the project, the collection and the active environment
-(edit them in the app with Ctrl+E). Secrets live in `environments/<name>.local.toml`,
-which is gitignored. Dynamic variables such as `{{$guid}}`, `{{$timestamp}}`,
-`{{$isoTimestamp}}` and `{{$randomEmail}}` get a new value every time they are used.
-
-Other bodies look like this. File paths are relative to the request file, so a
-collection that keeps its files inside works on every machine:
-
-```toml
-[[body.multipart]]
-key = "title"
-value = "Invoice"
-
-[[body.multipart]]
-key = "document"
-value = "../files/invoice.pdf"
-file = true
-content_type = "application/pdf"   # optional
-```
-
-```toml
-[body]
-binary = { file = "../files/dump.bin" }
-```
-
-```toml
-[body.graphql]
-query = "query ($id: ID!) { user(id: $id) { name } }"
-variables = '{ "id": "42" }'
-```
-
-A request without `auth` inherits it from the nearest folder that sets one in its
-`folder.toml`, then from the collection's `apix.toml`, then from the project.
-`auth = "none"` sends no auth at all. Other auth types:
-
-```toml
-[auth.oauth2]
-grant = "client_credentials"     # or "password", "authorization_code"
-token_url = "https://auth.example.com/oauth/token"
-client_id = "{{client_id}}"
-client_secret = "{{client_secret}}"
-scope = "read write"
-```
-
-```toml
-[auth.aws_sigv4]
-access_key = "{{aws_access_key}}"
-secret_key = "{{aws_secret_key}}"
-region = "eu-central-1"
-service = "execute-api"
-```
-
-`[auth.digest]` takes `username` and `password`; `[auth.oauth1]` takes
-`consumer_key`, `consumer_secret`, `token`, `token_secret` and `signature_method`.
+The [user guide](Docs/en/user-guide.md) and the
+[architecture](Docs/en/architecture.md#on-disk-format) describe the format in
+full: every body and auth type, folders, environments, secrets and projects.
 
 ## License
 
@@ -194,3 +133,5 @@ service = "execute-api"
 The desktop app embeds [Inter](https://github.com/rsms/inter) and
 [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono), both under the
 SIL Open Font License 1.1 ([licenses](crates/apix-desktop/assets/fonts)).
+`vendor/gpui-pre-windows` is part of [GPUI](https://github.com/zed-industries/zed)
+(Apache-2.0) with a small fix.

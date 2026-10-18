@@ -320,11 +320,14 @@ about 407 MB with the body loaded, against 69 MB idle.
 
 | Metric                              | Target            | Measured (Windows, release) |
 |-------------------------------------|-------------------|-----------------------------|
-| Cold start to first frame           | < 150 ms          | window handle at ~340 ms, not yet profiled |
-| Idle RAM                            | < 60 MB           | 69 MB |
+| Cold start to first frame           | < 150 ms          | 274 ms (`main` to first frame) |
+| Idle RAM                            | < 60 MB           | 83 MB working set, example collection open |
 | Release binary                      | < 100 MB          | 33.1 MB |
 | Input to paint latency              | 1 frame (≤ 8 ms at 120 Hz) | not measured |
-| Open and scroll a 100 MB JSON body  | no dropped frames | opens in ~0.33 s; frame times not measured |
+| Open and scroll a 100 MB JSON body  | no dropped frames | on screen 325 ms after sending (local server); frame times not measured |
+
+Start time and idle memory are above budget today; profiling them is planned.
+The numbers come from `scripts/measure.ps1` (see the [technical notes](technical.md#measuring-performance)).
 
 The release profile already uses fat LTO, one codegen unit and stripped
 symbols (see the root `Cargo.toml`).
