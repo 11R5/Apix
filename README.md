@@ -31,6 +31,9 @@
 - **Copy as / paste:** copy a request as `curl`, `curl.exe` or PowerShell; paste a
   `curl` command to fill the request.
 
+The menu bar at the top (File, Request, Environment, View, Help) holds every
+command: open, new collection or project, import, environments, auth and more.
+
 ### Keyboard
 
 | Keys | Action |

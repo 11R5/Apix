@@ -393,6 +393,7 @@ Bir koleksiyon (veya proje) parola ile şifrelenir. Parolayı bilmeyen hiçbir a
 | Şeffaf ve blur'lu pencere, kendi başlık çubuğu | ✅ |
 | **Uygulama simgesi** (not 4): kaynak `Logo/LogoFirst.jpg` (2048×2048). Windows için `.ico` (16–256 px, exe içine gömülü), macOS için `.icns` (16–1024 px, @2x dahil), Linux için hicolor PNG'leri ve `.desktop` dosyası. Ayrıca başlık çubuğundaki işaret, README ve GitHub sosyal önizlemesi. Ayrıntılar M3'te. | ✅ · ⬜ GitHub sosyal önizlemesi |
 | Komut paleti (Ctrl/⌘+K, Ctrl/⌘+P) | ✅ |
+| **Menü çubuğu** (başlık çubuğunda): File, Request, Environment, View, Help. Kısayollar menüde görünür. Kenar çubuğundaki "Open or create" menüsünün yerini aldı. Windows'ta başlık çubuğu sürükleme alanı olduğu hâlde tıklanabilir (menü düğmeleri sürükleme alanını örter). macOS'ta yerel menü çubuğu M9'da. | ✅ |
 | Kısayol tablosu ve kısayolları özelleştirme | ⬜ M |
 | Ayarlar ekranı (tema, cam ayarı, font, proxy, güncelleme) | ⬜ M |
 | Türkçe ve İngilizce arayüz (`rust-i18n`, gpui-kit zaten destekliyor) | ⬜ M |

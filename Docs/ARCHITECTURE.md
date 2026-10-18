@@ -42,7 +42,9 @@ actions and key bindings), `workspace/collections.rs` (sidebar, projects,
 file operations, import, file watching), `workspace/env_editor.rs` (the
 variables dialog), `workspace/auth_editor.rs` (the Auth tab and the folder/collection/project
 Auth dialog), `workspace/palette.rs` (the command palette and its fuzzy matcher),
-`workspace/tabs.rs` (open requests; the front tab lives in the editor widgets,
+`workspace/menu_bar.rs` (File/Request/Environment/View/Help in the title bar;
+the buttons `occlude()` the title bar's drag area so Windows hands them the
+click), `workspace/tabs.rs` (open requests; the front tab lives in the editor widgets,
 the others keep their draft, response and in-flight task), `workspace/drag.rs`
 (drag requests and folders to move them), `workspace/shell_copy.rs` (copy as / paste curl), `workspace/var_chips.rs`
 (`{{variable}}` chips in the URL bar and their hover card),
