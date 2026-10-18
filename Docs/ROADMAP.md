@@ -48,11 +48,14 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [x] Auth tab (inherit, none, Bearer, Basic, API key); folders (`folder.toml`), collections and projects can set auth that requests inherit, in the app and the CLI; Postman imports keep auth where it was set
 - [ ] OAuth 2.0 flows (moved to M4)
 - [x] Command palette (Ctrl+K or Ctrl+P): fuzzy search over every request and command (new request by method, environments, copy as, auth, grouping, recent folders)
+- [x] Menu bar in the title bar (File, Request, Environment, View, Help) with shortcuts; it replaces the sidebar's "Open or create" menu and works on Windows' drag area
 - [x] From M2: tabs (each keeps its draft, response and in-flight request; Ctrl+W, Ctrl+Tab, middle-click), drag to move requests and folders, also across collections
 - [ ] Manual ordering in the sidebar (now sorted by name)
 
 ## M4 — Daily driver
 - [ ] **Encrypted collections**: password-protected (XChaCha20-Poly1305, Argon2id), per-file encryption with opaque file names, unlock prompt and auto-lock, recovery key, `--password-env` for CI
+  - [x] Format and engine (`apix-vault`): per-file XChaCha20-Poly1305 with opaque names and an encrypted index, Argon2id password key, recovery key, password change without re-encrypting, tamper detection, local secrets kept out of git
+  - [ ] Open and edit encrypted collections in the app and the CLI; encrypt or decrypt an existing collection
 - [ ] **Network inspector**: local interface/IP/DNS/proxy, DNS answers, TCP/TLS details and certificate chain, timing waterfall, redirects
 - [ ] multipart, binary and GraphQL bodies; OAuth 2.0 (moved from M3), Digest, AWS SigV4 and OAuth 1.0 auth
 - [ ] Request settings (timeout, TLS, proxy, client certificates), cookie manager

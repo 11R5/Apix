@@ -4,6 +4,7 @@ mod auth_editor;
 mod collections;
 mod drag;
 mod env_editor;
+mod menu_bar;
 mod palette;
 mod shell_copy;
 mod tabs;
@@ -679,7 +680,7 @@ fn describe(err: &dyn std::error::Error) -> String {
 // ---------------------------------------------------------------------------
 
 impl Workspace {
-    fn render_title_bar(&self) -> impl IntoElement {
+    fn render_title_bar(&self, cx: &mut Context<Self>) -> impl IntoElement {
         let p = self.palette;
         let name = match (&self.project, &self.collection) {
             (Some(project), Some(c)) => format!("{}  ›  {}", project.meta.name, c.meta.name),
@@ -702,6 +703,9 @@ impl Workspace {
                             .text_color(p.accent)
                             .child("apix"),
                     )
+                    .child(div().w(px(6.)))
+                    .child(self.render_menu_bar(cx))
+                    .child(div().w(px(10.)))
                     .child(div().text_xs().text_color(p.text_muted).child(name)),
             )
     }
@@ -1214,7 +1218,7 @@ impl Render for Workspace {
             .size_full()
             .bg(p.background())
             .text_color(p.text)
-            .child(self.render_title_bar())
+            .child(self.render_title_bar(cx))
             // Hard to miss: requests in a production environment touch real data.
             .when(self.is_prod(), |d| {
                 d.child(div().h(px(2.)).flex_none().bg(p.err))

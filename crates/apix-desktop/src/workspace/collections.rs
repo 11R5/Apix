@@ -937,20 +937,9 @@ impl Workspace {
         let (kind, title) = match (&self.project, self.collections.first()) {
             (Some(project), _) => ("PROJECT", project.meta.name.clone()),
             (None, Some(c)) => ("COLLECTION", c.meta.name.clone()),
-            (None, None) => ("APIX", "Open or create…".to_owned()),
+            (None, None) => ("APIX", "Nothing open".to_owned()),
         };
-        let menu_state = WorkspaceMenu {
-            view: cx.entity().downgrade(),
-            has_project: self.project.is_some(),
-            group_by: self.project.as_ref().map(|p| p.meta.group_by),
-            recent: self
-                .app_state
-                .recent_collections()
-                .filter(|r| Some(*r) != self.workspace_root().as_ref())
-                .take(6)
-                .cloned()
-                .collect(),
-        };
+        // Opening, creating and project settings live in the menu bar above.
         let header = v_flex()
             .px_3()
             .pt_2()
@@ -960,15 +949,16 @@ impl Workspace {
                 h_flex()
                     .gap_1()
                     .items_center()
+                    .h(px(28.))
                     .child(
-                        div().flex_1().min_w_0().child(
-                            Button::new("workspace-menu")
-                                .ghost()
-                                .small()
-                                .label(title)
-                                .dropdown_caret(true)
-                                .dropdown_menu(move |menu, _, _| menu_state.build(menu)),
-                        ),
+                        div()
+                            .flex_1()
+                            .min_w_0()
+                            .px_1()
+                            .truncate()
+                            .text_sm()
+                            .font_weight(FontWeight::SEMIBOLD)
+                            .child(title),
                     )
                     .when(open, |bar| {
                         bar.child(
@@ -1563,7 +1553,11 @@ fn request_menu(menu: PopupMenu, view: WeakEntity<Workspace>, path: PathBuf) -> 
 }
 
 /// One item per HTTP method; picking one creates a request with it in `dir`.
-fn method_items(menu: PopupMenu, view: WeakEntity<Workspace>, dir: Option<PathBuf>) -> PopupMenu {
+pub(super) fn method_items(
+    menu: PopupMenu,
+    view: WeakEntity<Workspace>,
+    dir: Option<PathBuf>,
+) -> PopupMenu {
     Method::ALL.into_iter().fold(menu, |menu, method| {
         let (view, dir) = (view.clone(), dir.clone());
         menu.item(
@@ -1620,89 +1614,6 @@ fn folder_menu(
         .item(item("Move to trash", |this, path, window, cx| {
             this.confirm_delete(path, true, window, cx)
         }))
-}
-
-/// What the workspace menu (the project or collection name at the top of
-/// the sidebar) needs; built fresh each time the menu opens.
-#[derive(Clone)]
-struct WorkspaceMenu {
-    view: WeakEntity<Workspace>,
-    has_project: bool,
-    group_by: Option<GroupBy>,
-    recent: Vec<PathBuf>,
-}
-
-impl WorkspaceMenu {
-    fn build(&self, menu: PopupMenu) -> PopupMenu {
-        let item = |label: &str, f: fn(&mut Workspace, &mut Window, &mut Context<Workspace>)| {
-            let view = self.view.clone();
-            PopupMenuItem::new(label.to_owned()).on_click(move |_, window, cx| {
-                view.update(cx, |this, cx| f(this, window, cx)).ok();
-            })
-        };
-        let mut menu = menu
-            .item(item("New collection…", Workspace::prompt_new_collection))
-            .item(item("New project…", Workspace::prompt_new_project))
-            .separator()
-            .item(item(
-                &format!("Open… ({})", key_hint("O")),
-                Workspace::prompt_open_collection,
-            ))
-            .item(item("Import from Postman…", Workspace::prompt_import))
-            .separator()
-            .item(item(
-                &format!("Variables and environments… ({})", key_hint("E")),
-                Workspace::open_env_editor,
-            ))
-            .item(item(
-                if self.has_project {
-                    "Project auth…"
-                } else {
-                    "Collection auth…"
-                },
-                |this, window, cx| {
-                    let owner = match (&this.project, this.collections.first()) {
-                        (Some(p), _) => AuthOwner::Project(p.root.clone()),
-                        (None, Some(c)) => AuthOwner::Collection(c.root.clone()),
-                        (None, None) => return,
-                    };
-                    this.open_auth_dialog(owner, window, cx)
-                },
-            ));
-
-        if self.has_project {
-            let group = |label: &str, by: GroupBy, current: Option<GroupBy>| {
-                let view = self.view.clone();
-                PopupMenuItem::new(label.to_owned())
-                    .checked(current == Some(by))
-                    .on_click(move |_, window, cx| {
-                        view.update(cx, |this, cx| this.set_group_by(by, window, cx))
-                            .ok();
-                    })
-            };
-            menu = menu
-                .separator()
-                .label("Group the sidebar by")
-                .item(group("Collection", GroupBy::Collection, self.group_by))
-                .item(group("Environment", GroupBy::Environment, self.group_by));
-        }
-
-        if !self.recent.is_empty() {
-            menu = menu.separator().label("Recent");
-            for root in &self.recent {
-                let (view, dir) = (self.view.clone(), root.clone());
-                let name = root
-                    .file_name()
-                    .map(|n| n.to_string_lossy().into_owned())
-                    .unwrap_or_else(|| root.display().to_string());
-                menu = menu.item(PopupMenuItem::new(name).on_click(move |_, window, cx| {
-                    view.update(cx, |this, cx| this.open_or_create(dir.clone(), window, cx))
-                        .ok();
-                }));
-            }
-        }
-        menu
-    }
 }
 
 /// The context menu of a collection header. `pins` lists the project's
