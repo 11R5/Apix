@@ -2,9 +2,11 @@
 
 mod auth_editor;
 mod collections;
+mod drag;
 mod env_editor;
 mod palette;
 mod shell_copy;
+mod tabs;
 mod var_chips;
 
 use std::collections::{BTreeMap, HashSet};
@@ -45,6 +47,9 @@ actions!(
         ImportFile,
         EditVariables,
         OpenPalette,
+        CloseTab,
+        NextTab,
+        PrevTab,
         MethodGet,
         MethodPost,
         MethodPut,
@@ -67,6 +72,9 @@ pub fn bind_keys(cx: &mut App) {
         KeyBinding::new("secondary-e", EditVariables, Some(CONTEXT)),
         KeyBinding::new("secondary-k", OpenPalette, Some(CONTEXT)),
         KeyBinding::new("secondary-p", OpenPalette, Some(CONTEXT)),
+        KeyBinding::new("secondary-w", CloseTab, Some(CONTEXT)),
+        KeyBinding::new("ctrl-tab", NextTab, Some(CONTEXT)),
+        KeyBinding::new("ctrl-shift-tab", PrevTab, Some(CONTEXT)),
         // Alt+1…7 pick the method, in the order of the method picker.
         KeyBinding::new("alt-1", MethodGet, Some(CONTEXT)),
         KeyBinding::new("alt-2", MethodPost, Some(CONTEXT)),
@@ -240,6 +248,8 @@ pub struct Workspace {
     requests: BTreeMap<PathBuf, Request>,
     collapsed: HashSet<PathBuf>,
     load_errors: Vec<String>,
+    /// Open requests, in tab order; the one at `selected` is in front.
+    tabs: Vec<tabs::Tab>,
     /// The request file open in the editor.
     selected: Option<PathBuf>,
     watcher: Option<collections::Watcher>,
@@ -362,6 +372,7 @@ impl Workspace {
             collapsed: HashSet::new(),
             load_errors: Vec::new(),
             selected: None,
+            tabs: Vec::new(),
             watcher: None,
             environment: None,
             env_select,
@@ -528,6 +539,8 @@ impl Workspace {
 
         self.response = ResponseState::Loading;
         let pending = net::send(resolved.request);
+        // The tab may be in the back by the time the response arrives.
+        let tab = self.selected.clone();
         // Replacing an older task drops it, which cancels that request.
         self.task = Some(cx.spawn_in(window, async move |this, cx| {
             let result = pending.await;
@@ -535,8 +548,10 @@ impl Workspace {
             let prepared = cx
                 .background_spawn(async move { result.map(Finished::prepare) })
                 .await;
-            this.update_in(cx, |this, window, cx| this.finish(prepared, window, cx))
-                .ok();
+            this.update_in(cx, |this, window, cx| {
+                this.finish_for(tab, prepared, window, cx)
+            })
+            .ok();
         }));
         cx.notify();
     }
@@ -1173,6 +1188,11 @@ impl Render for Workspace {
                 cx.listener(|this, _: &EditVariables, window, cx| this.open_env_editor(window, cx)),
             )
             .on_action(
+                cx.listener(|this, _: &CloseTab, window, cx| this.close_front_tab(window, cx)),
+            )
+            .on_action(cx.listener(|this, _: &NextTab, window, cx| this.cycle_tab(1, window, cx)))
+            .on_action(cx.listener(|this, _: &PrevTab, window, cx| this.cycle_tab(-1, window, cx)))
+            .on_action(
                 cx.listener(|this, _: &OpenPalette, window, cx| this.open_palette(window, cx)),
             )
             // A click anywhere brings focus back inside the workspace (inputs
@@ -1211,6 +1231,7 @@ impl Render for Workspace {
                             .h_full()
                             .p_3()
                             .gap_3()
+                            .children(self.render_tabs(cx))
                             .child(self.render_url_bar(cx))
                             .child(
                                 div().flex_1().min_h_0().child(

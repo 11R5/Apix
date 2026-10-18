@@ -23,17 +23,17 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [x] Row-based virtual viewer for large bodies: 100 MB of JSON (9.6M lines) shows in ~0.33 s in release builds, scrolls by wheel, scrollbar and keyboard
 - [x] Params / Headers tables with enable toggles; JSON / Text / XML body editor
 
-## M2 — Collections and Postman import
+## M2 — Collections and Postman import ✅
 - [x] Open folder (Ctrl+O, or drop it on the window; offers to start a collection), sidebar tree built from files on disk
 - [x] Recent collections (empty state)
 - [x] Edit and save (Ctrl+S) with an unsaved marker and a save/discard prompt; new (Ctrl+N), rename, duplicate, delete to trash from a context menu
-- [ ] Drag to reorder
+- [x] Drag a request or folder onto a folder or collection to move it (done in M3); manual ordering is still by name
 - [x] File watching (outside edits show up within ~0.5 s)
-- [ ] Tabs
+- [x] Tabs (done in M3)
 - [x] **Postman Collection v2.1/v2.0 and environment import**, with an import report (sidebar button, drag and drop, CLI)
 - [x] `apix import <file> [--out dir] [--into collection]`
 
-## M3 — Icon, projects, environments, copy-as, auth (in progress)
+## M3 — Icon, projects, environments, copy-as, auth ✅ (smaller leftovers below stay open)
 - [x] App icon from `Logo/LogoFirst.jpg` (`cargo run -p icongen --release`): transparent squircle, tighter crop at 32 px and below; `.ico` embedded in the exe, `.icns`, Linux hicolor PNGs + `.desktop`
 - [x] Environment switcher in the sidebar, remembered per collection, with `*.local.toml` secrets; red line for prod
 - [x] Variables dialog (Ctrl+E): edit shared variables and environments, add, rename and delete environments, secrets kept in `*.local.toml` (added to `.gitignore` automatically)
@@ -48,7 +48,8 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [x] Auth tab (inherit, none, Bearer, Basic, API key); folders (`folder.toml`), collections and projects can set auth that requests inherit, in the app and the CLI; Postman imports keep auth where it was set
 - [ ] OAuth 2.0 flows (moved to M4)
 - [x] Command palette (Ctrl+K or Ctrl+P): fuzzy search over every request and command (new request by method, environments, copy as, auth, grouping, recent folders)
-- [ ] From M2: tabs, drag to reorder
+- [x] From M2: tabs (each keeps its draft, response and in-flight request; Ctrl+W, Ctrl+Tab, middle-click), drag to move requests and folders, also across collections
+- [ ] Manual ordering in the sidebar (now sorted by name)
 
 ## M4 — Daily driver
 - [ ] **Encrypted collections**: password-protected (XChaCha20-Poly1305, Argon2id), per-file encryption with opaque file names, unlock prompt and auto-lock, recovery key, `--password-env` for CI
