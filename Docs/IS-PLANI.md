@@ -14,10 +14,10 @@
 | M1 Arayüzden istek | ✅ 100 MB JSON ~0.33 s'de açılıyor |
 | M2 Koleksiyonlar, Postman içe aktarma | ✅ (sekmeler ve sürükle-bırak M3'te tamamlandı) |
 | M3 Simge, projeler, ortamlar, kopyalama, auth | ✅ 9/9 · bitti: simge, ortam seçici ve editörü, dinamik değişkenler, projeler, kabuk komutu olarak kopyalama, metotla yeni istek, değişken çipleri, Auth sekmesi ve miras, komut paleti, sekmeler, sürükle-bırak ile taşıma · küçük kalanlar M3 bölümünün sonunda |
-| M4 Günlük kullanım | 🔜 · bitti: menü çubuğu, şifreli koleksiyonlar (motor, uygulama, CLI), ağ denetçisi (Network sekmesi), multipart/binary/GraphQL gövdeleri · sıradaki: auth tipleri (OAuth 2.0, Digest, AWS SigV4, OAuth 1.0) · ardından: ayarlar ve 9 dilli arayüz, dokümantasyon yapısı ve README karşılaştırması |
+| M4 Günlük kullanım | 🔜 · bitti: menü çubuğu, şifreli koleksiyonlar (motor, uygulama, CLI), ağ denetçisi (Network sekmesi), multipart/binary/GraphQL gövdeleri, auth tipleri (Digest, OAuth 1.0, OAuth 2.0, AWS SigV4) · sıradaki: ayarlar ve 9 dilli arayüz · ardından: dokümantasyon yapısı ve README karşılaştırması |
 | M5–M9 | ⬜ |
 
-Release ikili dosyası 31.5 MB (üst sınır 100 MB). Testler: core 38, vault 7, desktop 6, codegen 13, import 12, http 9 (hepsi geçiyor, clippy uyarısız).
+Release ikili dosyası 32.2 MB (üst sınır 100 MB). Testler: core 44, vault 7, desktop 6, codegen 15, import 13, http 14 (hepsi geçiyor, clippy uyarısız).
 
 ### Kullanıcı notları (17 Ekim 2026) ve plana nasıl işlendikleri
 | # | Not | Nereye işlendi |
@@ -52,7 +52,7 @@ Apix, Postman'in yaptığı her şeyi yapan bir API istemcisi olacak. Postman'de
 | Kural | Ne anlama geliyor |
 |---|---|
 | **Minimalist** | Ekranda sadece o an gereken şey görünür. Gerisi Ctrl/⌘+K komut paletinde durur. |
-| **Hafif** | Hız, akıcılık ve özellik boyuttan önce gelir. Program dosyası için üst sınır 100 MB (not 11; şu an 31.5 MB; Postman ve Electron uygulamaları 300 MB'ı aşıyor). Açılış 150 ms'nin, boşta bellek kullanımı 60 MB'ın altında kalır (şu an 69 MB ölçüldü). |
+| **Hafif** | Hız, akıcılık ve özellik boyuttan önce gelir. Program dosyası için üst sınır 100 MB (not 11; şu an 32.2 MB; Postman ve Electron uygulamaları 300 MB'ı aşıyor). Açılış 150 ms'nin, boşta bellek kullanımı 60 MB'ın altında kalır (şu an 69 MB ölçüldü). |
 | **Hızlı** | Arayüz hiç donmaz. 100 MB'lık bir yanıt bile kare kaybetmeden kaydırılır. |
 | **Local-first** | Hesap ve bulut zorunlu değildir. Koleksiyonlar düz dosya olarak durur ve git ile versiyonlanır. |
 | **Postman'den kolay geçiş** | Postman koleksiyonları, ortamları ve scriptleri içe aktarılınca çalışır. |
@@ -193,10 +193,10 @@ Apix, Postman'in yaptığı her şeyi yapan bir API istemcisi olacak. Postman'de
 | Bearer Token | ✅ |
 | Basic Auth | ✅ |
 | API Key (header veya query) | ✅ |
-| Digest Auth | ⬜ M |
-| OAuth 1.0 | ⬜ M |
-| OAuth 2.0: Authorization Code + PKCE, Client Credentials, Password, Implicit, token yenileme, token önbelleği | ⬜ L |
-| AWS Signature v4 | ⬜ M |
+| Digest Auth: sunucunun meydan okumasına (401) MD5 veya SHA-256 ile tek seferde cevap | ✅ |
+| OAuth 1.0a: HMAC-SHA1, HMAC-SHA256, PLAINTEXT; header veya query; her gönderimde yeni nonce ve zaman damgası | ✅ |
+| OAuth 2.0: Authorization Code + PKCE (tarayıcıda giriş, loopback yönlendirme), Client Credentials, Password, token yenileme, bellekte token önbelleği ("Get new token", "Forget"). Token'lar diske yazılmaz. Implicit grant güvensiz olduğu için yok. | ✅ |
+| AWS Signature v4 (geçici kimlik bilgileri, S3 için içerik özeti) | ✅ |
 | Hawk, NTLM, Akamai EdgeGrid, JWT Bearer (JWT'yi Apix imzalar) | ⬜ M her biri |
 
 #### A6. İstek ayarları
@@ -299,7 +299,7 @@ Bir koleksiyon (veya proje) parola ile şifrelenir. Parolayı bilmeyen hiçbir a
 ### D. Postman uyumluluğu ve içe/dışa aktarma ⭐ (öncelikli)
 | Özellik | Ayrıntı | Durum |
 |---|---|---|
-| **Postman Collection v2.1 ve v2.0 içe aktarma** | Klasörler, istekler, header'lar, raw, urlencoded, form-data (dosyalarla), binary ve GraphQL gövdeleri, bearer/basic/API key auth (klasör ve koleksiyon auth'u olduğu yerde kalır, istekler miras alır), koleksiyon değişkenleri, açıklamalar, path değişkenleri. OAuth 2.0 ve örnek yanıtlar raporda listelenir; dosyası seçilmemiş alanlar için uyarı verilir. | ✅ |
+| **Postman Collection v2.1 ve v2.0 içe aktarma** | Klasörler, istekler, header'lar, raw, urlencoded, form-data (dosyalarla), binary ve GraphQL gövdeleri, bearer, basic, API key, Digest, OAuth 1.0, OAuth 2.0 ve AWS auth (klasör ve koleksiyon auth'u olduğu yerde kalır, istekler miras alır), koleksiyon değişkenleri, açıklamalar, path değişkenleri. NTLM, Hawk gibi desteklenmeyen auth tipleri ve örnek yanıtlar raporda listelenir; dosyası seçilmemiş alanlar ve loopback olmayan OAuth yönlendirme adresleri için uyarı verilir. | ✅ |
 | **Postman Environment içe aktarma** | `*.postman_environment.json`. `secret` tipindeki değerler `*.local.toml` dosyasına yazılır, git'e girmez. | ✅ |
 | **Postman Globals içe aktarma** | Tanınıyor, ortam olarak aktarılıyor. Projenin `[vars]` bölümüne aktarma seçeneği eklenecek. | ✅ tanıma · ⬜ S |
 | **Postman scriptleri** | İsteklerin yanına `.js` olarak kaydediliyor ✅. `pm.*` uyumlu API ile çalıştırılması M5'te (§F). | ⬜ L |
@@ -523,7 +523,7 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 - **Şifreli koleksiyonlar (§C2)** (not 2): oluşturma, şifreleme ve şifreyi kaldırma, kilit açma ve otomatik kilit, kurtarma anahtarı, CLI desteği (L). Motor ✅ (`apix-vault`), uygulama ✅ (kilit açma, kilitleme, 15 dk otomatik kilit, şifreleme ve şifreyi kaldırma, parola değiştirme, yeni şifreli koleksiyon), CLI ✅. Kalan: parolayı işletim sistemi anahtarlığında hatırlama.
 - **Ağ denetçisi (§B2)** (not 9): yerel ağ bilgisi, DNS, TCP, TLS ve sertifika zinciri, zaman şelalesi, yönlendirmeler (L) Network sekmesi ve `apix send --network` ✅; TLS sürümü/şifre takımı, tam zincir ve TCP/TLS ayrı süreler M7'de (not 12).
 - **Gövde tipleri (§A4)** ✅: düzenlenebilir urlencoded form, multipart (metin ve dosya alanları), binary ve GraphQL (renkli sorgu, JSON değişkenler). Motor, uygulama, CLI, "Copy as" (curl, cmd, PowerShell), curl yapıştırma (`-F`, `--form-string`, `--data-binary @dosya`) ve Postman içe aktarma hepsini taşır. Göreli dosya yolları isteğin klasörüne göre çözülür.
-- 🔜 OAuth 2.0 (M3'ten taşındı), Digest, AWS SigV4 ve OAuth 1.0 auth tipleri.
+- **Auth tipleri (§A5)** ✅: Digest, OAuth 1.0, OAuth 2.0 (client credentials, password, authorization code + PKCE) ve AWS SigV4. İmzalar `apix_core::sign` içinde (AWS test paketi, RFC 7616, RFC 7636 ve OAuth 1.0 örnek değerleriyle sınanır); motor, CLI, "Copy as" (curl `--digest`, `--aws-sigv4`; PowerShell için kopyalarken imzalanır), curl yapıştırma ve Postman içe aktarma hepsini taşır. Gerçek sunucularda denendi: httpbin Digest (MD5, SHA-256), Postman Echo OAuth 1.0, yerel OAuth 2.0 sunucusu (`cargo run -p apix-http --example oauth_server`).
 - **Ayarlar ekranı ve arayüz dili (§M, not 13)** (L): çeviri altyapısı (`rust-i18n`, tüm metinler anahtarlı), 9 dil, Arapça için sağdan sola, CJK ve Arapça yazı tipi yedekleri, ayarlardan anında dil değişimi. M7'den öne alındı: her yeni ekran yeni metin getirdiği için altyapı ne kadar erken gelirse sonradan o kadar az iş çıkar.
 - **Dokümantasyon yapısı ve README (§N, not 14, 16)** (M): `Docs/<dil>/` yapısı, `languages.toml`, İngilizce ve Türkçe belgeler (kullanım kılavuzu, mimari, teknik altyapı, iş akışları), README'de "neden Apix" karşılaştırması ve Apix'in tekrarlanabilir performans ölçümleri.
 - İstek ayarları (timeout, SSL, proxy, sertifikalar), çerez yöneticisi
@@ -550,7 +550,7 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 ### M9 — Yayın
 - GitHub Actions: Windows, macOS ve Linux'ta test ve derleme
 - Kurulum paketleri: `.msi` ve winget, `.dmg` ve Homebrew, AppImage, Flatpak ve `.deb`
-- İkili boyutunu izlemek: üst sınır 100 MB (not 11). Şu an release 31.5 MB; içinde 2.2 MB font, simgeler ve tree-sitter var. CJK ve Arapça yazı tipleri eklenince büyür; sınır hız ve akıcılık için tanındı, boyut için ödün verilmez.
+- İkili boyutunu izlemek: üst sınır 100 MB (not 11). Şu an release 32.2 MB; içinde 2.2 MB font, simgeler ve tree-sitter var. CJK ve Arapça yazı tipleri eklenince büyür; sınır hız ve akıcılık için tanındı, boyut için ödün verilmez.
 - **Tüm dillerde dokümantasyon (§N, not 14, 15):** 9 dilde kullanım kılavuzu, mimari, teknik altyapı, iş akışları; her dilin kendi arayüzünden otomatik alınmış ekran görüntüleriyle görselli kılavuz; dokümantasyon sitesinde dil seçici
 - **Karşılaştırmalı performans (not 16):** Apix ile Postman, Insomnia, Bruno ve Hoppscotch aynı makinede, aynı betikle ölçülür; sonuçlar README'de
 - **İmzalı sürümler:** Windows kod imzası (Akıllı Uygulama Denetimi engellemesin diye) ve macOS notarization

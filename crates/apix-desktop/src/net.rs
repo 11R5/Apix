@@ -41,6 +41,19 @@ pub fn send(request: Request) -> impl Future<Output = Result<Response, String>> 
     AbortOnDrop(handle)
 }
 
+/// Gets a new OAuth 2.0 token for an already-resolved configuration (and
+/// keeps it for the requests that follow).
+pub fn fetch_token(
+    config: apix_core::OAuth2,
+) -> impl Future<Output = Result<apix_http::oauth2::Token, String>> + Send + 'static {
+    let handle = net().runtime.spawn(async move {
+        apix_http::oauth2::fetch(&config)
+            .await
+            .map_err(|e| error_chain(&e))
+    });
+    AbortOnDrop(handle)
+}
+
 /// reqwest's top-level message ("error sending request") hides the cause,
 /// such as "connection refused", so the whole chain is shown.
 fn error_chain(err: &dyn std::error::Error) -> String {

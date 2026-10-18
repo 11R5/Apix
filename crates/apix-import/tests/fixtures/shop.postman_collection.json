@@ -163,8 +163,8 @@
 			"name": "Health",
 			"request": {
 				"auth": {
-					"type": "oauth2",
-					"oauth2": [{ "key": "grant_type", "value": "client_credentials", "type": "string" }]
+					"type": "ntlm",
+					"ntlm": [{ "key": "username", "value": "ada", "type": "string" }]
 				},
 				"method": "PROPFIND",
 				"header": [],

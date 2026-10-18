@@ -5,12 +5,16 @@
 pub mod dynamic;
 pub mod model;
 pub mod project;
+pub mod sign;
 pub mod store;
 pub mod text;
 pub mod vars;
 pub mod vfs;
 
-pub use model::{ApiKeyLocation, Auth, Body, FormPart, GraphQl, KeyValue, Method, Request};
+pub use model::{
+    ApiKeyLocation, Auth, AwsSigV4, Body, ClientAuth, FormPart, GraphQl, KeyValue, Method, OAuth1,
+    OAuth1Method, OAuth2, OAuth2Grant, Request,
+};
 pub use project::{GroupBy, Project};
 pub use store::{Collection, Environment, StoreError};
 pub use vars::{Resolved, Variables};

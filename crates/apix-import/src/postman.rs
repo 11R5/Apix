@@ -9,7 +9,10 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 use apix_core::store::{self, CollectionMeta, FolderMeta, VarMap};
-use apix_core::{ApiKeyLocation, Auth, Body, FormPart, GraphQl, KeyValue, Method, Request};
+use apix_core::{
+    ApiKeyLocation, Auth, AwsSigV4, Body, ClientAuth, FormPart, GraphQl, KeyValue, Method, OAuth1,
+    OAuth1Method, OAuth2, OAuth2Grant, Request,
+};
 use serde::Deserialize;
 use serde_json::Value;
 
@@ -707,6 +710,55 @@ impl Converter<'_> {
                     ApiKeyLocation::Header
                 },
             },
+            "digest" => Auth::Digest {
+                username: auth.param("username"),
+                password: auth.param("password"),
+            },
+            "awsv4" => {
+                if auth.param("addAuthDataToQuery") == "true" {
+                    self.report.warn(
+                        label,
+                        "AWS signatures in the URL are not supported; Apix signs with headers.",
+                    );
+                }
+                Auth::AwsSigV4(AwsSigV4 {
+                    access_key: auth.param("accessKey"),
+                    secret_key: auth.param("secretKey"),
+                    session_token: auth.param("sessionToken"),
+                    region: auth.param("region"),
+                    service: auth.param("service"),
+                })
+            }
+            "oauth1" => {
+                let method = auth.param("signatureMethod");
+                let signature_method = OAuth1Method::ALL
+                    .into_iter()
+                    .find(|m| m.as_str().eq_ignore_ascii_case(&method))
+                    .unwrap_or_else(|| {
+                        if !method.is_empty() {
+                            self.report.warn(
+                                label,
+                                format!("OAuth 1.0 {method} signatures are not supported; HMAC-SHA1 is used."),
+                            );
+                        }
+                        OAuth1Method::HmacSha1
+                    });
+                Auth::OAuth1(OAuth1 {
+                    consumer_key: auth.param("consumerKey"),
+                    consumer_secret: auth.param("consumerSecret"),
+                    token: auth.param("token"),
+                    token_secret: auth.param("tokenSecret"),
+                    signature_method,
+                    realm: auth.param("realm"),
+                    // Postman's default is the header.
+                    location: if auth.param("addParamsToHeader") == "false" {
+                        ApiKeyLocation::Query
+                    } else {
+                        ApiKeyLocation::Header
+                    },
+                })
+            }
+            "oauth2" => self.oauth2(auth, label),
             other => {
                 self.report.warn(
                     label,
@@ -716,6 +768,71 @@ impl Converter<'_> {
             }
         }
     }
+
+    fn oauth2(&mut self, auth: &PmAuth, label: &str) -> Auth {
+        let grant = match auth.param("grant_type").as_str() {
+            "client_credentials" => OAuth2Grant::ClientCredentials,
+            "password_credentials" => OAuth2Grant::Password,
+            "authorization_code" | "authorization_code_with_pkce" => OAuth2Grant::AuthorizationCode,
+            "implicit" => {
+                self.report.warn(
+                    label,
+                    "The OAuth 2.0 implicit grant is not supported; it was imported as \
+                     authorization code with PKCE.",
+                );
+                OAuth2Grant::AuthorizationCode
+            }
+            // Old exports may only carry a token that was already fetched.
+            _ => {
+                let token = auth.param("accessToken");
+                self.report.warn(
+                    label,
+                    "This OAuth 2.0 setup has no grant type; its saved access token was \
+                     imported as a bearer token.",
+                );
+                return Auth::Bearer { token };
+            }
+        };
+        let mut redirect_uri = auth.param("redirect_uri");
+        if grant == OAuth2Grant::AuthorizationCode
+            && !redirect_uri.is_empty()
+            && !is_loopback(&redirect_uri)
+        {
+            self.report.warn(
+                label,
+                format!(
+                    "Apix receives the OAuth 2.0 sign-in on this computer, so the redirect URL \
+                     {redirect_uri} was dropped. Register a loopback URL such as \
+                     http://127.0.0.1:8765/callback for the client and set it in the Auth tab."
+                ),
+            );
+            redirect_uri.clear();
+        }
+        Auth::OAuth2(OAuth2 {
+            grant,
+            token_url: auth.param("accessTokenUrl"),
+            auth_url: auth.param("authUrl"),
+            client_id: auth.param("clientId"),
+            client_secret: auth.param("clientSecret"),
+            scope: auth.param("scope"),
+            username: auth.param("username"),
+            password: auth.param("password"),
+            redirect_uri,
+            pkce: auth.param("grant_type") != "authorization_code",
+            client_auth: if auth.param("client_authentication") == "body" {
+                ClientAuth::Body
+            } else {
+                ClientAuth::Basic
+            },
+        })
+    }
+}
+
+fn is_loopback(uri: &str) -> bool {
+    let rest = uri.strip_prefix("http://").unwrap_or_default();
+    ["127.0.0.1", "localhost", "[::1]"]
+        .iter()
+        .any(|host| rest.starts_with(host))
 }
 
 // ---------------------------------------------------------------------------

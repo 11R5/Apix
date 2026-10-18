@@ -294,7 +294,9 @@ impl Workspace {
             state
         });
 
-        let auth_editor = cx.new(|cx| auth_editor::AuthEditor::new(palette, "request", window, cx));
+        let weak = cx.weak_entity();
+        let auth_editor =
+            cx.new(|cx| auth_editor::AuthEditor::new(palette, "request", weak, window, cx));
         let subscriptions = vec![
             // Typing in the Auth tab changes the unsaved marker.
             cx.observe(&auth_editor, |_, _, cx| cx.notify()),
@@ -751,6 +753,10 @@ impl Workspace {
             Auth::Bearer { .. } => "Auth · Bearer".into(),
             Auth::Basic { .. } => "Auth · Basic".into(),
             Auth::ApiKey { .. } => "Auth · API key".into(),
+            Auth::Digest { .. } => "Auth · Digest".into(),
+            Auth::OAuth1(_) => "Auth · OAuth 1.0".into(),
+            Auth::OAuth2(_) => "Auth · OAuth 2.0".into(),
+            Auth::AwsSigV4(_) => "Auth · AWS".into(),
         };
 
         let content = match self.request_tab {

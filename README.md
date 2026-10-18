@@ -14,8 +14,10 @@
 
 ## What works today
 - **Requests:** GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS with params, headers,
-  JSON / Text / XML bodies and an Auth tab (Bearer, Basic, API key). Folders,
-  collections and projects can set auth once; requests inherit it.
+  every common body type and an Auth tab: Bearer, Basic, API key, Digest, OAuth 1.0,
+  OAuth 2.0 (client credentials, password, authorization code with PKCE in the
+  browser) and AWS Signature V4. Folders, collections and projects can set auth
+  once; requests inherit it. OAuth 2.0 tokens stay in memory, never on disk.
 - **Responses:** status, timing (TTFB and total), size, highlighted and foldable JSON,
   raw and headers views. A 100 MB JSON response opens in about a third of a second.
 - **Network tab:** where the time went (DNS, connect, waiting, download), the server
@@ -105,7 +107,7 @@ apix import "Staging.postman_environment.json" --into my-api
 apix run my-api --env staging
 ```
 
-Collection v2.0 and v2.1 are supported. Anything Apix cannot carry over yet (OAuth 2.0,
+Collection v2.0 and v2.1 are supported. Anything Apix cannot carry over yet (NTLM, Hawk,
 saved examples) is listed in the import report. Pre-request and test
 scripts are kept as `.js` files next to their requests. Secrets from Postman
 environments go to a gitignored `*.local.toml`. In the desktop app, use the sidebar's
@@ -159,7 +161,27 @@ variables = '{ "id": "42" }'
 
 A request without `auth` inherits it from the nearest folder that sets one in its
 `folder.toml`, then from the collection's `apix.toml`, then from the project.
-`auth = "none"` sends no auth at all.
+`auth = "none"` sends no auth at all. Other auth types:
+
+```toml
+[auth.oauth2]
+grant = "client_credentials"     # or "password", "authorization_code"
+token_url = "https://auth.example.com/oauth/token"
+client_id = "{{client_id}}"
+client_secret = "{{client_secret}}"
+scope = "read write"
+```
+
+```toml
+[auth.aws_sigv4]
+access_key = "{{aws_access_key}}"
+secret_key = "{{aws_secret_key}}"
+region = "eu-central-1"
+service = "execute-api"
+```
+
+`[auth.digest]` takes `username` and `password`; `[auth.oauth1]` takes
+`consumer_key`, `consumer_secret`, `token`, `token_secret` and `signature_method`.
 
 ## License
 
