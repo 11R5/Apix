@@ -35,6 +35,9 @@ enum Command {
         /// Print response headers too
         #[arg(short = 'i', long)]
         include_headers: bool,
+        /// Print what happened on the network: DNS, connection, redirects, TLS, local side
+        #[arg(short = 'n', long)]
+        network: bool,
     },
     /// Send every request in a collection folder; exits non-zero if any fails
     Run {
@@ -236,6 +239,7 @@ async fn run(cli: Cli) -> Result<bool> {
             file,
             vars,
             include_headers,
+            network,
         } => {
             unlock_around(&file, &var)?;
             let scope = Scope::find(&file)?;
@@ -247,6 +251,9 @@ async fn run(cli: Cli) -> Result<bool> {
                     println!("{}{k}{}: {v}", style.dim, style.reset);
                 }
                 println!();
+            }
+            if network {
+                print_network(&style, &response);
             }
             println!("{}", response.pretty_body());
             Ok(response.is_success())
@@ -438,6 +445,87 @@ fn print_status(style: &Style, response: &Response) {
         human_size(response.body.len()),
         style.reset,
     );
+}
+
+/// `apix send --network`: where the time went and what the connection was.
+fn print_network(style: &Style, response: &Response) {
+    let trace = &response.trace;
+    let ms = |d: std::time::Duration| format!("{:.1} ms", d.as_secs_f64() * 1000.0);
+    let line =
+        |label: &str, value: String| println!("{}{label:<12}{} {value}", style.dim, style.reset);
+    let p = trace.phases(response.timing.ttfb, response.timing.total);
+    line(
+        "Timing",
+        format!(
+            "DNS {} · connect {} · waiting {} · download {}",
+            ms(p.dns),
+            ms(p.connect),
+            ms(p.waiting),
+            ms(p.download)
+        ),
+    );
+    for lookup in &trace.dns {
+        let addrs: Vec<String> = lookup.addrs.iter().map(ToString::to_string).collect();
+        line(
+            "DNS",
+            format!(
+                "{} → {} ({})",
+                lookup.host,
+                addrs.join(", "),
+                ms(lookup.duration)
+            ),
+        );
+    }
+    if let Some(remote) = trace.remote_addr {
+        line("Remote", format!("{remote} · {}", response.version));
+    }
+    for hop in &trace.redirects {
+        line("Redirect", format!("{} → {}", hop.status, hop.to));
+    }
+    if let Some(cert) = &trace.certificate {
+        line("Certificate", cert.subject.clone());
+        line("  issued by", cert.issuer.clone());
+        line(
+            "  valid",
+            format!(
+                "{} to {} ({} days left)",
+                cert.not_before, cert.not_after, cert.days_left
+            ),
+        );
+        if !cert.names.is_empty() {
+            line("  names", cert.names.join(", "));
+        }
+    }
+    let local = apix_http::local_network(trace.local_addr.map(|a| a.ip()));
+    let via = match (&local.interface, &local.kind) {
+        (Some(name), Some(kind)) => format!("{name} ({kind})"),
+        (Some(name), None) => name.clone(),
+        _ => "unknown interface".into(),
+    };
+    let address = trace
+        .local_addr
+        .map(|a| a.to_string())
+        .or_else(|| local.local_ip.map(|ip| ip.to_string()))
+        .unwrap_or_default();
+    line(
+        "Local",
+        format!(
+            "{address} via {via}{}",
+            if local.vpn { " · VPN" } else { "" }
+        ),
+    );
+    if let Some(gateway) = local.gateway {
+        line("Gateway", gateway.to_string());
+    }
+    if !local.dns_servers.is_empty() {
+        let servers: Vec<String> = local.dns_servers.iter().map(ToString::to_string).collect();
+        line("DNS servers", servers.join(", "));
+    }
+    match &local.proxy {
+        Some((var, value)) => line("Proxy", format!("{value} (from {var})")),
+        None => line("Proxy", "none in the environment".into()),
+    }
+    println!();
 }
 
 struct Style {

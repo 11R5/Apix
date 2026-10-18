@@ -14,10 +14,10 @@
 | M1 Arayüzden istek | ✅ 100 MB JSON ~0.33 s'de açılıyor |
 | M2 Koleksiyonlar, Postman içe aktarma | ✅ (sekmeler ve sürükle-bırak M3'te tamamlandı) |
 | M3 Simge, projeler, ortamlar, kopyalama, auth | ✅ 9/9 · bitti: simge, ortam seçici ve editörü, dinamik değişkenler, projeler, kabuk komutu olarak kopyalama, metotla yeni istek, değişken çipleri, Auth sekmesi ve miras, komut paleti, sekmeler, sürükle-bırak ile taşıma · küçük kalanlar M3 bölümünün sonunda · sıradaki: M4 |
-| M4 Günlük kullanım | 🔜 · bitti: menü çubuğu, şifreli koleksiyonlar (motor, uygulama, CLI) · sıradaki: ağ denetçisi |
+| M4 Günlük kullanım | 🔜 · bitti: menü çubuğu, şifreli koleksiyonlar (motor, uygulama, CLI), ağ denetçisi (Network sekmesi) · sıradaki: multipart/binary/GraphQL gövdeleri ve auth tipleri |
 | M5–M9 | ⬜ |
 
-Release ikili dosyası 27.7 MB (üst sınır ~40 MB). Testler: core 35, vault 7, desktop 4, codegen 11, import 10, http 4 (hepsi geçiyor, clippy uyarısız).
+Release ikili dosyası 31.2 MB (üst sınır ~40 MB). Testler: core 35, vault 7, desktop 4, codegen 11, import 10, http 8 (hepsi geçiyor, clippy uyarısız).
 
 ### Kullanıcı notları (17 Ekim 2026) ve plana nasıl işlendikleri
 | # | Not | Nereye işlendi |
@@ -42,7 +42,7 @@ Apix, Postman'in yaptığı her şeyi yapan bir API istemcisi olacak. Postman'de
 | Kural | Ne anlama geliyor |
 |---|---|
 | **Minimalist** | Ekranda sadece o an gereken şey görünür. Gerisi Ctrl/⌘+K komut paletinde durur. |
-| **Hafif** | Hız ve özellik boyuttan önce gelir. Program dosyası için üst sınır yaklaşık 40 MB (şu an 27.7 MB; Postman ve Electron uygulamaları 300 MB'ı aşıyor). Açılış 150 ms'nin, boşta bellek kullanımı 60 MB'ın altında kalır (şu an 69 MB ölçüldü). |
+| **Hafif** | Hız ve özellik boyuttan önce gelir. Program dosyası için üst sınır yaklaşık 40 MB (şu an 31.2 MB; Postman ve Electron uygulamaları 300 MB'ı aşıyor). Açılış 150 ms'nin, boşta bellek kullanımı 60 MB'ın altında kalır (şu an 69 MB ölçüldü). |
 | **Hızlı** | Arayüz hiç donmaz. 100 MB'lık bir yanıt bile kare kaybetmeden kaydırılır. |
 | **Local-first** | Hesap ve bulut zorunlu değildir. Koleksiyonlar düz dosya olarak durur ve git ile versiyonlanır. |
 | **Postman'den kolay geçiş** | Postman koleksiyonları, ortamları ve scriptleri içe aktarılınca çalışır. |
@@ -204,7 +204,7 @@ Apix, Postman'in yaptığı her şeyi yapan bir API istemcisi olacak. Postman'de
 | **Hex** | İkili yanıtlar için onaltılık görünüm | ⬜ S |
 | **Headers** | Tablo, kopyala ve ara | ✅ tablo · ⬜ kopyala, ara |
 | **Cookies** | Yanıtla gelen çerezler | ⬜ |
-| **Timing** | DNS, TCP, TLS, TTFB ve indirme sürelerini şelale grafiği olarak gösterir. Mockup'taki "Latency Visualizer" budur. | ✅ TTFB ve toplam · ⬜ ayrıntı L |
+| **Timing** | DNS, TCP, TLS, TTFB ve indirme sürelerini şelale grafiği olarak gösterir. Mockup'taki "Latency Visualizer" budur. | ✅ DNS, bağlantı (TCP+TLS), bekleme, indirme şelalesi (Network sekmesi) · ⬜ TCP ve TLS ayrı |
 | **Büyük yanıt** | 100 MB+ yanıtlarda sanal liste kullanılır, sadece ekrandaki satırlar çizilir. | ✅ (100 MB JSON ~0.33 s) |
 | **Gövdede arama** | Ctrl+F, regex desteğiyle | ⬜ |
 | **Filtre** | JSONPath ve jq ile yanıtı süzme | ⬜ M |
@@ -217,12 +217,12 @@ Her istek için "Network" sekmesi: istek gerçekte nasıl ve nereden geçti?
 
 | Özellik | Ayrıntı | Durum |
 |---|---|---|
-| **Yerel taraf** | Kullanılan ağ arayüzü, yerel IP (IPv4/IPv6), varsayılan ağ geçidi, DNS sunucuları, kullanılan proxy, VPN/tünel olup olmadığı | ⬜ M |
-| **DNS** | Çözülen tüm A/AAAA kayıtları, bağlanılan IP, DNS süresi | ⬜ M |
-| **Bağlantı** | TCP bağlantı süresi, bağlantının yeniden kullanılıp kullanılmadığı, HTTP sürümü ve ALPN | ⬜ M |
-| **TLS** | Sürüm, şifre takımı, sertifika zinciri (veren, geçerlilik ve kalan gün, SAN listesi). Süresi yaklaşan sertifika için uyarı. | ⬜ M |
-| **Zaman şelalesi** | DNS → TCP → TLS → ilk bayt → indirme, çubuk grafik olarak (§B "Timing" ile aynı veri) | ⬜ M |
-| **Yönlendirmeler** | 301/302 zinciri, her adımın süresi ve adresi | ⬜ S |
+| **Yerel taraf** | Kullanılan ağ arayüzü, yerel IP (IPv4/IPv6), varsayılan ağ geçidi, DNS sunucuları, kullanılan proxy, VPN/tünel olup olmadığı | ✅ arayüz ve türü, yerel IP ve port, ağ geçidi, DNS sunucuları, VPN tahmini (tünel arayüzü veya adı), ortamdaki proxy · ⬜ Windows sistem proxy'si |
+| **DNS** | Çözülen tüm A/AAAA kayıtları, bağlanılan IP, DNS süresi | ✅ |
+| **Bağlantı** | TCP bağlantı süresi, bağlantının yeniden kullanılıp kullanılmadığı, HTTP sürümü ve ALPN | ✅ kurulum süresi (TCP+TLS birlikte), uzak adres, HTTP sürümü · ⬜ TCP ve TLS ayrı süreler |
+| **TLS** | Sürüm, şifre takımı, sertifika zinciri (veren, geçerlilik ve kalan gün, SAN listesi). Süresi yaklaşan sertifika için uyarı. | ✅ sunucu sertifikası (veren, geçerlilik, kalan gün, adlar; 30 günden azsa uyarı rengi) · ⬜ sürüm, şifre takımı, tam zincir (reqwest vermiyor) |
+| **Zaman şelalesi** | DNS → TCP → TLS → ilk bayt → indirme, çubuk grafik olarak (§B "Timing" ile aynı veri) | ✅ |
+| **Yönlendirmeler** | 301/302 zinciri, her adımın süresi ve adresi | ✅ zincir (durum ve adres) · ⬜ adım başına süre |
 | **Boyut** | Sıkıştırılmış ve açılmış boyut, kullanılan sıkıştırma (gzip, br, zstd) | ⬜ S |
 | **Rota (traceroute)** | Hedefe giden atlamalar ve gecikmeleri. ICMP yönetici izni istediğinde TCP traceroute'a geçilir. | ⬜ L |
 | **Harita** | Atlamalar ve hedef, dünya haritası üzerinde çizgi olarak gösterilir. Konumlar çevrimdışı bir IP konum veritabanından gelir (ör. DB-IP Lite, CC-BY). Veritabanı isteğe bağlı indirilir. Çevrimiçi sorgu varsayılan olarak kapalıdır, gizlilik için. | ⬜ L |
@@ -486,7 +486,7 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 
 ### M4 — Günlük kullanıma hazır
 - **Şifreli koleksiyonlar (§C2)** (not 2): oluşturma, şifreleme ve şifreyi kaldırma, kilit açma ve otomatik kilit, kurtarma anahtarı, CLI desteği (L). Motor ✅ (`apix-vault`), uygulama ✅ (kilit açma, kilitleme, 15 dk otomatik kilit, şifreleme ve şifreyi kaldırma, parola değiştirme, yeni şifreli koleksiyon), CLI ✅. Kalan: parolayı işletim sistemi anahtarlığında hatırlama.
-- **Ağ denetçisi (§B2)** (not 9): yerel ağ bilgisi, DNS, TCP, TLS ve sertifika zinciri, zaman şelalesi, yönlendirmeler (L)
+- **Ağ denetçisi (§B2)** (not 9): yerel ağ bilgisi, DNS, TCP, TLS ve sertifika zinciri, zaman şelalesi, yönlendirmeler (L) Network sekmesi ve `apix send --network` ✅; TLS sürümü/şifre takımı ve TCP/TLS ayrı süreler için özel bağlayıcı 🔜.
 - multipart, binary ve GraphQL gövdeleri. OAuth 2.0 (M3'ten taşındı), Digest, AWS SigV4 ve OAuth 1.0 auth tipleri.
 - İstek ayarları (timeout, SSL, proxy, sertifikalar), çerez yöneticisi
 - Kod üretici (diller), geçmiş
@@ -511,7 +511,7 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 ### M9 — Yayın
 - GitHub Actions: Windows, macOS ve Linux'ta test ve derleme
 - Kurulum paketleri: `.msi` ve winget, `.dmg` ve Homebrew, AppImage, Flatpak ve `.deb`
-- İkili boyutunu izlemek: üst sınır yaklaşık 40 MB (not 10). Şu an release 27.7 MB; içinde 2.2 MB font, simgeler ve tree-sitter var. Kolay kazançlar alınır (`panic = "abort"`, kullanılmayan özellikleri kapatmak), ama hız ve özellikten ödün verilmez.
+- İkili boyutunu izlemek: üst sınır yaklaşık 40 MB (not 10). Şu an release 31.2 MB; içinde 2.2 MB font, simgeler ve tree-sitter var. Kolay kazançlar alınır (`panic = "abort"`, kullanılmayan özellikleri kapatmak), ama hız ve özellikten ödün verilmez.
 - **İmzalı sürümler:** Windows kod imzası (Akıllı Uygulama Denetimi engellemesin diye) ve macOS notarization
 - Kurulum paketlerinde M3'te hazırlanan simgelerin kullanılması, web sitesi, tanıtım (r/rust, Hacker News)
 

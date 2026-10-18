@@ -1,11 +1,19 @@
 //! Turns a resolved [`apix_core::Request`] into a real HTTP call and captures
 //! everything the UI needs to show: status, headers, raw body and timings.
 
+mod local;
+mod trace;
+
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use apix_core::{ApiKeyLocation, Auth, Body, Request};
 use bytes::Bytes;
 use reqwest::header::CONTENT_TYPE;
+
+pub use local::{LocalNetwork, local_network};
+pub use trace::{Certificate, DnsLookup, NetTrace, Phases, Redirect, read_certificate};
+use trace::{Recorder, TimedResolver, TimingLayer};
 
 #[derive(Debug, thiserror::Error)]
 pub enum HttpError {
@@ -13,6 +21,13 @@ pub enum HttpError {
     InvalidUrl { url: String, reason: String },
     #[error(transparent)]
     Request(#[from] reqwest::Error),
+    /// reqwest names the first URL even when a redirect target failed.
+    #[error("while following a redirect to {to}")]
+    Redirected {
+        to: String,
+        #[source]
+        source: reqwest::Error,
+    },
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -31,6 +46,8 @@ pub struct Response {
     pub headers: Vec<(String, String)>,
     pub body: Bytes,
     pub timing: Timing,
+    /// What happened on the network while sending.
+    pub trace: NetTrace,
 }
 
 impl Response {
@@ -98,26 +115,71 @@ pub fn human_duration(d: Duration) -> String {
     }
 }
 
-/// Cheap to clone; clones share one connection pool.
+const USER_AGENT: &str = concat!("apix/", env!("CARGO_PKG_VERSION"));
+/// Redirects followed before giving up, like browsers and reqwest's default.
+const MAX_REDIRECTS: usize = 10;
+
+/// Sends requests. Each send builds its own short-lived connection so its
+/// network trace (DNS, connection setup, redirects) belongs to that request.
 #[derive(Debug, Clone)]
 pub struct HttpClient {
-    inner: reqwest::Client,
+    _private: (),
 }
 
 impl HttpClient {
     pub fn new() -> Result<Self, HttpError> {
-        let inner = reqwest::Client::builder()
-            .user_agent(concat!("apix/", env!("CARGO_PKG_VERSION")))
-            .build()?;
-        Ok(Self { inner })
+        Ok(Self { _private: () })
+    }
+
+    /// A client whose DNS lookups, connections and redirects are recorded.
+    fn traced(recorder: &Arc<Recorder>) -> Result<reqwest::Client, HttpError> {
+        let redirects = recorder.clone();
+        let policy = reqwest::redirect::Policy::custom(move |attempt| {
+            redirects.redirect(attempt.status().as_u16(), attempt.url().to_string());
+            if attempt.previous().len() > MAX_REDIRECTS {
+                attempt.error("too many redirects")
+            } else {
+                attempt.follow()
+            }
+        });
+        Ok(reqwest::Client::builder()
+            .user_agent(USER_AGENT)
+            .tls_info(true)
+            .dns_resolver(Arc::new(TimedResolver(recorder.clone())))
+            .connector_layer(TimingLayer(recorder.clone()))
+            .redirect(policy)
+            .build()?)
     }
 
     /// Sends a request whose `{{variables}}` have already been resolved.
     pub async fn send(&self, req: &Request) -> Result<Response, HttpError> {
-        let builder = self.build(req)?;
+        let recorder = Arc::new(Recorder::default());
+        let client = Self::traced(&recorder)?;
+        let builder = build(&client, req)?;
         let started = Instant::now();
-        let response = builder.send().await?;
+        let response = match builder.send().await {
+            Ok(response) => response,
+            Err(source) => {
+                return Err(match recorder.take().redirects.pop() {
+                    Some(last) => HttpError::Redirected {
+                        to: last.to,
+                        source,
+                    },
+                    None => HttpError::Request(source),
+                });
+            }
+        };
         let ttfb = started.elapsed();
+
+        let connection = response
+            .extensions()
+            .get::<hyper_util::client::legacy::connect::HttpInfo>()
+            .map(|info| (info.local_addr(), info.remote_addr()));
+        let certificate = response
+            .extensions()
+            .get::<reqwest::tls::TlsInfo>()
+            .and_then(|tls| tls.peer_certificate())
+            .and_then(read_certificate);
 
         let status = response.status();
         let version = format!("{:?}", response.version());
@@ -132,88 +194,92 @@ impl HttpClient {
             })
             .collect();
         let body = response.bytes().await?;
+        let total = started.elapsed();
 
+        let mut trace = recorder.take();
+        trace.local_addr = connection.map(|(local, _)| local);
+        trace.remote_addr = connection.map(|(_, remote)| remote);
+        trace.certificate = certificate;
         Ok(Response {
             status: status.as_u16(),
             reason: status.canonical_reason(),
             version,
             headers,
             body,
-            timing: Timing {
-                ttfb,
-                total: started.elapsed(),
-            },
+            timing: Timing { ttfb, total },
+            trace,
         })
     }
+}
 
-    fn build(&self, req: &Request) -> Result<reqwest::RequestBuilder, HttpError> {
-        let mut url = reqwest::Url::parse(&req.url).map_err(|e| HttpError::InvalidUrl {
-            url: req.url.clone(),
-            reason: e.to_string(),
-        })?;
+/// The reqwest request for `req` on `client`.
+fn build(client: &reqwest::Client, req: &Request) -> Result<reqwest::RequestBuilder, HttpError> {
+    let mut url = reqwest::Url::parse(&req.url).map_err(|e| HttpError::InvalidUrl {
+        url: req.url.clone(),
+        reason: e.to_string(),
+    })?;
 
-        let mut query: Vec<(&str, &str)> = req
-            .query
-            .iter()
-            .filter(|q| q.enabled)
-            .map(|q| (q.key.as_str(), q.value.as_str()))
-            .collect();
-        if let Auth::ApiKey {
+    let mut query: Vec<(&str, &str)> = req
+        .query
+        .iter()
+        .filter(|q| q.enabled)
+        .map(|q| (q.key.as_str(), q.value.as_str()))
+        .collect();
+    if let Auth::ApiKey {
+        key,
+        value,
+        location: ApiKeyLocation::Query,
+    } = &req.auth
+    {
+        query.push((key.as_str(), value.as_str()));
+    }
+    if !query.is_empty() {
+        url.query_pairs_mut().extend_pairs(query);
+    }
+
+    let method = reqwest::Method::from_bytes(req.method.as_str().as_bytes())
+        .expect("every apix Method is a valid HTTP method");
+    let mut builder = client.request(method, url);
+
+    for header in req.headers.iter().filter(|h| h.enabled) {
+        builder = builder.header(&header.key, &header.value);
+    }
+
+    builder = match &req.auth {
+        // Callers resolve `Inherit` first; left over, it sends nothing.
+        Auth::None | Auth::Inherit => builder,
+        Auth::Bearer { token } => builder.bearer_auth(token),
+        Auth::Basic { username, password } => builder.basic_auth(username, Some(password)),
+        Auth::ApiKey {
             key,
             value,
+            location: ApiKeyLocation::Header,
+        } => builder.header(key, value),
+        Auth::ApiKey {
             location: ApiKeyLocation::Query,
-        } = &req.auth
-        {
-            query.push((key.as_str(), value.as_str()));
-        }
-        if !query.is_empty() {
-            url.query_pairs_mut().extend_pairs(query);
-        }
+            ..
+        } => builder,
+    };
 
-        let method = reqwest::Method::from_bytes(req.method.as_str().as_bytes())
-            .expect("every apix Method is a valid HTTP method");
-        let mut builder = self.inner.request(method, url);
-
-        for header in req.headers.iter().filter(|h| h.enabled) {
-            builder = builder.header(&header.key, &header.value);
-        }
-
-        builder = match &req.auth {
-            // Callers resolve `Inherit` first; left over, it sends nothing.
-            Auth::None | Auth::Inherit => builder,
-            Auth::Bearer { token } => builder.bearer_auth(token),
-            Auth::Basic { username, password } => builder.basic_auth(username, Some(password)),
-            Auth::ApiKey {
-                key,
-                value,
-                location: ApiKeyLocation::Header,
-            } => builder.header(key, value),
-            Auth::ApiKey {
-                location: ApiKeyLocation::Query,
-                ..
-            } => builder,
-        };
-
-        if let Some(content_type) = req.body.default_content_type()
-            && !req.has_header(CONTENT_TYPE.as_str())
-        {
-            builder = builder.header(CONTENT_TYPE, content_type);
-        }
-        builder = match &req.body {
-            Body::None => builder,
-            Body::Json(text) | Body::Text(text) | Body::Xml(text) => builder.body(text.clone()),
-            Body::Form(rows) => {
-                let fields: Vec<(&str, &str)> = rows
-                    .iter()
-                    .filter(|r| r.enabled)
-                    .map(|r| (r.key.as_str(), r.value.as_str()))
-                    .collect();
-                builder.form(&fields)
-            }
-        };
-
-        Ok(builder)
+    if let Some(content_type) = req.body.default_content_type()
+        && !req.has_header(CONTENT_TYPE.as_str())
+    {
+        builder = builder.header(CONTENT_TYPE, content_type);
     }
+    builder = match &req.body {
+        Body::None => builder,
+        Body::Json(text) | Body::Text(text) | Body::Xml(text) => builder.body(text.clone()),
+        Body::Form(rows) => {
+            let fields: Vec<(&str, &str)> = rows
+                .iter()
+                .filter(|r| r.enabled)
+                .map(|r| (r.key.as_str(), r.value.as_str()))
+                .collect();
+            builder.form(&fields)
+        }
+    };
+
+    Ok(builder)
 }
 
 #[cfg(test)]
@@ -236,9 +302,7 @@ mod tests {
         };
         req.body = Body::Json("{}".into());
 
-        let built = HttpClient::new()
-            .unwrap()
-            .build(&req)
+        let built = build(&reqwest::Client::new(), &req)
             .unwrap()
             .build()
             .unwrap();
@@ -256,9 +320,7 @@ mod tests {
         req.headers
             .push(KeyValue::new("content-type", "application/vnd.api+json"));
         req.body = Body::Json("{}".into());
-        let built = HttpClient::new()
-            .unwrap()
-            .build(&req)
+        let built = build(&reqwest::Client::new(), &req)
             .unwrap()
             .build()
             .unwrap();
@@ -291,6 +353,7 @@ mod tests {
                 ttfb: Duration::ZERO,
                 total: Duration::ZERO,
             },
+            trace: NetTrace::default(),
         };
         let value: serde_json::Value = serde_json::from_str(raw).unwrap();
         assert_eq!(

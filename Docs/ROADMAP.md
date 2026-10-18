@@ -58,6 +58,8 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
   - [x] Open and edit encrypted collections in the app (unlock prompt, recovery key, lock, auto-lock after 15 idle minutes, encrypt or decrypt in place, change password, new encrypted collection) and the CLI (`--password-env`, `apix encrypt`, `apix decrypt`); nothing decrypted is written to disk
   - [ ] Remember the password in the OS keychain
 - [ ] **Network inspector**: local interface/IP/DNS/proxy, DNS answers, TCP/TLS details and certificate chain, timing waterfall, redirects
+  - [x] Network tab and `apix send --network`: timing waterfall (DNS, connect, waiting, download), DNS answers, server and local address, interface and VPN hint, gateway, DNS servers, proxy from the environment, redirect chain, server certificate (issuer, validity, days left, names); every send uses a fresh traced connection
+  - [ ] TLS version and cipher, the full certificate chain, separate TCP and TLS times (reqwest does not expose them; needs a custom connector), compressed size
 - [ ] multipart, binary and GraphQL bodies; OAuth 2.0 (moved from M3), Digest, AWS SigV4 and OAuth 1.0 auth
 - [ ] Request settings (timeout, TLS, proxy, client certificates), cookie manager
 - [ ] Code snippets in other languages, history
@@ -84,7 +86,7 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 ## M9 — Release & distribution
 - [ ] GitHub Actions: test and build on Windows, macOS and Linux
 - [ ] Installers: `.msi`/winget, `.dmg`/Homebrew cask, AppImage/Flatpak/`.deb`, using the M3 icons
-- [ ] Keep the release binary under ~40 MB (27.7 MB today); take easy wins, never at the cost of speed or features
+- [ ] Keep the release binary under ~40 MB (31.2 MB today); take easy wins, never at the cost of speed or features
 - [ ] Signed Windows builds (so Smart App Control allows them) and notarized macOS builds
 - [ ] Docs site and a launch post (r/rust, Hacker News)
 

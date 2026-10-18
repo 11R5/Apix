@@ -18,6 +18,9 @@
   collections and projects can set auth once; requests inherit it.
 - **Responses:** status, timing (TTFB and total), size, highlighted and foldable JSON,
   raw and headers views. A 100 MB JSON response opens in about a third of a second.
+- **Network tab:** where the time went (DNS, connect, waiting, download), the server
+  and local address, interface, gateway, DNS servers, proxy, redirects and the
+  server certificate with its days left.
 - **Collections and projects:** a sidebar built from the files on disk, with new,
   rename, duplicate and delete (to the trash); drag a request or folder to move it.
   Projects group collections, share environments, and can show the sidebar as
@@ -67,6 +70,7 @@ cargo build --release          # optimized binaries in target/release
 ```sh
 apix send examples/jsonplaceholder/users/list-users.apix
 apix send examples/jsonplaceholder/health.apix --env local --var token=abc -i
+apix send examples/jsonplaceholder/health.apix --network     # DNS, connection, TLS certificate, local side
 apix run examples/jsonplaceholder
 apix shell examples/jsonplaceholder/users/create-user.apix --as powershell   # or bash, cmd
 ```

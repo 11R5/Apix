@@ -19,7 +19,7 @@ no WebView and no Electron.
    Only the visible rows are laid out (virtual lists), and the body is parsed
    lazily.
 5. **Light and fast to start.** Speed and features come before size. The release
-   binary stays under about 40 MB (27.7 MB today; Electron apps are 300 MB+) and
+   binary stays under about 40 MB (31.2 MB today; Electron apps are 300 MB+) and
    opens a window in under 150 ms.
 
 ## Crates
@@ -28,7 +28,8 @@ no WebView and no Electron.
 crates/
 ├── apix-core     request model, {{variables}} and {{$dynamic}} values, on-disk format,
 │                 projects, environments and secrets, tree and file operations
-├── apix-http     HTTP engine: reqwest + rustls, timings, response capture
+├── apix-http     HTTP engine: reqwest + rustls, timings, response capture, network trace
+│                 (DNS, connection setup, redirects, certificate, local interface)
 ├── apix-import   Postman v2.0/v2.1 collections and environments → Apix collections
 ├── apix-codegen  requests ↔ shell commands: curl (bash), curl.exe (cmd), PowerShell; parses pasted curl
 ├── apix-vault    encrypted collections: per-file XChaCha20-Poly1305, Argon2id, recovery key
@@ -43,7 +44,7 @@ actions and key bindings), `workspace/collections.rs` (sidebar, projects,
 file operations, import, file watching), `workspace/env_editor.rs` (the
 variables dialog), `workspace/auth_editor.rs` (the Auth tab and the folder/collection/project
 Auth dialog), `workspace/palette.rs` (the command palette and its fuzzy matcher),
-`workspace/vault_ui.rs` (unlock, lock and auto-lock, encrypt, decrypt, change
+`workspace/network.rs` (the response's Network tab), `workspace/vault_ui.rs` (unlock, lock and auto-lock, encrypt, decrypt, change
 password, recovery key), `assets.rs` (gpui-kit icons plus the two lock icons),
 `workspace/menu_bar.rs` (File/Request/Environment/View/Help in the title bar;
 the buttons `occlude()` the title bar's drag area so Windows hands them the
@@ -244,7 +245,7 @@ about 407 MB with the body loaded, against 69 MB idle.
 |-------------------------------------|-------------------|-----------------------------|
 | Cold start to first frame           | < 150 ms          | window handle at ~340 ms, not yet profiled |
 | Idle RAM                            | < 60 MB           | 69 MB |
-| Release binary                      | < 40 MB           | 27.7 MB |
+| Release binary                      | < 40 MB           | 31.2 MB |
 | Input to paint latency              | 1 frame (≤ 8 ms at 120 Hz) | not measured |
 | Open and scroll a 100 MB JSON body  | no dropped frames | opens in ~0.33 s; frame times not measured |
 
