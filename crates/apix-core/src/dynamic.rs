@@ -136,8 +136,8 @@ fn now_millis() -> i64 {
         .unwrap_or_default()
 }
 
-/// Unix milliseconds → `2026-10-17T12:34:56.789Z`.
-fn iso8601(millis: i64) -> String {
+/// Unix milliseconds → `2026-10-17T12:34:56.789Z` (UTC).
+pub fn iso8601(millis: i64) -> String {
     let secs = millis.div_euclid(1000);
     let ms = millis.rem_euclid(1000);
     let days = secs.div_euclid(86_400);

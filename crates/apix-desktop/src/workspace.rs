@@ -5,6 +5,7 @@ mod collections;
 mod drag;
 mod env_editor;
 mod menu_bar;
+mod network;
 mod palette;
 mod shell_copy;
 mod tabs;
@@ -192,6 +193,8 @@ struct Finished {
     /// Too big for the code editor; shown in the virtualized viewer.
     large: bool,
     json: bool,
+    /// This machine's side of the connection, read once per response.
+    local: apix_http::LocalNetwork,
 }
 
 impl Finished {
@@ -213,12 +216,14 @@ impl Finished {
                 (doc.clone(), Some(doc))
             }
         };
+        let local = apix_http::local_network(response.trace.local_addr.map(|a| a.ip()));
         Self {
             response,
             pretty,
             raw,
             large,
             json,
+            local,
         }
     }
 }
@@ -1013,6 +1018,7 @@ impl Workspace {
                     format!("Headers {}", response.headers.len()).into();
                 let content = match (&self.large_view, self.response_tab) {
                     (_, 2) => self.render_response_headers(response).into_any_element(),
+                    (_, 3) => self.render_network(done).into_any_element(),
                     (Some(view), _) => view.clone().into_any_element(),
                     (None, _) if done.large => centered(
                         h_flex()
@@ -1066,6 +1072,7 @@ impl Workspace {
                             .child(Tab::new().label("Pretty"))
                             .child(Tab::new().label("Raw"))
                             .child(Tab::new().label(headers_label))
+                            .child(Tab::new().label("Network"))
                             .on_click(cx.listener(|this, ix: &usize, window, cx| {
                                 this.set_response_tab(*ix, window, cx)
                             })),

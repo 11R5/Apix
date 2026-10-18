@@ -28,7 +28,8 @@ no WebView and no Electron.
 crates/
 ├── apix-core     request model, {{variables}} and {{$dynamic}} values, on-disk format,
 │                 projects, environments and secrets, tree and file operations
-├── apix-http     HTTP engine: reqwest + rustls, timings, response capture
+├── apix-http     HTTP engine: reqwest + rustls, timings, response capture, network trace
+│                 (DNS, connection setup, redirects, certificate, local interface)
 ├── apix-import   Postman v2.0/v2.1 collections and environments → Apix collections
 ├── apix-codegen  requests ↔ shell commands: curl (bash), curl.exe (cmd), PowerShell; parses pasted curl
 ├── apix-vault    encrypted collections: per-file XChaCha20-Poly1305, Argon2id, recovery key
@@ -43,7 +44,7 @@ actions and key bindings), `workspace/collections.rs` (sidebar, projects,
 file operations, import, file watching), `workspace/env_editor.rs` (the
 variables dialog), `workspace/auth_editor.rs` (the Auth tab and the folder/collection/project
 Auth dialog), `workspace/palette.rs` (the command palette and its fuzzy matcher),
-`workspace/vault_ui.rs` (unlock, lock and auto-lock, encrypt, decrypt, change
+`workspace/network.rs` (the response's Network tab), `workspace/vault_ui.rs` (unlock, lock and auto-lock, encrypt, decrypt, change
 password, recovery key), `assets.rs` (gpui-kit icons plus the two lock icons),
 `workspace/menu_bar.rs` (File/Request/Environment/View/Help in the title bar;
 the buttons `occlude()` the title bar's drag area so Windows hands them the

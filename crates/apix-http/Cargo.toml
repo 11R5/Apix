@@ -9,7 +9,17 @@ repository.workspace = true
 [dependencies]
 apix-core.workspace = true
 bytes.workspace = true
-reqwest.workspace = true
+reqwest = { workspace = true, features = ["rustls-tls"] }
+# The connection details reqwest keeps in a response (local and remote address).
+hyper-util = { version = "0.1", features = ["client-legacy"] }
+# Local interfaces, default gateway and DNS servers for the network inspector.
+netdev = "0"
+tokio = { workspace = true, features = ["net"] }
+# Times connection setup inside reqwest.
+tower-layer = "0.3"
+tower-service = "0.3"
+# Reads the server certificate.
+x509-parser = "0"
 thiserror.workspace = true
 
 [dev-dependencies]
