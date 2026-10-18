@@ -1,0 +1,415 @@
+_version: 1
+app.error_with_cause: "%{error}：%{cause}"
+app.status.collections: "%{count} 个集合"
+app.status.env: "环境：%{name}"
+app.status.no_collection: 无集合
+app.status.no_collections: 尚无集合
+app.status.one_collection: 1 个集合
+app.status.one_request: 1 个请求
+app.status.requests: "%{count} 个请求"
+app.status.shortcuts: "%{palette} 命令  ·  %{send} 发送  ·  Esc 取消"
+app.status.unsaved: 有未保存的更改 · %{key} 保存
+auth.add_to: 添加到
+auth.client_auth: 客户端认证
+auth.client_basic: Basic 认证请求头
+auth.client_body: 放在请求体中
+auth.describe.aws: "%{region} 的 %{service}"
+auth.describe.consumer_key: "Consumer Key：%{key}"
+auth.describe.key_in_header: "请求头中的 %{key}"
+auth.describe.key_in_query: "查询字符串中的 %{key}"
+auth.describe.oauth2: "%{grant}，令牌来自 %{url}"
+auth.describe.token: "令牌：%{token}"
+auth.describe.token_set: "令牌：已设置"
+auth.describe.username: "用户名：%{name}"
+auth.dialog.collection_note: 此集合中未单独设置认证的请求将使用此设置。
+auth.dialog.collection_title: 集合“%{name}”的认证
+auth.dialog.folder_note: 此文件夹中未单独设置认证的请求将使用此设置。
+auth.dialog.folder_title: 文件夹“%{name}”的认证
+auth.dialog.project_note: 此项目中未单独设置认证的请求将使用此设置。
+auth.dialog.project_title: 项目“%{name}”的认证
+auth.field.access_key: 访问密钥
+auth.field.access_token: 访问令牌
+auth.field.auth_url: 授权 URL
+auth.field.client_id: 客户端 ID
+auth.field.client_secret: 客户端密钥
+auth.field.consumer_key: Consumer Key
+auth.field.consumer_secret: Consumer Secret
+auth.field.key: 键
+auth.field.password: 密码
+auth.field.realm: Realm
+auth.field.redirect_url: 重定向 URL
+auth.field.region: 区域
+auth.field.scope: 作用域
+auth.field.secret_key: 秘密访问密钥
+auth.field.service: 服务
+auth.field.session_token: 会话令牌
+auth.field.token: 令牌
+auth.field.token_secret: Token Secret
+auth.field.token_url: 令牌 URL
+auth.field.username: 用户名
+auth.field.value: 值
+auth.grant.authorization_code: 授权码
+auth.grant.client_credentials: 客户端凭据
+auth.grant.password: 密码
+auth.grant_type: 授权类型
+auth.hint.access_key: "例如 {{aws_access_key}}"
+auth.hint.client_secret: 公共客户端请留空
+auth.hint.key: 名称，例如 X-API-Key
+auth.hint.optional: 可选
+auth.hint.redirect_url: "留空：使用 http://127.0.0.1 上的空闲端口"
+auth.hint.region: 例如 eu-central-1
+auth.hint.scope: 以空格分隔，例如 read write
+auth.hint.service: 例如 execute-api、s3、lambda
+auth.hint.session_token: 仅用于临时凭据
+auth.hint.token: "令牌，例如 {{token}}"
+auth.hint.value: "值，例如 {{apiKey}}"
+auth.in_header: 请求头
+auth.in_query: 查询参数
+auth.inherit.collection_none: 上级未设置认证，因此不会发送认证。可在项目菜单中为整个项目设置（项目认证…）。
+auth.inherit.from_collection: 继承集合“%{name}”的设置：%{what}。
+auth.inherit.from_folder: 继承文件夹“%{name}”的设置：%{what}。
+auth.inherit.from_project: 继承项目“%{name}”的设置：%{what}。
+auth.inherit.project_none: 继承设置的请求不会发送认证。
+auth.inherit.request_none: 上级未设置认证，因此不会发送认证。可通过文件夹或集合的右键菜单设置（认证…）。
+auth.kind.api_key: API 密钥
+auth.kind.aws: AWS 签名
+auth.kind.basic: Basic 认证
+auth.kind.bearer: Bearer 令牌
+auth.kind.digest: Digest 认证
+auth.kind.inherit: 继承上级
+auth.kind.none: 无认证
+auth.no_auth.collection: 不发送认证，即使项目为此集合设置了认证。
+auth.no_auth.folder: 不发送认证，即使上级文件夹或集合为此文件夹设置了认证。
+auth.no_auth.project: 继承设置的请求不发送认证。
+auth.no_auth.request: 不发送认证，即使文件夹或集合为此请求设置了认证。
+auth.note.aws: 每次发送都使用 AWS Signature Version 4 签名。
+auth.note.bearer: "以 Authorization: Bearer <token> 发送。"
+auth.note.digest: Apix 会响应服务器的 Digest 质询（MD5 或 SHA-256）。
+auth.note.oauth1: 每次发送都使用新的 nonce 和时间戳签名。
+auth.note.oauth2: Apix 会自动获取令牌，并以 Bearer 令牌发送。令牌仅保存在内存中，不会写入磁盘。
+auth.note.variables: "值中可使用 {{variables}}。"
+auth.signature: 签名
+auth.token.expired: 令牌已过期，下次发送时将获取新令牌。
+auth.token.forget: 清除
+auth.token.get_new: 获取新令牌
+auth.token.getting: 正在获取令牌…
+auth.token.none: 尚无令牌，首次发送时将自动获取。
+auth.token.ready: 令牌已就绪。
+auth.token.valid_for: 令牌已就绪，有效期 %{time}。
+auth.token.waiting_browser: 正在等待在浏览器中登录…
+auth.type: 类型
+auth.use_pkce: 使用 PKCE（推荐）
+auth.what.api_key: API 密钥
+auth.what.aws: AWS 签名
+auth.what.basic: Basic 认证
+auth.what.bearer: Bearer 令牌
+auth.what.digest: Digest 认证
+auth.what.none: 无认证
+body.binary_hint: 文件的字节即为请求体。Content-Type 默认为 application/octet-stream，可在请求头中另行设置。
+body.binary_placeholder: 要发送的文件，例如 data/upload.bin
+body.binary_size: "%{size} · 原样发送"
+body.choose: 选择…
+body.choose_file: 选择文件
+body.choose_files: 选择多个文件
+body.file_not_found: 找不到文件
+body.file_path: 文件路径
+body.form_hint: 以 application/x-www-form-urlencoded 发送，与 HTML 表单相同。
+body.graphql_query: 查询
+body.graphql_variables: 变量（JSON）
+body.invalid_json: 不是有效的 JSON
+body.kind.binary: 二进制
+body.kind.form: 表单
+body.kind.none: 无
+body.kind.text: 文本
+body.multipart_hint: 以 multipart/form-data 发送。将字段切换为“文件”即可上传文件；集合内的路径会保存为相对于请求的路径。
+body.none_hint: 此请求没有请求体。
+body.part_file: 文件
+body.part_text: 文本
+body.send_file_instead: 改为发送文件
+body.send_text_instead: 改为发送文本
+chips.add_with: 按 %{key} 添加（变量）。
+chips.dynamic: "动态：每次发送都生成新值"
+chips.empty: （空）
+chips.missing_in_env: 环境“%{env}”中未定义。
+chips.missing_no_env: 未定义，且未选择环境。
+chips.scope.collection: 集合“%{name}”
+chips.scope.environment: 环境“%{name}”
+chips.scope.environment_of: “%{collection}”的环境“%{name}”
+chips.scope.project: 项目“%{name}”
+chips.secret_scope: "%{scope} · 机密（.local.toml）"
+chips.set_for_run: 为本次运行设置
+collection.choose_folder: 选择文件夹…
+collection.create: 创建
+collection.create_collection: 创建集合
+collection.create_collection_in: 集合创建位置
+collection.create_project_in: 项目创建位置
+collection.default_name: 集合
+collection.delete: 删除
+collection.delete_folder_permanent: “%{name}”及其中所有内容将被永久删除（加密集合没有回收站）。
+collection.delete_folder_title: 删除文件夹？
+collection.delete_folder_trash: “%{name}”及其中所有内容将被移到回收站。
+collection.delete_request_permanent: “%{name}”将被永久删除（加密集合没有回收站）。
+collection.delete_request_title: 删除请求？
+collection.delete_request_trash: “%{name}”将被移到回收站。
+collection.dont_save: 不保存
+collection.new_collection_title: 新建集合
+collection.new_folder_title: 新建文件夹
+collection.new_project_title: 新建项目
+collection.new_request_name: 新请求
+collection.no_root: "%{path} 及其上级目录中均没有 apix.toml 或 apix-project.toml。"
+collection.open_first: 请先打开或创建一个集合（%{key}）。
+collection.open_prompt: 打开集合
+collection.rename: 重命名
+collection.rename_collection_title: 重命名集合
+collection.rename_folder_title: 重命名文件夹
+collection.rename_request_title: 重命名请求
+collection.start_here_text: "%{path} 中还没有 apix.toml。Apix 将创建一个，请求会以 .apix 文件保存在此文件夹中。"
+collection.start_here_title: 在此新建集合？
+collection.unsaved_text: 是否先保存对“%{name}”的更改？
+collection.unsaved_title: 未保存的更改
+copy.as_shell: 复制为 %{shell}
+copy.copied: 已复制为 %{shell}。
+copy.copied_missing: "已复制为 %{shell}。以下变量未定义，保留为 {{…}}：%{names}。"
+copy.curl_filled: 已根据粘贴的 curl 命令填写请求。
+copy.curl_imported: 已导入 curl
+dialog.cancel: 取消
+dialog.close: 关闭
+dialog.save: 保存
+env.add_environment: 添加环境
+env.add_variable: 添加变量
+env.delete: 删除
+env.dialog_title: 变量
+env.dynamic_variables: 动态变量
+env.error.defined_twice: "%{key} 被定义了两次。"
+env.error.exists: 已存在名为 %{name} 的环境。
+env.error.name_clash: 将有两个环境都命名为 %{name}。
+env.error.needs_name: 环境需要名称。
+env.hint.dynamic: 点击名称即可复制。每次使用都会生成新值；若自定义了同名变量，则以自定义变量为准。
+env.hint.environment: 机密仅保存在本机的 %{name}.local.toml 中，git 会忽略该文件。
+env.hint.shared: 共享变量适用于所有环境；环境中的值优先。
+env.none: 无环境
+env.placeholder.name: 名称
+env.placeholder.new_environment: 新建环境…
+env.placeholder.value: 值
+env.secret: 机密
+env.secret_tooltip: 仅保存在本机的 .local.toml 文件中
+env.section.built_in: 内置
+env.section.collection_only: "仅 %{name}"
+env.section.environments: 环境
+env.section.shared: 共享
+env.title.collection: "%{name} 变量"
+env.title.environment: 环境
+env.title.project: 项目变量
+env.undo_delete: 撤销删除
+import.collection_done: 已导入 Postman 集合
+import.environment_done: 已导入环境
+import.environment_needs_open: 请先打开此环境所属的集合或项目，然后再导入。
+import.environment_saved: “%{title}”已保存为 environments/%{name}.toml，包含 %{count} 个变量。
+import.environment_saved_with_secrets: “%{title}”已保存为 environments/%{name}.toml，包含 %{count} 个变量。%{secrets} 个机密已存入 %{name}.local.toml，git 会忽略该文件。
+import.prompt: 导入 Postman 导出文件
+menu.active_environment: 当前环境
+menu.cancel: 取消
+menu.close_tab: 关闭标签页
+menu.collection_auth: 集合认证…
+menu.command_palette: 命令面板…
+menu.copy_as: 复制为
+menu.documentation: 文档
+menu.encrypt_collection: 加密此集合…
+menu.environment: 环境
+menu.file: 文件
+menu.group_by: 侧边栏分组方式
+menu.group_collection: 集合
+menu.group_environment: 环境
+menu.help: 帮助
+menu.import_postman: 从 Postman 导入…
+menu.lock_collections: 锁定加密集合
+menu.method: 方法
+menu.new_collection: 新建集合…
+menu.new_encrypted_collection: 新建加密集合…
+menu.new_folder: 新建文件夹…
+menu.new_project: 新建项目…
+menu.new_request: 新建请求
+menu.new_request_with_method: 按方法新建请求
+menu.next_tab: 下一个标签页
+menu.open: 打开…
+menu.open_recent: 最近打开
+menu.previous_tab: 上一个标签页
+menu.project_auth: 项目认证…
+menu.quit: 退出
+menu.report_problem: 报告问题
+menu.request: 请求
+menu.save: 保存
+menu.send: 发送
+menu.settings: 设置…
+menu.source_code: 源代码
+menu.variables: 变量和环境…
+menu.view: 视图
+network.cert.days_left: "剩余 %{count} 天"
+network.cert.engine_note: HTTP 引擎只报告服务器证书，不报告 TLS 版本或加密套件。
+network.cert.expired_days_ago: 已于 %{count} 天前过期
+network.cert.expired_one_day_ago: 已于 1 天前过期
+network.cert.issued_by: 颁发者
+network.cert.issued_to: 颁发给
+network.cert.names: 名称
+network.cert.not_reported: 已加密，但未报告证书。
+network.cert.one_day_left: 剩余 1 天
+network.cert.valid: 有效期
+network.cert.valid_range: "%{from} 至 %{to}"
+network.connection.dns_servers: DNS 服务器
+network.connection.gateway: 网关
+network.connection.none_recorded: 未记录到新连接（复用了已有连接，或经过代理）。
+network.connection.proxy: 代理
+network.connection.proxy_from: "%{value}（来自 %{var}）"
+network.connection.proxy_none: 环境中未设置
+network.connection.server: 服务器
+network.connection.this_computer: 本机
+network.connection.unknown_address: 未知
+network.connection.unknown_interface: 未知接口
+network.connection.via: "%{address} 经由 %{via}"
+network.connection.via_vpn: "%{address} 经由 %{via} · VPN"
+network.dns.lookup: 查询
+network.dns.lookup_result: "%{host} → %{addrs}，用时 %{duration}"
+network.note: 说明
+network.plain_http: "明文 HTTP：所有内容均未加密。"
+network.redirect.followed: 已跟随
+network.section.certificate: 证书
+network.section.connection: 连接
+network.section.dns: DNS
+network.section.encryption: 加密
+network.section.redirects: 重定向
+network.section.timing: 耗时
+network.timing.connect: 连接（TCP + TLS）
+network.timing.dns: DNS 查询
+network.timing.download: 下载
+network.timing.summary: 总计 %{total} · 首字节用时 %{ttfb}
+network.timing.waiting: 等待服务器
+palette.copy_as: 复制为 %{format}
+palette.empty: 无匹配项。
+palette.environment: "环境：%{name}"
+palette.environment_none: "环境：无"
+palette.group.commands: 命令
+palette.group.requests: 请求
+palette.group_by_collection: 侧边栏按集合分组
+palette.group_by_environment: 侧边栏按环境分组
+palette.new_method_request: 新建 %{method} 请求
+palette.open_folder: 打开文件夹…
+palette.open_recent: "最近打开：%{name}"
+palette.placeholder: 搜索请求和命令…
+palette.save_request: 保存请求
+palette.send_request: 发送请求
+request.copy_as_tooltip: 复制为 cURL 或 PowerShell
+request.error.no_url: 请输入 URL 以发送请求。
+request.error.undefined_variable: 未定义变量 %{name}。可按 %{key} 定义（变量）。
+request.error.undefined_variables: "未定义的变量：%{names}。可按 %{key} 定义（变量）。"
+request.headers_hint: Content-Type 会根据请求体类型自动设置，除非在此处添加。
+request.params_hint: 查询参数会附加到 URL 后。
+request.tab.auth: 认证
+request.tab.auth_api_key: 认证 · API 密钥
+request.tab.auth_kind: 认证 · %{kind}
+request.tab.auth_none: 认证 · 无
+request.tab.body: 请求体
+request.tab.body_kind: 请求体 · %{kind}
+request.tab.headers: 请求头
+request.tab.headers_count: 请求头 %{count}
+request.tab.params: 参数
+request.tab.params_count: 参数 %{count}
+request.url_placeholder: "https://api.example.com/users   或   {{base_url}}/users"
+response.cancelled: 请求已取消。
+response.empty: 发送请求以查看响应
+response.failed: 请求失败
+response.lines: "%{count} 行"
+response.preparing_raw: 正在准备原始视图…
+response.send_hint: "%{key} 发送"
+response.sending: 正在发送…  按 Esc 取消
+response.tab.network: 网络
+response.tab.pretty: 美化
+response.tab.raw: 原始
+settings.auto_lock: 自动锁定加密集合
+settings.auto_lock_description: 空闲达到此时长后，加密集合将被锁定，需要重新输入密码。
+settings.auto_lock_hour: 1 小时后
+settings.auto_lock_minutes: "%{count} 分钟后"
+settings.auto_lock_never: 从不
+settings.language: 语言
+settings.language_description: 菜单、按钮和消息的语言。立即生效。
+settings.theme: 主题
+settings.theme_cyber: 赛博玻璃
+settings.theme_description: 窗口的配色。
+settings.theme_obsidian: 黑曜石
+settings.theme_restart: 下次启动 Apix 时生效。
+settings.title: 设置
+sidebar.auth: 认证…
+sidebar.change_password: 更改密码…
+sidebar.copy_as_shell: 复制为 %{shell}
+sidebar.drop_hint: 也可以将 Postman 导出文件或文件夹拖放到窗口中。
+sidebar.duplicate: 创建副本
+sidebar.edit_variables: 编辑变量…
+sidebar.edit_variables_tooltip: 编辑变量（%{key}）
+sidebar.empty: 空
+sidebar.encrypt: 加密…
+sidebar.import_postman: 从 Postman 导入
+sidebar.kind_collection: 集合
+sidebar.kind_project: 项目
+sidebar.lock: 锁定
+sidebar.move_to_trash: 移到回收站
+sidebar.new_folder: 新建文件夹
+sidebar.new_request_tooltip: 新建请求（%{key} 新建 GET 请求）
+sidebar.no_collections: "还没有集合。请使用上方菜单：%{item}"
+sidebar.no_environments: 此项目还没有环境。请在其 environments/ 文件夹中添加 test.toml 或 prod.toml。
+sidebar.no_requests: 还没有请求。按 %{key} 创建。
+sidebar.nothing_open: 未打开任何内容
+sidebar.open_folder: 打开文件夹
+sidebar.recent: 最近
+sidebar.remove_encryption: 移除加密…
+sidebar.rename: 重命名…
+sidebar.show_in_environment: 在环境中显示
+table.add: 添加
+table.key: 键
+table.value: 值
+time.hours_minutes: "%{hours} 小时 %{minutes} 分钟"
+time.minutes: "%{count} 分钟"
+vault.auto_locked: 加密集合已在空闲 %{count} 分钟后锁定。
+vault.change_password: 更改密码
+vault.change_password_note: 文件不会重新加密，只会更改用于解锁的密钥。
+vault.change_password_title: “%{name}”的新密码
+vault.create: 创建
+vault.decrypt: 移除加密
+vault.decrypt_description: 其文件将以明文写回，任何能访问该文件夹的人都可以读取。加密文件将移到回收站。
+vault.decrypt_title: 要移除“%{name}”的加密吗？
+vault.decrypted: 该集合已不再加密。
+vault.encrypt: 加密
+vault.encrypt_note: 所有文件都将使用此密码加密。之后明文文件会被移到回收站；清空回收站即可将其永久删除。如果该文件夹在 git 中，其历史记录仍保留明文文件。
+vault.encrypt_title: 加密“%{name}”
+vault.error.locked: 该集合已锁定。
+vault.error.mismatch: 两次输入的密码不一致。
+vault.error.no_name: 请为集合命名。
+vault.error.no_password: 请输入密码。
+vault.error.no_recovery_key: 请输入恢复密钥。
+vault.error.open_project_first: 请先打开一个项目，或使用 %{menu}。
+vault.error.too_short: 请至少使用 %{count} 个字符。
+vault.error.trash: "无法移到回收站：%{error}"
+vault.error.trash_encrypted: "无法将加密文件移到回收站：%{error}"
+vault.error.trash_plain: "无法将明文文件移到回收站：%{error}"
+vault.error.unlock_first: 请先解锁该集合。
+vault.locked: 已锁定
+vault.locked_title: 已锁定
+vault.name_placeholder: 集合名称
+vault.new_needs_project: 请打开一个项目以在其中创建加密集合，或使用 %{menu} 加密当前打开的集合。
+vault.new_note: 所有请求、环境和名称都会在磁盘上加密。你将获得一个恢复密钥，请妥善保管。
+vault.new_password_placeholder: 新密码（至少 %{count} 个字符）
+vault.new_title: 新建加密集合
+vault.password_changed: 密码已更改。恢复密钥仍然有效。
+vault.recovery.copy: 复制
+vault.recovery.done: 完成
+vault.recovery.intro: 如果忘记密码，可用此密钥打开集合。请将其存入密码管理器。Apix 只会显示这一次。
+vault.recovery.stored: 我已将恢复密钥妥善保存
+vault.recovery.title: 你的恢复密钥
+vault.recovery.warning: 如果既没有密码也没有此密钥，任何人（包括你自己）都无法打开该集合。
+vault.recovery_placeholder: 恢复密钥，例如 7K2M-9QXA-…
+vault.repeat_password: 再次输入密码
+vault.unlock: 解锁
+vault.unlock_note: 此集合已加密。它将保持解锁状态，直到你锁定它、退出 Apix 或空闲 %{count} 分钟。
+vault.unlock_note_no_auto_lock: 此集合已加密。它将保持解锁状态，直到你锁定它或退出 Apix。
+vault.unlock_title: 解锁“%{name}”
+vault.use_password: 改用密码
+vault.use_recovery: 忘记密码？使用恢复密钥
+vault.working: 正在处理…密钥派生需要一些时间，这是有意设计的。

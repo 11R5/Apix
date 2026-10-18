@@ -17,6 +17,19 @@ use gpui_kit::*;
 use super::auth_editor::AuthOwner;
 use super::{Workspace, key_hint};
 use crate::theme;
+use crate::tr;
+
+/// A command's name from the locale key, as `(current language, English)`:
+/// it shows in the current language and is also found by its English name.
+/// `name!("palette.copy_as", format = label)` for `%{format}`.
+macro_rules! name {
+    ($key:tt $(, $arg:ident = $value:expr)* $(,)?) => {
+        (
+            tr!($key $(, $arg = $value)*),
+            tr!($key, locale = "en" $(, $arg = $value)*),
+        )
+    };
+}
 
 type Run = Rc<dyn Fn(&mut Workspace, &mut Window, &mut Context<Workspace>)>;
 
@@ -26,6 +39,9 @@ const MAX_REQUESTS: usize = 40;
 #[derive(Clone)]
 struct Entry {
     label: String,
+    /// A command's English name, also searched when the UI is in another
+    /// language; empty when it is the label.
+    english: String,
     /// Muted text after the label: where a request lives, or a path.
     detail: String,
     method: Option<Method>,
@@ -36,9 +52,16 @@ struct Entry {
 }
 
 impl Entry {
-    fn command(label: impl Into<String>, run: Run) -> Self {
+    /// A command named by [`name!`].
+    fn command((label, english): (SharedString, SharedString), run: Run) -> Self {
+        let english = if english == label {
+            String::new()
+        } else {
+            english.to_string()
+        };
         Self {
-            label: label.into(),
+            label: label.to_string(),
+            english,
             detail: String::new(),
             method: None,
             keys: None,
@@ -53,11 +76,16 @@ impl Entry {
     }
 
     /// The best match of `query` in the label, or (ranked lower) in the
-    /// detail and label together.
+    /// English name, or in the detail and label together.
     fn score(&self, query: &str) -> Option<i32> {
         let in_label = fuzzy(query, &self.label);
+        let in_english = if self.english.is_empty() {
+            None
+        } else {
+            fuzzy(query, &self.english).map(|s| s - 2)
+        };
         let in_both = fuzzy(query, &format!("{} {}", self.detail, self.label)).map(|s| s - 6);
-        in_label.max(in_both)
+        in_label.max(in_english).max(in_both)
     }
 }
 
@@ -102,13 +130,16 @@ pub(super) struct CommandPalette {
 
 impl CommandPalette {
     /// The sections to show for the current query, best match first.
-    fn sections(&self) -> Vec<(&'static str, Vec<&Entry>)> {
+    fn sections(&self) -> Vec<(SharedString, Vec<&Entry>)> {
         [
             (
-                "Requests",
+                tr!("palette.group.requests"),
                 filter(&self.requests, &self.query, MAX_REQUESTS),
             ),
-            ("Commands", filter(&self.commands, &self.query, usize::MAX)),
+            (
+                tr!("palette.group.commands"),
+                filter(&self.commands, &self.query, usize::MAX),
+            ),
         ]
         .into_iter()
         .filter(|(_, entries)| !entries.is_empty())
@@ -198,7 +229,7 @@ impl Render for CommandPalette {
             .filterable(false)
             .bordered(false)
             .max_h(px(440.))
-            .placeholder("Search requests and commands…")
+            .placeholder(tr!("palette.placeholder"))
             .on_query(move |query, _, cx| {
                 let query = query.to_owned();
                 this.update(cx, |palette, cx| {
@@ -226,7 +257,7 @@ impl Render for CommandPalette {
                     .p_4()
                     .text_sm()
                     .text_color(colors.text_muted)
-                    .child("Nothing matches.")
+                    .child(tr!("palette.empty"))
             });
         for (label, entries) in self.sections() {
             command = command.group(
@@ -277,6 +308,7 @@ impl Workspace {
                 let open = path.clone();
                 Entry {
                     label: request.name.clone(),
+                    english: String::new(),
                     detail: self.location(path, root.as_deref()),
                     method: Some(request.method),
                     keys: None,
@@ -317,10 +349,12 @@ impl Workspace {
         let open = self.workspace_root().is_some();
         let mut out = Vec::new();
         if open {
-            out.push(Entry::command("Send request", run(Workspace::send)).keys("Enter"));
+            out.push(
+                Entry::command(name!("palette.send_request"), run(Workspace::send)).keys("Enter"),
+            );
             out.push(
                 Entry::command(
-                    "Save request",
+                    name!("palette.save_request"),
                     run(|ws, window, cx| {
                         ws.save(window, cx);
                     }),
@@ -328,37 +362,46 @@ impl Workspace {
                 .keys("S"),
             );
             if !self.tabs.is_empty() {
-                out.push(Entry::command("Close tab", run(Workspace::close_front_tab)).keys("W"));
+                out.push(
+                    Entry::command(name!("menu.close_tab"), run(Workspace::close_front_tab))
+                        .keys("W"),
+                );
             }
             out.push(
                 Entry::command(
-                    "New request",
+                    name!("menu.new_request"),
                     run(|ws, window, cx| ws.new_request(None, Method::Get, window, cx)),
                 )
                 .keys("N"),
             );
             for method in Method::ALL.into_iter().skip(1) {
                 out.push(Entry::command(
-                    format!("New {} request", method.as_str()),
+                    name!("palette.new_method_request", method = method.as_str()),
                     Rc::new(move |ws, window, cx| ws.new_request(None, method, window, cx)),
                 ));
             }
             out.push(Entry::command(
-                "New folder…",
+                name!("menu.new_folder"),
                 run(|ws, window, cx| ws.new_folder(None, window, cx)),
             ));
         }
         out.push(Entry::command(
-            "New collection…",
+            name!("menu.new_collection"),
             run(Workspace::prompt_new_collection),
         ));
         out.push(Entry::command(
-            "New project…",
+            name!("menu.new_project"),
             run(Workspace::prompt_new_project),
         ));
-        out.push(Entry::command("Open folder…", run(Workspace::prompt_open_collection)).keys("O"));
+        out.push(
+            Entry::command(
+                name!("palette.open_folder"),
+                run(Workspace::prompt_open_collection),
+            )
+            .keys("O"),
+        );
         out.push(Entry::command(
-            "Import from Postman…",
+            name!("menu.import_postman"),
             run(Workspace::prompt_import),
         ));
         if !open {
@@ -366,17 +409,13 @@ impl Workspace {
             return out;
         }
         out.push(
-            Entry::command(
-                "Variables and environments…",
-                run(Workspace::open_env_editor),
-            )
-            .keys("E"),
+            Entry::command(name!("menu.variables"), run(Workspace::open_env_editor)).keys("E"),
         );
         let current = self.environment.clone();
         out.push(Entry {
             checked: current.is_none(),
             ..Entry::command(
-                "Environment: none",
+                name!("palette.environment_none"),
                 run(|ws, window, cx| ws.set_environment(None, window, cx)),
             )
         });
@@ -385,7 +424,7 @@ impl Workspace {
             out.push(Entry {
                 checked: current.as_deref() == Some(name.as_str()),
                 ..Entry::command(
-                    format!("Environment: {name}"),
+                    name!("palette.environment", name = name),
                     Rc::new(move |ws, window, cx| {
                         ws.set_environment(Some(pick.clone()), window, cx)
                     }),
@@ -394,13 +433,19 @@ impl Workspace {
         }
         for shell in Shell::ALL {
             out.push(Entry::command(
-                format!("Copy as {}", shell.label()),
+                name!("palette.copy_as", format = shell.label()),
                 Rc::new(move |ws, window, cx| ws.copy_current_as(shell, window, cx)),
             ));
         }
         let owner = match (&self.project, self.collections.first()) {
-            (Some(p), _) => Some(("Project auth…", AuthOwner::Project(p.root.clone()))),
-            (None, Some(c)) => Some(("Collection auth…", AuthOwner::Collection(c.root.clone()))),
+            (Some(p), _) => Some((
+                name!("menu.project_auth"),
+                AuthOwner::Project(p.root.clone()),
+            )),
+            (None, Some(c)) => Some((
+                name!("menu.collection_auth"),
+                AuthOwner::Collection(c.root.clone()),
+            )),
             (None, None) => None,
         };
         if let Some((label, owner)) = owner {
@@ -411,8 +456,8 @@ impl Workspace {
         }
         if let Some(project) = &self.project {
             for (label, by) in [
-                ("Group sidebar by collection", GroupBy::Collection),
-                ("Group sidebar by environment", GroupBy::Environment),
+                (name!("palette.group_by_collection"), GroupBy::Collection),
+                (name!("palette.group_by_environment"), GroupBy::Environment),
             ] {
                 out.push(Entry {
                     checked: project.meta.group_by == by,
@@ -442,7 +487,7 @@ impl Workspace {
                 Entry {
                     detail: dir.display().to_string(),
                     ..Entry::command(
-                        format!("Open recent: {name}"),
+                        name!("palette.open_recent", name = name),
                         Rc::new(move |ws, window, cx| {
                             ws.open_or_create(target.clone(), window, cx)
                         }),

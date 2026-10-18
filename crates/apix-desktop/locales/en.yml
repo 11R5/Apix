@@ -1,0 +1,417 @@
+_version: 1
+# English, the source language. One `key: value` per line, sorted by key.
+# %{name} placeholders must stay the same in every language.
+app.error_with_cause: "%{error}: %{cause}"
+app.status.collections: "%{count} collections"
+app.status.env: "env: %{name}"
+app.status.no_collection: No collection
+app.status.no_collections: no collections yet
+app.status.one_collection: 1 collection
+app.status.one_request: 1 request
+app.status.requests: "%{count} requests"
+app.status.shortcuts: "%{palette} commands  ·  %{send} send  ·  Esc cancel"
+app.status.unsaved: Unsaved changes · %{key} save
+auth.add_to: Add to
+auth.client_auth: Client auth
+auth.client_basic: Basic auth header
+auth.client_body: In the body
+auth.describe.aws: "%{service} in %{region}"
+auth.describe.consumer_key: "Consumer key: %{key}"
+auth.describe.key_in_header: "%{key} in the headers"
+auth.describe.key_in_query: "%{key} in the query string"
+auth.describe.oauth2: "%{grant}, token from %{url}"
+auth.describe.token: "Token: %{token}"
+auth.describe.token_set: "Token: set"
+auth.describe.username: "Username: %{name}"
+auth.dialog.collection_note: Requests in this collection without their own auth use this.
+auth.dialog.collection_title: Auth for collection “%{name}”
+auth.dialog.folder_note: Requests in this folder without their own auth use this.
+auth.dialog.folder_title: Auth for folder “%{name}”
+auth.dialog.project_note: Requests in this project without their own auth use this.
+auth.dialog.project_title: Auth for project “%{name}”
+auth.field.access_key: Access key
+auth.field.access_token: Access token
+auth.field.auth_url: Auth URL
+auth.field.client_id: Client ID
+auth.field.client_secret: Client secret
+auth.field.consumer_key: Consumer key
+auth.field.consumer_secret: Consumer secret
+auth.field.key: Key
+auth.field.password: Password
+auth.field.realm: Realm
+auth.field.redirect_url: Redirect URL
+auth.field.region: Region
+auth.field.scope: Scope
+auth.field.secret_key: Secret key
+auth.field.service: Service
+auth.field.session_token: Session token
+auth.field.token: Token
+auth.field.token_secret: Token secret
+auth.field.token_url: Token URL
+auth.field.username: Username
+auth.field.value: Value
+auth.grant.authorization_code: Authorization code
+auth.grant.client_credentials: Client credentials
+auth.grant.password: Password
+auth.grant_type: Grant type
+auth.hint.access_key: "e.g. {{aws_access_key}}"
+auth.hint.client_secret: Empty for a public client
+auth.hint.key: Name, e.g. X-API-Key
+auth.hint.optional: Optional
+auth.hint.redirect_url: "Empty: a free port on http://127.0.0.1"
+auth.hint.region: e.g. eu-central-1
+auth.hint.scope: Space-separated, e.g. read write
+auth.hint.service: e.g. execute-api, s3, lambda
+auth.hint.session_token: Only for temporary credentials
+auth.hint.token: "Token, e.g. {{token}}"
+auth.hint.value: "Value, e.g. {{apiKey}}"
+auth.in_header: Header
+auth.in_query: Query params
+auth.inherit.collection_none: Nothing above sets auth, so none is sent. Set it for the whole project from the project menu (Project auth…).
+auth.inherit.from_collection: Uses %{what} from the collection “%{name}”.
+auth.inherit.from_folder: Uses %{what} from the folder “%{name}”.
+auth.inherit.from_project: Uses %{what} from the project “%{name}”.
+auth.inherit.project_none: Requests that inherit get no auth.
+auth.inherit.request_none: Nothing above sets auth, so none is sent. Set it on a folder or collection from its right-click menu (Auth…).
+auth.kind.api_key: API key
+auth.kind.aws: AWS Signature
+auth.kind.basic: Basic auth
+auth.kind.bearer: Bearer token
+auth.kind.digest: Digest auth
+auth.kind.inherit: Inherit from parent
+auth.kind.none: No auth
+auth.no_auth.collection: No auth is sent, even if the project sets one for this collection.
+auth.no_auth.folder: No auth is sent, even if a parent folder or the collection sets one for this folder.
+auth.no_auth.project: No auth is sent for requests that inherit.
+auth.no_auth.request: No auth is sent, even if a folder or collection sets one for this request.
+auth.note.aws: Every send is signed with AWS Signature Version 4.
+auth.note.bearer: "Sent as Authorization: Bearer <token>."
+auth.note.digest: Apix answers the server's Digest challenge (MD5 or SHA-256).
+auth.note.oauth1: Signed with a fresh nonce and timestamp on every send.
+auth.note.oauth2: Apix gets the token itself and sends it as a bearer token. Tokens stay in memory and are never written to disk.
+auth.note.variables: "Values can use {{variables}}."
+auth.signature: Signature
+auth.token.expired: The token has expired; the next send gets a new one.
+auth.token.forget: Forget
+auth.token.get_new: Get new token
+auth.token.getting: Getting a token…
+auth.token.none: No token yet. One is fetched on the first send.
+auth.token.ready: Token ready.
+auth.token.valid_for: Token ready, valid for %{time}.
+auth.token.waiting_browser: Waiting for the sign-in in your browser…
+auth.type: Type
+auth.use_pkce: Use PKCE (recommended)
+auth.what.api_key: an API key
+auth.what.aws: an AWS signature
+auth.what.basic: basic auth
+auth.what.bearer: a bearer token
+auth.what.digest: digest auth
+auth.what.none: no auth
+body.binary_hint: The file's bytes are the body. Content-Type defaults to application/octet-stream; set another in Headers.
+body.binary_placeholder: File to send, e.g. data/upload.bin
+body.binary_size: "%{size} · sent as is"
+body.choose: Choose…
+body.choose_file: Choose file
+body.choose_files: Choose files
+body.file_not_found: File not found
+body.file_path: File path
+body.form_hint: Sent as application/x-www-form-urlencoded, like an HTML form.
+body.graphql_query: Query
+body.graphql_variables: Variables (JSON)
+body.invalid_json: not valid JSON
+body.kind.binary: Binary
+body.kind.form: Form
+body.kind.none: None
+body.kind.text: Text
+body.multipart_hint: Sent as multipart/form-data. Switch a field to File to upload a file; paths inside the collection are saved relative to the request.
+body.none_hint: This request has no body.
+body.part_file: File
+body.part_text: Text
+body.send_file_instead: Send a file instead
+body.send_text_instead: Send text instead
+chips.add_with: Add it with %{key} (Variables).
+chips.dynamic: "Dynamic: a new value on every send"
+chips.empty: (empty)
+chips.missing_in_env: Not defined for environment “%{env}”.
+chips.missing_no_env: Not defined, and no environment is selected.
+chips.scope.collection: Collection “%{name}”
+chips.scope.environment: Environment “%{name}”
+chips.scope.environment_of: Environment “%{name}” of “%{collection}”
+chips.scope.project: Project “%{name}”
+chips.secret_scope: "%{scope} · secret (.local.toml)"
+chips.set_for_run: Set for this run
+collection.choose_folder: Choose folder…
+collection.create: Create
+collection.create_collection: Create collection
+collection.create_collection_in: Create the collection in
+collection.create_project_in: Create the project in
+collection.default_name: Collection
+collection.delete: Delete
+collection.delete_folder_permanent: “%{name}” and everything in it will be deleted for good (encrypted collections have no trash).
+collection.delete_folder_title: Delete folder?
+collection.delete_folder_trash: “%{name}” and everything in it will be moved to the trash.
+collection.delete_request_permanent: “%{name}” will be deleted for good (encrypted collections have no trash).
+collection.delete_request_title: Delete request?
+collection.delete_request_trash: “%{name}” will be moved to the trash.
+collection.dont_save: Don't save
+collection.new_collection_title: New collection
+collection.new_folder_title: New folder
+collection.new_project_title: New project
+collection.new_request_name: New request
+collection.no_root: No apix.toml or apix-project.toml in %{path} or its parents.
+collection.open_first: Open or create a collection first (%{key}).
+collection.open_prompt: Open collection
+collection.rename: Rename
+collection.rename_collection_title: Rename collection
+collection.rename_folder_title: Rename folder
+collection.rename_request_title: Rename request
+collection.start_here_text: "%{path} has no apix.toml yet. Apix will create one; requests are saved as .apix files in this folder."
+collection.start_here_title: Start a new collection here?
+collection.unsaved_text: Save your changes to “%{name}” first?
+collection.unsaved_title: Unsaved changes
+copy.as_shell: Copy as %{shell}
+copy.copied: Copied as %{shell}.
+copy.copied_missing: "Copied as %{shell}. Not defined, left as {{…}}: %{names}."
+copy.curl_filled: The request was filled in from the pasted curl command.
+copy.curl_imported: curl imported
+dialog.cancel: Cancel
+dialog.close: Close
+dialog.save: Save
+env.add_environment: Add environment
+env.add_variable: Add variable
+env.delete: Delete
+env.dialog_title: Variables
+env.dynamic_variables: Dynamic variables
+env.error.defined_twice: "%{key} is defined twice."
+env.error.exists: An environment named %{name} already exists.
+env.error.name_clash: Two environments would be named %{name}.
+env.error.needs_name: The environment needs a name.
+env.hint.dynamic: Click a name to copy it. Every use gets a new value; a variable you define with the same name wins.
+env.hint.environment: Secrets stay on this computer in %{name}.local.toml, which git ignores.
+env.hint.shared: Shared variables apply in every environment; an environment's value wins.
+env.none: No environment
+env.placeholder.name: name
+env.placeholder.new_environment: New environment…
+env.placeholder.value: value
+env.secret: Secret
+env.secret_tooltip: Saved only on this computer, in the .local.toml file
+env.section.built_in: Built in
+env.section.collection_only: "%{name} only"
+env.section.environments: Environments
+env.section.shared: Shared
+env.title.collection: "%{name} variables"
+env.title.environment: Environment
+env.title.project: Project variables
+env.undo_delete: Undo delete
+import.collection_done: Postman collection imported
+import.environment_done: Environment imported
+import.environment_needs_open: Open the collection or project this environment belongs to first, then import it.
+import.environment_saved: “%{title}” saved as environments/%{name}.toml with %{count} variables.
+import.environment_saved_with_secrets: “%{title}” saved as environments/%{name}.toml with %{count} variables. %{secrets} secrets went to %{name}.local.toml, which git ignores.
+import.prompt: Import Postman export
+menu.active_environment: Active environment
+menu.cancel: Cancel
+menu.close_tab: Close tab
+menu.collection_auth: Collection auth…
+menu.command_palette: Command palette…
+menu.copy_as: Copy as
+menu.documentation: Documentation
+menu.encrypt_collection: Encrypt this collection…
+menu.environment: Environment
+menu.file: File
+menu.group_by: Group the sidebar by
+menu.group_collection: Collection
+menu.group_environment: Environment
+menu.help: Help
+menu.import_postman: Import from Postman…
+menu.lock_collections: Lock encrypted collections
+menu.method: Method
+menu.new_collection: New collection…
+menu.new_encrypted_collection: New encrypted collection…
+menu.new_folder: New folder…
+menu.new_project: New project…
+menu.new_request: New request
+menu.new_request_with_method: New request with method
+menu.next_tab: Next tab
+menu.open: Open…
+menu.open_recent: Open recent
+menu.previous_tab: Previous tab
+menu.project_auth: Project auth…
+menu.quit: Quit
+menu.report_problem: Report a problem
+menu.request: Request
+menu.save: Save
+menu.send: Send
+menu.settings: Settings…
+menu.source_code: Source code
+menu.variables: Variables and environments…
+menu.view: View
+network.cert.days_left: "%{count} days left"
+network.cert.engine_note: The HTTP engine reports the server’s certificate, not the TLS version or cipher.
+network.cert.expired_days_ago: expired %{count} days ago
+network.cert.expired_one_day_ago: expired 1 day ago
+network.cert.issued_by: Issued by
+network.cert.issued_to: Issued to
+network.cert.names: Names
+network.cert.not_reported: Encrypted, but the certificate was not reported.
+network.cert.one_day_left: 1 day left
+network.cert.valid: Valid
+network.cert.valid_range: "%{from} to %{to}"
+network.connection.dns_servers: DNS servers
+network.connection.gateway: Gateway
+network.connection.none_recorded: No new connection was recorded (reused, or through a proxy).
+network.connection.proxy: Proxy
+network.connection.proxy_from: "%{value} (from %{var})"
+network.connection.proxy_none: none in the environment
+network.connection.server: Server
+network.connection.this_computer: This computer
+network.connection.unknown_address: unknown
+network.connection.unknown_interface: unknown interface
+network.connection.via: "%{address} via %{via}"
+network.connection.via_vpn: "%{address} via %{via} · VPN"
+network.dns.lookup: Lookup
+network.dns.lookup_result: "%{host} → %{addrs} in %{duration}"
+network.note: Note
+network.plain_http: "Plain HTTP: nothing is encrypted."
+network.redirect.followed: Followed
+network.section.certificate: Certificate
+network.section.connection: Connection
+network.section.dns: DNS
+network.section.encryption: Encryption
+network.section.redirects: Redirects
+network.section.timing: Timing
+network.timing.connect: Connect (TCP + TLS)
+network.timing.dns: DNS lookup
+network.timing.download: Download
+network.timing.summary: Total %{total} · first byte after %{ttfb}
+network.timing.waiting: Waiting for the server
+palette.copy_as: Copy as %{format}
+palette.empty: Nothing matches.
+palette.environment: "Environment: %{name}"
+palette.environment_none: "Environment: none"
+palette.group.commands: Commands
+palette.group.requests: Requests
+palette.group_by_collection: Group sidebar by collection
+palette.group_by_environment: Group sidebar by environment
+palette.new_method_request: New %{method} request
+palette.open_folder: Open folder…
+palette.open_recent: "Open recent: %{name}"
+palette.placeholder: Search requests and commands…
+palette.save_request: Save request
+palette.send_request: Send request
+request.copy_as_tooltip: Copy as cURL or PowerShell
+request.error.no_url: Enter a URL to send a request.
+request.error.undefined_variable: Undefined variable %{name}. Define it with %{key} (Variables).
+request.error.undefined_variables: "Undefined variables: %{names}. Define them with %{key} (Variables)."
+request.headers_hint: Content-Type is set from the body type unless you add one here.
+request.params_hint: Query parameters are appended to the URL.
+request.tab.auth: Auth
+request.tab.auth_api_key: Auth · API key
+request.tab.auth_kind: Auth · %{kind}
+request.tab.auth_none: Auth · none
+request.tab.body: Body
+request.tab.body_kind: Body · %{kind}
+request.tab.headers: Headers
+request.tab.headers_count: Headers %{count}
+request.tab.params: Params
+request.tab.params_count: Params %{count}
+request.url_placeholder: "https://api.example.com/users   or   {{base_url}}/users"
+response.cancelled: Request cancelled.
+response.empty: Send a request to see the response
+response.failed: Request failed
+response.lines: "%{count} lines"
+response.preparing_raw: Preparing the raw view…
+response.send_hint: "%{key} send"
+response.sending: Sending…  Esc to cancel
+response.tab.network: Network
+response.tab.pretty: Pretty
+response.tab.raw: Raw
+settings.auto_lock: Lock encrypted collections
+settings.auto_lock_description: After this much idle time, encrypted collections lock and need the password again.
+settings.auto_lock_hour: After 1 hour
+settings.auto_lock_minutes: After %{count} minutes
+settings.auto_lock_never: Never
+settings.language: Language
+settings.language_description: The language of menus, buttons and messages. Changes at once.
+settings.theme: Theme
+settings.theme_cyber: Cyber glass
+settings.theme_description: The colours of the window.
+settings.theme_obsidian: Obsidian
+settings.theme_restart: Applies the next time Apix starts.
+settings.title: Settings
+sidebar.auth: Auth…
+sidebar.change_password: Change password…
+sidebar.copy_as_shell: Copy as %{shell}
+sidebar.drop_hint: Or drop a Postman export or a folder onto the window.
+sidebar.duplicate: Duplicate
+sidebar.edit_variables: Edit variables…
+sidebar.edit_variables_tooltip: Edit variables (%{key})
+sidebar.empty: Empty
+sidebar.encrypt: Encrypt…
+sidebar.import_postman: Import from Postman
+sidebar.kind_collection: COLLECTION
+sidebar.kind_project: PROJECT
+sidebar.lock: Lock
+sidebar.move_to_trash: Move to trash
+sidebar.new_folder: New folder
+sidebar.new_request_tooltip: New request (%{key} for GET)
+sidebar.no_collections: "No collections yet. Use the menu above: %{item}"
+sidebar.no_environments: This project has no environments yet. Add test.toml or prod.toml to its environments/ folder.
+sidebar.no_requests: No requests yet. %{key} creates one.
+sidebar.nothing_open: Nothing open
+sidebar.open_folder: Open a folder
+sidebar.recent: RECENT
+sidebar.remove_encryption: Remove encryption…
+sidebar.rename: Rename…
+sidebar.show_in_environment: Show in environment
+table.add: Add
+table.key: Key
+table.value: Value
+time.hours_minutes: "%{hours} h %{minutes} min"
+time.minutes: "%{count} min"
+vault.auto_locked: Encrypted collections were locked after %{count} idle minutes.
+vault.change_password: Change password
+vault.change_password_note: Files are not re-encrypted; only the key that unlocks them changes.
+vault.change_password_title: New password for “%{name}”
+vault.create: Create
+vault.decrypt: Remove encryption
+vault.decrypt_description: Its files are written back in plain text, readable by anyone with access to the folder. The encrypted files go to the trash.
+vault.decrypt_title: Remove encryption from “%{name}”?
+vault.decrypted: The collection is no longer encrypted.
+vault.encrypt: Encrypt
+vault.encrypt_note: Every file is encrypted with this password. The plain files are moved to the trash afterwards; empty the trash to remove them for good. If the folder is in git, its history still holds the plain files.
+vault.encrypt_title: Encrypt “%{name}”
+vault.error.locked: The collection is locked.
+vault.error.mismatch: The two passwords are different.
+vault.error.no_name: Give the collection a name.
+vault.error.no_password: Enter the password.
+vault.error.no_recovery_key: Enter the recovery key.
+vault.error.open_project_first: Open a project first, or use %{menu}.
+vault.error.too_short: Use at least %{count} characters.
+vault.error.trash: "Could not move to the trash: %{error}"
+vault.error.trash_encrypted: "Could not move the encrypted files to the trash: %{error}"
+vault.error.trash_plain: "Could not move the plain files to the trash: %{error}"
+vault.error.unlock_first: Unlock the collection first.
+vault.locked: Locked
+vault.locked_title: Locked
+vault.name_placeholder: Collection name
+vault.new_needs_project: Open a project to create an encrypted collection in it, or encrypt the open collection with %{menu}.
+vault.new_note: Every request, environment and name is encrypted on disk. You will get a recovery key to keep somewhere safe.
+vault.new_password_placeholder: New password (%{count} characters or more)
+vault.new_title: New encrypted collection
+vault.password_changed: The password was changed. The recovery key still works.
+vault.recovery.copy: Copy
+vault.recovery.done: Done
+vault.recovery.intro: If the password is ever lost, this key opens the collection. Store it in a password manager. Apix shows it only now.
+vault.recovery.stored: I stored the recovery key somewhere safe
+vault.recovery.title: Your recovery key
+vault.recovery.warning: Without the password and without this key, nobody, including you, can open the collection.
+vault.recovery_placeholder: Recovery key, e.g. 7K2M-9QXA-…
+vault.repeat_password: Repeat the password
+vault.unlock: Unlock
+vault.unlock_note: This collection is encrypted. It stays unlocked until you lock it, quit Apix, or leave it idle for %{count} minutes.
+vault.unlock_note_no_auto_lock: This collection is encrypted. It stays unlocked until you lock it or quit Apix.
+vault.unlock_title: Unlock “%{name}”
+vault.use_password: Use the password instead
+vault.use_recovery: Forgot the password? Use the recovery key
+vault.working: Working… deriving the key takes a moment on purpose.

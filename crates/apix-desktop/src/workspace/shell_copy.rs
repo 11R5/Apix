@@ -10,6 +10,7 @@ use gpui_kit::component::notification::Notification;
 use gpui_kit::*;
 
 use super::Workspace;
+use crate::tr;
 
 /// A paste adds many characters at once; typing adds one. Below this jump
 /// a `curl ...` in the URL field is treated as typing and left alone.
@@ -37,14 +38,16 @@ impl Workspace {
             &resolved.request,
             shell,
         )));
-        let mut message = format!("Copied as {}.", shell.label());
-        if !resolved.missing.is_empty() {
+        let message = if resolved.missing.is_empty() {
+            tr!("copy.copied", shell = shell.label())
+        } else {
             let names: Vec<_> = resolved.missing.into_iter().collect();
-            message.push_str(&format!(
-                " Not defined, left as {{{{…}}}}: {}.",
-                names.join(", ")
-            ));
-        }
+            tr!(
+                "copy.copied_missing",
+                shell = shell.label(),
+                names = names.join(", ")
+            )
+        };
         window.push_notification(Notification::success(message), cx);
     }
 
@@ -97,15 +100,14 @@ impl Workspace {
                 request.description = self.base.description.clone();
                 self.fill_editor(&request, window, cx);
                 self.last_url_len = request.url.chars().count();
-                let mut message =
-                    String::from("The request was filled in from the pasted curl command.");
+                let mut message = String::from(tr!("copy.curl_filled"));
                 for warning in &import.warnings {
                     message.push_str("\n• ");
                     message.push_str(warning);
                 }
                 window.push_notification(
                     Notification::success(message)
-                        .title("curl imported")
+                        .title(tr!("copy.curl_imported"))
                         .autohide(import.warnings.is_empty()),
                     cx,
                 );
@@ -124,7 +126,7 @@ pub(super) fn copy_items(
     Shell::ALL.into_iter().fold(menu, |menu, shell| {
         let view = view.clone();
         menu.item(
-            PopupMenuItem::new(format!("Copy as {}", shell.label())).on_click(
+            PopupMenuItem::new(tr!("copy.as_shell", shell = shell.label())).on_click(
                 move |_, window, cx| {
                     view.update(cx, |this, cx| copy(this, shell, window, cx))
                         .ok();

@@ -8,6 +8,7 @@ mod env_editor;
 mod menu_bar;
 mod network;
 mod palette;
+mod settings_ui;
 mod shell_copy;
 mod tabs;
 mod var_chips;
@@ -37,8 +38,10 @@ use gpui_kit::*;
 
 use crate::large_view::{Document, LARGE_BODY_BYTES, LargeView};
 use crate::net;
+use crate::settings::Settings;
 use crate::state::AppState;
 use crate::theme::{self, Palette};
+use crate::tr;
 
 actions!(
     apix,
@@ -51,6 +54,7 @@ actions!(
         ImportFile,
         EditVariables,
         OpenPalette,
+        OpenSettings,
         CloseTab,
         NextTab,
         PrevTab,
@@ -78,6 +82,7 @@ pub fn bind_keys(cx: &mut App) {
         KeyBinding::new("secondary-e", EditVariables, Some(CONTEXT)),
         KeyBinding::new("secondary-k", OpenPalette, Some(CONTEXT)),
         KeyBinding::new("secondary-p", OpenPalette, Some(CONTEXT)),
+        KeyBinding::new("secondary-,", OpenSettings, Some(CONTEXT)),
         KeyBinding::new("secondary-w", CloseTab, Some(CONTEXT)),
         KeyBinding::new("ctrl-tab", NextTab, Some(CONTEXT)),
         KeyBinding::new("ctrl-shift-tab", PrevTab, Some(CONTEXT)),
@@ -95,9 +100,6 @@ pub fn bind_keys(cx: &mut App) {
 type MethodSelect = SelectState<Vec<&'static str>>;
 type EnvSelect = SelectState<Vec<SharedString>>;
 
-/// The first entry of the environment picker.
-const NO_ENVIRONMENT: &str = "No environment";
-
 /// One editable row of the Params or Headers table.
 struct KvRow {
     key: Entity<InputState>,
@@ -112,16 +114,25 @@ impl KvRow {
         Self {
             key: cx.new(|cx| {
                 InputState::new(window, cx)
-                    .placeholder("Key")
+                    .placeholder(tr!("table.key"))
                     .default_value(key)
             }),
             value: cx.new(|cx| {
                 InputState::new(window, cx)
-                    .placeholder("Value")
+                    .placeholder(tr!("table.value"))
                     .default_value(value)
             }),
             enabled: kv.enabled,
         }
+    }
+
+    fn retranslate(&self, window: &mut Window, cx: &mut App) {
+        self.key.update(cx, |state, cx| {
+            state.set_placeholder(tr!("table.key"), window, cx)
+        });
+        self.value.update(cx, |state, cx| {
+            state.set_placeholder(tr!("table.value"), window, cx)
+        });
     }
 
     /// Rows without a key are ignored, like Postman's trailing empty row.
@@ -231,6 +242,7 @@ pub struct Workspace {
     environment: Option<String>,
     env_select: Entity<EnvSelect>,
     app_state: AppState,
+    settings: Settings,
     /// The request as last loaded or saved; edits are compared to it.
     base: Request,
     /// The Auth tab.
@@ -274,20 +286,12 @@ impl Workspace {
     ) -> Self {
         let methods: Vec<&'static str> = Method::ALL.iter().map(|m| m.as_str()).collect();
         let method = cx.new(|cx| SelectState::new(methods, Some(IndexPath::new(0)), window, cx));
-        let url = cx.new(|cx| {
-            InputState::new(window, cx)
-                .placeholder("https://api.example.com/users   or   {{base_url}}/users")
-        });
+        let url =
+            cx.new(|cx| InputState::new(window, cx).placeholder(tr!("request.url_placeholder")));
         let workspace = cx.weak_entity();
         let body_editor = cx.new(|cx| body_editor::BodyEditor::new(palette, workspace, window, cx));
-        let env_select = cx.new(|cx| {
-            SelectState::new(
-                vec![SharedString::from(NO_ENVIRONMENT)],
-                Some(IndexPath::new(0)),
-                window,
-                cx,
-            )
-        });
+        let env_select = cx
+            .new(|cx| SelectState::new(vec![tr!("env.none")], Some(IndexPath::new(0)), window, cx));
         let response_body = cx.new(|cx| {
             let mut state = EditorState::new(window, cx).language("json");
             state.set_readonly(true, cx);
@@ -328,10 +332,12 @@ impl Workspace {
                 &env_select,
                 window,
                 |this, state, _: &SelectEvent<Vec<SharedString>>, window, cx| {
+                    // The first entry is "No environment", in any language.
+                    let state = state.read(cx);
                     let name = state
-                        .read(cx)
-                        .selected_value()
-                        .filter(|v| v.as_ref() != NO_ENVIRONMENT)
+                        .selected_index(cx)
+                        .filter(|ix| ix.row > 0)
+                        .and_then(|_| state.selected_value())
                         .map(|v| v.to_string());
                     this.set_environment(name, window, cx);
                 },
@@ -354,6 +360,7 @@ impl Workspace {
             environment: None,
             env_select,
             app_state: AppState::load(),
+            settings: Settings::load(),
             base: Request::default(),
             auth_editor,
             body_editor,
@@ -386,6 +393,23 @@ impl Workspace {
         }
         this.url.update(cx, |state, cx| state.focus(window, cx));
         this
+    }
+
+    /// After a language change: texts kept inside widgets (placeholders,
+    /// picker entries) are set again; everything else follows on the next frame.
+    pub(super) fn retranslate(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        self.url.update(cx, |state, cx| {
+            state.set_placeholder(tr!("request.url_placeholder"), window, cx)
+        });
+        for row in self.params.iter().chain(&self.headers) {
+            row.retranslate(window, cx);
+        }
+        self.auth_editor
+            .update(cx, |editor, cx| editor.retranslate(window, cx));
+        self.body_editor
+            .update(cx, |editor, cx| editor.retranslate(window, cx));
+        self.refresh_environments(window, cx);
+        cx.notify();
     }
 
     /// Opens `request` in the editor as the saved state (no unsaved changes).
@@ -487,20 +511,27 @@ impl Workspace {
     pub(super) fn send(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         let request = self.with_inherited_auth(self.build_request(cx), self.selected.as_deref());
         if request.url.is_empty() {
-            self.fail("Enter a URL to send a request.", cx);
+            self.fail(tr!("request.error.no_url"), cx);
             return;
         }
         let resolved = request.resolve(&self.vars);
         if !resolved.missing.is_empty() {
             let names: Vec<_> = resolved.missing.into_iter().collect();
-            self.fail(
-                format!(
-                    "Undefined variable(s): {}. Define them with {} (Variables).",
-                    names.join(", "),
-                    key_hint("E")
-                ),
-                cx,
-            );
+            let key = key_hint("E");
+            let message = if names.len() == 1 {
+                tr!(
+                    "request.error.undefined_variable",
+                    name = names[0],
+                    key = key
+                )
+            } else {
+                tr!(
+                    "request.error.undefined_variables",
+                    names = names.join(", "),
+                    key = key
+                )
+            };
+            self.fail(message, cx);
             return;
         }
 
@@ -641,7 +672,7 @@ impl Workspace {
 /// `error: cause`, for messages shown to the user.
 fn describe(err: &dyn std::error::Error) -> String {
     match err.source() {
-        Some(source) => format!("{err}: {source}"),
+        Some(source) => tr!("app.error_with_cause", error = err, cause = source).into(),
         None => err.to_string(),
     }
 }
@@ -688,13 +719,13 @@ impl Workspace {
             Button::new("cancel")
                 .small()
                 .icon(IconName::Close)
-                .label("Cancel")
+                .label(tr!("menu.cancel"))
                 .on_click(cx.listener(|this, _: &ClickEvent, _, cx| this.cancel(cx)))
         } else {
             Button::new("send")
                 .primary()
                 .small()
-                .label("Send")
+                .label(tr!("menu.send"))
                 .on_click(cx.listener(|this, _: &ClickEvent, window, cx| this.send(window, cx)))
         };
 
@@ -720,7 +751,7 @@ impl Workspace {
                     .ghost()
                     .small()
                     .icon(IconName::Copy)
-                    .tooltip("Copy as cURL or PowerShell")
+                    .tooltip(tr!("request.copy_as_tooltip"))
                     .dropdown_menu({
                         let view = cx.entity().downgrade();
                         move |menu, _, _| {
@@ -735,28 +766,31 @@ impl Workspace {
         let p = self.palette;
         let params = self.active_count(Table::Params, cx);
         let headers = self.active_count(Table::Headers, cx);
-        let label = |name: &str, n: usize| -> SharedString {
-            if n == 0 {
-                name.to_string().into()
-            } else {
-                format!("{name} {n}").into()
-            }
+        let params_label = match params {
+            0 => tr!("request.tab.params"),
+            n => tr!("request.tab.params_count", count = n),
         };
-        let body_label: SharedString = match self.body_editor.read(cx).kind() {
-            body_editor::BodyKind::None => "Body".into(),
-            kind => format!("Body · {}", kind.label()).into(),
+        let headers_label = match headers {
+            0 => tr!("request.tab.headers"),
+            n => tr!("request.tab.headers_count", count = n),
+        };
+        let body_label = match self.body_editor.read(cx).kind() {
+            body_editor::BodyKind::None => tr!("request.tab.body"),
+            kind => tr!("request.tab.body_kind", kind = kind.label()),
         };
 
-        let auth_label: SharedString = match self.auth_editor.read(cx).auth(cx) {
-            Auth::Inherit => "Auth".into(),
-            Auth::None => "Auth · none".into(),
-            Auth::Bearer { .. } => "Auth · Bearer".into(),
-            Auth::Basic { .. } => "Auth · Basic".into(),
-            Auth::ApiKey { .. } => "Auth · API key".into(),
-            Auth::Digest { .. } => "Auth · Digest".into(),
-            Auth::OAuth1(_) => "Auth · OAuth 1.0".into(),
-            Auth::OAuth2(_) => "Auth · OAuth 2.0".into(),
-            Auth::AwsSigV4(_) => "Auth · AWS".into(),
+        // Technical names stay as they are; only the frame is translated.
+        let auth_kind = |kind: &str| tr!("request.tab.auth_kind", kind = kind);
+        let auth_label = match self.auth_editor.read(cx).auth(cx) {
+            Auth::Inherit => tr!("request.tab.auth"),
+            Auth::None => tr!("request.tab.auth_none"),
+            Auth::Bearer { .. } => auth_kind("Bearer"),
+            Auth::Basic { .. } => auth_kind("Basic"),
+            Auth::ApiKey { .. } => tr!("request.tab.auth_api_key"),
+            Auth::Digest { .. } => auth_kind("Digest"),
+            Auth::OAuth1(_) => auth_kind("OAuth 1.0"),
+            Auth::OAuth2(_) => auth_kind("OAuth 2.0"),
+            Auth::AwsSigV4(_) => auth_kind("AWS"),
         };
 
         let content = match self.request_tab {
@@ -780,8 +814,8 @@ impl Workspace {
                 TabBar::new("request-tabs")
                     .underline()
                     .selected_index(self.request_tab)
-                    .child(Tab::new().label(label("Params", params)))
-                    .child(Tab::new().label(label("Headers", headers)))
+                    .child(Tab::new().label(params_label))
+                    .child(Tab::new().label(headers_label))
                     .child(Tab::new().label(auth_label))
                     .child(Tab::new().label(body_label))
                     .on_click(cx.listener(|this, ix: &usize, _, cx| {
@@ -843,7 +877,7 @@ impl Workspace {
                         .ghost()
                         .small()
                         .icon(IconName::Plus)
-                        .label("Add")
+                        .label(tr!("table.add"))
                         .on_click(cx.listener(move |this, _: &ClickEvent, window, cx| {
                             let row = KvRow::new(&KeyValue::new("", ""), window, cx);
                             this.rows_mut(table).push(row);
@@ -858,10 +892,8 @@ impl Workspace {
                         .text_xs()
                         .text_color(p.text_muted)
                         .child(match table {
-                            Table::Params => "Query parameters are appended to the URL.",
-                            Table::Headers => {
-                                "Content-Type is set from the body type unless you add one here."
-                            }
+                            Table::Params => tr!("request.params_hint"),
+                            Table::Headers => tr!("request.headers_hint"),
                         }),
                 )
             })
@@ -892,7 +924,7 @@ impl Workspace {
                 div()
                     .text_sm()
                     .text_color(p.text_muted)
-                    .child("Request cancelled.")
+                    .child(tr!("response.cancelled"))
                     .into_any_element(),
             )),
             ResponseState::Idle => shell.child(centered(
@@ -901,7 +933,7 @@ impl Workspace {
                     .gap_1()
                     .text_sm()
                     .text_color(p.text_muted)
-                    .child("Send a request to see the response")
+                    .child(tr!("response.empty"))
                     .child(div().text_xs().child(send_hint()))
                     .into_any_element(),
             )),
@@ -912,7 +944,7 @@ impl Workspace {
                     .text_sm()
                     .text_color(p.text_muted)
                     .child(Spinner::new().small().color(p.accent))
-                    .child("Sending…  Esc to cancel")
+                    .child(tr!("response.sending"))
                     .into_any_element(),
             )),
             ResponseState::Failed(message) => shell.child(centered(
@@ -924,7 +956,7 @@ impl Workspace {
                         div()
                             .font_weight(FontWeight::BOLD)
                             .text_color(p.err)
-                            .child("Request failed"),
+                            .child(tr!("response.failed")),
                     )
                     .child(div().text_color(p.text_muted).child(message.clone()))
                     .into_any_element(),
@@ -932,8 +964,8 @@ impl Workspace {
             ResponseState::Done(done) => {
                 let response = &done.response;
                 let status = p.status(response.status);
-                let headers_label: SharedString =
-                    format!("Headers {}", response.headers.len()).into();
+                let headers_label =
+                    tr!("request.tab.headers_count", count = response.headers.len());
                 let content = match (&self.large_view, self.response_tab) {
                     (_, 2) => self.render_response_headers(response).into_any_element(),
                     (_, 3) => self.render_network(done).into_any_element(),
@@ -945,15 +977,18 @@ impl Workspace {
                             .text_sm()
                             .text_color(p.text_muted)
                             .child(Spinner::new().small().color(p.accent))
-                            .child("Preparing the raw view…")
+                            .child(tr!("response.preparing_raw"))
                             .into_any_element(),
                     )
                     .into_any_element(),
                     (None, _) => Editor::new(&self.response_body).h_full().into_any_element(),
                 };
-                let viewer_note = done
-                    .large
-                    .then(|| format!("{} lines", group_digits(done.pretty.lines().into())));
+                let viewer_note = done.large.then(|| {
+                    tr!(
+                        "response.lines",
+                        count = group_digits(done.pretty.lines().into())
+                    )
+                });
                 shell
                     .child(
                         h_flex()
@@ -987,10 +1022,10 @@ impl Workspace {
                         TabBar::new("response-tabs")
                             .underline()
                             .selected_index(self.response_tab)
-                            .child(Tab::new().label("Pretty"))
-                            .child(Tab::new().label("Raw"))
+                            .child(Tab::new().label(tr!("response.tab.pretty")))
+                            .child(Tab::new().label(tr!("response.tab.raw")))
                             .child(Tab::new().label(headers_label))
-                            .child(Tab::new().label("Network"))
+                            .child(Tab::new().label(tr!("response.tab.network")))
                             .on_click(cx.listener(|this, ix: &usize, window, cx| {
                                 this.set_response_tab(*ix, window, cx)
                             })),
@@ -1026,36 +1061,49 @@ impl Workspace {
         let p = self.palette;
         let location = match &self.collection {
             Some(c) => {
-                let file = self
+                // Separate facts joined by dots, so each is translated whole.
+                let mut parts: Vec<String> = Vec::new();
+                match &self.project {
+                    Some(project) => {
+                        parts.push(project.meta.name.clone());
+                        parts.push(match self.collections.len() {
+                            1 => tr!("app.status.one_collection").into(),
+                            n => tr!("app.status.collections", count = n).into(),
+                        });
+                    }
+                    None => parts.push(c.meta.name.clone()),
+                }
+                parts.push(match self.requests.len() {
+                    1 => tr!("app.status.one_request").into(),
+                    n => tr!("app.status.requests", count = n).into(),
+                });
+                if let Some(rel) = self
                     .selected
                     .as_ref()
                     .and_then(|path| path.strip_prefix(&c.root).ok())
-                    .map(|rel| format!("  ·  {}", rel.display()))
-                    .unwrap_or_default();
-                let scope = match &self.project {
-                    Some(project) => format!(
-                        "{}  ·  {} collections",
-                        project.meta.name,
-                        self.collections.len()
-                    ),
-                    None => c.meta.name.clone(),
-                };
-                format!("{scope}  ·  {} requests{file}", self.requests.len())
+                {
+                    parts.push(rel.display().to_string());
+                }
+                parts.join("  ·  ")
             }
             None => match &self.project {
-                Some(project) => format!("{}  ·  no collections yet", project.meta.name),
-                None => "No collection".to_string(),
+                Some(project) => format!(
+                    "{}  ·  {}",
+                    project.meta.name,
+                    tr!("app.status.no_collections")
+                ),
+                None => tr!("app.status.no_collection").into(),
             },
         };
         let environment = self.environment.as_ref().map(|name| {
             div()
                 .text_color(if self.is_prod() { p.err } else { p.ok })
-                .child(format!("env: {name}"))
+                .child(tr!("app.status.env", name = name))
         });
         let unsaved = self.is_dirty(cx).then(|| {
             div()
                 .text_color(p.warn)
-                .child(format!("Unsaved changes · {} save", key_hint("S")))
+                .child(tr!("app.status.unsaved", key = key_hint("S")))
         });
         h_flex()
             .justify_between()
@@ -1070,10 +1118,10 @@ impl Workspace {
             .child(div().flex_1().min_w_0().truncate().child(location))
             .children(environment)
             .children(unsaved)
-            .child(format!(
-                "{} commands  ·  {} send  ·  Esc cancel",
-                key_hint("K"),
-                key_hint("Enter")
+            .child(tr!(
+                "app.status.shortcuts",
+                palette = key_hint("K"),
+                send = key_hint("Enter")
             ))
     }
 }
@@ -1088,8 +1136,8 @@ fn key_hint(key: &str) -> String {
     }
 }
 
-fn send_hint() -> String {
-    format!("{} send", key_hint("Enter"))
+fn send_hint() -> SharedString {
+    tr!("response.send_hint", key = key_hint("Enter"))
 }
 
 impl Render for Workspace {
@@ -1134,6 +1182,9 @@ impl Render for Workspace {
             .on_action(cx.listener(|this, _: &PrevTab, window, cx| this.cycle_tab(-1, window, cx)))
             .on_action(
                 cx.listener(|this, _: &OpenPalette, window, cx| this.open_palette(window, cx)),
+            )
+            .on_action(
+                cx.listener(|this, _: &OpenSettings, window, cx| this.open_settings(window, cx)),
             )
             // A click anywhere brings focus back inside the workspace (inputs
             // focus themselves first, so they keep it), so shortcuts keep working.

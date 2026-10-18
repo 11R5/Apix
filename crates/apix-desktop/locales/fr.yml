@@ -1,0 +1,415 @@
+_version: 1
+app.error_with_cause: "%{error} : %{cause}"
+app.status.collections: "%{count} collections"
+app.status.env: "env. : %{name}"
+app.status.no_collection: Aucune collection
+app.status.no_collections: aucune collection pour l'instant
+app.status.one_collection: 1 collection
+app.status.one_request: 1 requête
+app.status.requests: "%{count} requêtes"
+app.status.shortcuts: "%{palette} commandes  ·  %{send} envoyer  ·  Esc annuler"
+app.status.unsaved: Modifications non enregistrées · %{key} enregistrer
+auth.add_to: Ajouter à
+auth.client_auth: Authentification du client
+auth.client_basic: En-tête d'authentification Basic
+auth.client_body: Dans le corps
+auth.describe.aws: "%{service}, région %{region}"
+auth.describe.consumer_key: "Clé du consommateur : %{key}"
+auth.describe.key_in_header: "%{key} dans les en-têtes"
+auth.describe.key_in_query: "%{key} dans les paramètres d'URL"
+auth.describe.oauth2: "%{grant}, jeton obtenu via %{url}"
+auth.describe.token: "Jeton : %{token}"
+auth.describe.token_set: "Jeton : défini"
+auth.describe.username: "Nom d'utilisateur : %{name}"
+auth.dialog.collection_note: Les requêtes de cette collection sans authentification propre utilisent celle-ci.
+auth.dialog.collection_title: Authentification de la collection « %{name} »
+auth.dialog.folder_note: Les requêtes de ce dossier sans authentification propre utilisent celle-ci.
+auth.dialog.folder_title: Authentification du dossier « %{name} »
+auth.dialog.project_note: Les requêtes de ce projet sans authentification propre utilisent celle-ci.
+auth.dialog.project_title: Authentification du projet « %{name} »
+auth.field.access_key: Clé d'accès
+auth.field.access_token: Jeton d'accès
+auth.field.auth_url: URL d'autorisation
+auth.field.client_id: ID client
+auth.field.client_secret: Secret client
+auth.field.consumer_key: Clé du consommateur
+auth.field.consumer_secret: Secret du consommateur
+auth.field.key: Clé
+auth.field.password: Mot de passe
+auth.field.realm: Domaine (realm)
+auth.field.redirect_url: URL de redirection
+auth.field.region: Région
+auth.field.scope: Portée
+auth.field.secret_key: Clé secrète
+auth.field.service: Service
+auth.field.session_token: Jeton de session
+auth.field.token: Jeton
+auth.field.token_secret: Secret du jeton
+auth.field.token_url: URL du jeton
+auth.field.username: Nom d'utilisateur
+auth.field.value: Valeur
+auth.grant.authorization_code: Code d'autorisation
+auth.grant.client_credentials: Identifiants client
+auth.grant.password: Mot de passe
+auth.grant_type: Type d'octroi
+auth.hint.access_key: "ex. {{aws_access_key}}"
+auth.hint.client_secret: Vide pour un client public
+auth.hint.key: Nom, ex. X-API-Key
+auth.hint.optional: Facultatif
+auth.hint.redirect_url: "Vide : un port libre sur http://127.0.0.1"
+auth.hint.region: ex. eu-central-1
+auth.hint.scope: Séparées par des espaces, ex. read write
+auth.hint.service: ex. execute-api, s3, lambda
+auth.hint.session_token: Uniquement pour des identifiants temporaires
+auth.hint.token: "Jeton, ex. {{token}}"
+auth.hint.value: "Valeur, ex. {{apiKey}}"
+auth.in_header: En-tête
+auth.in_query: Paramètres d'URL
+auth.inherit.collection_none: Aucun niveau supérieur ne définit d'authentification, donc aucune n'est envoyée. Définissez-la pour tout le projet depuis le menu du projet (Authentification du projet…).
+auth.inherit.from_collection: Utilise %{what} de la collection « %{name} ».
+auth.inherit.from_folder: Utilise %{what} du dossier « %{name} ».
+auth.inherit.from_project: Utilise %{what} du projet « %{name} ».
+auth.inherit.project_none: Les requêtes qui héritent n'ont aucune authentification.
+auth.inherit.request_none: Aucun niveau supérieur ne définit d'authentification, donc aucune n'est envoyée. Définissez-la sur un dossier ou une collection depuis son menu contextuel (Authentification…).
+auth.kind.api_key: Clé d'API
+auth.kind.aws: AWS Signature
+auth.kind.basic: Authentification Basic
+auth.kind.bearer: Jeton Bearer
+auth.kind.digest: Authentification Digest
+auth.kind.inherit: Hériter du parent
+auth.kind.none: Aucune authentification
+auth.no_auth.collection: Aucune authentification n'est envoyée, même si le projet en définit une pour cette collection.
+auth.no_auth.folder: Aucune authentification n'est envoyée, même si un dossier parent ou la collection en définit une pour ce dossier.
+auth.no_auth.project: Aucune authentification n'est envoyée pour les requêtes qui héritent.
+auth.no_auth.request: Aucune authentification n'est envoyée, même si un dossier ou une collection en définit une pour cette requête.
+auth.note.aws: Chaque envoi est signé avec AWS Signature Version 4.
+auth.note.bearer: "Envoyé sous la forme Authorization: Bearer <token>."
+auth.note.digest: Apix répond au défi Digest du serveur (MD5 ou SHA-256).
+auth.note.oauth1: Signé avec un nonce et un horodatage nouveaux à chaque envoi.
+auth.note.oauth2: Apix obtient le jeton lui-même et l'envoie comme jeton Bearer. Les jetons restent en mémoire et ne sont jamais écrits sur le disque.
+auth.note.variables: "Les valeurs peuvent utiliser des {{variables}}."
+auth.signature: Signature
+auth.token.expired: Le jeton a expiré ; le prochain envoi en obtiendra un nouveau.
+auth.token.forget: Oublier
+auth.token.get_new: Obtenir un nouveau jeton
+auth.token.getting: Obtention d'un jeton…
+auth.token.none: Pas encore de jeton. Il sera obtenu au premier envoi.
+auth.token.ready: Jeton prêt.
+auth.token.valid_for: Jeton prêt, valide pendant %{time}.
+auth.token.waiting_browser: En attente de la connexion dans votre navigateur…
+auth.type: Type
+auth.use_pkce: Utiliser PKCE (recommandé)
+auth.what.api_key: une clé d'API
+auth.what.aws: une signature AWS
+auth.what.basic: l'authentification Basic
+auth.what.bearer: un jeton Bearer
+auth.what.digest: l'authentification Digest
+auth.what.none: aucune authentification
+body.binary_hint: Les octets du fichier forment le corps. Content-Type vaut application/octet-stream par défaut ; définissez-en un autre dans En-têtes.
+body.binary_placeholder: Fichier à envoyer, ex. data/upload.bin
+body.binary_size: "%{size} · envoyé tel quel"
+body.choose: Choisir…
+body.choose_file: Choisir un fichier
+body.choose_files: Choisir des fichiers
+body.file_not_found: Fichier introuvable
+body.file_path: Chemin du fichier
+body.form_hint: Envoyé en application/x-www-form-urlencoded, comme un formulaire HTML.
+body.graphql_query: Requête (query)
+body.graphql_variables: Variables (JSON)
+body.invalid_json: JSON non valide
+body.kind.binary: Binaire
+body.kind.form: Formulaire
+body.kind.none: Aucun
+body.kind.text: Texte
+body.multipart_hint: Envoyé en multipart/form-data. Passez un champ sur Fichier pour envoyer un fichier ; les chemins situés dans la collection sont enregistrés relativement à la requête.
+body.none_hint: Cette requête n'a pas de corps.
+body.part_file: Fichier
+body.part_text: Texte
+body.send_file_instead: Envoyer un fichier à la place
+body.send_text_instead: Envoyer du texte à la place
+chips.add_with: Ajoutez-la avec %{key} (Variables).
+chips.dynamic: "Dynamique : une nouvelle valeur à chaque envoi"
+chips.empty: (vide)
+chips.missing_in_env: Non définie pour l'environnement « %{env} ».
+chips.missing_no_env: Non définie, et aucun environnement n'est sélectionné.
+chips.scope.collection: Collection « %{name} »
+chips.scope.environment: Environnement « %{name} »
+chips.scope.environment_of: Environnement « %{name} » de « %{collection} »
+chips.scope.project: Projet « %{name} »
+chips.secret_scope: "%{scope} · secrète (.local.toml)"
+chips.set_for_run: Définir pour cette exécution
+collection.choose_folder: Choisir un dossier…
+collection.create: Créer
+collection.create_collection: Créer la collection
+collection.create_collection_in: Créer la collection dans
+collection.create_project_in: Créer le projet dans
+collection.default_name: Collection
+collection.delete: Supprimer
+collection.delete_folder_permanent: « %{name} » et tout son contenu seront supprimés définitivement (les collections chiffrées n'ont pas de corbeille).
+collection.delete_folder_title: Supprimer le dossier ?
+collection.delete_folder_trash: « %{name} » et tout son contenu seront placés dans la corbeille.
+collection.delete_request_permanent: « %{name} » sera supprimée définitivement (les collections chiffrées n'ont pas de corbeille).
+collection.delete_request_title: Supprimer la requête ?
+collection.delete_request_trash: « %{name} » sera placée dans la corbeille.
+collection.dont_save: Ne pas enregistrer
+collection.new_collection_title: Nouvelle collection
+collection.new_folder_title: Nouveau dossier
+collection.new_project_title: Nouveau projet
+collection.new_request_name: Nouvelle requête
+collection.no_root: Aucun apix.toml ni apix-project.toml dans %{path} ou ses dossiers parents.
+collection.open_first: Ouvrez ou créez d'abord une collection (%{key}).
+collection.open_prompt: Ouvrir une collection
+collection.rename: Renommer
+collection.rename_collection_title: Renommer la collection
+collection.rename_folder_title: Renommer le dossier
+collection.rename_request_title: Renommer la requête
+collection.start_here_text: "%{path} ne contient pas encore de fichier apix.toml. Apix va en créer un ; les requêtes sont enregistrées sous forme de fichiers .apix dans ce dossier."
+collection.start_here_title: Démarrer une nouvelle collection ici ?
+collection.unsaved_text: Enregistrer d'abord vos modifications de « %{name} » ?
+collection.unsaved_title: Modifications non enregistrées
+copy.as_shell: Copier en %{shell}
+copy.copied: Copié en %{shell}.
+copy.copied_missing: "Copié en %{shell}. Non définies, laissées en {{…}} : %{names}."
+copy.curl_filled: La requête a été remplie à partir de la commande curl collée.
+copy.curl_imported: curl importé
+dialog.cancel: Annuler
+dialog.close: Fermer
+dialog.save: Enregistrer
+env.add_environment: Ajouter un environnement
+env.add_variable: Ajouter une variable
+env.delete: Supprimer
+env.dialog_title: Variables
+env.dynamic_variables: Variables dynamiques
+env.error.defined_twice: "%{key} est définie deux fois."
+env.error.exists: Un environnement nommé %{name} existe déjà.
+env.error.name_clash: Deux environnements porteraient le nom %{name}.
+env.error.needs_name: L'environnement doit avoir un nom.
+env.hint.dynamic: Cliquez sur un nom pour le copier. Chaque utilisation donne une nouvelle valeur ; une variable que vous définissez avec le même nom l'emporte.
+env.hint.environment: Les secrets restent sur cet ordinateur dans %{name}.local.toml, ignoré par git.
+env.hint.shared: Les variables partagées s'appliquent dans tous les environnements ; la valeur d'un environnement l'emporte.
+env.none: Aucun environnement
+env.placeholder.name: nom
+env.placeholder.new_environment: Nouvel environnement…
+env.placeholder.value: valeur
+env.secret: Secret
+env.secret_tooltip: Enregistré uniquement sur cet ordinateur, dans le fichier .local.toml
+env.section.built_in: Intégrées
+env.section.collection_only: "%{name} uniquement"
+env.section.environments: Environnements
+env.section.shared: Partagées
+env.title.collection: "Variables de %{name}"
+env.title.environment: Environnement
+env.title.project: Variables du projet
+env.undo_delete: Annuler la suppression
+import.collection_done: Collection Postman importée
+import.environment_done: Environnement importé
+import.environment_needs_open: Ouvrez d'abord la collection ou le projet auquel appartient cet environnement, puis importez-le.
+import.environment_saved: « %{title} » enregistré sous environments/%{name}.toml avec %{count} variables.
+import.environment_saved_with_secrets: « %{title} » enregistré sous environments/%{name}.toml avec %{count} variables. %{secrets} secrets ont été placés dans %{name}.local.toml, ignoré par git.
+import.prompt: Importer un export Postman
+menu.active_environment: Environnement actif
+menu.cancel: Annuler
+menu.close_tab: Fermer l'onglet
+menu.collection_auth: Authentification de la collection…
+menu.command_palette: Palette de commandes…
+menu.copy_as: Copier en
+menu.documentation: Documentation
+menu.encrypt_collection: Chiffrer cette collection…
+menu.environment: Environnement
+menu.file: Fichier
+menu.group_by: Grouper la barre latérale par
+menu.group_collection: Collection
+menu.group_environment: Environnement
+menu.help: Aide
+menu.import_postman: Importer depuis Postman…
+menu.lock_collections: Verrouiller les collections chiffrées
+menu.method: Méthode
+menu.new_collection: Nouvelle collection…
+menu.new_encrypted_collection: Nouvelle collection chiffrée…
+menu.new_folder: Nouveau dossier…
+menu.new_project: Nouveau projet…
+menu.new_request: Nouvelle requête
+menu.new_request_with_method: Nouvelle requête avec la méthode
+menu.next_tab: Onglet suivant
+menu.open: Ouvrir…
+menu.open_recent: Ouvrir récent
+menu.previous_tab: Onglet précédent
+menu.project_auth: Authentification du projet…
+menu.quit: Quitter
+menu.report_problem: Signaler un problème
+menu.request: Requête
+menu.save: Enregistrer
+menu.send: Envoyer
+menu.settings: Paramètres…
+menu.source_code: Code source
+menu.variables: Variables et environnements…
+menu.view: Affichage
+network.cert.days_left: "%{count} jours restants"
+network.cert.engine_note: Le moteur HTTP indique le certificat du serveur, mais pas la version TLS ni la suite de chiffrement.
+network.cert.expired_days_ago: expiré depuis %{count} jours
+network.cert.expired_one_day_ago: expiré depuis 1 jour
+network.cert.issued_by: Émis par
+network.cert.issued_to: Émis pour
+network.cert.names: Noms
+network.cert.not_reported: Chiffré, mais le certificat n'a pas été communiqué.
+network.cert.one_day_left: 1 jour restant
+network.cert.valid: Validité
+network.cert.valid_range: "du %{from} au %{to}"
+network.connection.dns_servers: Serveurs DNS
+network.connection.gateway: Passerelle
+network.connection.none_recorded: Aucune nouvelle connexion enregistrée (réutilisée, ou via un proxy).
+network.connection.proxy: Proxy
+network.connection.proxy_from: "%{value} (depuis %{var})"
+network.connection.proxy_none: aucun dans l'environnement
+network.connection.server: Serveur
+network.connection.this_computer: Cet ordinateur
+network.connection.unknown_address: inconnue
+network.connection.unknown_interface: interface inconnue
+network.connection.via: "%{address} via %{via}"
+network.connection.via_vpn: "%{address} via %{via} · VPN"
+network.dns.lookup: Résolution
+network.dns.lookup_result: "%{host} → %{addrs} en %{duration}"
+network.note: Remarque
+network.plain_http: "HTTP en clair : rien n'est chiffré."
+network.redirect.followed: Suivie
+network.section.certificate: Certificat
+network.section.connection: Connexion
+network.section.dns: DNS
+network.section.encryption: Chiffrement
+network.section.redirects: Redirections
+network.section.timing: Durées
+network.timing.connect: Connexion (TCP + TLS)
+network.timing.dns: Résolution DNS
+network.timing.download: Téléchargement
+network.timing.summary: Total %{total} · premier octet après %{ttfb}
+network.timing.waiting: Attente du serveur
+palette.copy_as: Copier en %{format}
+palette.empty: Aucun résultat.
+palette.environment: "Environnement : %{name}"
+palette.environment_none: "Environnement : aucun"
+palette.group.commands: Commandes
+palette.group.requests: Requêtes
+palette.group_by_collection: Grouper la barre latérale par collection
+palette.group_by_environment: Grouper la barre latérale par environnement
+palette.new_method_request: Nouvelle requête %{method}
+palette.open_folder: Ouvrir un dossier…
+palette.open_recent: "Ouvrir récent : %{name}"
+palette.placeholder: Rechercher des requêtes et des commandes…
+palette.save_request: Enregistrer la requête
+palette.send_request: Envoyer la requête
+request.copy_as_tooltip: Copier en cURL ou PowerShell
+request.error.no_url: Saisissez une URL pour envoyer une requête.
+request.error.undefined_variable: Variable %{name} non définie. Définissez-la avec %{key} (Variables).
+request.error.undefined_variables: "Variables non définies : %{names}. Définissez-les avec %{key} (Variables)."
+request.headers_hint: Content-Type est déduit du type de corps, sauf si vous en ajoutez un ici.
+request.params_hint: Les paramètres sont ajoutés à la fin de l'URL.
+request.tab.auth: Auth
+request.tab.auth_api_key: Auth · Clé d'API
+request.tab.auth_kind: Auth · %{kind}
+request.tab.auth_none: Auth · aucune
+request.tab.body: Corps
+request.tab.body_kind: Corps · %{kind}
+request.tab.headers: En-têtes
+request.tab.headers_count: En-têtes %{count}
+request.tab.params: Paramètres
+request.tab.params_count: Paramètres %{count}
+request.url_placeholder: "https://api.example.com/users   ou   {{base_url}}/users"
+response.cancelled: Requête annulée.
+response.empty: Envoyez une requête pour voir la réponse
+response.failed: Échec de la requête
+response.lines: "%{count} lignes"
+response.preparing_raw: Préparation de la vue brute…
+response.send_hint: "%{key} envoyer"
+response.sending: Envoi…  Esc pour annuler
+response.tab.network: Réseau
+response.tab.pretty: Formaté
+response.tab.raw: Brut
+settings.auto_lock: Verrouiller les collections chiffrées
+settings.auto_lock_description: Après ce délai d'inactivité, les collections chiffrées se verrouillent et redemandent le mot de passe.
+settings.auto_lock_hour: Après 1 heure
+settings.auto_lock_minutes: Après %{count} minutes
+settings.auto_lock_never: Jamais
+settings.language: Langue
+settings.language_description: La langue des menus, boutons et messages. S'applique immédiatement.
+settings.theme: Thème
+settings.theme_cyber: Cyber glass
+settings.theme_description: Les couleurs de la fenêtre.
+settings.theme_obsidian: Obsidian
+settings.theme_restart: S'applique au prochain démarrage d'Apix.
+settings.title: Paramètres
+sidebar.auth: Authentification…
+sidebar.change_password: Changer le mot de passe…
+sidebar.copy_as_shell: Copier en %{shell}
+sidebar.drop_hint: Ou déposez un export Postman ou un dossier sur la fenêtre.
+sidebar.duplicate: Dupliquer
+sidebar.edit_variables: Modifier les variables…
+sidebar.edit_variables_tooltip: Modifier les variables (%{key})
+sidebar.empty: Vide
+sidebar.encrypt: Chiffrer…
+sidebar.import_postman: Importer depuis Postman
+sidebar.kind_collection: COLLECTION
+sidebar.kind_project: PROJET
+sidebar.lock: Verrouiller
+sidebar.move_to_trash: Placer dans la corbeille
+sidebar.new_folder: Nouveau dossier
+sidebar.new_request_tooltip: Nouvelle requête (%{key} pour GET)
+sidebar.no_collections: "Aucune collection pour l'instant. Utilisez le menu ci-dessus : %{item}"
+sidebar.no_environments: Ce projet n'a pas encore d'environnement. Ajoutez test.toml ou prod.toml dans son dossier environments/.
+sidebar.no_requests: Aucune requête pour l'instant. %{key} en crée une.
+sidebar.nothing_open: Rien d'ouvert
+sidebar.open_folder: Ouvrir un dossier
+sidebar.recent: RÉCENTS
+sidebar.remove_encryption: Supprimer le chiffrement…
+sidebar.rename: Renommer…
+sidebar.show_in_environment: Afficher dans l'environnement
+table.add: Ajouter
+table.key: Clé
+table.value: Valeur
+time.hours_minutes: "%{hours} h %{minutes} min"
+time.minutes: "%{count} min"
+vault.auto_locked: Les collections chiffrées ont été verrouillées après %{count} minutes d'inactivité.
+vault.change_password: Changer le mot de passe
+vault.change_password_note: Les fichiers ne sont pas rechiffrés ; seule la clé qui les déverrouille change.
+vault.change_password_title: Nouveau mot de passe pour « %{name} »
+vault.create: Créer
+vault.decrypt: Supprimer le chiffrement
+vault.decrypt_description: Ses fichiers sont réécrits en clair, lisibles par toute personne ayant accès au dossier. Les fichiers chiffrés sont placés dans la corbeille.
+vault.decrypt_title: Supprimer le chiffrement de « %{name} » ?
+vault.decrypted: La collection n'est plus chiffrée.
+vault.encrypt: Chiffrer
+vault.encrypt_note: Chaque fichier est chiffré avec ce mot de passe. Les fichiers en clair sont ensuite placés dans la corbeille ; videz-la pour les supprimer définitivement. Si le dossier est suivi par git, son historique contient toujours les fichiers en clair.
+vault.encrypt_title: Chiffrer « %{name} »
+vault.error.locked: La collection est verrouillée.
+vault.error.mismatch: Les deux mots de passe sont différents.
+vault.error.no_name: Donnez un nom à la collection.
+vault.error.no_password: Saisissez le mot de passe.
+vault.error.no_recovery_key: Saisissez la clé de récupération.
+vault.error.open_project_first: Ouvrez d'abord un projet, ou utilisez %{menu}.
+vault.error.too_short: Utilisez au moins %{count} caractères.
+vault.error.trash: "Impossible de placer dans la corbeille : %{error}"
+vault.error.trash_encrypted: "Impossible de placer les fichiers chiffrés dans la corbeille : %{error}"
+vault.error.trash_plain: "Impossible de placer les fichiers en clair dans la corbeille : %{error}"
+vault.error.unlock_first: Déverrouillez d'abord la collection.
+vault.locked: Verrouillée
+vault.locked_title: Verrouillée
+vault.name_placeholder: Nom de la collection
+vault.new_needs_project: Ouvrez un projet pour y créer une collection chiffrée, ou chiffrez la collection ouverte avec %{menu}.
+vault.new_note: Chaque requête, environnement et nom est chiffré sur le disque. Vous recevrez une clé de récupération à conserver en lieu sûr.
+vault.new_password_placeholder: Nouveau mot de passe (%{count} caractères ou plus)
+vault.new_title: Nouvelle collection chiffrée
+vault.password_changed: Le mot de passe a été changé. La clé de récupération fonctionne toujours.
+vault.recovery.copy: Copier
+vault.recovery.done: Terminé
+vault.recovery.intro: Si le mot de passe est perdu, cette clé ouvre la collection. Conservez-la dans un gestionnaire de mots de passe. Apix ne l'affiche qu'une seule fois, maintenant.
+vault.recovery.stored: J'ai conservé la clé de récupération en lieu sûr
+vault.recovery.title: Votre clé de récupération
+vault.recovery.warning: Sans le mot de passe et sans cette clé, personne, pas même vous, ne peut ouvrir la collection.
+vault.recovery_placeholder: Clé de récupération, ex. 7K2M-9QXA-…
+vault.repeat_password: Confirmer le mot de passe
+vault.unlock: Déverrouiller
+vault.unlock_note: Cette collection est chiffrée. Elle reste déverrouillée jusqu'à ce que vous la verrouilliez, quittiez Apix ou la laissiez inactive pendant %{count} minutes.
+vault.unlock_note_no_auto_lock: Cette collection est chiffrée. Elle reste déverrouillée jusqu'à ce que vous la verrouilliez ou quittiez Apix.
+vault.unlock_title: Déverrouiller « %{name} »
+vault.use_password: Utiliser plutôt le mot de passe
+vault.use_recovery: Mot de passe oublié ? Utiliser la clé de récupération
+vault.working: Traitement… la dérivation de la clé prend volontairement un moment.

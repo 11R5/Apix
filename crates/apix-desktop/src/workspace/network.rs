@@ -9,6 +9,7 @@ use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
 use super::{Finished, Workspace};
+use crate::tr;
 
 impl Workspace {
     pub(super) fn render_network(&self, done: &Finished) -> impl IntoElement {
@@ -21,14 +22,18 @@ impl Workspace {
 
         // One bar per phase, offset by the phases before it.
         let rows = [
-            ("DNS lookup", phases.dns, hsla(0.55, 0.7, 0.6, 1.)),
             (
-                "Connect (TCP + TLS)",
+                tr!("network.timing.dns"),
+                phases.dns,
+                hsla(0.55, 0.7, 0.6, 1.),
+            ),
+            (
+                tr!("network.timing.connect"),
                 phases.connect,
                 hsla(0.75, 0.6, 0.7, 1.),
             ),
-            ("Waiting for the server", phases.waiting, p.warn),
-            ("Download", phases.download, p.ok),
+            (tr!("network.timing.waiting"), phases.waiting, p.warn),
+            (tr!("network.timing.download"), phases.download, p.ok),
         ];
         let mut offset = Duration::ZERO;
         let waterfall = rows.into_iter().map(|(label, took, color)| {
@@ -68,7 +73,7 @@ impl Workspace {
                 )
         });
 
-        let row = |label: &'static str, value: String| {
+        let row = |label: SharedString, value: SharedString| {
             h_flex()
                 .gap_3()
                 .items_start()
@@ -82,93 +87,102 @@ impl Workspace {
                 )
                 .child(div().flex_1().min_w_0().text_color(p.text).child(value))
         };
-        let section = |title: &'static str| {
+        let section = |title: SharedString| {
             div()
                 .pt_3()
                 .pb_1()
                 .text_xs()
                 .font_weight(FontWeight::SEMIBOLD)
                 .text_color(p.text_muted)
-                .child(title.to_uppercase())
+                .child(crate::i18n::upper(&title))
         };
 
         let mut body = v_flex()
             .gap_1()
-            .child(section("Timing"))
+            .child(section(tr!("network.section.timing")))
             .children(waterfall)
-            .child(
-                div()
-                    .pt_1()
-                    .text_xs()
-                    .text_color(p.text_muted)
-                    .child(format!(
-                        "Total {} · first byte after {}",
-                        human_duration(response.timing.total),
-                        human_duration(response.timing.ttfb)
-                    )),
-            )
-            .child(section("Connection"));
+            .child(div().pt_1().text_xs().text_color(p.text_muted).child(tr!(
+                "network.timing.summary",
+                total = human_duration(response.timing.total),
+                ttfb = human_duration(response.timing.ttfb)
+            )))
+            .child(section(tr!("network.section.connection")));
         if let Some(remote) = trace.remote_addr {
-            body = body.child(row("Server", format!("{remote} · {}", response.version)));
+            body = body.child(row(
+                tr!("network.connection.server"),
+                format!("{remote} · {}", response.version).into(),
+            ));
         }
-        let via = match (&local.interface, &local.kind) {
-            (Some(name), Some(kind)) if name != kind => format!("{name} ({kind})"),
-            (Some(name), _) => name.clone(),
-            _ => "unknown interface".into(),
+        let via: SharedString = match (&local.interface, &local.kind) {
+            (Some(name), Some(kind)) if name != kind => format!("{name} ({kind})").into(),
+            (Some(name), _) => name.clone().into(),
+            _ => tr!("network.connection.unknown_interface"),
         };
-        let address = trace
+        let address: SharedString = trace
             .local_addr
-            .map(|a| a.to_string())
-            .or_else(|| local.local_ip.map(|ip| ip.to_string()))
-            .unwrap_or_else(|| "unknown".into());
+            .map(|a| a.to_string().into())
+            .or_else(|| local.local_ip.map(|ip| ip.to_string().into()))
+            .unwrap_or_else(|| tr!("network.connection.unknown_address"));
         body = body.child(row(
-            "This computer",
-            format!(
-                "{address} via {via}{}",
-                if local.vpn { " · VPN" } else { "" }
-            ),
+            tr!("network.connection.this_computer"),
+            if local.vpn {
+                tr!("network.connection.via_vpn", address = address, via = via)
+            } else {
+                tr!("network.connection.via", address = address, via = via)
+            },
         ));
         if let Some(gateway) = local.gateway {
-            body = body.child(row("Gateway", gateway.to_string()));
+            body = body.child(row(
+                tr!("network.connection.gateway"),
+                gateway.to_string().into(),
+            ));
         }
         if !local.dns_servers.is_empty() {
             let servers: Vec<String> = local.dns_servers.iter().map(ToString::to_string).collect();
-            body = body.child(row("DNS servers", servers.join(", ")));
+            body = body.child(row(
+                tr!("network.connection.dns_servers"),
+                servers.join(", ").into(),
+            ));
         }
         body = body.child(row(
-            "Proxy",
+            tr!("network.connection.proxy"),
             match &local.proxy {
-                Some((var, value)) => format!("{value} (from {var})"),
-                None => "none in the environment".into(),
+                Some((var, value)) => {
+                    tr!("network.connection.proxy_from", value = value, var = var)
+                }
+                None => tr!("network.connection.proxy_none"),
             },
         ));
         if trace.connects.is_empty() {
             body = body.child(row(
-                "Note",
-                "No new connection was recorded (reused, or through a proxy).".into(),
+                tr!("network.note"),
+                tr!("network.connection.none_recorded"),
             ));
         }
 
         if !trace.dns.is_empty() {
-            body = body.child(section("DNS"));
+            body = body.child(section(tr!("network.section.dns")));
             for lookup in &trace.dns {
                 let addrs: Vec<String> = lookup.addrs.iter().map(ToString::to_string).collect();
                 body = body.child(row(
-                    "Lookup",
-                    format!(
-                        "{} → {} in {}",
-                        lookup.host,
-                        addrs.join(", "),
-                        human_duration(lookup.duration)
+                    tr!("network.dns.lookup"),
+                    tr!(
+                        "network.dns.lookup_result",
+                        host = lookup.host,
+                        addrs = addrs.join(", "),
+                        duration = human_duration(lookup.duration)
                     ),
                 ));
             }
         }
 
         if !trace.redirects.is_empty() {
-            body = body.child(section("Redirects"));
+            body = body.child(section(tr!("network.section.redirects")));
             for hop in &trace.redirects {
-                body = body.child(row("Followed", format!("{} → {}", hop.status, hop.to)));
+                body = body.child(row(
+                    tr!("network.redirect.followed"),
+                    format!("{} → {}", hop.status, hop.to).into(),
+                ));
             }
         }
 
@@ -179,15 +193,22 @@ impl Workspace {
                     0..30 => p.warn,
                     _ => p.text,
                 };
-                let left = if cert.days_left < 0 {
-                    format!("expired {} days ago", -cert.days_left)
-                } else {
-                    format!("{} days left", cert.days_left)
+                let left = match cert.days_left {
+                    -1 => tr!("network.cert.expired_one_day_ago"),
+                    ..-1 => tr!("network.cert.expired_days_ago", count = -cert.days_left),
+                    1 => tr!("network.cert.one_day_left"),
+                    _ => tr!("network.cert.days_left", count = cert.days_left),
                 };
                 body = body
-                    .child(section("Certificate"))
-                    .child(row("Issued to", cert.subject.clone()))
-                    .child(row("Issued by", cert.issuer.clone()))
+                    .child(section(tr!("network.section.certificate")))
+                    .child(row(
+                        tr!("network.cert.issued_to"),
+                        cert.subject.clone().into(),
+                    ))
+                    .child(row(
+                        tr!("network.cert.issued_by"),
+                        cert.issuer.clone().into(),
+                    ))
                     .child(
                         h_flex()
                             .gap_3()
@@ -197,38 +218,37 @@ impl Workspace {
                                     .w(px(150.))
                                     .flex_none()
                                     .text_color(p.text_muted)
-                                    .child("Valid"),
+                                    .child(tr!("network.cert.valid")),
                             )
-                            .child(
-                                div()
-                                    .text_color(p.text)
-                                    .child(format!("{} to {}", cert.not_before, cert.not_after)),
-                            )
+                            .child(div().text_color(p.text).child(tr!(
+                                "network.cert.valid_range",
+                                from = cert.not_before,
+                                to = cert.not_after
+                            )))
                             .child(div().text_color(color).child(left)),
                     )
                     .when(!cert.names.is_empty(), |b| {
-                        b.child(row("Names", cert.names.join(", ")))
+                        b.child(row(tr!("network.cert.names"), cert.names.join(", ").into()))
                     })
                     .child(
                         div()
                             .pt_1()
                             .text_xs()
                             .text_color(p.text_muted)
-                            .child("The HTTP engine reports the server's certificate, not the TLS version or cipher."),
+                            .child(tr!("network.cert.engine_note")),
                     );
             }
             None if response.version.contains('2')
                 || trace.remote_addr.is_some_and(|a| a.port() == 443) =>
             {
-                body = body.child(section("Certificate")).child(row(
-                    "Note",
-                    "Encrypted, but the certificate was not reported.".into(),
-                ));
+                body = body
+                    .child(section(tr!("network.section.certificate")))
+                    .child(row(tr!("network.note"), tr!("network.cert.not_reported")));
             }
             None => {
                 body = body
-                    .child(section("Encryption"))
-                    .child(row("Note", "Plain HTTP: nothing is encrypted.".into()));
+                    .child(section(tr!("network.section.encryption")))
+                    .child(row(tr!("network.note"), tr!("network.plain_http")));
             }
         }
 

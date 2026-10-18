@@ -1,0 +1,415 @@
+_version: 1
+app.error_with_cause: "%{error}: %{cause}"
+app.status.collections: "%{count} Sammlungen"
+app.status.env: "Umgebung: %{name}"
+app.status.no_collection: Keine Sammlung
+app.status.no_collections: noch keine Sammlungen
+app.status.one_collection: 1 Sammlung
+app.status.one_request: 1 Anfrage
+app.status.requests: "%{count} Anfragen"
+app.status.shortcuts: "%{palette} Befehle  ·  %{send} Senden  ·  Esc Abbrechen"
+app.status.unsaved: Ungespeicherte Änderungen · %{key} Speichern
+auth.add_to: Hinzufügen zu
+auth.client_auth: Client-Authentifizierung
+auth.client_basic: Basic-Auth-Header
+auth.client_body: Im Body
+auth.describe.aws: "%{service} in %{region}"
+auth.describe.consumer_key: "Consumer Key: %{key}"
+auth.describe.key_in_header: "%{key} in den Headern"
+auth.describe.key_in_query: "%{key} im Query-String"
+auth.describe.oauth2: "%{grant}, Token von %{url}"
+auth.describe.token: "Token: %{token}"
+auth.describe.token_set: "Token: gesetzt"
+auth.describe.username: "Benutzername: %{name}"
+auth.dialog.collection_note: Anfragen in dieser Sammlung ohne eigene Authentifizierung verwenden diese.
+auth.dialog.collection_title: Authentifizierung für Sammlung „%{name}“
+auth.dialog.folder_note: Anfragen in diesem Ordner ohne eigene Authentifizierung verwenden diese.
+auth.dialog.folder_title: Authentifizierung für Ordner „%{name}“
+auth.dialog.project_note: Anfragen in diesem Projekt ohne eigene Authentifizierung verwenden diese.
+auth.dialog.project_title: Authentifizierung für Projekt „%{name}“
+auth.field.access_key: Access Key
+auth.field.access_token: Access Token
+auth.field.auth_url: Auth-URL
+auth.field.client_id: Client-ID
+auth.field.client_secret: Client Secret
+auth.field.consumer_key: Consumer Key
+auth.field.consumer_secret: Consumer Secret
+auth.field.key: Schlüssel
+auth.field.password: Passwort
+auth.field.realm: Realm
+auth.field.redirect_url: Redirect-URL
+auth.field.region: Region
+auth.field.scope: Scope
+auth.field.secret_key: Secret Key
+auth.field.service: Dienst
+auth.field.session_token: Session-Token
+auth.field.token: Token
+auth.field.token_secret: Token Secret
+auth.field.token_url: Token-URL
+auth.field.username: Benutzername
+auth.field.value: Wert
+auth.grant.authorization_code: Authorization Code
+auth.grant.client_credentials: Client Credentials
+auth.grant.password: Passwort
+auth.grant_type: Grant-Typ
+auth.hint.access_key: "z. B. {{aws_access_key}}"
+auth.hint.client_secret: Leer bei einem öffentlichen Client
+auth.hint.key: Name, z. B. X-API-Key
+auth.hint.optional: Optional
+auth.hint.redirect_url: "Leer: ein freier Port auf http://127.0.0.1"
+auth.hint.region: z. B. eu-central-1
+auth.hint.scope: Durch Leerzeichen getrennt, z. B. read write
+auth.hint.service: z. B. execute-api, s3, lambda
+auth.hint.session_token: Nur für temporäre Zugangsdaten
+auth.hint.token: "Token, z. B. {{token}}"
+auth.hint.value: "Wert, z. B. {{apiKey}}"
+auth.in_header: Header
+auth.in_query: Query-Parameter
+auth.inherit.collection_none: Darüber ist keine Authentifizierung festgelegt, daher wird keine gesendet. Legen Sie sie im Projektmenü für das ganze Projekt fest (Projekt-Authentifizierung…).
+auth.inherit.from_collection: Verwendet %{what} aus der Sammlung „%{name}“.
+auth.inherit.from_folder: Verwendet %{what} aus dem Ordner „%{name}“.
+auth.inherit.from_project: Verwendet %{what} aus dem Projekt „%{name}“.
+auth.inherit.project_none: Anfragen, die erben, erhalten keine Authentifizierung.
+auth.inherit.request_none: Darüber ist keine Authentifizierung festgelegt, daher wird keine gesendet. Legen Sie sie für einen Ordner oder eine Sammlung über deren Kontextmenü fest (Authentifizierung…).
+auth.kind.api_key: API-Schlüssel
+auth.kind.aws: AWS Signature
+auth.kind.basic: Basic Auth
+auth.kind.bearer: Bearer-Token
+auth.kind.digest: Digest Auth
+auth.kind.inherit: Vom übergeordneten Element erben
+auth.kind.none: Keine Authentifizierung
+auth.no_auth.collection: Es wird keine Authentifizierung gesendet, auch wenn das Projekt eine für diese Sammlung festlegt.
+auth.no_auth.folder: Es wird keine Authentifizierung gesendet, auch wenn ein übergeordneter Ordner oder die Sammlung eine für diesen Ordner festlegt.
+auth.no_auth.project: Für erbende Anfragen wird keine Authentifizierung gesendet.
+auth.no_auth.request: Es wird keine Authentifizierung gesendet, auch wenn ein Ordner oder die Sammlung eine für diese Anfrage festlegt.
+auth.note.aws: Jede gesendete Anfrage wird mit AWS Signature Version 4 signiert.
+auth.note.bearer: "Gesendet als Authorization: Bearer <token>."
+auth.note.digest: Apix beantwortet die Digest-Challenge des Servers (MD5 oder SHA-256).
+auth.note.oauth1: Bei jedem Senden mit neuer Nonce und neuem Zeitstempel signiert.
+auth.note.oauth2: Apix holt das Token selbst und sendet es als Bearer-Token. Tokens bleiben im Arbeitsspeicher und werden nie auf die Festplatte geschrieben.
+auth.note.variables: "Werte können {{variables}} enthalten."
+auth.signature: Signatur
+auth.token.expired: Das Token ist abgelaufen; beim nächsten Senden wird ein neues geholt.
+auth.token.forget: Verwerfen
+auth.token.get_new: Neues Token holen
+auth.token.getting: Token wird geholt…
+auth.token.none: Noch kein Token. Es wird beim ersten Senden geholt.
+auth.token.ready: Token bereit.
+auth.token.valid_for: Token bereit, noch %{time} gültig.
+auth.token.waiting_browser: Warten auf die Anmeldung in Ihrem Browser…
+auth.type: Typ
+auth.use_pkce: PKCE verwenden (empfohlen)
+auth.what.api_key: einen API-Schlüssel
+auth.what.aws: eine AWS-Signatur
+auth.what.basic: Basic Auth
+auth.what.bearer: ein Bearer-Token
+auth.what.digest: Digest Auth
+auth.what.none: keine Authentifizierung
+body.binary_hint: Die Bytes der Datei bilden den Body. Content-Type ist standardmäßig application/octet-stream; einen anderen legen Sie unter Header fest.
+body.binary_placeholder: Zu sendende Datei, z. B. data/upload.bin
+body.binary_size: "%{size} · unverändert gesendet"
+body.choose: Auswählen…
+body.choose_file: Datei auswählen
+body.choose_files: Dateien auswählen
+body.file_not_found: Datei nicht gefunden
+body.file_path: Dateipfad
+body.form_hint: Gesendet als application/x-www-form-urlencoded, wie ein HTML-Formular.
+body.graphql_query: Query
+body.graphql_variables: Variablen (JSON)
+body.invalid_json: kein gültiges JSON
+body.kind.binary: Binär
+body.kind.form: Formular
+body.kind.none: Keiner
+body.kind.text: Text
+body.multipart_hint: Gesendet als multipart/form-data. Stellen Sie ein Feld auf Datei um, um eine Datei hochzuladen; Pfade innerhalb der Sammlung werden relativ zur Anfrage gespeichert.
+body.none_hint: Diese Anfrage hat keinen Body.
+body.part_file: Datei
+body.part_text: Text
+body.send_file_instead: Stattdessen eine Datei senden
+body.send_text_instead: Stattdessen Text senden
+chips.add_with: Mit %{key} hinzufügen (Variablen).
+chips.dynamic: "Dynamisch: bei jedem Senden ein neuer Wert"
+chips.empty: (leer)
+chips.missing_in_env: Für die Umgebung „%{env}“ nicht definiert.
+chips.missing_no_env: Nicht definiert, und es ist keine Umgebung ausgewählt.
+chips.scope.collection: Sammlung „%{name}“
+chips.scope.environment: Umgebung „%{name}“
+chips.scope.environment_of: Umgebung „%{name}“ von „%{collection}“
+chips.scope.project: Projekt „%{name}“
+chips.secret_scope: "%{scope} · geheim (.local.toml)"
+chips.set_for_run: Für diese Sitzung festlegen
+collection.choose_folder: Ordner auswählen…
+collection.create: Erstellen
+collection.create_collection: Sammlung erstellen
+collection.create_collection_in: Sammlung erstellen in
+collection.create_project_in: Projekt erstellen in
+collection.default_name: Sammlung
+collection.delete: Löschen
+collection.delete_folder_permanent: „%{name}“ und sein gesamter Inhalt werden endgültig gelöscht (verschlüsselte Sammlungen haben keinen Papierkorb).
+collection.delete_folder_title: Ordner löschen?
+collection.delete_folder_trash: „%{name}“ und sein gesamter Inhalt werden in den Papierkorb verschoben.
+collection.delete_request_permanent: „%{name}“ wird endgültig gelöscht (verschlüsselte Sammlungen haben keinen Papierkorb).
+collection.delete_request_title: Anfrage löschen?
+collection.delete_request_trash: „%{name}“ wird in den Papierkorb verschoben.
+collection.dont_save: Nicht speichern
+collection.new_collection_title: Neue Sammlung
+collection.new_folder_title: Neuer Ordner
+collection.new_project_title: Neues Projekt
+collection.new_request_name: Neue Anfrage
+collection.no_root: Keine apix.toml oder apix-project.toml in %{path} oder einem übergeordneten Ordner.
+collection.open_first: Öffnen oder erstellen Sie zuerst eine Sammlung (%{key}).
+collection.open_prompt: Sammlung öffnen
+collection.rename: Umbenennen
+collection.rename_collection_title: Sammlung umbenennen
+collection.rename_folder_title: Ordner umbenennen
+collection.rename_request_title: Anfrage umbenennen
+collection.start_here_text: "%{path} hat noch keine apix.toml. Apix erstellt eine; Anfragen werden als .apix-Dateien in diesem Ordner gespeichert."
+collection.start_here_title: Hier eine neue Sammlung beginnen?
+collection.unsaved_text: Änderungen an „%{name}“ zuerst speichern?
+collection.unsaved_title: Ungespeicherte Änderungen
+copy.as_shell: Als %{shell} kopieren
+copy.copied: Als %{shell} kopiert.
+copy.copied_missing: "Als %{shell} kopiert. Nicht definiert, als {{…}} belassen: %{names}."
+copy.curl_filled: Die Anfrage wurde aus dem eingefügten curl-Befehl ausgefüllt.
+copy.curl_imported: curl importiert
+dialog.cancel: Abbrechen
+dialog.close: Schließen
+dialog.save: Speichern
+env.add_environment: Umgebung hinzufügen
+env.add_variable: Variable hinzufügen
+env.delete: Löschen
+env.dialog_title: Variablen
+env.dynamic_variables: Dynamische Variablen
+env.error.defined_twice: "%{key} ist doppelt definiert."
+env.error.exists: Eine Umgebung namens %{name} existiert bereits.
+env.error.name_clash: Zwei Umgebungen hießen dann %{name}.
+env.error.needs_name: Die Umgebung braucht einen Namen.
+env.hint.dynamic: Klicken Sie auf einen Namen, um ihn zu kopieren. Jede Verwendung liefert einen neuen Wert; eine selbst definierte Variable mit gleichem Namen hat Vorrang.
+env.hint.environment: Geheime Werte bleiben auf diesem Computer in %{name}.local.toml, die von git ignoriert wird.
+env.hint.shared: Gemeinsame Variablen gelten in jeder Umgebung; der Wert einer Umgebung hat Vorrang.
+env.none: Keine Umgebung
+env.placeholder.name: Name
+env.placeholder.new_environment: Neue Umgebung…
+env.placeholder.value: Wert
+env.secret: Geheim
+env.secret_tooltip: Nur auf diesem Computer gespeichert, in der .local.toml-Datei
+env.section.built_in: Integriert
+env.section.collection_only: "Nur %{name}"
+env.section.environments: Umgebungen
+env.section.shared: Gemeinsam
+env.title.collection: "Variablen von %{name}"
+env.title.environment: Umgebung
+env.title.project: Projektvariablen
+env.undo_delete: Löschen rückgängig machen
+import.collection_done: Postman-Sammlung importiert
+import.environment_done: Umgebung importiert
+import.environment_needs_open: Öffnen Sie zuerst die Sammlung oder das Projekt, zu dem diese Umgebung gehört, und importieren Sie sie dann.
+import.environment_saved: „%{title}“ als environments/%{name}.toml mit %{count} Variablen gespeichert.
+import.environment_saved_with_secrets: „%{title}“ als environments/%{name}.toml mit %{count} Variablen gespeichert. %{secrets} geheime Werte stehen in %{name}.local.toml, die von git ignoriert wird.
+import.prompt: Postman-Export importieren
+menu.active_environment: Aktive Umgebung
+menu.cancel: Abbrechen
+menu.close_tab: Tab schließen
+menu.collection_auth: Sammlungs-Authentifizierung…
+menu.command_palette: Befehlspalette…
+menu.copy_as: Kopieren als
+menu.documentation: Dokumentation
+menu.encrypt_collection: Diese Sammlung verschlüsseln…
+menu.environment: Umgebung
+menu.file: Datei
+menu.group_by: Seitenleiste gruppieren nach
+menu.group_collection: Sammlung
+menu.group_environment: Umgebung
+menu.help: Hilfe
+menu.import_postman: Aus Postman importieren…
+menu.lock_collections: Verschlüsselte Sammlungen sperren
+menu.method: Methode
+menu.new_collection: Neue Sammlung…
+menu.new_encrypted_collection: Neue verschlüsselte Sammlung…
+menu.new_folder: Neuer Ordner…
+menu.new_project: Neues Projekt…
+menu.new_request: Neue Anfrage
+menu.new_request_with_method: Neue Anfrage mit Methode
+menu.next_tab: Nächster Tab
+menu.open: Öffnen…
+menu.open_recent: Zuletzt geöffnet
+menu.previous_tab: Vorheriger Tab
+menu.project_auth: Projekt-Authentifizierung…
+menu.quit: Beenden
+menu.report_problem: Problem melden
+menu.request: Anfrage
+menu.save: Speichern
+menu.send: Senden
+menu.settings: Einstellungen…
+menu.source_code: Quellcode
+menu.variables: Variablen und Umgebungen…
+menu.view: Ansicht
+network.cert.days_left: "Noch %{count} Tage"
+network.cert.engine_note: Die HTTP-Engine meldet das Zertifikat des Servers, nicht die TLS-Version oder die Cipher-Suite.
+network.cert.expired_days_ago: vor %{count} Tagen abgelaufen
+network.cert.expired_one_day_ago: vor 1 Tag abgelaufen
+network.cert.issued_by: Ausgestellt von
+network.cert.issued_to: Ausgestellt für
+network.cert.names: Namen
+network.cert.not_reported: Verschlüsselt, aber das Zertifikat wurde nicht gemeldet.
+network.cert.one_day_left: Noch 1 Tag
+network.cert.valid: Gültig
+network.cert.valid_range: "%{from} bis %{to}"
+network.connection.dns_servers: DNS-Server
+network.connection.gateway: Gateway
+network.connection.none_recorded: Keine neue Verbindung aufgezeichnet (wiederverwendet oder über einen Proxy).
+network.connection.proxy: Proxy
+network.connection.proxy_from: "%{value} (aus %{var})"
+network.connection.proxy_none: keiner in den Umgebungsvariablen
+network.connection.server: Server
+network.connection.this_computer: Dieser Computer
+network.connection.unknown_address: unbekannt
+network.connection.unknown_interface: unbekannte Schnittstelle
+network.connection.via: "%{address} über %{via}"
+network.connection.via_vpn: "%{address} über %{via} · VPN"
+network.dns.lookup: Abfrage
+network.dns.lookup_result: "%{host} → %{addrs} in %{duration}"
+network.note: Hinweis
+network.plain_http: "Reines HTTP: Nichts wird verschlüsselt."
+network.redirect.followed: Gefolgt
+network.section.certificate: Zertifikat
+network.section.connection: Verbindung
+network.section.dns: DNS
+network.section.encryption: Verschlüsselung
+network.section.redirects: Weiterleitungen
+network.section.timing: Zeitmessung
+network.timing.connect: Verbindungsaufbau (TCP + TLS)
+network.timing.dns: DNS-Abfrage
+network.timing.download: Download
+network.timing.summary: Gesamt %{total} · erstes Byte nach %{ttfb}
+network.timing.waiting: Warten auf den Server
+palette.copy_as: Als %{format} kopieren
+palette.empty: Keine Treffer.
+palette.environment: "Umgebung: %{name}"
+palette.environment_none: "Umgebung: keine"
+palette.group.commands: Befehle
+palette.group.requests: Anfragen
+palette.group_by_collection: Seitenleiste nach Sammlung gruppieren
+palette.group_by_environment: Seitenleiste nach Umgebung gruppieren
+palette.new_method_request: Neue %{method}-Anfrage
+palette.open_folder: Ordner öffnen…
+palette.open_recent: "Zuletzt geöffnet: %{name}"
+palette.placeholder: Anfragen und Befehle durchsuchen…
+palette.save_request: Anfrage speichern
+palette.send_request: Anfrage senden
+request.copy_as_tooltip: Als cURL oder PowerShell kopieren
+request.error.no_url: Geben Sie eine URL ein, um eine Anfrage zu senden.
+request.error.undefined_variable: Undefinierte Variable %{name}. Definieren Sie sie mit %{key} (Variablen).
+request.error.undefined_variables: "Undefinierte Variablen: %{names}. Definieren Sie sie mit %{key} (Variablen)."
+request.headers_hint: Content-Type wird aus dem Body-Typ gesetzt, sofern Sie hier keinen hinzufügen.
+request.params_hint: Query-Parameter werden an die URL angehängt.
+request.tab.auth: Auth
+request.tab.auth_api_key: Auth · API-Schlüssel
+request.tab.auth_kind: Auth · %{kind}
+request.tab.auth_none: Auth · keine
+request.tab.body: Body
+request.tab.body_kind: Body · %{kind}
+request.tab.headers: Header
+request.tab.headers_count: Header %{count}
+request.tab.params: Parameter
+request.tab.params_count: Parameter %{count}
+request.url_placeholder: "https://api.example.com/users   oder   {{base_url}}/users"
+response.cancelled: Anfrage abgebrochen.
+response.empty: Senden Sie eine Anfrage, um die Antwort zu sehen
+response.failed: Anfrage fehlgeschlagen
+response.lines: "%{count} Zeilen"
+response.preparing_raw: Rohansicht wird vorbereitet…
+response.send_hint: "%{key} Senden"
+response.sending: Wird gesendet…  Esc zum Abbrechen
+response.tab.network: Netzwerk
+response.tab.pretty: Formatiert
+response.tab.raw: Roh
+settings.auto_lock: Verschlüsselte Sammlungen sperren
+settings.auto_lock_description: Nach dieser Leerlaufzeit werden verschlüsselte Sammlungen gesperrt und benötigen erneut das Passwort.
+settings.auto_lock_hour: Nach 1 Stunde
+settings.auto_lock_minutes: Nach %{count} Minuten
+settings.auto_lock_never: Nie
+settings.language: Sprache
+settings.language_description: Die Sprache von Menüs, Schaltflächen und Meldungen. Wird sofort übernommen.
+settings.theme: Design
+settings.theme_cyber: Cyber Glass
+settings.theme_description: Die Farben des Fensters.
+settings.theme_obsidian: Obsidian
+settings.theme_restart: Wird beim nächsten Start von Apix übernommen.
+settings.title: Einstellungen
+sidebar.auth: Authentifizierung…
+sidebar.change_password: Passwort ändern…
+sidebar.copy_as_shell: Als %{shell} kopieren
+sidebar.drop_hint: Oder ziehen Sie einen Postman-Export oder einen Ordner auf das Fenster.
+sidebar.duplicate: Duplizieren
+sidebar.edit_variables: Variablen bearbeiten…
+sidebar.edit_variables_tooltip: Variablen bearbeiten (%{key})
+sidebar.empty: Leer
+sidebar.encrypt: Verschlüsseln…
+sidebar.import_postman: Aus Postman importieren
+sidebar.kind_collection: SAMMLUNG
+sidebar.kind_project: PROJEKT
+sidebar.lock: Sperren
+sidebar.move_to_trash: In den Papierkorb verschieben
+sidebar.new_folder: Neuer Ordner
+sidebar.new_request_tooltip: Neue Anfrage (%{key} für GET)
+sidebar.no_collections: "Noch keine Sammlungen. Verwenden Sie das Menü oben: %{item}"
+sidebar.no_environments: Dieses Projekt hat noch keine Umgebungen. Fügen Sie test.toml oder prod.toml zum Ordner environments/ hinzu.
+sidebar.no_requests: Noch keine Anfragen. %{key} erstellt eine.
+sidebar.nothing_open: Nichts geöffnet
+sidebar.open_folder: Ordner öffnen
+sidebar.recent: ZULETZT
+sidebar.remove_encryption: Verschlüsselung entfernen…
+sidebar.rename: Umbenennen…
+sidebar.show_in_environment: In Umgebung anzeigen
+table.add: Hinzufügen
+table.key: Schlüssel
+table.value: Wert
+time.hours_minutes: "%{hours} Std. %{minutes} Min."
+time.minutes: "%{count} Min."
+vault.auto_locked: Verschlüsselte Sammlungen wurden nach %{count} Minuten Leerlauf gesperrt.
+vault.change_password: Passwort ändern
+vault.change_password_note: Die Dateien werden nicht neu verschlüsselt; nur der Schlüssel, der sie entsperrt, ändert sich.
+vault.change_password_title: Neues Passwort für „%{name}“
+vault.create: Erstellen
+vault.decrypt: Verschlüsselung entfernen
+vault.decrypt_description: Die Dateien werden wieder im Klartext geschrieben und sind für jeden mit Zugriff auf den Ordner lesbar. Die verschlüsselten Dateien werden in den Papierkorb verschoben.
+vault.decrypt_title: Verschlüsselung von „%{name}“ entfernen?
+vault.decrypted: Die Sammlung ist nicht mehr verschlüsselt.
+vault.encrypt: Verschlüsseln
+vault.encrypt_note: Jede Datei wird mit diesem Passwort verschlüsselt. Die unverschlüsselten Dateien werden danach in den Papierkorb verschoben; leeren Sie den Papierkorb, um sie endgültig zu entfernen. Liegt der Ordner in git, enthält dessen Verlauf weiterhin die unverschlüsselten Dateien.
+vault.encrypt_title: „%{name}“ verschlüsseln
+vault.error.locked: Die Sammlung ist gesperrt.
+vault.error.mismatch: Die beiden Passwörter stimmen nicht überein.
+vault.error.no_name: Geben Sie der Sammlung einen Namen.
+vault.error.no_password: Geben Sie das Passwort ein.
+vault.error.no_recovery_key: Geben Sie den Wiederherstellungsschlüssel ein.
+vault.error.open_project_first: Öffnen Sie zuerst ein Projekt, oder verwenden Sie %{menu}.
+vault.error.too_short: Verwenden Sie mindestens %{count} Zeichen.
+vault.error.trash: "Verschieben in den Papierkorb fehlgeschlagen: %{error}"
+vault.error.trash_encrypted: "Die verschlüsselten Dateien konnten nicht in den Papierkorb verschoben werden: %{error}"
+vault.error.trash_plain: "Die unverschlüsselten Dateien konnten nicht in den Papierkorb verschoben werden: %{error}"
+vault.error.unlock_first: Entsperren Sie zuerst die Sammlung.
+vault.locked: Gesperrt
+vault.locked_title: Gesperrt
+vault.name_placeholder: Name der Sammlung
+vault.new_needs_project: Öffnen Sie ein Projekt, um darin eine verschlüsselte Sammlung zu erstellen, oder verschlüsseln Sie die geöffnete Sammlung mit %{menu}.
+vault.new_note: Jede Anfrage, jede Umgebung und jeder Name wird auf der Festplatte verschlüsselt. Sie erhalten einen Wiederherstellungsschlüssel, den Sie sicher aufbewahren sollten.
+vault.new_password_placeholder: Neues Passwort (mindestens %{count} Zeichen)
+vault.new_title: Neue verschlüsselte Sammlung
+vault.password_changed: Das Passwort wurde geändert. Der Wiederherstellungsschlüssel funktioniert weiterhin.
+vault.recovery.copy: Kopieren
+vault.recovery.done: Fertig
+vault.recovery.intro: Falls das Passwort einmal verloren geht, öffnet dieser Schlüssel die Sammlung. Bewahren Sie ihn in einem Passwortmanager auf. Apix zeigt ihn nur jetzt an.
+vault.recovery.stored: Ich habe den Wiederherstellungsschlüssel sicher aufbewahrt
+vault.recovery.title: Ihr Wiederherstellungsschlüssel
+vault.recovery.warning: Ohne das Passwort und ohne diesen Schlüssel kann niemand, auch Sie nicht, die Sammlung öffnen.
+vault.recovery_placeholder: Wiederherstellungsschlüssel, z. B. 7K2M-9QXA-…
+vault.repeat_password: Passwort wiederholen
+vault.unlock: Entsperren
+vault.unlock_note: Diese Sammlung ist verschlüsselt. Sie bleibt entsperrt, bis Sie sie sperren, Apix beenden oder sie %{count} Minuten lang nicht benutzt wird.
+vault.unlock_note_no_auto_lock: Diese Sammlung ist verschlüsselt. Sie bleibt entsperrt, bis Sie sie sperren oder Apix beenden.
+vault.unlock_title: „%{name}“ entsperren
+vault.use_password: Stattdessen das Passwort verwenden
+vault.use_recovery: Passwort vergessen? Wiederherstellungsschlüssel verwenden
+vault.working: Bitte warten… Das Ableiten des Schlüssels dauert absichtlich einen Moment.

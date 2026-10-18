@@ -37,6 +37,8 @@
 - **Postman:** collection v2.0/v2.1 and environment import, with a report.
 - **Copy as / paste:** copy a request as `curl`, `curl.exe` or PowerShell; paste a
   `curl` command to fill the request.
+- **Nine languages:** English, Türkçe, العربية, Deutsch, Français, Русский, 日本語,
+  简体中文 and Español, switched in Settings (Ctrl+,) without a restart.
 
 The menu bar at the top (File, Request, Environment, View, Help) holds every
 command: open, new collection or project, import, environments, auth and more.
@@ -52,6 +54,7 @@ command: open, new collection or project, import, environments, auth and more.
 | Ctrl+O | Open a folder, project or collection |
 | Ctrl+K or Ctrl+P | Command palette: find any request or command |
 | Ctrl+E | Variables and environments |
+| Ctrl+, | Settings: language, theme, auto-lock |
 | Alt+1…7 | Switch the method |
 | Ctrl+W | Close the tab (middle-click works too) |
 | Ctrl+Tab / Ctrl+Shift+Tab | Next / previous tab |

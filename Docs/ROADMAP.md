@@ -63,6 +63,9 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [x] **Bodies**: editable URL-encoded form, multipart (text and file fields), binary file and GraphQL (highlighted query, JSON variables) in the app, the CLI, "Copy as", curl paste (`-F`, `--form-string`, `--data-binary @file`) and Postman import; relative file paths resolve against the request's folder
 - [x] **Auth types**: Digest (MD5, SHA-256), OAuth 1.0 (HMAC-SHA1/SHA256, PLAINTEXT, header or query), OAuth 2.0 (client credentials, password, authorization code with PKCE in the browser; token refresh; tokens kept in memory only) and AWS Signature V4, in the app, the CLI, "Copy as", curl paste and Postman import
 - [ ] **Settings and UI language** (moved from M7): settings screen; English, Turkish, Arabic, German, French, Russian, Japanese, Chinese and Spanish; right-to-left layout for Arabic; switch without restarting; a new language is one file plus one line
+  - [x] Settings dialog (Ctrl+,): language, theme, auto-lock time for encrypted collections; saved to `settings.toml` at once
+  - [x] Every UI text behind a key (about 414), nine languages, switch without restarting, first start follows the system language, a test for missing keys and placeholders
+  - [ ] Right-to-left layout for Arabic (the text itself is already shaped right to left), translated engine error messages, native-speaker review
 - [ ] **Documentation and README**: per-language docs in `Docs/<lang>/` (user guide, architecture, technical, workflows), English and Turkish first; README section on how Apix differs from Postman, Insomnia, Bruno, Hoppscotch and HTTPie; reproducible performance numbers
 - [ ] Request settings (timeout, TLS, proxy, client certificates), cookie manager
 - [ ] Code snippets in other languages, history
@@ -90,7 +93,7 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 ## M9 — Release & distribution
 - [ ] GitHub Actions: test and build on Windows, macOS and Linux
 - [ ] Installers: `.msi`/winget, `.dmg`/Homebrew cask, AppImage/Flatpak/`.deb`, using the M3 icons
-- [ ] Keep the release binary under 100 MB (32.2 MB today); speed and smoothness come first
+- [ ] Keep the release binary under 100 MB (33.1 MB today); speed and smoothness come first
 - [ ] Signed Windows builds (so Smart App Control allows them) and notarized macOS builds
 - [ ] Documentation in all nine languages, an illustrated user guide with screenshots taken from each language's UI, a docs site with a language picker
 - [ ] Side-by-side performance numbers against Postman, Insomnia, Bruno and Hoppscotch, measured on one machine with one script

@@ -3,8 +3,10 @@
 
 mod assets;
 mod fonts;
+mod i18n;
 mod large_view;
 mod net;
+mod settings;
 mod state;
 mod theme;
 mod workspace;
@@ -16,6 +18,9 @@ use gpui_kit::*;
 
 use crate::theme::{Palette, Variant};
 use crate::workspace::Workspace;
+
+// Every `tr!` looks its text up in locales/<code>.yml; English fills any gap.
+rust_i18n::i18n!("locales", fallback = "en");
 
 /// `apix-desktop <folder>` opens that collection. Without an argument, the
 /// example collection is opened when running from the repository.
@@ -35,7 +40,9 @@ fn main() {
         .run(move |cx| {
             gpui_kit::init(cx);
             let embedded_fonts = fonts::register(cx);
-            let palette = Palette::new(Variant::from_env());
+            let settings = settings::Settings::load();
+            i18n::set(settings.language_code());
+            let palette = Palette::new(Variant::chosen(&settings));
             theme::apply(&palette, embedded_fonts, cx);
             workspace::bind_keys(cx);
             workspace::register_graphql();

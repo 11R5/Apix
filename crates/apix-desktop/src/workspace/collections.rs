@@ -28,8 +28,9 @@ use gpui_kit::*;
 
 use super::auth_editor::AuthOwner;
 use super::drag::{DraggedNode, draggable};
-use super::{NO_ENVIRONMENT, Workspace, describe, key_hint};
+use super::{Workspace, describe, key_hint};
 use crate::theme;
+use crate::tr;
 
 /// Keeps the folder watcher alive; dropping it stops watching.
 pub(super) struct Watcher {
@@ -65,14 +66,7 @@ impl Workspace {
             (Some(p), _) => p.root.clone(),
             (None, Some(c)) => c.clone(),
             (None, None) => {
-                self.notify_error(
-                    format!(
-                        "No apix.toml or apix-project.toml in {} or its parents.",
-                        dir.display()
-                    ),
-                    window,
-                    cx,
-                );
+                self.notify_error(tr!("collection.no_root", path = dir.display()), window, cx);
                 return;
             }
         };
@@ -232,7 +226,7 @@ impl Workspace {
 
     /// Re-reads `environments/`, keeps the choice if it still exists, and
     /// rebuilds the variables used for sending.
-    fn refresh_environments(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+    pub(super) fn refresh_environments(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         let names = self.environment_names();
         if self
             .environment
@@ -246,7 +240,7 @@ impl Workspace {
             .as_ref()
             .and_then(|current| names.iter().position(|n| n == current))
             .map_or(0, |ix| ix + 1);
-        let items: Vec<SharedString> = std::iter::once(SharedString::from(NO_ENVIRONMENT))
+        let items: Vec<SharedString> = std::iter::once(tr!("env.none"))
             .chain(names.into_iter().map(SharedString::from))
             .collect();
         self.env_select.update(cx, |state, cx| {
@@ -375,10 +369,12 @@ impl Workspace {
             let (save_then, discard_then) = (then.clone(), then.clone());
             dialog
                 .on_close(refocus(view.clone()))
-                .title("Unsaved changes")
-                .child(div().text_sm().child(format!(
-                    "Save your changes to \u{201c}{name}\u{201d} first?"
-                )))
+                .title(tr!("collection.unsaved_title"))
+                .child(
+                    div()
+                        .text_sm()
+                        .child(tr!("collection.unsaved_text", name = name)),
+                )
                 .footer(
                     h_flex()
                         .w_full()
@@ -387,23 +383,25 @@ impl Workspace {
                         .child(
                             Button::new("unsaved-cancel")
                                 .ghost()
-                                .label("Cancel")
+                                .label(tr!("dialog.cancel"))
                                 .on_click(move |_, window, cx| {
                                     close_dialog(&cancel_view, window, cx)
                                 }),
                         )
-                        .child(Button::new("unsaved-discard").label("Don't save").on_click(
-                            move |_, window, cx| {
-                                close_dialog(&discard_view, window, cx);
-                                discard_view
-                                    .update(cx, |this, cx| discard_then(this, window, cx))
-                                    .ok();
-                            },
-                        ))
+                        .child(
+                            Button::new("unsaved-discard")
+                                .label(tr!("collection.dont_save"))
+                                .on_click(move |_, window, cx| {
+                                    close_dialog(&discard_view, window, cx);
+                                    discard_view
+                                        .update(cx, |this, cx| discard_then(this, window, cx))
+                                        .ok();
+                                }),
+                        )
                         .child(
                             Button::new("unsaved-save")
                                 .primary()
-                                .label("Save")
+                                .label(tr!("dialog.save"))
                                 .on_click(move |_, window, cx| {
                                     close_dialog(&save_view, window, cx);
                                     save_view
@@ -432,14 +430,14 @@ impl Workspace {
             None => {
                 let Some(collection) = &self.collection else {
                     self.notify_error(
-                        format!("Open or create a collection first ({}).", key_hint("O")),
+                        tr!("collection.open_first", key = key_hint("O")),
                         window,
                         cx,
                     );
                     return false;
                 };
                 if request.name.is_empty() {
-                    request.name = "New request".into();
+                    request.name = tr!("collection.new_request_name").into();
                 }
                 match store::create_request(&collection.root, &request) {
                     Ok(path) => path,
@@ -493,7 +491,7 @@ impl Workspace {
     ) {
         let Some(dir) = self.target_dir(dir) else {
             self.notify_error(
-                format!("Open or create a collection first ({}).", key_hint("O")),
+                tr!("collection.open_first", key = key_hint("O")),
                 window,
                 cx,
             );
@@ -505,7 +503,7 @@ impl Workspace {
             _ => Body::None,
         };
         let request = Request {
-            name: "New request".into(),
+            name: tr!("collection.new_request_name").into(),
             body,
             ..Request::new(method, "")
         };
@@ -530,9 +528,9 @@ impl Workspace {
             return;
         };
         self.prompt_name(
-            "New folder",
+            tr!("collection.new_folder_title"),
             String::new(),
-            "Create",
+            tr!("collection.create"),
             window,
             cx,
             move |this, name, window, cx| match store::create_folder(&parent, &name) {
@@ -552,9 +550,9 @@ impl Workspace {
             .map(|r| r.name.clone())
             .unwrap_or_default();
         self.prompt_name(
-            "Rename request",
+            tr!("collection.rename_request_title"),
             current,
-            "Rename",
+            tr!("collection.rename"),
             window,
             cx,
             move |this, name, window, cx| match store::rename_request(&path, &name) {
@@ -576,9 +574,9 @@ impl Workspace {
     fn rename_folder(&mut self, path: PathBuf, window: &mut Window, cx: &mut Context<Self>) {
         let current = file_stem(&path);
         self.prompt_name(
-            "Rename folder",
+            tr!("collection.rename_folder_title"),
             current,
-            "Rename",
+            tr!("collection.rename"),
             window,
             cx,
             move |this, name, window, cx| match store::rename_folder(&path, &name) {
@@ -623,28 +621,26 @@ impl Workspace {
         window.open_alert_dialog(cx, move |alert: AlertDialog, _, _| {
             let (view, path) = (view.clone(), path.clone());
             let what = if folder {
-                "Delete folder?"
+                tr!("collection.delete_folder_title")
             } else {
-                "Delete request?"
+                tr!("collection.delete_request_title")
             };
-            let (gone, ok) = if permanent {
-                (
-                    "will be deleted for good (encrypted collections have no trash)",
-                    "Delete",
-                )
+            let ok = if permanent {
+                tr!("collection.delete")
             } else {
-                ("will be moved to the trash", "Move to trash")
+                tr!("sidebar.move_to_trash")
             };
-            let detail = if folder {
-                format!("\u{201c}{name}\u{201d} and everything in it {gone}.")
-            } else {
-                format!("\u{201c}{name}\u{201d} {gone}.")
+            let detail = match (folder, permanent) {
+                (true, true) => tr!("collection.delete_folder_permanent", name = name),
+                (true, false) => tr!("collection.delete_folder_trash", name = name),
+                (false, true) => tr!("collection.delete_request_permanent", name = name),
+                (false, false) => tr!("collection.delete_request_trash", name = name),
             };
             alert
                 .on_close(refocus(view.clone()))
                 .confirm()
                 .title(what)
-                .description(SharedString::from(detail))
+                .description(detail)
                 .ok_text(ok)
                 .on_ok(move |_, window, cx| {
                     view.update(cx, |this, cx| this.delete(path.clone(), folder, window, cx))
@@ -671,9 +667,9 @@ impl Workspace {
     /// A small dialog with one text field, used for names.
     fn prompt_name(
         &mut self,
-        title: &'static str,
+        title: SharedString,
         initial: String,
-        ok_label: &'static str,
+        ok_label: SharedString,
         window: &mut Window,
         cx: &mut Context<Self>,
         on_ok: impl Fn(&mut Workspace, String, &mut Window, &mut Context<Workspace>) + 'static,
@@ -705,7 +701,7 @@ impl Workspace {
             let cancel_view = view.clone();
             dialog
                 .on_close(refocus(view.clone()))
-                .title(title)
+                .title(title.clone())
                 .width(px(420.))
                 .child(Input::new(&input))
                 .on_ok(move |_, window, cx| on_enter(window, cx))
@@ -715,17 +711,23 @@ impl Workspace {
                         .justify_end()
                         .gap_2()
                         .child(
-                            Button::new("name-cancel").ghost().label("Cancel").on_click(
-                                move |_, window, cx| close_dialog(&cancel_view, window, cx),
-                            ),
+                            Button::new("name-cancel")
+                                .ghost()
+                                .label(tr!("dialog.cancel"))
+                                .on_click(move |_, window, cx| {
+                                    close_dialog(&cancel_view, window, cx)
+                                }),
                         )
-                        .child(Button::new("name-ok").primary().label(ok_label).on_click(
-                            move |_, window, cx| {
-                                if confirm(window, cx) {
-                                    window.close_dialog(cx);
-                                }
-                            },
-                        )),
+                        .child(
+                            Button::new("name-ok")
+                                .primary()
+                                .label(ok_label.clone())
+                                .on_click(move |_, window, cx| {
+                                    if confirm(window, cx) {
+                                        window.close_dialog(cx);
+                                    }
+                                }),
+                        ),
                 )
         });
     }
@@ -739,7 +741,7 @@ impl Workspace {
             files: false,
             directories: true,
             multiple: false,
-            prompt: Some("Open collection".into()),
+            prompt: Some(tr!("collection.open_prompt")),
         });
         cx.spawn_in(window, async move |this, cx| {
             if let Ok(Ok(Some(paths))) = picked.await
@@ -786,28 +788,31 @@ impl Workspace {
             alert
                 .on_close(refocus(view.clone()))
                 .confirm()
-                .title("Start a new collection here?")
-                .description(SharedString::from(format!(
-                    "{} has no apix.toml yet. Apix will create one; requests are saved as .apix files in this folder.",
-                    dir.display()
-                )))
-                .ok_text("Create collection")
+                .title(tr!("collection.start_here_title"))
+                .description(tr!("collection.start_here_text", path = dir.display()))
+                .ok_text(tr!("collection.create_collection"))
                 .on_ok(move |_, window, cx| {
                     let meta = CollectionMeta {
                         name: dir
                             .file_name()
                             .map(|n| n.to_string_lossy().into_owned())
-                            .unwrap_or_else(|| "Collection".into()),
+                            .unwrap_or_else(|| tr!("collection.default_name").into()),
                         ..CollectionMeta::default()
                     };
-                    view.update(cx, |this, cx| match store::save_collection_meta(&dir, &meta) {
-                        Ok(()) => {
-                            let dir = dir.clone();
-                            this.guard_all_tabs(window, cx, Rc::new(move |this, window, cx| {
-                                this.open_collection_dir(&dir, window, cx)
-                            }));
+                    view.update(cx, |this, cx| {
+                        match store::save_collection_meta(&dir, &meta) {
+                            Ok(()) => {
+                                let dir = dir.clone();
+                                this.guard_all_tabs(
+                                    window,
+                                    cx,
+                                    Rc::new(move |this, window, cx| {
+                                        this.open_collection_dir(&dir, window, cx)
+                                    }),
+                                );
+                            }
+                            Err(e) => this.notify_error(describe(&e), window, cx),
                         }
-                        Err(e) => this.notify_error(describe(&e), window, cx),
                     })
                     .ok();
                     true
@@ -820,7 +825,7 @@ impl Workspace {
             files: true,
             directories: false,
             multiple: false,
-            prompt: Some("Import Postman export".into()),
+            prompt: Some(tr!("import.prompt")),
         });
         cx.spawn_in(window, async move |this, cx| {
             if let Ok(Ok(Some(paths))) = picked.await
@@ -877,7 +882,7 @@ impl Workspace {
             files: false,
             directories: true,
             multiple: false,
-            prompt: Some("Create the collection in".into()),
+            prompt: Some(tr!("collection.create_collection_in")),
         });
         cx.spawn_in(window, async move |this, cx| {
             let Ok(Ok(Some(paths))) = picked.await else {
@@ -902,7 +907,7 @@ impl Workspace {
                 );
                 window.push_notification(
                     Notification::success(report.trim_end().to_owned())
-                        .title("Postman collection imported")
+                        .title(tr!("import.collection_done"))
                         .autohide(!has_warnings),
                     cx,
                 );
@@ -915,11 +920,7 @@ impl Workspace {
     fn import_environment(&mut self, json: &str, window: &mut Window, cx: &mut Context<Self>) {
         // In a project the environment is shared by all its collections.
         let Some(root) = self.workspace_root() else {
-            self.notify_error(
-                "Open the collection or project this environment belongs to first, then import it.",
-                window,
-                cx,
-            );
+            self.notify_error(tr!("import.environment_needs_open"), window, cx);
             return;
         };
         let result = postman::convert_environment(json).and_then(|env| {
@@ -928,21 +929,24 @@ impl Workspace {
         });
         match result {
             Ok(env) => {
-                let mut message = format!(
-                    "\u{201c}{}\u{201d} saved as environments/{}.toml with {} variables.",
-                    env.title,
-                    env.name,
-                    env.vars.len()
-                );
-                if !env.secrets.is_empty() {
-                    message.push_str(&format!(
-                        " {} secrets went to {}.local.toml, which git ignores.",
-                        env.secrets.len(),
-                        env.name
-                    ));
-                }
+                let message = if env.secrets.is_empty() {
+                    tr!(
+                        "import.environment_saved",
+                        title = env.title,
+                        name = env.name,
+                        count = env.vars.len()
+                    )
+                } else {
+                    tr!(
+                        "import.environment_saved_with_secrets",
+                        title = env.title,
+                        name = env.name,
+                        count = env.vars.len(),
+                        secrets = env.secrets.len()
+                    )
+                };
                 window.push_notification(
-                    Notification::success(message).title("Environment imported"),
+                    Notification::success(message).title(tr!("import.environment_done")),
                     cx,
                 );
             }
@@ -970,14 +974,20 @@ impl Workspace {
             .project
             .as_ref()
             .is_some_and(|pr| pr.meta.group_by == GroupBy::Environment);
-        let icon_button = |id: &'static str, icon: IconName, tooltip: String| {
+        let icon_button = |id: &'static str, icon: IconName, tooltip: SharedString| {
             Button::new(id).ghost().xsmall().icon(icon).tooltip(tooltip)
         };
 
         let (kind, title) = match (&self.project, self.collections.first()) {
-            (Some(project), _) => ("PROJECT", project.meta.name.clone()),
-            (None, Some(c)) => ("COLLECTION", c.meta.name.clone()),
-            (None, None) => ("APIX", "Nothing open".to_owned()),
+            (Some(project), _) => (
+                tr!("sidebar.kind_project"),
+                SharedString::from(project.meta.name.clone()),
+            ),
+            (None, Some(c)) => (
+                tr!("sidebar.kind_collection"),
+                SharedString::from(c.meta.name.clone()),
+            ),
+            (None, None) => (SharedString::from("APIX"), tr!("sidebar.nothing_open")),
         };
         // Opening, creating and project settings live in the menu bar above.
         let header = v_flex()
@@ -1005,7 +1015,7 @@ impl Workspace {
                             icon_button(
                                 "sidebar-new",
                                 IconName::Plus,
-                                format!("New request ({} for GET)", key_hint("N")),
+                                tr!("sidebar.new_request_tooltip", key = key_hint("N")),
                             )
                             .dropdown_menu({
                                 let view = cx.entity().downgrade();
@@ -1016,7 +1026,7 @@ impl Workspace {
                             icon_button(
                                 "sidebar-folder",
                                 IconName::FolderClosed,
-                                "New folder".into(),
+                                tr!("sidebar.new_folder"),
                             )
                             .on_click(cx.listener(
                                 |this, _: &ClickEvent, window, cx| {
@@ -1051,7 +1061,7 @@ impl Workspace {
                     icon_button(
                         "sidebar-vars",
                         IconName::Settings,
-                        format!("Edit variables ({})", key_hint("E")),
+                        tr!("sidebar.edit_variables_tooltip", key = key_hint("E")),
                     )
                     .on_click(cx.listener(
                         |this, _: &ClickEvent, window, cx| this.open_env_editor(window, cx),
@@ -1079,9 +1089,9 @@ impl Workspace {
             }
             if rows.is_empty() {
                 let hint = if self.project.is_some() && self.collections.is_empty() {
-                    "No collections yet. Use the menu above: New collection…".to_owned()
+                    tr!("sidebar.no_collections", item = tr!("menu.new_collection"))
                 } else {
-                    format!("No requests yet. {} creates one.", key_hint("N"))
+                    tr!("sidebar.no_requests", key = key_hint("N"))
                 };
                 rows.push(
                     div()
@@ -1228,7 +1238,7 @@ impl Workspace {
                         .py_1()
                         .text_xs()
                         .text_color(p.text_muted)
-                        .child("Empty")
+                        .child(tr!("sidebar.empty"))
                         .into_any_element(),
                 );
             }
@@ -1250,7 +1260,7 @@ impl Workspace {
                     .py_2()
                     .text_xs()
                     .text_color(p.text_muted)
-                    .child("This project has no environments yet. Add test.toml or prod.toml to its environments/ folder.")
+                    .child(tr!("sidebar.no_environments"))
                     .into_any_element(),
             );
             for collection in &self.collections {
@@ -1288,7 +1298,7 @@ impl Workspace {
                         let view = cx.entity().downgrade();
                         move |menu, _, _| {
                             let view = view.clone();
-                            menu.item(PopupMenuItem::new("Edit variables…").on_click(
+                            menu.item(PopupMenuItem::new(tr!("sidebar.edit_variables")).on_click(
                                 move |_, window, cx| {
                                     view.update(cx, |this, cx| this.open_env_editor(window, cx))
                                         .ok();
@@ -1330,7 +1340,7 @@ impl Workspace {
                 Button::new("empty-open")
                     .small()
                     .icon(IconName::FolderOpen)
-                    .label("Open a folder")
+                    .label(tr!("sidebar.open_folder"))
                     .on_click(cx.listener(|this, _: &ClickEvent, window, cx| {
                         this.prompt_open_collection(window, cx)
                     })),
@@ -1339,7 +1349,7 @@ impl Workspace {
                 Button::new("empty-import")
                     .small()
                     .icon(IconName::Inbox)
-                    .label("Import from Postman")
+                    .label(tr!("sidebar.import_postman"))
                     .on_click(cx.listener(|this, _: &ClickEvent, window, cx| {
                         this.prompt_import(window, cx)
                     })),
@@ -1349,7 +1359,7 @@ impl Workspace {
                     .pt_1()
                     .text_xs()
                     .text_color(p.text_muted)
-                    .child("Or drop a Postman export or a folder onto the window."),
+                    .child(tr!("sidebar.drop_hint")),
             )
             .children(self.render_recent(cx))
     }
@@ -1400,7 +1410,7 @@ impl Workspace {
                         .pb_1()
                         .text_xs()
                         .text_color(p.text_muted)
-                        .child("RECENT"),
+                        .child(tr!("sidebar.recent")),
                 )
                 .children(rows),
         )
@@ -1568,7 +1578,7 @@ fn row_base(path: &Path, depth: usize) -> Stateful<Div> {
 
 fn request_menu(menu: PopupMenu, view: WeakEntity<Workspace>, path: PathBuf) -> PopupMenu {
     let item =
-        |label: &'static str,
+        |label: SharedString,
          f: fn(&mut Workspace, PathBuf, &mut Window, &mut Context<Workspace>)| {
             let (view, path) = (view.clone(), path.clone());
             PopupMenuItem::new(label).on_click(move |_, window, cx| {
@@ -1577,10 +1587,10 @@ fn request_menu(menu: PopupMenu, view: WeakEntity<Workspace>, path: PathBuf) -> 
             })
         };
     let menu = menu
-        .item(item("Rename…", |this, path, window, cx| {
+        .item(item(tr!("sidebar.rename"), |this, path, window, cx| {
             this.rename_request(path, window, cx)
         }))
-        .item(item("Duplicate", |this, path, window, cx| {
+        .item(item(tr!("sidebar.duplicate"), |this, path, window, cx| {
             this.duplicate(path, window, cx)
         }))
         .separator();
@@ -1589,7 +1599,7 @@ fn request_menu(menu: PopupMenu, view: WeakEntity<Workspace>, path: PathBuf) -> 
         .fold(menu, |menu, shell| {
             let (view, path) = (view.clone(), path.clone());
             menu.item(
-                PopupMenuItem::new(format!("Copy as {}", shell.label())).on_click(
+                PopupMenuItem::new(tr!("sidebar.copy_as_shell", shell = shell.label())).on_click(
                     move |_, window, cx| {
                         view.update(cx, |this, cx| {
                             this.copy_saved_as(path.clone(), shell, window, cx)
@@ -1599,10 +1609,10 @@ fn request_menu(menu: PopupMenu, view: WeakEntity<Workspace>, path: PathBuf) -> 
                 ),
             )
         });
-    menu.separator()
-        .item(item("Move to trash", |this, path, window, cx| {
-            this.confirm_delete(path, false, window, cx)
-        }))
+    menu.separator().item(item(
+        tr!("sidebar.move_to_trash"),
+        |this, path, window, cx| this.confirm_delete(path, false, window, cx),
+    ))
 }
 
 /// One item per HTTP method; picking one creates a request with it in `dir`.
@@ -1632,7 +1642,7 @@ fn new_request_submenu(
     window: &mut Window,
     cx: &mut Context<PopupMenu>,
 ) -> PopupMenu {
-    menu.submenu("New request", window, cx, move |menu, _, _| {
+    menu.submenu(tr!("menu.new_request"), window, cx, move |menu, _, _| {
         method_items(menu, view.clone(), Some(dir.clone()))
     })
 }
@@ -1645,7 +1655,7 @@ fn folder_menu(
     cx: &mut Context<PopupMenu>,
 ) -> PopupMenu {
     let item =
-        |label: &'static str,
+        |label: SharedString,
          f: fn(&mut Workspace, PathBuf, &mut Window, &mut Context<Workspace>)| {
             let (view, path) = (view.clone(), path.clone());
             PopupMenuItem::new(label).on_click(move |_, window, cx| {
@@ -1654,19 +1664,20 @@ fn folder_menu(
             })
         };
     new_request_submenu(menu, view.clone(), path.clone(), window, cx)
-        .item(item("New folder…", |this, path, window, cx| {
+        .item(item(tr!("menu.new_folder"), |this, path, window, cx| {
             this.new_folder(Some(path), window, cx)
         }))
-        .item(item("Rename…", |this, path, window, cx| {
+        .item(item(tr!("sidebar.rename"), |this, path, window, cx| {
             this.rename_folder(path, window, cx)
         }))
-        .item(item("Auth…", |this, path, window, cx| {
+        .item(item(tr!("sidebar.auth"), |this, path, window, cx| {
             this.open_auth_dialog(AuthOwner::Folder(path), window, cx)
         }))
         .separator()
-        .item(item("Move to trash", |this, path, window, cx| {
-            this.confirm_delete(path, true, window, cx)
-        }))
+        .item(item(
+            tr!("sidebar.move_to_trash"),
+            |this, path, window, cx| this.confirm_delete(path, true, window, cx),
+        ))
 }
 
 /// The context menu of a collection header. `pins` lists the project's
@@ -1680,7 +1691,7 @@ fn collection_menu(
     cx: &mut Context<PopupMenu>,
 ) -> PopupMenu {
     let item =
-        |label: &'static str,
+        |label: SharedString,
          f: fn(&mut Workspace, PathBuf, &mut Window, &mut Context<Workspace>)| {
             let (view, root) = (view.clone(), root.clone());
             PopupMenuItem::new(label).on_click(move |_, window, cx| {
@@ -1689,33 +1700,35 @@ fn collection_menu(
             })
         };
     let mut menu = new_request_submenu(menu, view.clone(), root.clone(), window, cx)
-        .item(item("New folder…", |this, root, window, cx| {
+        .item(item(tr!("menu.new_folder"), |this, root, window, cx| {
             this.new_folder(Some(root), window, cx)
         }))
-        .item(item("Rename…", |this, root, window, cx| {
+        .item(item(tr!("sidebar.rename"), |this, root, window, cx| {
             this.rename_collection(root, window, cx)
         }))
-        .item(item("Auth…", |this, root, window, cx| {
+        .item(item(tr!("sidebar.auth"), |this, root, window, cx| {
             this.open_auth_dialog(AuthOwner::Collection(root), window, cx)
         }))
         .separator();
     menu = if vfs::is_virtual(&root) {
-        menu.item(item("Lock", |this, _, window, cx| {
+        menu.item(item(tr!("sidebar.lock"), |this, _, window, cx| {
             this.lock_collections(window, cx)
         }))
-        .item(item("Change password…", |this, root, window, cx| {
-            this.prompt_change_password(root, window, cx)
-        }))
-        .item(item("Remove encryption…", |this, root, window, cx| {
-            this.confirm_decrypt(root, window, cx)
-        }))
+        .item(item(
+            tr!("sidebar.change_password"),
+            |this, root, window, cx| this.prompt_change_password(root, window, cx),
+        ))
+        .item(item(
+            tr!("sidebar.remove_encryption"),
+            |this, root, window, cx| this.confirm_decrypt(root, window, cx),
+        ))
     } else {
-        menu.item(item("Encrypt…", |this, root, window, cx| {
+        menu.item(item(tr!("sidebar.encrypt"), |this, root, window, cx| {
             this.prompt_encrypt(root, window, cx)
         }))
     };
     if let Some((envs, shown)) = pins.filter(|(envs, _)| !envs.is_empty()) {
-        menu = menu.separator().label("Show in environment");
+        menu = menu.separator().label(tr!("sidebar.show_in_environment"));
         for (env, is_shown) in envs.into_iter().zip(shown) {
             let (view, root) = (view.clone(), root.clone());
             menu = menu.item(PopupMenuItem::new(env.clone()).checked(is_shown).on_click(
@@ -1728,10 +1741,10 @@ fn collection_menu(
             ));
         }
     }
-    menu.separator()
-        .item(item("Move to trash", |this, root, window, cx| {
-            this.confirm_delete(root, true, window, cx)
-        }))
+    menu.separator().item(item(
+        tr!("sidebar.move_to_trash"),
+        |this, root, window, cx| this.confirm_delete(root, true, window, cx),
+    ))
 }
 
 impl Workspace {
@@ -1739,9 +1752,9 @@ impl Workspace {
     /// with Test and Prod environments.
     pub(super) fn prompt_new_project(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         self.prompt_name(
-            "New project",
+            tr!("collection.new_project_title"),
             String::new(),
-            "Choose folder…",
+            tr!("collection.choose_folder"),
             window,
             cx,
             |_, name, window, cx| {
@@ -1749,7 +1762,7 @@ impl Workspace {
                     files: false,
                     directories: true,
                     multiple: false,
-                    prompt: Some("Create the project in".into()),
+                    prompt: Some(tr!("collection.create_project_in")),
                 });
                 cx.spawn_in(window, async move |this, cx| {
                     if let Ok(Ok(Some(paths))) = picked.await
@@ -1779,12 +1792,12 @@ impl Workspace {
     pub(super) fn prompt_new_collection(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         let project_root = self.project.as_ref().map(|p| p.root.clone());
         let label = if project_root.is_some() {
-            "Create"
+            tr!("collection.create")
         } else {
-            "Choose folder…"
+            tr!("collection.choose_folder")
         };
         self.prompt_name(
-            "New collection",
+            tr!("collection.new_collection_title"),
             String::new(),
             label,
             window,
@@ -1807,7 +1820,7 @@ impl Workspace {
                     files: false,
                     directories: true,
                     multiple: false,
-                    prompt: Some("Create the collection in".into()),
+                    prompt: Some(tr!("collection.create_collection_in")),
                 });
                 cx.spawn_in(window, async move |this, cx| {
                     if let Ok(Ok(Some(paths))) = picked.await
@@ -1841,9 +1854,9 @@ impl Workspace {
             .map(|c| c.meta.name.clone())
             .unwrap_or_default();
         self.prompt_name(
-            "Rename collection",
+            tr!("collection.rename_collection_title"),
             current,
-            "Rename",
+            tr!("collection.rename"),
             window,
             cx,
             move |this, name, window, cx| {

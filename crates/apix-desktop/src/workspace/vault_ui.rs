@@ -24,9 +24,8 @@ use gpui_kit::*;
 use super::collections::{Then, close_dialog, refocus};
 use super::{Workspace, describe};
 use crate::theme::Palette;
+use crate::tr;
 
-/// Locks every encrypted collection after this long without input.
-const AUTO_LOCK: Duration = Duration::from_secs(15 * 60);
 /// New passwords are at least this long.
 const MIN_PASSWORD: usize = 8;
 
@@ -43,10 +42,10 @@ enum Ask {
 
 /// The text and kind of a password dialog.
 struct Dialog {
-    title: String,
-    ok: &'static str,
+    title: SharedString,
+    ok: SharedString,
     ask: Ask,
-    note: String,
+    note: SharedString,
 }
 
 /// The finished background job of a password dialog.
@@ -75,7 +74,7 @@ pub(super) struct PasswordForm {
     password: Entity<InputState>,
     confirm: Option<Entity<InputState>>,
     recovery: bool,
-    note: String,
+    note: SharedString,
     error: Option<String>,
     busy: bool,
     submit: Option<Submit>,
@@ -86,29 +85,31 @@ impl PasswordForm {
     fn new(
         palette: Palette,
         ask: Ask,
-        note: String,
+        note: SharedString,
         window: &mut Window,
         cx: &mut Context<Self>,
     ) -> Self {
-        let masked = |placeholder: &'static str, window: &mut Window, cx: &mut Context<Self>| {
+        let masked = |placeholder: SharedString, window: &mut Window, cx: &mut Context<Self>| {
             cx.new(|cx| {
                 InputState::new(window, cx)
                     .placeholder(placeholder)
                     .masked(true)
             })
         };
-        let name = (ask == Ask::NewCollection)
-            .then(|| cx.new(|cx| InputState::new(window, cx).placeholder("Collection name")));
+        let name = (ask == Ask::NewCollection).then(|| {
+            cx.new(|cx| InputState::new(window, cx).placeholder(tr!("vault.name_placeholder")))
+        });
         let password = masked(
             if ask == Ask::Unlock {
-                "Password"
+                tr!("auth.field.password")
             } else {
-                "New password (8 characters or more)"
+                tr!("vault.new_password_placeholder", count = MIN_PASSWORD)
             },
             window,
             cx,
         );
-        let confirm = (ask != Ask::Unlock).then(|| masked("Repeat the password", window, cx));
+        let confirm =
+            (ask != Ask::Unlock).then(|| masked(tr!("vault.repeat_password"), window, cx));
         let mut subscriptions = Vec::new();
         for field in name.iter().chain([&password]).chain(confirm.iter()) {
             subscriptions.push(cx.subscribe_in(
@@ -145,21 +146,21 @@ impl PasswordForm {
         let password = text(&self.password);
         let name = self.name.as_ref().map(text).unwrap_or_default();
         if self.ask == Ask::NewCollection && name.trim().is_empty() {
-            return Err("Give the collection a name.".into());
+            return Err(tr!("vault.error.no_name").into());
         }
         if password.is_empty() {
             return Err(if self.recovery {
-                "Enter the recovery key.".into()
+                tr!("vault.error.no_recovery_key").into()
             } else {
-                "Enter the password.".into()
+                tr!("vault.error.no_password").into()
             });
         }
         if let Some(confirm) = &self.confirm {
             if password.chars().count() < MIN_PASSWORD {
-                return Err(format!("Use at least {MIN_PASSWORD} characters."));
+                return Err(tr!("vault.error.too_short", count = MIN_PASSWORD).into());
             }
             if text(confirm) != password {
-                return Err("The two passwords are different.".into());
+                return Err(tr!("vault.error.mismatch").into());
             }
         }
         Ok(Secret {
@@ -178,9 +179,9 @@ impl PasswordForm {
             state.set_value("", window, cx);
             state.set_placeholder(
                 if recovery {
-                    "Recovery key, e.g. 7K2M-9QXA-…"
+                    tr!("vault.recovery_placeholder")
                 } else {
-                    "Password"
+                    tr!("auth.field.password")
                 },
                 window,
                 cx,
@@ -219,9 +220,9 @@ impl Render for PasswordForm {
                             .ghost()
                             .xsmall()
                             .label(if self.recovery {
-                                "Use the password instead"
+                                tr!("vault.use_password")
                             } else {
-                                "Forgot the password? Use the recovery key"
+                                tr!("vault.use_recovery")
                             })
                             .on_click(cx.listener(|this, _: &ClickEvent, window, cx| {
                                 this.toggle_recovery(window, cx)
@@ -237,7 +238,7 @@ impl Render for PasswordForm {
                     div()
                         .text_sm()
                         .text_color(p.text_muted)
-                        .child("Working… deriving the key takes a moment on purpose."),
+                        .child(tr!("vault.working")),
                 )
             })
     }
@@ -340,7 +341,7 @@ impl Workspace {
                         .child(
                             Button::new("vault-cancel")
                                 .ghost()
-                                .label("Cancel")
+                                .label(tr!("dialog.cancel"))
                                 .on_click(move |_, window, cx| {
                                     close_dialog(&cancel_view, window, cx)
                                 }),
@@ -348,7 +349,7 @@ impl Workspace {
                         .child(
                             Button::new("vault-ok")
                                 .primary()
-                                .label(ok_label)
+                                .label(ok_label.clone())
                                 .on_click(move |_, window, cx| submit(window, cx)),
                         ),
                 )
@@ -384,13 +385,13 @@ impl Workspace {
         });
         self.password_dialog(
             Dialog {
-                title: format!("Unlock \u{201c}{name}\u{201d}"),
-                ok: "Unlock",
+                title: tr!("vault.unlock_title", name = name),
+                ok: tr!("vault.unlock"),
                 ask: Ask::Unlock,
-                note:
-                    "This collection is encrypted. It stays unlocked until you lock it, quit Apix, \
-             or leave it idle for 15 minutes."
-                        .into(),
+                note: match self.settings.auto_lock_minutes {
+                    0 => tr!("vault.unlock_note_no_auto_lock"),
+                    minutes => tr!("vault.unlock_note", count = minutes),
+                },
             },
             make_job,
             done,
@@ -409,7 +410,7 @@ impl Workspace {
         let parent = self.project.as_ref().map(|p| p.root.clone());
         let make_job: MakeJob = Rc::new(move |secret: Secret| {
             let parent = parent.clone().ok_or_else(|| {
-                "Open a project first, or use File › Encrypt this collection.".to_owned()
+                tr!("vault.error.open_project_first", menu = encrypt_menu_path()).to_string()
             })?;
             let root = store::unique_path(&parent, &store::slug(&secret.name, "collection"), "");
             Ok(Box::new(move || {
@@ -437,8 +438,7 @@ impl Workspace {
         });
         if self.project.is_none() {
             self.notify_error(
-                "Open a project to create an encrypted collection in it, or encrypt the open \
-                 collection with File › Encrypt this collection.",
+                tr!("vault.new_needs_project", menu = encrypt_menu_path()).to_string(),
                 window,
                 cx,
             );
@@ -446,12 +446,10 @@ impl Workspace {
         }
         self.password_dialog(
             Dialog {
-                title: "New encrypted collection".into(),
-                ok: "Create",
+                title: tr!("vault.new_title"),
+                ok: tr!("vault.create"),
                 ask: Ask::NewCollection,
-                note: "Every request, environment and name is encrypted on disk. You will get a \
-             recovery key to keep somewhere safe."
-                    .into(),
+                note: tr!("vault.new_note"),
             },
             make_job,
             done,
@@ -482,14 +480,10 @@ impl Workspace {
         });
         self.password_dialog(
             Dialog {
-                title: format!("Encrypt \u{201c}{name}\u{201d}"),
-                ok: "Encrypt",
+                title: tr!("vault.encrypt_title", name = name),
+                ok: tr!("vault.encrypt"),
                 ask: Ask::NewPassword,
-                note:
-                    "Every file is encrypted with this password. The plain files are moved to the \
-             trash afterwards; empty the trash to remove them for good. If the folder is in \
-             git, its history still holds the plain files."
-                        .into(),
+                note: tr!("vault.encrypt_note"),
             },
             make_job,
             done,
@@ -512,18 +506,15 @@ impl Workspace {
             alert
                 .on_close(refocus(view.clone()))
                 .confirm()
-                .title(format!("Remove encryption from \u{201c}{name}\u{201d}?"))
-                .description(
-                    "Its files are written back in plain text, readable by anyone with \
-                     access to the folder. The encrypted files go to the trash.",
-                )
-                .ok_text("Remove encryption")
+                .title(tr!("vault.decrypt_title", name = name))
+                .description(tr!("vault.decrypt_description"))
+                .ok_text(tr!("vault.decrypt"))
                 .on_ok(move |_, window, cx| {
                     view.update(cx, |ws, cx| match decrypt_in_place(&root) {
                         Ok(()) => {
                             ws.reload(window, cx);
                             window.push_notification(
-                                Notification::success("The collection is no longer encrypted."),
+                                Notification::success(tr!("vault.decrypted")),
                                 cx,
                             );
                         }
@@ -547,23 +538,20 @@ impl Workspace {
             let root = target.clone();
             Ok(Box::new(move || {
                 vfs::with_vault(&root, |vault, _| vault.change_password(&secret.password))
-                    .ok_or_else(|| "The collection is locked.".to_owned())?
+                    .ok_or_else(|| tr!("vault.error.locked").to_string())?
                     .map_err(|e| describe(&e))?;
                 Ok(Outcome::Done)
             }) as Job)
         });
         let done: OnDone = Rc::new(|_, _, window, cx| {
-            window.push_notification(
-                Notification::success("The password was changed. The recovery key still works."),
-                cx,
-            );
+            window.push_notification(Notification::success(tr!("vault.password_changed")), cx);
         });
         self.password_dialog(
             Dialog {
-                title: format!("New password for \u{201c}{name}\u{201d}"),
-                ok: "Change password",
+                title: tr!("vault.change_password_title", name = name),
+                ok: tr!("vault.change_password"),
                 ask: Ask::NewPassword,
-                note: "Files are not re-encrypted; only the key that unlocks them changes.".into(),
+                note: tr!("vault.change_password_note"),
             },
             make_job,
             done,
@@ -584,7 +572,7 @@ impl Workspace {
             let checked = stored.get();
             dialog
                 .on_close(refocus(view.clone()))
-                .title("Your recovery key")
+                .title(tr!("vault.recovery.title"))
                 .w(px(580.))
                 .close_button(false)
                 .overlay_closable(false)
@@ -592,10 +580,7 @@ impl Workspace {
                 .child(
                     v_flex()
                         .gap_3()
-                        .child(div().text_sm().child(
-                            "If the password is ever lost, this key opens the collection. \
-                             Store it in a password manager. Apix shows it only now.",
-                        ))
+                        .child(div().text_sm().child(tr!("vault.recovery.intro")))
                         .child(
                             h_flex()
                                 .gap_2()
@@ -613,22 +598,25 @@ impl Workspace {
                                         .child(text.clone()),
                                 )
                                 .child(
-                                    Button::new("recovery-copy").small().label("Copy").on_click(
-                                        move |_, _, cx| {
+                                    Button::new("recovery-copy")
+                                        .small()
+                                        .label(tr!("vault.recovery.copy"))
+                                        .on_click(move |_, _, cx| {
                                             cx.write_to_clipboard(ClipboardItem::new_string(
                                                 copy.to_string(),
                                             ))
-                                        },
-                                    ),
+                                        }),
                                 ),
                         )
-                        .child(div().text_sm().text_color(p.warn).child(
-                            "Without the password and without this key, nobody, including \
-                             you, can open the collection.",
-                        ))
+                        .child(
+                            div()
+                                .text_sm()
+                                .text_color(p.warn)
+                                .child(tr!("vault.recovery.warning")),
+                        )
                         .child(
                             Checkbox::new("recovery-stored")
-                                .label("I stored the recovery key somewhere safe")
+                                .label(tr!("vault.recovery.stored"))
                                 .checked(checked)
                                 .on_click(move |value: &bool, window, _| {
                                     tick.set(*value);
@@ -640,7 +628,7 @@ impl Workspace {
                     h_flex().w_full().justify_end().child(
                         Button::new("recovery-done")
                             .primary()
-                            .label("Done")
+                            .label(tr!("vault.recovery.done"))
                             .disabled(!checked)
                             .on_click(move |_, window, cx| close_dialog(&done_view, window, cx)),
                     ),
@@ -680,7 +668,7 @@ impl Workspace {
         }
     }
 
-    /// Checks every 30 seconds whether to lock after `AUTO_LOCK` idle time.
+    /// Checks every 30 seconds whether to lock after the idle time set in Settings.
     /// Collections with unsaved edits stay unlocked until they are saved.
     pub(super) fn auto_lock_task(window: &mut Window, cx: &mut Context<Self>) -> Task<()> {
         cx.spawn_in(window, async move |this, cx| {
@@ -689,7 +677,9 @@ impl Workspace {
                     .timer(Duration::from_secs(30))
                     .await;
                 let Ok(()) = this.update_in(cx, |ws, window, cx| {
-                    if ws.last_input.get().elapsed() < AUTO_LOCK {
+                    let minutes = ws.settings.auto_lock_minutes;
+                    let idle = Duration::from_secs(u64::from(minutes) * 60);
+                    if minutes == 0 || ws.last_input.get().elapsed() < idle {
                         return;
                     }
                     let roots: Vec<PathBuf> = vfs::unlocked_roots()
@@ -699,10 +689,8 @@ impl Workspace {
                     if !roots.is_empty() {
                         ws.lock_now(&roots, window, cx);
                         window.push_notification(
-                            Notification::info(
-                                "Encrypted collections were locked after 15 idle minutes.",
-                            )
-                            .title("Locked"),
+                            Notification::info(tr!("vault.auto_locked", count = minutes))
+                                .title(tr!("vault.locked_title")),
                             cx,
                         );
                     }
@@ -743,7 +731,7 @@ impl Workspace {
             }))
             .child(Icon::new(IconName::Lock).xsmall())
             .child(div().flex_1().min_w_0().truncate().child(name))
-            .child(div().text_xs().child("Locked"))
+            .child(div().text_xs().child(tr!("vault.locked")))
             .into_any_element()
     }
 
@@ -780,7 +768,7 @@ fn encrypt_in_place(root: &Path, password: &str) -> Result<Outcome, String> {
             std::fs::rename(&path, staging.join(&name)).map_err(|e| e.to_string())?;
         }
     }
-    trash::delete(root).map_err(|e| format!("Could not move the plain files to the trash: {e}"))?;
+    trash::delete(root).map_err(|e| tr!("vault.error.trash_plain", error = e).to_string())?;
     std::fs::rename(&staging, root).map_err(|e| e.to_string())?;
     vault.relocate(root);
     Ok(Outcome::Created(vault, recovery))
@@ -793,7 +781,7 @@ fn decrypt_in_place(root: &Path) -> Result<(), String> {
         std::fs::remove_dir_all(&staging).map_err(|e| e.to_string())?;
     }
     vfs::with_vault(root, |vault, _| vault.export(&staging))
-        .ok_or_else(|| "Unlock the collection first.".to_owned())?
+        .ok_or_else(|| tr!("vault.error.unlock_first").to_string())?
         .map_err(|e| describe(&e))?;
     for entry in std::fs::read_dir(root).map_err(|e| e.to_string())? {
         let path = entry.map_err(|e| e.to_string())?.path();
@@ -807,8 +795,7 @@ fn decrypt_in_place(root: &Path) -> Result<(), String> {
         }
     }
     vfs::lock(root);
-    trash::delete(root)
-        .map_err(|e| format!("Could not move the encrypted files to the trash: {e}"))?;
+    trash::delete(root).map_err(|e| tr!("vault.error.trash_encrypted", error = e).to_string())?;
     std::fs::rename(&staging, root).map_err(|e| e.to_string())
 }
 
@@ -819,7 +806,7 @@ pub(super) fn discard(paths: &[PathBuf]) -> Result<(), String> {
         // A whole encrypted collection is a real folder: lock it, then trash it.
         if vfs::is_encrypted(path) {
             vfs::lock(path);
-            trash::delete(path).map_err(|e| format!("Could not move to the trash: {e}"))?;
+            trash::delete(path).map_err(|e| tr!("vault.error.trash", error = e).to_string())?;
         } else if vfs::is_virtual(path) {
             let removed = if vfs::is_dir(path) {
                 vfs::remove_dir_all(path)
@@ -828,8 +815,17 @@ pub(super) fn discard(paths: &[PathBuf]) -> Result<(), String> {
             };
             removed.map_err(|e| e.to_string())?;
         } else {
-            trash::delete(path).map_err(|e| format!("Could not move to the trash: {e}"))?;
+            trash::delete(path).map_err(|e| tr!("vault.error.trash", error = e).to_string())?;
         }
     }
     Ok(())
+}
+
+/// `File › Encrypt this collection`, in the interface language.
+fn encrypt_menu_path() -> String {
+    format!(
+        "{} › {}",
+        tr!("menu.file"),
+        tr!("menu.encrypt_collection").trim_end_matches('…')
+    )
 }

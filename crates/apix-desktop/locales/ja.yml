@@ -1,0 +1,415 @@
+_version: 1
+app.error_with_cause: "%{error}: %{cause}"
+app.status.collections: "コレクション %{count} 件"
+app.status.env: "環境: %{name}"
+app.status.no_collection: コレクションなし
+app.status.no_collections: コレクションはまだありません
+app.status.one_collection: コレクション 1 件
+app.status.one_request: リクエスト 1 件
+app.status.requests: "リクエスト %{count} 件"
+app.status.shortcuts: "%{palette} コマンド  ·  %{send} 送信  ·  Esc キャンセル"
+app.status.unsaved: 未保存の変更 · %{key} で保存
+auth.add_to: 追加先
+auth.client_auth: クライアント認証
+auth.client_basic: Basic 認証ヘッダー
+auth.client_body: ボディ内
+auth.describe.aws: "%{region} の %{service}"
+auth.describe.consumer_key: "コンシューマーキー: %{key}"
+auth.describe.key_in_header: "ヘッダー内の %{key}"
+auth.describe.key_in_query: "クエリ文字列内の %{key}"
+auth.describe.oauth2: "%{grant}、トークン取得元 %{url}"
+auth.describe.token: "トークン: %{token}"
+auth.describe.token_set: "トークン: 設定済み"
+auth.describe.username: "ユーザー名: %{name}"
+auth.dialog.collection_note: このコレクション内で独自の認証を持たないリクエストは、この設定を使用します。
+auth.dialog.collection_title: コレクション「%{name}」の認証
+auth.dialog.folder_note: このフォルダー内で独自の認証を持たないリクエストは、この設定を使用します。
+auth.dialog.folder_title: フォルダー「%{name}」の認証
+auth.dialog.project_note: このプロジェクト内で独自の認証を持たないリクエストは、この設定を使用します。
+auth.dialog.project_title: プロジェクト「%{name}」の認証
+auth.field.access_key: アクセスキー
+auth.field.access_token: アクセストークン
+auth.field.auth_url: 認可 URL
+auth.field.client_id: クライアント ID
+auth.field.client_secret: クライアントシークレット
+auth.field.consumer_key: コンシューマーキー
+auth.field.consumer_secret: コンシューマーシークレット
+auth.field.key: キー
+auth.field.password: パスワード
+auth.field.realm: レルム
+auth.field.redirect_url: リダイレクト URL
+auth.field.region: リージョン
+auth.field.scope: スコープ
+auth.field.secret_key: シークレットキー
+auth.field.service: サービス
+auth.field.session_token: セッショントークン
+auth.field.token: トークン
+auth.field.token_secret: トークンシークレット
+auth.field.token_url: トークン URL
+auth.field.username: ユーザー名
+auth.field.value: 値
+auth.grant.authorization_code: 認可コード
+auth.grant.client_credentials: クライアントクレデンシャル
+auth.grant.password: パスワード
+auth.grant_type: グラントタイプ
+auth.hint.access_key: "例: {{aws_access_key}}"
+auth.hint.client_secret: パブリッククライアントの場合は空欄
+auth.hint.key: "名前（例: X-API-Key）"
+auth.hint.optional: 任意
+auth.hint.redirect_url: "空欄: http://127.0.0.1 の空きポート"
+auth.hint.region: "例: eu-central-1"
+auth.hint.scope: "スペース区切り（例: read write）"
+auth.hint.service: "例: execute-api, s3, lambda"
+auth.hint.session_token: 一時的な認証情報の場合のみ
+auth.hint.token: "トークン（例: {{token}}）"
+auth.hint.value: "値（例: {{apiKey}}）"
+auth.in_header: ヘッダー
+auth.in_query: クエリパラメーター
+auth.inherit.collection_none: 上位で認証が設定されていないため、認証は送信されません。プロジェクトメニュー（プロジェクトの認証…）からプロジェクト全体に設定できます。
+auth.inherit.from_collection: コレクション「%{name}」の%{what}を使用します。
+auth.inherit.from_folder: フォルダー「%{name}」の%{what}を使用します。
+auth.inherit.from_project: プロジェクト「%{name}」の%{what}を使用します。
+auth.inherit.project_none: 継承するリクエストには認証が付きません。
+auth.inherit.request_none: 上位で認証が設定されていないため、認証は送信されません。フォルダーまたはコレクションの右クリックメニュー（認証…）から設定できます。
+auth.kind.api_key: API キー
+auth.kind.aws: AWS Signature
+auth.kind.basic: Basic 認証
+auth.kind.bearer: Bearer トークン
+auth.kind.digest: Digest 認証
+auth.kind.inherit: 親から継承
+auth.kind.none: 認証なし
+auth.no_auth.collection: プロジェクトがこのコレクションに認証を設定していても、認証は送信されません。
+auth.no_auth.folder: 親フォルダーまたはコレクションがこのフォルダーに認証を設定していても、認証は送信されません。
+auth.no_auth.project: 継承するリクエストには認証が送信されません。
+auth.no_auth.request: フォルダーまたはコレクションがこのリクエストに認証を設定していても、認証は送信されません。
+auth.note.aws: 送信のたびに AWS Signature Version 4 で署名します。
+auth.note.bearer: "Authorization: Bearer <token> として送信します。"
+auth.note.digest: Apix がサーバーの Digest チャレンジに応答します（MD5 または SHA-256）。
+auth.note.oauth1: 送信のたびに新しい nonce とタイムスタンプで署名します。
+auth.note.oauth2: Apix がトークンを自動で取得し、Bearer トークンとして送信します。トークンはメモリ上にのみ保持され、ディスクには書き込まれません。
+auth.note.variables: "値には {{variables}} を使用できます。"
+auth.signature: 署名
+auth.token.expired: トークンの有効期限が切れました。次の送信時に新しいトークンを取得します。
+auth.token.forget: 破棄
+auth.token.get_new: 新しいトークンを取得
+auth.token.getting: トークンを取得中…
+auth.token.none: トークンはまだありません。最初の送信時に取得します。
+auth.token.ready: トークンの準備ができました。
+auth.token.valid_for: トークンの準備ができました。有効期間は残り %{time} です。
+auth.token.waiting_browser: ブラウザーでのサインインを待っています…
+auth.type: 種類
+auth.use_pkce: PKCE を使用（推奨）
+auth.what.api_key: API キー
+auth.what.aws: AWS 署名
+auth.what.basic: Basic 認証
+auth.what.bearer: Bearer トークン
+auth.what.digest: Digest 認証
+auth.what.none: 認証なしの設定
+body.binary_hint: ファイルのバイト列がそのままボディになります。Content-Type の既定値は application/octet-stream です。変更する場合は「ヘッダー」で設定してください。
+body.binary_placeholder: "送信するファイル（例: data/upload.bin）"
+body.binary_size: "%{size} · そのまま送信"
+body.choose: 選択…
+body.choose_file: ファイルを選択
+body.choose_files: ファイルを選択（複数可）
+body.file_not_found: ファイルが見つかりません
+body.file_path: ファイルパス
+body.form_hint: HTML フォームと同様に application/x-www-form-urlencoded として送信します。
+body.graphql_query: クエリ
+body.graphql_variables: 変数 (JSON)
+body.invalid_json: 有効な JSON ではありません
+body.kind.binary: バイナリ
+body.kind.form: フォーム
+body.kind.none: なし
+body.kind.text: テキスト
+body.multipart_hint: multipart/form-data として送信します。ファイルをアップロードするには、フィールドを「ファイル」に切り替えます。コレクション内のパスは、リクエストからの相対パスで保存されます。
+body.none_hint: このリクエストにはボディがありません。
+body.part_file: ファイル
+body.part_text: テキスト
+body.send_file_instead: 代わりにファイルを送信
+body.send_text_instead: 代わりにテキストを送信
+chips.add_with: "%{key}（変数）で追加できます。"
+chips.dynamic: "動的: 送信のたびに新しい値"
+chips.empty: （空）
+chips.missing_in_env: 環境「%{env}」では定義されていません。
+chips.missing_no_env: 定義されておらず、環境も選択されていません。
+chips.scope.collection: コレクション「%{name}」
+chips.scope.environment: 環境「%{name}」
+chips.scope.environment_of: 「%{collection}」の環境「%{name}」
+chips.scope.project: プロジェクト「%{name}」
+chips.secret_scope: "%{scope} · シークレット (.local.toml)"
+chips.set_for_run: この実行のみ設定
+collection.choose_folder: フォルダーを選択…
+collection.create: 作成
+collection.create_collection: コレクションを作成
+collection.create_collection_in: コレクションの作成先
+collection.create_project_in: プロジェクトの作成先
+collection.default_name: コレクション
+collection.delete: 削除
+collection.delete_folder_permanent: 「%{name}」とその中身はすべて完全に削除されます（暗号化されたコレクションにはゴミ箱がありません）。
+collection.delete_folder_title: フォルダーを削除しますか？
+collection.delete_folder_trash: 「%{name}」とその中身はすべてゴミ箱に移動されます。
+collection.delete_request_permanent: 「%{name}」は完全に削除されます（暗号化されたコレクションにはゴミ箱がありません）。
+collection.delete_request_title: リクエストを削除しますか？
+collection.delete_request_trash: 「%{name}」はゴミ箱に移動されます。
+collection.dont_save: 保存しない
+collection.new_collection_title: 新しいコレクション
+collection.new_folder_title: 新しいフォルダー
+collection.new_project_title: 新しいプロジェクト
+collection.new_request_name: 新しいリクエスト
+collection.no_root: "%{path} またはその親フォルダーに apix.toml も apix-project.toml もありません。"
+collection.open_first: 先にコレクションを開くか作成してください（%{key}）。
+collection.open_prompt: コレクションを開く
+collection.rename: 名前を変更
+collection.rename_collection_title: コレクション名の変更
+collection.rename_folder_title: フォルダー名の変更
+collection.rename_request_title: リクエスト名の変更
+collection.start_here_text: "%{path} にはまだ apix.toml がありません。Apix が作成し、リクエストはこのフォルダーに .apix ファイルとして保存されます。"
+collection.start_here_title: ここで新しいコレクションを始めますか？
+collection.unsaved_text: 先に「%{name}」への変更を保存しますか？
+collection.unsaved_title: 未保存の変更
+copy.as_shell: "%{shell} としてコピー"
+copy.copied: "%{shell} としてコピーしました。"
+copy.copied_missing: "%{shell} としてコピーしました。未定義のため {{…}} のまま: %{names}。"
+copy.curl_filled: 貼り付けた curl コマンドからリクエストを入力しました。
+copy.curl_imported: curl をインポートしました
+dialog.cancel: キャンセル
+dialog.close: 閉じる
+dialog.save: 保存
+env.add_environment: 環境を追加
+env.add_variable: 変数を追加
+env.delete: 削除
+env.dialog_title: 変数
+env.dynamic_variables: 動的変数
+env.error.defined_twice: "%{key} が 2 回定義されています。"
+env.error.exists: 環境 %{name} はすでに存在します。
+env.error.name_clash: 2 つの環境が同じ名前 %{name} になります。
+env.error.needs_name: 環境には名前が必要です。
+env.hint.dynamic: 名前をクリックするとコピーされます。使用するたびに新しい値になります。同じ名前の変数を定義した場合はそちらが優先されます。
+env.hint.environment: シークレットはこのコンピューター上の %{name}.local.toml に保存され、git では無視されます。
+env.hint.shared: 共有変数はすべての環境に適用されます。環境ごとの値が優先されます。
+env.none: 環境なし
+env.placeholder.name: 名前
+env.placeholder.new_environment: 新しい環境…
+env.placeholder.value: 値
+env.secret: シークレット
+env.secret_tooltip: このコンピューターの .local.toml ファイルにのみ保存されます
+env.section.built_in: 組み込み
+env.section.collection_only: "%{name} のみ"
+env.section.environments: 環境
+env.section.shared: 共有
+env.title.collection: "%{name} の変数"
+env.title.environment: 環境
+env.title.project: プロジェクトの変数
+env.undo_delete: 削除を元に戻す
+import.collection_done: Postman コレクションをインポートしました
+import.environment_done: 環境をインポートしました
+import.environment_needs_open: この環境が属するコレクションまたはプロジェクトを先に開いてから、インポートしてください。
+import.environment_saved: 「%{title}」を %{count} 個の変数とともに environments/%{name}.toml として保存しました。
+import.environment_saved_with_secrets: 「%{title}」を %{count} 個の変数とともに environments/%{name}.toml として保存しました。%{secrets} 個のシークレットは git で無視される %{name}.local.toml に保存しました。
+import.prompt: Postman のエクスポートをインポート
+menu.active_environment: アクティブな環境
+menu.cancel: キャンセル
+menu.close_tab: タブを閉じる
+menu.collection_auth: コレクションの認証…
+menu.command_palette: コマンドパレット…
+menu.copy_as: 形式を指定してコピー
+menu.documentation: ドキュメント
+menu.encrypt_collection: このコレクションを暗号化…
+menu.environment: 環境
+menu.file: ファイル
+menu.group_by: サイドバーのグループ化
+menu.group_collection: コレクション
+menu.group_environment: 環境
+menu.help: ヘルプ
+menu.import_postman: Postman からインポート…
+menu.lock_collections: 暗号化されたコレクションをロック
+menu.method: メソッド
+menu.new_collection: 新しいコレクション…
+menu.new_encrypted_collection: 新しい暗号化コレクション…
+menu.new_folder: 新しいフォルダー…
+menu.new_project: 新しいプロジェクト…
+menu.new_request: 新しいリクエスト
+menu.new_request_with_method: メソッドを指定して新しいリクエスト
+menu.next_tab: 次のタブ
+menu.open: 開く…
+menu.open_recent: 最近使ったものを開く
+menu.previous_tab: 前のタブ
+menu.project_auth: プロジェクトの認証…
+menu.quit: 終了
+menu.report_problem: 問題を報告
+menu.request: リクエスト
+menu.save: 保存
+menu.send: 送信
+menu.settings: 設定…
+menu.source_code: ソースコード
+menu.variables: 変数と環境…
+menu.view: 表示
+network.cert.days_left: "残り %{count} 日"
+network.cert.engine_note: HTTP エンジンが報告するのはサーバーの証明書のみで、TLS のバージョンや暗号スイートは含まれません。
+network.cert.expired_days_ago: "%{count} 日前に期限切れ"
+network.cert.expired_one_day_ago: 1 日前に期限切れ
+network.cert.issued_by: 発行者
+network.cert.issued_to: 発行先
+network.cert.names: 名前
+network.cert.not_reported: 暗号化されていますが、証明書は報告されませんでした。
+network.cert.one_day_left: 残り 1 日
+network.cert.valid: 有効期間
+network.cert.valid_range: "%{from} ～ %{to}"
+network.connection.dns_servers: DNS サーバー
+network.connection.gateway: ゲートウェイ
+network.connection.none_recorded: 新しい接続は記録されませんでした（再利用、またはプロキシ経由）。
+network.connection.proxy: プロキシ
+network.connection.proxy_from: "%{value}（%{var} から）"
+network.connection.proxy_none: 環境に設定なし
+network.connection.server: サーバー
+network.connection.this_computer: このコンピューター
+network.connection.unknown_address: 不明
+network.connection.unknown_interface: 不明なインターフェイス
+network.connection.via: "%{address}（%{via} 経由）"
+network.connection.via_vpn: "%{address}（%{via} 経由）· VPN"
+network.dns.lookup: ルックアップ
+network.dns.lookup_result: "%{host} → %{addrs}（%{duration}）"
+network.note: 注
+network.plain_http: "平文の HTTP: 何も暗号化されていません。"
+network.redirect.followed: 追従済み
+network.section.certificate: 証明書
+network.section.connection: 接続
+network.section.dns: DNS
+network.section.encryption: 暗号化
+network.section.redirects: リダイレクト
+network.section.timing: タイミング
+network.timing.connect: 接続 (TCP + TLS)
+network.timing.dns: DNS ルックアップ
+network.timing.download: ダウンロード
+network.timing.summary: 合計 %{total} · 最初のバイトまで %{ttfb}
+network.timing.waiting: サーバーの応答待ち
+palette.copy_as: "%{format} としてコピー"
+palette.empty: 一致する項目はありません。
+palette.environment: "環境: %{name}"
+palette.environment_none: "環境: なし"
+palette.group.commands: コマンド
+palette.group.requests: リクエスト
+palette.group_by_collection: サイドバーをコレクションでグループ化
+palette.group_by_environment: サイドバーを環境でグループ化
+palette.new_method_request: 新しい %{method} リクエスト
+palette.open_folder: フォルダーを開く…
+palette.open_recent: "最近使ったものを開く: %{name}"
+palette.placeholder: リクエストとコマンドを検索…
+palette.save_request: リクエストを保存
+palette.send_request: リクエストを送信
+request.copy_as_tooltip: cURL または PowerShell としてコピー
+request.error.no_url: リクエストを送信するには URL を入力してください。
+request.error.undefined_variable: 変数 %{name} は定義されていません。%{key}（変数）で定義してください。
+request.error.undefined_variables: "未定義の変数: %{names}。%{key}（変数）で定義してください。"
+request.headers_hint: ここで追加しない限り、Content-Type はボディの種類から設定されます。
+request.params_hint: クエリパラメーターは URL の末尾に追加されます。
+request.tab.auth: 認証
+request.tab.auth_api_key: 認証 · API キー
+request.tab.auth_kind: 認証 · %{kind}
+request.tab.auth_none: 認証 · なし
+request.tab.body: ボディ
+request.tab.body_kind: ボディ · %{kind}
+request.tab.headers: ヘッダー
+request.tab.headers_count: ヘッダー %{count}
+request.tab.params: パラメーター
+request.tab.params_count: パラメーター %{count}
+request.url_placeholder: "https://api.example.com/users   または   {{base_url}}/users"
+response.cancelled: リクエストをキャンセルしました。
+response.empty: リクエストを送信するとレスポンスが表示されます
+response.failed: リクエストに失敗しました
+response.lines: "%{count} 行"
+response.preparing_raw: 生データ表示を準備中…
+response.send_hint: "%{key} で送信"
+response.sending: 送信中…  Esc でキャンセル
+response.tab.network: ネットワーク
+response.tab.pretty: 整形
+response.tab.raw: 生データ
+settings.auto_lock: 暗号化されたコレクションのロック
+settings.auto_lock_description: この時間操作がないと、暗号化されたコレクションはロックされ、再度パスワードが必要になります。
+settings.auto_lock_hour: 1 時間後
+settings.auto_lock_minutes: "%{count} 分後"
+settings.auto_lock_never: しない
+settings.language: 言語
+settings.language_description: メニュー、ボタン、メッセージの言語です。すぐに切り替わります。
+settings.theme: テーマ
+settings.theme_cyber: サイバーグラス
+settings.theme_description: ウィンドウの配色です。
+settings.theme_obsidian: オブシディアン
+settings.theme_restart: 次回 Apix の起動時に適用されます。
+settings.title: 設定
+sidebar.auth: 認証…
+sidebar.change_password: パスワードを変更…
+sidebar.copy_as_shell: "%{shell} としてコピー"
+sidebar.drop_hint: または、Postman のエクスポートやフォルダーをウィンドウにドロップします。
+sidebar.duplicate: 複製
+sidebar.edit_variables: 変数を編集…
+sidebar.edit_variables_tooltip: 変数を編集 (%{key})
+sidebar.empty: 空
+sidebar.encrypt: 暗号化…
+sidebar.import_postman: Postman からインポート
+sidebar.kind_collection: コレクション
+sidebar.kind_project: プロジェクト
+sidebar.lock: ロック
+sidebar.move_to_trash: ゴミ箱に移動
+sidebar.new_folder: 新しいフォルダー
+sidebar.new_request_tooltip: 新しいリクエスト（%{key} で GET）
+sidebar.no_collections: "コレクションはまだありません。上のメニューを使用してください: %{item}"
+sidebar.no_environments: このプロジェクトにはまだ環境がありません。environments/ フォルダーに test.toml や prod.toml を追加してください。
+sidebar.no_requests: リクエストはまだありません。%{key} で作成できます。
+sidebar.nothing_open: 何も開いていません
+sidebar.open_folder: フォルダーを開く
+sidebar.recent: 最近使った項目
+sidebar.remove_encryption: 暗号化を解除…
+sidebar.rename: 名前を変更…
+sidebar.show_in_environment: 環境で表示
+table.add: 追加
+table.key: キー
+table.value: 値
+time.hours_minutes: "%{hours} 時間 %{minutes} 分"
+time.minutes: "%{count} 分"
+vault.auto_locked: "%{count} 分間操作がなかったため、暗号化されたコレクションをロックしました。"
+vault.change_password: パスワードを変更
+vault.change_password_note: ファイルは再暗号化されません。変わるのはロックを解除するキーだけです。
+vault.change_password_title: 「%{name}」の新しいパスワード
+vault.create: 作成
+vault.decrypt: 暗号化を解除
+vault.decrypt_description: ファイルは平文で書き戻され、フォルダーにアクセスできる人なら誰でも読めるようになります。暗号化されたファイルはゴミ箱に移動されます。
+vault.decrypt_title: 「%{name}」の暗号化を解除しますか？
+vault.decrypted: コレクションの暗号化を解除しました。
+vault.encrypt: 暗号化
+vault.encrypt_note: すべてのファイルがこのパスワードで暗号化されます。暗号化後、平文のファイルはゴミ箱に移動されます。完全に削除するにはゴミ箱を空にしてください。フォルダーが git で管理されている場合、履歴には平文のファイルが残ります。
+vault.encrypt_title: 「%{name}」を暗号化
+vault.error.locked: コレクションはロックされています。
+vault.error.mismatch: 2 つのパスワードが一致しません。
+vault.error.no_name: コレクションに名前を付けてください。
+vault.error.no_password: パスワードを入力してください。
+vault.error.no_recovery_key: 回復キーを入力してください。
+vault.error.open_project_first: 先にプロジェクトを開くか、%{menu} を使用してください。
+vault.error.too_short: "%{count} 文字以上にしてください。"
+vault.error.trash: "ゴミ箱に移動できませんでした: %{error}"
+vault.error.trash_encrypted: "暗号化されたファイルをゴミ箱に移動できませんでした: %{error}"
+vault.error.trash_plain: "平文のファイルをゴミ箱に移動できませんでした: %{error}"
+vault.error.unlock_first: 先にコレクションのロックを解除してください。
+vault.locked: ロック中
+vault.locked_title: ロック中
+vault.name_placeholder: コレクション名
+vault.new_needs_project: 暗号化されたコレクションを作成するには、プロジェクトを開いてください。または、%{menu} で開いているコレクションを暗号化します。
+vault.new_note: すべてのリクエスト、環境、名前がディスク上で暗号化されます。安全な場所に保管するための回復キーが発行されます。
+vault.new_password_placeholder: 新しいパスワード（%{count} 文字以上）
+vault.new_title: 新しい暗号化コレクション
+vault.password_changed: パスワードを変更しました。回復キーは引き続き使用できます。
+vault.recovery.copy: コピー
+vault.recovery.done: 完了
+vault.recovery.intro: パスワードを紛失した場合、このキーでコレクションを開けます。パスワードマネージャーに保管してください。Apix がこのキーを表示するのは今回だけです。
+vault.recovery.stored: 回復キーを安全な場所に保管しました
+vault.recovery.title: 回復キー
+vault.recovery.warning: パスワードとこのキーの両方がなければ、あなたを含め誰もコレクションを開けません。
+vault.recovery_placeholder: "回復キー（例: 7K2M-9QXA-…）"
+vault.repeat_password: パスワードを再入力
+vault.unlock: ロック解除
+vault.unlock_note: このコレクションは暗号化されています。ロックする、Apix を終了する、または %{count} 分間操作しないまで、ロック解除された状態が続きます。
+vault.unlock_note_no_auto_lock: このコレクションは暗号化されています。ロックするか Apix を終了するまで、ロック解除された状態が続きます。
+vault.unlock_title: 「%{name}」のロックを解除
+vault.use_password: 代わりにパスワードを使用
+vault.use_recovery: パスワードを忘れた場合は回復キーを使用
+vault.working: 処理中… キーの導出には意図的に時間がかかります。

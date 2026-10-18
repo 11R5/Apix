@@ -1,0 +1,415 @@
+_version: 1
+app.error_with_cause: "%{error}: %{cause}"
+app.status.collections: "Коллекций: %{count}"
+app.status.env: "окружение: %{name}"
+app.status.no_collection: Нет коллекции
+app.status.no_collections: коллекций пока нет
+app.status.one_collection: 1 коллекция
+app.status.one_request: 1 запрос
+app.status.requests: "Запросов: %{count}"
+app.status.shortcuts: "%{palette} команды  ·  %{send} отправить  ·  Esc отмена"
+app.status.unsaved: Несохранённые изменения · %{key} сохранить
+auth.add_to: Добавлять в
+auth.client_auth: Аутентификация клиента
+auth.client_basic: Заголовок Basic auth
+auth.client_body: В теле запроса
+auth.describe.aws: "%{service} в %{region}"
+auth.describe.consumer_key: "Consumer key: %{key}"
+auth.describe.key_in_header: "%{key} в заголовках"
+auth.describe.key_in_query: "%{key} в строке запроса"
+auth.describe.oauth2: "%{grant}, токен с %{url}"
+auth.describe.token: "Токен: %{token}"
+auth.describe.token_set: "Токен: задан"
+auth.describe.username: "Пользователь: %{name}"
+auth.dialog.collection_note: Используется запросами этой коллекции, у которых нет своей авторизации.
+auth.dialog.collection_title: Авторизация коллекции «%{name}»
+auth.dialog.folder_note: Используется запросами этой папки, у которых нет своей авторизации.
+auth.dialog.folder_title: Авторизация папки «%{name}»
+auth.dialog.project_note: Используется запросами этого проекта, у которых нет своей авторизации.
+auth.dialog.project_title: Авторизация проекта «%{name}»
+auth.field.access_key: Ключ доступа
+auth.field.access_token: Токен доступа
+auth.field.auth_url: URL авторизации
+auth.field.client_id: Client ID
+auth.field.client_secret: Client secret
+auth.field.consumer_key: Consumer key
+auth.field.consumer_secret: Consumer secret
+auth.field.key: Ключ
+auth.field.password: Пароль
+auth.field.realm: Realm
+auth.field.redirect_url: URL перенаправления
+auth.field.region: Регион
+auth.field.scope: Scope
+auth.field.secret_key: Секретный ключ
+auth.field.service: Сервис
+auth.field.session_token: Токен сессии
+auth.field.token: Токен
+auth.field.token_secret: Token secret
+auth.field.token_url: URL токена
+auth.field.username: Имя пользователя
+auth.field.value: Значение
+auth.grant.authorization_code: Authorization code
+auth.grant.client_credentials: Client credentials
+auth.grant.password: Password
+auth.grant_type: Grant type
+auth.hint.access_key: "напр. {{aws_access_key}}"
+auth.hint.client_secret: Пусто для публичного клиента
+auth.hint.key: Имя, напр. X-API-Key
+auth.hint.optional: Необязательно
+auth.hint.redirect_url: "Пусто: свободный порт на http://127.0.0.1"
+auth.hint.region: напр. eu-central-1
+auth.hint.scope: Через пробел, напр. read write
+auth.hint.service: напр. execute-api, s3, lambda
+auth.hint.session_token: Только для временных учётных данных
+auth.hint.token: "Токен, напр. {{token}}"
+auth.hint.value: "Значение, напр. {{apiKey}}"
+auth.in_header: Заголовок
+auth.in_query: Параметры запроса
+auth.inherit.collection_none: Выше авторизация не задана, поэтому она не отправляется. Задайте её для всего проекта в меню проекта (Авторизация проекта…).
+auth.inherit.from_collection: Наследует %{what} от коллекции «%{name}».
+auth.inherit.from_folder: Наследует %{what} от папки «%{name}».
+auth.inherit.from_project: Наследует %{what} от проекта «%{name}».
+auth.inherit.project_none: Наследующие запросы отправляются без авторизации.
+auth.inherit.request_none: Выше авторизация не задана, поэтому она не отправляется. Задайте её для папки или коллекции через контекстное меню (Авторизация…).
+auth.kind.api_key: API-ключ
+auth.kind.aws: AWS Signature
+auth.kind.basic: Basic auth
+auth.kind.bearer: Bearer-токен
+auth.kind.digest: Digest auth
+auth.kind.inherit: Наследовать от родителя
+auth.kind.none: Без авторизации
+auth.no_auth.collection: Авторизация не отправляется, даже если проект задаёт её для этой коллекции.
+auth.no_auth.folder: Авторизация не отправляется, даже если родительская папка или коллекция задаёт её для этой папки.
+auth.no_auth.project: Наследующие запросы отправляются без авторизации.
+auth.no_auth.request: Авторизация не отправляется, даже если папка или коллекция задаёт её для этого запроса.
+auth.note.aws: Каждая отправка подписывается по AWS Signature Version 4.
+auth.note.bearer: "Отправляется как Authorization: Bearer <token>."
+auth.note.digest: Apix отвечает на Digest-запрос сервера (MD5 или SHA-256).
+auth.note.oauth1: При каждой отправке подписывается с новыми nonce и временной меткой.
+auth.note.oauth2: Apix сам получает токен и отправляет его как Bearer-токен. Токены хранятся только в памяти и никогда не записываются на диск.
+auth.note.variables: "В значениях можно использовать {{variables}}."
+auth.signature: Подпись
+auth.token.expired: Срок действия токена истёк; при следующей отправке будет получен новый.
+auth.token.forget: Забыть
+auth.token.get_new: Получить новый токен
+auth.token.getting: Получение токена…
+auth.token.none: Токена пока нет. Он будет получен при первой отправке.
+auth.token.ready: Токен готов.
+auth.token.valid_for: Токен готов, действителен ещё %{time}.
+auth.token.waiting_browser: Ожидание входа в браузере…
+auth.type: Тип
+auth.use_pkce: Использовать PKCE (рекомендуется)
+auth.what.api_key: API-ключ
+auth.what.aws: подпись AWS
+auth.what.basic: Basic auth
+auth.what.bearer: Bearer-токен
+auth.what.digest: Digest auth
+auth.what.none: «Без авторизации»
+body.binary_hint: Тело — это байты файла. По умолчанию Content-Type равен application/octet-stream; другой можно задать на вкладке «Заголовки».
+body.binary_placeholder: Файл для отправки, напр. data/upload.bin
+body.binary_size: "%{size} · отправляется как есть"
+body.choose: Выбрать…
+body.choose_file: Выбрать файл
+body.choose_files: Выбрать файлы
+body.file_not_found: Файл не найден
+body.file_path: Путь к файлу
+body.form_hint: Отправляется как application/x-www-form-urlencoded, как HTML-форма.
+body.graphql_query: Query
+body.graphql_variables: Переменные (JSON)
+body.invalid_json: некорректный JSON
+body.kind.binary: Двоичные данные
+body.kind.form: Форма
+body.kind.none: Нет
+body.kind.text: Текст
+body.multipart_hint: Отправляется как multipart/form-data. Переключите поле на «Файл», чтобы загрузить файл; пути внутри коллекции сохраняются относительно запроса.
+body.none_hint: У этого запроса нет тела.
+body.part_file: Файл
+body.part_text: Текст
+body.send_file_instead: Отправить файл вместо текста
+body.send_text_instead: Отправить текст вместо файла
+chips.add_with: Добавьте её через %{key} (Переменные).
+chips.dynamic: "Динамическая: новое значение при каждой отправке"
+chips.empty: (пусто)
+chips.missing_in_env: Не задана для окружения «%{env}».
+chips.missing_no_env: Не задана, и окружение не выбрано.
+chips.scope.collection: Коллекция «%{name}»
+chips.scope.environment: Окружение «%{name}»
+chips.scope.environment_of: Окружение «%{name}» из «%{collection}»
+chips.scope.project: Проект «%{name}»
+chips.secret_scope: "%{scope} · секрет (.local.toml)"
+chips.set_for_run: Задать для этого запуска
+collection.choose_folder: Выбрать папку…
+collection.create: Создать
+collection.create_collection: Создать коллекцию
+collection.create_collection_in: Создать коллекцию в
+collection.create_project_in: Создать проект в
+collection.default_name: Коллекция
+collection.delete: Удалить
+collection.delete_folder_permanent: Папка «%{name}» и всё её содержимое будут удалены безвозвратно (у зашифрованных коллекций нет корзины).
+collection.delete_folder_title: Удалить папку?
+collection.delete_folder_trash: Папка «%{name}» и всё её содержимое будут перемещены в корзину.
+collection.delete_request_permanent: Запрос «%{name}» будет удалён безвозвратно (у зашифрованных коллекций нет корзины).
+collection.delete_request_title: Удалить запрос?
+collection.delete_request_trash: Запрос «%{name}» будет перемещён в корзину.
+collection.dont_save: Не сохранять
+collection.new_collection_title: Новая коллекция
+collection.new_folder_title: Новая папка
+collection.new_project_title: Новый проект
+collection.new_request_name: Новый запрос
+collection.no_root: Ни в %{path}, ни в родительских папках нет apix.toml или apix-project.toml.
+collection.open_first: Сначала откройте или создайте коллекцию (%{key}).
+collection.open_prompt: Открыть коллекцию
+collection.rename: Переименовать
+collection.rename_collection_title: Переименовать коллекцию
+collection.rename_folder_title: Переименовать папку
+collection.rename_request_title: Переименовать запрос
+collection.start_here_text: "В %{path} ещё нет apix.toml. Apix создаст его; запросы будут сохраняться в этой папке как файлы .apix."
+collection.start_here_title: Создать здесь новую коллекцию?
+collection.unsaved_text: Сначала сохранить изменения в «%{name}»?
+collection.unsaved_title: Несохранённые изменения
+copy.as_shell: Копировать как %{shell}
+copy.copied: Скопировано как %{shell}.
+copy.copied_missing: "Скопировано как %{shell}. Не заданы и оставлены как {{…}}: %{names}."
+copy.curl_filled: Запрос заполнен из вставленной команды curl.
+copy.curl_imported: curl импортирован
+dialog.cancel: Отмена
+dialog.close: Закрыть
+dialog.save: Сохранить
+env.add_environment: Добавить окружение
+env.add_variable: Добавить переменную
+env.delete: Удалить
+env.dialog_title: Переменные
+env.dynamic_variables: Динамические переменные
+env.error.defined_twice: "Переменная %{key} задана дважды."
+env.error.exists: Окружение с именем %{name} уже существует.
+env.error.name_clash: Два окружения получат имя %{name}.
+env.error.needs_name: Укажите имя окружения.
+env.hint.dynamic: Нажмите на имя, чтобы скопировать его. При каждом использовании подставляется новое значение; ваша переменная с тем же именем имеет приоритет.
+env.hint.environment: Секреты хранятся только на этом компьютере в %{name}.local.toml, который игнорируется git.
+env.hint.shared: Общие переменные действуют во всех окружениях; значение из окружения имеет приоритет.
+env.none: Без окружения
+env.placeholder.name: имя
+env.placeholder.new_environment: Новое окружение…
+env.placeholder.value: значение
+env.secret: Секрет
+env.secret_tooltip: Сохраняется только на этом компьютере, в файле .local.toml
+env.section.built_in: Встроенные
+env.section.collection_only: "Только %{name}"
+env.section.environments: Окружения
+env.section.shared: Общие
+env.title.collection: "Переменные %{name}"
+env.title.environment: Окружение
+env.title.project: Переменные проекта
+env.undo_delete: Отменить удаление
+import.collection_done: Коллекция Postman импортирована
+import.environment_done: Окружение импортировано
+import.environment_needs_open: Сначала откройте коллекцию или проект, к которому относится это окружение, затем импортируйте его.
+import.environment_saved: "Окружение «%{title}» сохранено как environments/%{name}.toml (переменных: %{count})."
+import.environment_saved_with_secrets: "Окружение «%{title}» сохранено как environments/%{name}.toml (переменных: %{count}). Секреты (%{secrets}) записаны в %{name}.local.toml, который игнорируется git."
+import.prompt: Импортировать экспорт Postman
+menu.active_environment: Активное окружение
+menu.cancel: Отменить
+menu.close_tab: Закрыть вкладку
+menu.collection_auth: Авторизация коллекции…
+menu.command_palette: Палитра команд…
+menu.copy_as: Копировать как
+menu.documentation: Документация
+menu.encrypt_collection: Зашифровать эту коллекцию…
+menu.environment: Окружение
+menu.file: Файл
+menu.group_by: Группировать боковую панель по
+menu.group_collection: Коллекциям
+menu.group_environment: Окружениям
+menu.help: Справка
+menu.import_postman: Импорт из Postman…
+menu.lock_collections: Заблокировать зашифрованные коллекции
+menu.method: Метод
+menu.new_collection: Новая коллекция…
+menu.new_encrypted_collection: Новая зашифрованная коллекция…
+menu.new_folder: Новая папка…
+menu.new_project: Новый проект…
+menu.new_request: Новый запрос
+menu.new_request_with_method: Новый запрос с методом
+menu.next_tab: Следующая вкладка
+menu.open: Открыть…
+menu.open_recent: Открыть недавние
+menu.previous_tab: Предыдущая вкладка
+menu.project_auth: Авторизация проекта…
+menu.quit: Выход
+menu.report_problem: Сообщить о проблеме
+menu.request: Запрос
+menu.save: Сохранить
+menu.send: Отправить
+menu.settings: Настройки…
+menu.source_code: Исходный код
+menu.variables: Переменные и окружения…
+menu.view: Вид
+network.cert.days_left: "осталось %{count} дн."
+network.cert.engine_note: HTTP-движок сообщает сертификат сервера, но не версию TLS и не шифр.
+network.cert.expired_days_ago: истёк %{count} дн. назад
+network.cert.expired_one_day_ago: истёк 1 день назад
+network.cert.issued_by: Кем выдан
+network.cert.issued_to: Кому выдан
+network.cert.names: Имена
+network.cert.not_reported: Соединение зашифровано, но сертификат не передан.
+network.cert.one_day_left: остался 1 день
+network.cert.valid: Действителен
+network.cert.valid_range: "с %{from} по %{to}"
+network.connection.dns_servers: DNS-серверы
+network.connection.gateway: Шлюз
+network.connection.none_recorded: Новое соединение не зафиксировано (повторное использование или прокси).
+network.connection.proxy: Прокси
+network.connection.proxy_from: "%{value} (из %{var})"
+network.connection.proxy_none: не задан в переменных среды
+network.connection.server: Сервер
+network.connection.this_computer: Этот компьютер
+network.connection.unknown_address: неизвестен
+network.connection.unknown_interface: неизвестный интерфейс
+network.connection.via: "%{address} через %{via}"
+network.connection.via_vpn: "%{address} через %{via} · VPN"
+network.dns.lookup: Разрешение
+network.dns.lookup_result: "%{host} → %{addrs} за %{duration}"
+network.note: Примечание
+network.plain_http: "Обычный HTTP: ничего не шифруется."
+network.redirect.followed: Выполнен
+network.section.certificate: Сертификат
+network.section.connection: Соединение
+network.section.dns: DNS
+network.section.encryption: Шифрование
+network.section.redirects: Перенаправления
+network.section.timing: Время
+network.timing.connect: Подключение (TCP + TLS)
+network.timing.dns: Разрешение DNS
+network.timing.download: Загрузка
+network.timing.summary: Всего %{total} · первый байт через %{ttfb}
+network.timing.waiting: Ожидание сервера
+palette.copy_as: Копировать как %{format}
+palette.empty: Ничего не найдено.
+palette.environment: "Окружение: %{name}"
+palette.environment_none: "Окружение: нет"
+palette.group.commands: Команды
+palette.group.requests: Запросы
+palette.group_by_collection: Группировать боковую панель по коллекциям
+palette.group_by_environment: Группировать боковую панель по окружениям
+palette.new_method_request: Новый запрос %{method}
+palette.open_folder: Открыть папку…
+palette.open_recent: "Открыть недавнее: %{name}"
+palette.placeholder: Поиск запросов и команд…
+palette.save_request: Сохранить запрос
+palette.send_request: Отправить запрос
+request.copy_as_tooltip: Копировать как cURL или PowerShell
+request.error.no_url: Введите URL, чтобы отправить запрос.
+request.error.undefined_variable: Переменная %{name} не задана. Задайте её через %{key} (Переменные).
+request.error.undefined_variables: "Не заданы переменные: %{names}. Задайте их через %{key} (Переменные)."
+request.headers_hint: Content-Type определяется типом тела, если вы не добавите его здесь.
+request.params_hint: Параметры запроса добавляются к URL.
+request.tab.auth: Авторизация
+request.tab.auth_api_key: Авторизация · API-ключ
+request.tab.auth_kind: Авторизация · %{kind}
+request.tab.auth_none: Авторизация · нет
+request.tab.body: Тело
+request.tab.body_kind: Тело · %{kind}
+request.tab.headers: Заголовки
+request.tab.headers_count: Заголовки %{count}
+request.tab.params: Параметры
+request.tab.params_count: Параметры %{count}
+request.url_placeholder: "https://api.example.com/users   или   {{base_url}}/users"
+response.cancelled: Запрос отменён.
+response.empty: Отправьте запрос, чтобы увидеть ответ
+response.failed: Ошибка запроса
+response.lines: "Строк: %{count}"
+response.preparing_raw: Подготовка исходного вида…
+response.send_hint: "%{key} отправить"
+response.sending: Отправка…  Esc для отмены
+response.tab.network: Сеть
+response.tab.pretty: Форматированный
+response.tab.raw: Исходный
+settings.auto_lock: Блокировка зашифрованных коллекций
+settings.auto_lock_description: После такого времени бездействия зашифрованные коллекции блокируются и снова запрашивают пароль.
+settings.auto_lock_hour: Через 1 час
+settings.auto_lock_minutes: Через %{count} мин
+settings.auto_lock_never: Никогда
+settings.language: Язык
+settings.language_description: Язык меню, кнопок и сообщений. Меняется сразу.
+settings.theme: Тема
+settings.theme_cyber: Кибер-стекло
+settings.theme_description: Цвета окна.
+settings.theme_obsidian: Обсидиан
+settings.theme_restart: Применится при следующем запуске Apix.
+settings.title: Настройки
+sidebar.auth: Авторизация…
+sidebar.change_password: Сменить пароль…
+sidebar.copy_as_shell: Копировать как %{shell}
+sidebar.drop_hint: Или перетащите в окно экспорт Postman или папку.
+sidebar.duplicate: Дублировать
+sidebar.edit_variables: Изменить переменные…
+sidebar.edit_variables_tooltip: Изменить переменные (%{key})
+sidebar.empty: Пусто
+sidebar.encrypt: Зашифровать…
+sidebar.import_postman: Импорт из Postman
+sidebar.kind_collection: КОЛЛЕКЦИЯ
+sidebar.kind_project: ПРОЕКТ
+sidebar.lock: Заблокировать
+sidebar.move_to_trash: Переместить в корзину
+sidebar.new_folder: Новая папка
+sidebar.new_request_tooltip: Новый запрос (%{key} — GET)
+sidebar.no_collections: "Коллекций пока нет. Воспользуйтесь меню выше: %{item}"
+sidebar.no_environments: В этом проекте пока нет окружений. Добавьте test.toml или prod.toml в его папку environments/.
+sidebar.no_requests: Запросов пока нет. %{key} создаёт новый.
+sidebar.nothing_open: Ничего не открыто
+sidebar.open_folder: Открыть папку
+sidebar.recent: НЕДАВНИЕ
+sidebar.remove_encryption: Снять шифрование…
+sidebar.rename: Переименовать…
+sidebar.show_in_environment: Показать в окружении
+table.add: Добавить
+table.key: Ключ
+table.value: Значение
+time.hours_minutes: "%{hours} ч %{minutes} мин"
+time.minutes: "%{count} мин"
+vault.auto_locked: Зашифрованные коллекции заблокированы после %{count} мин бездействия.
+vault.change_password: Сменить пароль
+vault.change_password_note: Файлы не перешифровываются; меняется только ключ, который их открывает.
+vault.change_password_title: Новый пароль для «%{name}»
+vault.create: Создать
+vault.decrypt: Снять шифрование
+vault.decrypt_description: Её файлы будут записаны обратно открытым текстом и станут доступны любому, у кого есть доступ к папке. Зашифрованные файлы будут перемещены в корзину.
+vault.decrypt_title: Снять шифрование с «%{name}»?
+vault.decrypted: Коллекция больше не зашифрована.
+vault.encrypt: Зашифровать
+vault.encrypt_note: Каждый файл шифруется этим паролем. Затем открытые файлы перемещаются в корзину; очистите корзину, чтобы удалить их окончательно. Если папка находится в git, её история по-прежнему содержит открытые файлы.
+vault.encrypt_title: Зашифровать «%{name}»
+vault.error.locked: Коллекция заблокирована.
+vault.error.mismatch: Пароли не совпадают.
+vault.error.no_name: Укажите имя коллекции.
+vault.error.no_password: Введите пароль.
+vault.error.no_recovery_key: Введите ключ восстановления.
+vault.error.open_project_first: Сначала откройте проект или воспользуйтесь %{menu}.
+vault.error.too_short: Пароль должен быть не короче %{count} симв.
+vault.error.trash: "Не удалось переместить в корзину: %{error}"
+vault.error.trash_encrypted: "Не удалось переместить зашифрованные файлы в корзину: %{error}"
+vault.error.trash_plain: "Не удалось переместить открытые файлы в корзину: %{error}"
+vault.error.unlock_first: Сначала разблокируйте коллекцию.
+vault.locked: Заблокирована
+vault.locked_title: Заблокировано
+vault.name_placeholder: Имя коллекции
+vault.new_needs_project: Откройте проект, чтобы создать в нём зашифрованную коллекцию, или зашифруйте открытую коллекцию через %{menu}.
+vault.new_note: Все запросы, окружения и имена шифруются на диске. Вы получите ключ восстановления — сохраните его в надёжном месте.
+vault.new_password_placeholder: Новый пароль (не менее %{count} симв.)
+vault.new_title: Новая зашифрованная коллекция
+vault.password_changed: Пароль изменён. Ключ восстановления по-прежнему действует.
+vault.recovery.copy: Копировать
+vault.recovery.done: Готово
+vault.recovery.intro: Если пароль будет утерян, этот ключ откроет коллекцию. Сохраните его в менеджере паролей. Apix показывает его только сейчас.
+vault.recovery.stored: Ключ восстановления сохранён в надёжном месте
+vault.recovery.title: Ваш ключ восстановления
+vault.recovery.warning: Без пароля и без этого ключа никто, включая вас, не сможет открыть коллекцию.
+vault.recovery_placeholder: Ключ восстановления, напр. 7K2M-9QXA-…
+vault.repeat_password: Повторите пароль
+vault.unlock: Разблокировать
+vault.unlock_note: Эта коллекция зашифрована. Она остаётся разблокированной, пока вы её не заблокируете, не закроете Apix или не оставите без действия на %{count} мин.
+vault.unlock_note_no_auto_lock: Эта коллекция зашифрована. Она остаётся разблокированной, пока вы её не заблокируете или не закроете Apix.
+vault.unlock_title: Разблокировать «%{name}»
+vault.use_password: Использовать пароль
+vault.use_recovery: Забыли пароль? Используйте ключ восстановления
+vault.working: Подождите… получение ключа намеренно занимает некоторое время.

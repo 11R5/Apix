@@ -45,3 +45,9 @@ opt-level = 3
 # Dependencies are optimized even in debug builds so the UI stays smooth while developing.
 [profile.dev.package."*"]
 opt-level = 2
+
+# gpui's Windows text renderer placed right-to-left runs (Arabic) left to right,
+# so words came out mirrored. vendor/gpui-pre-windows is 0.3.9 with that fixed in
+# DirectWrite's DrawGlyphRun (marked "Apix patch"). Drop it once upstream fixes it.
+[patch.crates-io]
+gpui-pre-windows = { path = "vendor/gpui-pre-windows" }

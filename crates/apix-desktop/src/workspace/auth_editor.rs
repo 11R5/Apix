@@ -22,21 +22,36 @@ use gpui_kit::*;
 
 use super::Workspace;
 use crate::theme::Palette;
+use crate::tr;
 
 /// The picker's entries, in `kind_index` order.
-const KINDS: [&str; 9] = [
-    "Inherit from parent",
-    "No auth",
-    "Bearer token",
-    "Basic auth",
-    "API key",
-    "Digest auth",
-    "OAuth 1.0",
-    "OAuth 2.0",
-    "AWS Signature",
-];
+fn kinds() -> Vec<SharedString> {
+    vec![
+        tr!("auth.kind.inherit"),
+        tr!("auth.kind.none"),
+        tr!("auth.kind.bearer"),
+        tr!("auth.kind.basic"),
+        tr!("auth.kind.api_key"),
+        tr!("auth.kind.digest"),
+        "OAuth 1.0".into(),
+        "OAuth 2.0".into(),
+        tr!("auth.kind.aws"),
+    ]
+}
 
-type Picker = SelectState<Vec<&'static str>>;
+fn grant_label(grant: OAuth2Grant) -> SharedString {
+    match grant {
+        OAuth2Grant::ClientCredentials => tr!("auth.grant.client_credentials"),
+        OAuth2Grant::Password => tr!("auth.grant.password"),
+        OAuth2Grant::AuthorizationCode => tr!("auth.grant.authorization_code"),
+    }
+}
+
+fn grants() -> Vec<SharedString> {
+    OAuth2Grant::ALL.into_iter().map(grant_label).collect()
+}
+
+type Picker = SelectState<Vec<SharedString>>;
 
 fn kind_index(auth: &Auth) -> usize {
     match auth {
@@ -105,48 +120,47 @@ impl F {
         F::Service,
     ];
 
-    fn label(self) -> &'static str {
+    fn label(self) -> SharedString {
         match self {
-            F::Token => "Token",
-            F::Username => "Username",
-            F::Password => "Password",
-            F::Key => "Key",
-            F::Value => "Value",
-            F::ConsumerKey => "Consumer key",
-            F::ConsumerSecret => "Consumer secret",
-            F::AccessToken => "Access token",
-            F::TokenSecret => "Token secret",
-            F::Realm => "Realm",
-            F::TokenUrl => "Token URL",
-            F::AuthUrl => "Auth URL",
-            F::ClientId => "Client ID",
-            F::ClientSecret => "Client secret",
-            F::Scope => "Scope",
-            F::RedirectUri => "Redirect URL",
-            F::AccessKey => "Access key",
-            F::SecretKey => "Secret key",
-            F::SessionToken => "Session token",
-            F::Region => "Region",
-            F::Service => "Service",
+            F::Token => tr!("auth.field.token"),
+            F::Username => tr!("auth.field.username"),
+            F::Password => tr!("auth.field.password"),
+            F::Key => tr!("auth.field.key"),
+            F::Value => tr!("auth.field.value"),
+            F::ConsumerKey => tr!("auth.field.consumer_key"),
+            F::ConsumerSecret => tr!("auth.field.consumer_secret"),
+            F::AccessToken => tr!("auth.field.access_token"),
+            F::TokenSecret => tr!("auth.field.token_secret"),
+            F::Realm => tr!("auth.field.realm"),
+            F::TokenUrl => tr!("auth.field.token_url"),
+            F::AuthUrl => tr!("auth.field.auth_url"),
+            F::ClientId => tr!("auth.field.client_id"),
+            F::ClientSecret => tr!("auth.field.client_secret"),
+            F::Scope => tr!("auth.field.scope"),
+            F::RedirectUri => tr!("auth.field.redirect_url"),
+            F::AccessKey => tr!("auth.field.access_key"),
+            F::SecretKey => tr!("auth.field.secret_key"),
+            F::SessionToken => tr!("auth.field.session_token"),
+            F::Region => tr!("auth.field.region"),
+            F::Service => tr!("auth.field.service"),
         }
     }
 
-    fn placeholder(self) -> &'static str {
+    fn placeholder(self) -> SharedString {
         match self {
-            F::Token => "Token, e.g. {{token}}",
-            F::Key => "Name, e.g. X-API-Key",
-            F::Value => "Value, e.g. {{apiKey}}",
-            F::AccessToken | F::TokenSecret => "Optional",
-            F::Realm => "Optional",
-            F::TokenUrl => "https://auth.example.com/oauth/token",
-            F::AuthUrl => "https://auth.example.com/authorize",
-            F::ClientSecret => "Empty for a public client",
-            F::Scope => "Space-separated, e.g. read write",
-            F::RedirectUri => "Empty: a free port on http://127.0.0.1",
-            F::AccessKey => "e.g. {{aws_access_key}}",
-            F::SessionToken => "Only for temporary credentials",
-            F::Region => "e.g. eu-central-1",
-            F::Service => "e.g. execute-api, s3, lambda",
+            F::Token => tr!("auth.hint.token"),
+            F::Key => tr!("auth.hint.key"),
+            F::Value => tr!("auth.hint.value"),
+            F::AccessToken | F::TokenSecret | F::Realm => tr!("auth.hint.optional"),
+            F::TokenUrl => "https://auth.example.com/oauth/token".into(),
+            F::AuthUrl => "https://auth.example.com/authorize".into(),
+            F::ClientSecret => tr!("auth.hint.client_secret"),
+            F::Scope => tr!("auth.hint.scope"),
+            F::RedirectUri => tr!("auth.hint.redirect_url"),
+            F::AccessKey => tr!("auth.hint.access_key"),
+            F::SessionToken => tr!("auth.hint.session_token"),
+            F::Region => tr!("auth.hint.region"),
+            F::Service => tr!("auth.hint.service"),
             other => other.label(),
         }
     }
@@ -194,27 +208,26 @@ impl AuthEditor {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) -> Self {
-        let picker = |items: Vec<&'static str>, window: &mut Window, cx: &mut Context<Self>| {
+        let picker = |items: Vec<SharedString>, window: &mut Window, cx: &mut Context<Self>| {
             cx.new(|cx| SelectState::new(items, Some(IndexPath::new(0)), window, cx))
         };
-        let kind = picker(KINDS.to_vec(), window, cx);
+        let kind = picker(kinds(), window, cx);
         let signature = picker(
-            OAuth1Method::ALL.iter().map(|m| m.as_str()).collect(),
+            OAuth1Method::ALL
+                .iter()
+                .map(|m| SharedString::from(m.as_str()))
+                .collect(),
             window,
             cx,
         );
-        let grant = picker(
-            OAuth2Grant::ALL.iter().map(|g| g.label()).collect(),
-            window,
-            cx,
-        );
+        let grant = picker(grants(), window, cx);
 
         let mut subscriptions = Vec::new();
         for select in [&kind, &signature, &grant] {
             subscriptions.push(cx.subscribe_in(
                 select,
                 window,
-                |_, _, _: &SelectEvent<Vec<&'static str>>, _, cx| cx.notify(),
+                |_, _, _: &SelectEvent<Vec<SharedString>>, _, cx| cx.notify(),
             ));
         }
         let mut fields = HashMap::new();
@@ -247,6 +260,29 @@ impl AuthEditor {
             owner,
             _subscriptions: subscriptions,
         }
+    }
+
+    /// Relabels the pickers and placeholders after a language change.
+    pub(super) fn retranslate(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        // `set_items` keeps the selection by position, which is all that changes here.
+        let keep = |select: &Entity<Picker>,
+                    items: Vec<SharedString>,
+                    window: &mut Window,
+                    cx: &mut App| {
+            let ix = select.read(cx).selected_index(cx);
+            select.update(cx, |state, cx| {
+                state.set_items(items, window, cx);
+                state.set_selected_index(ix, window, cx);
+            });
+        };
+        keep(&self.kind, kinds(), window, cx);
+        keep(&self.grant, grants(), window, cx);
+        for f in F::ALL {
+            self.fields[&f].update(cx, |state, cx| {
+                state.set_placeholder(f.placeholder(), window, cx)
+            });
+        }
+        cx.notify();
     }
 
     fn input(&self, f: F) -> &Entity<InputState> {
@@ -485,7 +521,8 @@ impl AuthEditor {
         cx.notify();
     }
 
-    fn row(&self, label: &'static str, child: impl IntoElement) -> Div {
+    fn row(&self, label: impl Into<SharedString>, child: impl IntoElement) -> Div {
+        let label: SharedString = label.into();
         h_flex()
             .gap_3()
             .items_center()
@@ -521,13 +558,13 @@ impl AuthEditor {
     /// Two or more toggle buttons in a labelled row.
     fn choice<T: Copy + PartialEq + 'static>(
         &self,
-        label: &'static str,
+        label: SharedString,
         current: T,
-        options: &[(&'static str, &'static str, T)],
+        options: Vec<(&'static str, SharedString, T)>,
         set: fn(&mut Self, T),
         cx: &mut Context<Self>,
     ) -> AnyElement {
-        let buttons = options.iter().map(|&(id, text, value)| {
+        let buttons = options.into_iter().map(|(id, text, value)| {
             Button::new(id)
                 .ghost()
                 .small()
@@ -555,11 +592,15 @@ impl AuthEditor {
 
     fn location_choice(&self, cx: &mut Context<Self>) -> AnyElement {
         self.choice(
-            "Add to",
+            tr!("auth.add_to"),
             self.location,
-            &[
-                ("auth-in-header", "Header", ApiKeyLocation::Header),
-                ("auth-in-query", "Query params", ApiKeyLocation::Query),
+            vec![
+                (
+                    "auth-in-header",
+                    tr!("auth.in_header"),
+                    ApiKeyLocation::Header,
+                ),
+                ("auth-in-query", tr!("auth.in_query"), ApiKeyLocation::Query),
             ],
             |this, at| this.location = at,
             cx,
@@ -571,7 +612,7 @@ impl AuthEditor {
         let grant = self.grant(cx);
         let mut out = vec![
             self.row(
-                "Grant type",
+                tr!("auth.grant_type"),
                 div().w(px(220.)).child(Select::new(&self.grant).small()),
             )
             .into_any_element(),
@@ -594,7 +635,7 @@ impl AuthEditor {
                     "",
                     Checkbox::new("auth-pkce")
                         .checked(self.pkce)
-                        .label("Use PKCE (recommended)")
+                        .label(tr!("auth.use_pkce"))
                         .on_click(cx.listener(|this, checked: &bool, _, cx| {
                             this.pkce = *checked;
                             cx.notify();
@@ -604,11 +645,19 @@ impl AuthEditor {
             );
         }
         out.push(self.choice(
-            "Client auth",
+            tr!("auth.client_auth"),
             self.client_auth,
-            &[
-                ("auth-client-basic", "Basic auth header", ClientAuth::Basic),
-                ("auth-client-body", "In the body", ClientAuth::Body),
+            vec![
+                (
+                    "auth-client-basic",
+                    tr!("auth.client_basic"),
+                    ClientAuth::Basic,
+                ),
+                (
+                    "auth-client-body",
+                    tr!("auth.client_body"),
+                    ClientAuth::Body,
+                ),
             ],
             |this, value| this.client_auth = value,
             cx,
@@ -616,37 +665,30 @@ impl AuthEditor {
 
         // The token: kept in memory only, fetched on the first send.
         let (status, color) = match &self.fetch {
-            Fetch::Running if grant == OAuth2Grant::AuthorizationCode => (
-                "Waiting for the sign-in in your browser…".to_owned(),
-                p.text_muted,
-            ),
-            Fetch::Running => ("Getting a token…".to_owned(), p.text_muted),
-            Fetch::Failed(error) => (error.clone(), p.err),
+            Fetch::Running if grant == OAuth2Grant::AuthorizationCode => {
+                (tr!("auth.token.waiting_browser"), p.text_muted)
+            }
+            Fetch::Running => (tr!("auth.token.getting"), p.text_muted),
+            Fetch::Failed(error) => (error.clone().into(), p.err),
             Fetch::Idle => match self
                 .resolved_oauth2(cx)
                 .and_then(|c| apix_http::oauth2::cached(&c))
             {
-                None => (
-                    "No token yet. One is fetched on the first send.".to_owned(),
-                    p.text_muted,
-                ),
+                None => (tr!("auth.token.none"), p.text_muted),
                 Some(token) => match token.expires_in() {
-                    Some(left) if left.as_secs() < 30 => (
-                        "The token has expired; the next send gets a new one.".to_owned(),
-                        p.text_muted,
-                    ),
+                    Some(left) if left.as_secs() < 30 => (tr!("auth.token.expired"), p.text_muted),
                     Some(left) => (
-                        format!("Token ready, valid for {}.", human_minutes(left.as_secs())),
+                        tr!("auth.token.valid_for", time = human_minutes(left.as_secs())),
                         p.ok,
                     ),
-                    None => ("Token ready.".to_owned(), p.ok),
+                    None => (tr!("auth.token.ready"), p.ok),
                 },
             },
         };
         let running = matches!(self.fetch, Fetch::Running);
         out.push(
             self.row(
-                "Token",
+                tr!("auth.field.token"),
                 h_flex()
                     .gap_2()
                     .items_center()
@@ -661,7 +703,7 @@ impl AuthEditor {
                     .child(
                         Button::new("auth-get-token")
                             .small()
-                            .label("Get new token")
+                            .label(tr!("auth.token.get_new"))
                             .loading(running)
                             .disabled(running)
                             .on_click(cx.listener(|this, _: &ClickEvent, window, cx| {
@@ -672,7 +714,7 @@ impl AuthEditor {
                         Button::new("auth-forget-token")
                             .ghost()
                             .small()
-                            .label("Forget")
+                            .label(tr!("auth.token.forget"))
                             .on_click(
                                 cx.listener(|this, _: &ClickEvent, _, cx| this.forget_token(cx)),
                             ),
@@ -684,10 +726,7 @@ impl AuthEditor {
             div()
                 .text_xs()
                 .text_color(p.text_muted.opacity(0.8))
-                .child(
-                    "Apix gets the token itself and sends it as a bearer token. Tokens stay \
-                     in memory and are never written to disk.",
-                )
+                .child(tr!("auth.note.oauth2"))
                 .into_any_element(),
         );
         out
@@ -695,12 +734,28 @@ impl AuthEditor {
 }
 
 /// `54 min`, `2 h 5 min`.
-fn human_minutes(secs: u64) -> String {
+fn human_minutes(secs: u64) -> SharedString {
     let minutes = secs.div_ceil(60);
     if minutes < 60 {
-        format!("{minutes} min")
+        tr!("time.minutes", count = minutes)
     } else {
-        format!("{} h {} min", minutes / 60, minutes % 60)
+        tr!(
+            "time.hours_minutes",
+            hours = minutes / 60,
+            minutes = minutes % 60
+        )
+    }
+}
+
+/// "Uses … from the folder "orders"." The source comes from apix-core as
+/// `folder "orders"`, `collection "Shop"` or `project "Shop"`.
+fn inherited_note(what: SharedString, from: &str) -> SharedString {
+    let (kind, name) = from.split_once(' ').unwrap_or((from, ""));
+    let name = name.trim_matches('"');
+    match kind {
+        "folder" => tr!("auth.inherit.from_folder", what = what, name = name),
+        "collection" => tr!("auth.inherit.from_collection", what = what, name = name),
+        _ => tr!("auth.inherit.from_project", what = what, name = name),
     }
 }
 
@@ -712,24 +767,20 @@ impl Render for AuthEditor {
             0 => {
                 let (auth, from) = &self.inherited;
                 let what = match auth {
-                    Auth::Bearer { .. } => "a bearer token",
-                    Auth::Basic { .. } => "basic auth",
-                    Auth::ApiKey { .. } => "an API key",
-                    Auth::Digest { .. } => "digest auth",
-                    Auth::OAuth1(_) => "OAuth 1.0",
-                    Auth::OAuth2(_) => "OAuth 2.0",
-                    Auth::AwsSigV4(_) => "an AWS signature",
-                    Auth::Inherit | Auth::None => "no auth",
+                    Auth::Bearer { .. } => tr!("auth.what.bearer"),
+                    Auth::Basic { .. } => tr!("auth.what.basic"),
+                    Auth::ApiKey { .. } => tr!("auth.what.api_key"),
+                    Auth::Digest { .. } => tr!("auth.what.digest"),
+                    Auth::OAuth1(_) => "OAuth 1.0".into(),
+                    Auth::OAuth2(_) => "OAuth 2.0".into(),
+                    Auth::AwsSigV4(_) => tr!("auth.what.aws"),
+                    Auth::Inherit | Auth::None => tr!("auth.what.none"),
                 };
                 let text = match (from, self.owner) {
-                    (Some(from), _) => format!("Uses {what} from the {from}."),
-                    (None, "project") => "Requests that inherit get no auth.".to_owned(),
-                    (None, "collection") => "Nothing above sets auth, so none is sent. \
-                         Set it for the whole project from the project menu (Project auth…)."
-                        .to_owned(),
-                    (None, _) => "Nothing above sets auth, so none is sent. Set it on a folder \
-                         or collection from its right-click menu (Auth…)."
-                        .to_owned(),
+                    (Some(from), _) => inherited_note(what, from),
+                    (None, "project") => tr!("auth.inherit.project_none"),
+                    (None, "collection") => tr!("auth.inherit.collection_none"),
+                    (None, _) => tr!("auth.inherit.request_none"),
                 };
                 let mut out = vec![self.note(text)];
                 if let Some(detail) = describe(auth) {
@@ -743,14 +794,13 @@ impl Render for AuthEditor {
                 }
                 out
             }
-            1 => vec![self.note(format!(
-                "No auth is sent, even if a folder or collection sets one for this {}.",
-                self.owner
-            ))],
-            2 => vec![
-                self.field(F::Token),
-                self.note("Sent as Authorization: Bearer <token>."),
-            ],
+            1 => vec![self.note(match self.owner {
+                "folder" => tr!("auth.no_auth.folder"),
+                "collection" => tr!("auth.no_auth.collection"),
+                "project" => tr!("auth.no_auth.project"),
+                _ => tr!("auth.no_auth.request"),
+            })],
+            2 => vec![self.field(F::Token), self.note(tr!("auth.note.bearer"))],
             3 => vec![self.field(F::Username), self.field(F::Password)],
             4 => vec![
                 self.field(F::Key),
@@ -760,7 +810,7 @@ impl Render for AuthEditor {
             5 => vec![
                 self.field(F::Username),
                 self.field(F::Password),
-                self.note("Apix answers the server's Digest challenge (MD5 or SHA-256)."),
+                self.note(tr!("auth.note.digest")),
             ],
             6 => vec![
                 self.field(F::ConsumerKey),
@@ -768,7 +818,7 @@ impl Render for AuthEditor {
                 self.field(F::AccessToken),
                 self.field(F::TokenSecret),
                 self.row(
-                    "Signature",
+                    tr!("auth.signature"),
                     div()
                         .w(px(220.))
                         .child(Select::new(&self.signature).small()),
@@ -776,7 +826,7 @@ impl Render for AuthEditor {
                 .into_any_element(),
                 self.field(F::Realm),
                 self.location_choice(cx),
-                self.note("Signed with a fresh nonce and timestamp on every send."),
+                self.note(tr!("auth.note.oauth1")),
             ],
             7 => self.render_oauth2(cx),
             _ => vec![
@@ -785,13 +835,13 @@ impl Render for AuthEditor {
                 self.field(F::SessionToken),
                 self.field(F::Region),
                 self.field(F::Service),
-                self.note("Every send is signed with AWS Signature Version 4."),
+                self.note(tr!("auth.note.aws")),
             ],
         };
         v_flex()
             .gap_3()
             .child(self.row(
-                "Type",
+                tr!("auth.type"),
                 div().w(px(220.)).child(Select::new(&self.kind).small()),
             ))
             .children(body)
@@ -800,30 +850,37 @@ impl Render for AuthEditor {
                     div()
                         .text_xs()
                         .text_color(p.text_muted.opacity(0.8))
-                        .child("Values can use {{variables}}."),
+                        .child(tr!("auth.note.variables")),
                 )
             })
     }
 }
 
 /// One line about an inherited auth, without revealing secrets.
-fn describe(auth: &Auth) -> Option<String> {
+fn describe(auth: &Auth) -> Option<SharedString> {
     match auth {
-        Auth::Bearer { token } if token.starts_with("{{") => Some(format!("Token: {token}")),
-        Auth::Bearer { .. } => Some("Token: set".into()),
-        Auth::Basic { username, .. } | Auth::Digest { username, .. } => {
-            Some(format!("Username: {username}"))
+        Auth::Bearer { token } if token.starts_with("{{") => {
+            Some(tr!("auth.describe.token", token = token))
         }
-        Auth::ApiKey { key, location, .. } => Some(format!(
-            "{key} in the {}",
-            match location {
-                ApiKeyLocation::Header => "headers",
-                ApiKeyLocation::Query => "query string",
-            }
+        Auth::Bearer { .. } => Some(tr!("auth.describe.token_set")),
+        Auth::Basic { username, .. } | Auth::Digest { username, .. } => {
+            Some(tr!("auth.describe.username", name = username))
+        }
+        Auth::ApiKey { key, location, .. } => Some(match location {
+            ApiKeyLocation::Header => tr!("auth.describe.key_in_header", key = key),
+            ApiKeyLocation::Query => tr!("auth.describe.key_in_query", key = key),
+        }),
+        Auth::OAuth1(o) => Some(tr!("auth.describe.consumer_key", key = o.consumer_key)),
+        Auth::OAuth2(o) => Some(tr!(
+            "auth.describe.oauth2",
+            grant = grant_label(o.grant),
+            url = o.token_url
         )),
-        Auth::OAuth1(o) => Some(format!("Consumer key: {}", o.consumer_key)),
-        Auth::OAuth2(o) => Some(format!("{}, token from {}", o.grant.label(), o.token_url)),
-        Auth::AwsSigV4(a) => Some(format!("{} in {}", a.service, a.region)),
+        Auth::AwsSigV4(a) => Some(tr!(
+            "auth.describe.aws",
+            service = a.service,
+            region = a.region
+        )),
         Auth::Inherit | Auth::None => None,
     }
 }
@@ -889,7 +946,7 @@ impl super::Workspace {
                 let parent = dir.parent().unwrap_or(dir);
                 let inherited = project::inherited_auth(parent, collection, self.project.as_ref());
                 (
-                    format!("Auth for folder \"{name}\""),
+                    tr!("auth.dialog.folder_title", name = name),
                     "folder",
                     meta.auth,
                     inherited,
@@ -898,7 +955,7 @@ impl super::Workspace {
             AuthOwner::Collection(root) => Collection::open(root).map(|c| {
                 let inherited = project::inherited_auth(root, None, self.project.as_ref());
                 (
-                    format!("Auth for collection \"{}\"", c.meta.name),
+                    tr!("auth.dialog.collection_title", name = c.meta.name),
                     "collection",
                     c.meta.auth,
                     inherited,
@@ -906,7 +963,7 @@ impl super::Workspace {
             }),
             AuthOwner::Project(root) => Project::open(root).map(|p| {
                 (
-                    format!("Auth for project \"{}\"", p.meta.name),
+                    tr!("auth.dialog.project_title", name = p.meta.name),
                     "project",
                     p.meta.auth,
                     Ok((Auth::None, None)),
@@ -945,28 +1002,36 @@ impl super::Workspace {
                                 .flex_1()
                                 .text_xs()
                                 .text_color(palette.text_muted)
-                                .child(format!(
-                                    "Requests in this {label} without their own auth use this."
-                                )),
+                                .child(match label {
+                                    "folder" => tr!("auth.dialog.folder_note"),
+                                    "collection" => tr!("auth.dialog.collection_note"),
+                                    _ => tr!("auth.dialog.project_note"),
+                                }),
                         )
-                        .child(Button::new("auth-cancel").ghost().label("Cancel").on_click(
-                            move |_, window, cx| {
-                                super::collections::close_dialog(&cancel_view, window, cx)
-                            },
-                        ))
-                        .child(Button::new("auth-save").primary().label("Save").on_click(
-                            move |_, window, cx| {
-                                let auth = save.read(cx).auth(cx);
-                                let saved = save_view
-                                    .update(cx, |this, cx| {
-                                        this.save_shared_auth(&owner, auth, window, cx)
-                                    })
-                                    .unwrap_or(false);
-                                if saved {
-                                    super::collections::close_dialog(&save_view, window, cx);
-                                }
-                            },
-                        )),
+                        .child(
+                            Button::new("auth-cancel")
+                                .ghost()
+                                .label(tr!("dialog.cancel"))
+                                .on_click(move |_, window, cx| {
+                                    super::collections::close_dialog(&cancel_view, window, cx)
+                                }),
+                        )
+                        .child(
+                            Button::new("auth-save")
+                                .primary()
+                                .label(tr!("dialog.save"))
+                                .on_click(move |_, window, cx| {
+                                    let auth = save.read(cx).auth(cx);
+                                    let saved = save_view
+                                        .update(cx, |this, cx| {
+                                            this.save_shared_auth(&owner, auth, window, cx)
+                                        })
+                                        .unwrap_or(false);
+                                    if saved {
+                                        super::collections::close_dialog(&save_view, window, cx);
+                                    }
+                                }),
+                        ),
                 )
         });
     }
