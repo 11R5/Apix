@@ -19,7 +19,7 @@ no WebView and no Electron.
    Only the visible rows are laid out (virtual lists), and the body is parsed
    lazily.
 5. **Light and fast to start.** Speed and features come before size. The release
-   binary stays under about 40 MB (27.7 MB today; Electron apps are 300 MB+) and
+   binary stays under about 40 MB (31.2 MB today; Electron apps are 300 MB+) and
    opens a window in under 150 ms.
 
 ## Crates
@@ -245,7 +245,7 @@ about 407 MB with the body loaded, against 69 MB idle.
 |-------------------------------------|-------------------|-----------------------------|
 | Cold start to first frame           | < 150 ms          | window handle at ~340 ms, not yet profiled |
 | Idle RAM                            | < 60 MB           | 69 MB |
-| Release binary                      | < 40 MB           | 27.7 MB |
+| Release binary                      | < 40 MB           | 31.2 MB |
 | Input to paint latency              | 1 frame (≤ 8 ms at 120 Hz) | not measured |
 | Open and scroll a 100 MB JSON body  | no dropped frames | opens in ~0.33 s; frame times not measured |
 

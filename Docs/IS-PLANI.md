@@ -17,7 +17,7 @@
 | M4 Günlük kullanım | 🔜 · bitti: menü çubuğu, şifreli koleksiyonlar (motor, uygulama, CLI), ağ denetçisi (Network sekmesi) · sıradaki: multipart/binary/GraphQL gövdeleri ve auth tipleri |
 | M5–M9 | ⬜ |
 
-Release ikili dosyası 27.7 MB (üst sınır ~40 MB). Testler: core 35, vault 7, desktop 4, codegen 11, import 10, http 8 (hepsi geçiyor, clippy uyarısız).
+Release ikili dosyası 31.2 MB (üst sınır ~40 MB). Testler: core 35, vault 7, desktop 4, codegen 11, import 10, http 8 (hepsi geçiyor, clippy uyarısız).
 
 ### Kullanıcı notları (17 Ekim 2026) ve plana nasıl işlendikleri
 | # | Not | Nereye işlendi |
@@ -42,7 +42,7 @@ Apix, Postman'in yaptığı her şeyi yapan bir API istemcisi olacak. Postman'de
 | Kural | Ne anlama geliyor |
 |---|---|
 | **Minimalist** | Ekranda sadece o an gereken şey görünür. Gerisi Ctrl/⌘+K komut paletinde durur. |
-| **Hafif** | Hız ve özellik boyuttan önce gelir. Program dosyası için üst sınır yaklaşık 40 MB (şu an 27.7 MB; Postman ve Electron uygulamaları 300 MB'ı aşıyor). Açılış 150 ms'nin, boşta bellek kullanımı 60 MB'ın altında kalır (şu an 69 MB ölçüldü). |
+| **Hafif** | Hız ve özellik boyuttan önce gelir. Program dosyası için üst sınır yaklaşık 40 MB (şu an 31.2 MB; Postman ve Electron uygulamaları 300 MB'ı aşıyor). Açılış 150 ms'nin, boşta bellek kullanımı 60 MB'ın altında kalır (şu an 69 MB ölçüldü). |
 | **Hızlı** | Arayüz hiç donmaz. 100 MB'lık bir yanıt bile kare kaybetmeden kaydırılır. |
 | **Local-first** | Hesap ve bulut zorunlu değildir. Koleksiyonlar düz dosya olarak durur ve git ile versiyonlanır. |
 | **Postman'den kolay geçiş** | Postman koleksiyonları, ortamları ve scriptleri içe aktarılınca çalışır. |
@@ -511,7 +511,7 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 ### M9 — Yayın
 - GitHub Actions: Windows, macOS ve Linux'ta test ve derleme
 - Kurulum paketleri: `.msi` ve winget, `.dmg` ve Homebrew, AppImage, Flatpak ve `.deb`
-- İkili boyutunu izlemek: üst sınır yaklaşık 40 MB (not 10). Şu an release 27.7 MB; içinde 2.2 MB font, simgeler ve tree-sitter var. Kolay kazançlar alınır (`panic = "abort"`, kullanılmayan özellikleri kapatmak), ama hız ve özellikten ödün verilmez.
+- İkili boyutunu izlemek: üst sınır yaklaşık 40 MB (not 10). Şu an release 31.2 MB; içinde 2.2 MB font, simgeler ve tree-sitter var. Kolay kazançlar alınır (`panic = "abort"`, kullanılmayan özellikleri kapatmak), ama hız ve özellikten ödün verilmez.
 - **İmzalı sürümler:** Windows kod imzası (Akıllı Uygulama Denetimi engellemesin diye) ve macOS notarization
 - Kurulum paketlerinde M3'te hazırlanan simgelerin kullanılması, web sitesi, tanıtım (r/rust, Hacker News)
 

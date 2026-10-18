@@ -86,7 +86,7 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 ## M9 — Release & distribution
 - [ ] GitHub Actions: test and build on Windows, macOS and Linux
 - [ ] Installers: `.msi`/winget, `.dmg`/Homebrew cask, AppImage/Flatpak/`.deb`, using the M3 icons
-- [ ] Keep the release binary under ~40 MB (27.7 MB today); take easy wins, never at the cost of speed or features
+- [ ] Keep the release binary under ~40 MB (31.2 MB today); take easy wins, never at the cost of speed or features
 - [ ] Signed Windows builds (so Smart App Control allows them) and notarized macOS builds
 - [ ] Docs site and a launch post (r/rust, Hacker News)
 
