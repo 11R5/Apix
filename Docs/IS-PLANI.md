@@ -14,10 +14,10 @@
 | M1 Arayüzden istek | ✅ 100 MB JSON ~0.33 s'de açılıyor |
 | M2 Koleksiyonlar, Postman içe aktarma | ✅ (sekmeler ve sürükle-bırak M3'te tamamlandı) |
 | M3 Simge, projeler, ortamlar, kopyalama, auth | ✅ 9/9 · bitti: simge, ortam seçici ve editörü, dinamik değişkenler, projeler, kabuk komutu olarak kopyalama, metotla yeni istek, değişken çipleri, Auth sekmesi ve miras, komut paleti, sekmeler, sürükle-bırak ile taşıma · küçük kalanlar M3 bölümünün sonunda |
-| M4 Günlük kullanım | 🔜 · bitti: menü çubuğu, şifreli koleksiyonlar (motor, uygulama, CLI), ağ denetçisi (Network sekmesi), multipart/binary/GraphQL gövdeleri, auth tipleri (Digest, OAuth 1.0, OAuth 2.0, AWS SigV4) · sıradaki: ayarlar ve 9 dilli arayüz · ardından: dokümantasyon yapısı ve README karşılaştırması |
+| M4 Günlük kullanım | 🔜 · bitti: menü çubuğu, şifreli koleksiyonlar (motor, uygulama, CLI), ağ denetçisi (Network sekmesi), multipart/binary/GraphQL gövdeleri, auth tipleri (Digest, OAuth 1.0, OAuth 2.0, AWS SigV4), ayarlar ekranı ve 9 dilli arayüz · sıradaki: dokümantasyon yapısı ve README karşılaştırması · ardından: Arapça düzen aynalama |
 | M5–M9 | ⬜ |
 
-Release ikili dosyası 32.2 MB (üst sınır 100 MB). Testler: core 44, vault 7, desktop 6, codegen 15, import 13, http 14 (hepsi geçiyor, clippy uyarısız).
+Release ikili dosyası 33.1 MB (üst sınır 100 MB). Testler: core 44, vault 7, desktop 9, codegen 15, import 13, http 14 (hepsi geçiyor, clippy uyarısız).
 
 ### Kullanıcı notları (17 Ekim 2026) ve plana nasıl işlendikleri
 | # | Not | Nereye işlendi |
@@ -52,7 +52,7 @@ Apix, Postman'in yaptığı her şeyi yapan bir API istemcisi olacak. Postman'de
 | Kural | Ne anlama geliyor |
 |---|---|
 | **Minimalist** | Ekranda sadece o an gereken şey görünür. Gerisi Ctrl/⌘+K komut paletinde durur. |
-| **Hafif** | Hız, akıcılık ve özellik boyuttan önce gelir. Program dosyası için üst sınır 100 MB (not 11; şu an 32.2 MB; Postman ve Electron uygulamaları 300 MB'ı aşıyor). Açılış 150 ms'nin, boşta bellek kullanımı 60 MB'ın altında kalır (şu an 69 MB ölçüldü). |
+| **Hafif** | Hız, akıcılık ve özellik boyuttan önce gelir. Program dosyası için üst sınır 100 MB (not 11; şu an 33.1 MB; Postman ve Electron uygulamaları 300 MB'ı aşıyor). Açılış 150 ms'nin, boşta bellek kullanımı 60 MB'ın altında kalır (şu an 69 MB ölçüldü). |
 | **Hızlı** | Arayüz hiç donmaz. 100 MB'lık bir yanıt bile kare kaybetmeden kaydırılır. |
 | **Local-first** | Hesap ve bulut zorunlu değildir. Koleksiyonlar düz dosya olarak durur ve git ile versiyonlanır. |
 | **Postman'den kolay geçiş** | Postman koleksiyonları, ortamları ve scriptleri içe aktarılınca çalışır. |
@@ -406,8 +406,8 @@ Bir koleksiyon (veya proje) parola ile şifrelenir. Parolayı bilmeyen hiçbir a
 | Komut paleti (Ctrl/⌘+K, Ctrl/⌘+P) | ✅ |
 | **Menü çubuğu** (başlık çubuğunda): File, Request, Environment, View, Help. Kısayollar menüde görünür. Kenar çubuğundaki "Open or create" menüsünün yerini aldı. Windows'ta başlık çubuğu sürükleme alanı olduğu hâlde tıklanabilir (menü düğmeleri sürükleme alanını örter). macOS'ta yerel menü çubuğu M9'da. | ✅ |
 | Kısayol tablosu ve kısayolları özelleştirme | ⬜ M |
-| **Ayarlar ekranı** (not 13): arayüz dili, tema, cam ayarı, font, proxy, otomatik kilit süresi, güncelleme. Ayarlar kullanıcı klasöründeki `settings.toml`'da tutulur. | ⬜ M (M4) |
-| **Arayüz dili** (not 13): İngilizce, Türkçe, Arapça, Almanca, Fransızca, Rusça, Japonca, Çince (basitleştirilmiş), İspanyolca. Ayarlardan anında değişir, yeniden başlatma gerekmez. Arapça için sağdan sola düzen (kenar çubuğu, sekmeler ve metin hizası aynalanır). Japonca, Çince ve Arapça için yazı tipi yedekleri. Her dil tek bir dosya (`locales/<kod>.yml`, `rust-i18n`; gpui-kit'in kendi metinleri de aynı sistemle çevrilir). Yeni dil eklemek: bir dosya ve dil listesine bir satır. Eksik çeviri İngilizceye düşer; CI eksik anahtarları raporlar. Çeviriler ilk etapta makine çevirisi + gözden geçirme; anadili konuşan katkıcılar düzeltebilir. | ⬜ L (M4) |
+| **Ayarlar ekranı** (not 13, Ctrl+,): arayüz dili, tema, şifreli koleksiyonların otomatik kilit süresi; her değişiklik anında kaydedilir (`settings.toml`, kullanıcı ayar klasöründe). Sonra: cam ayarı, font, proxy, güncelleme. | ✅ dil, tema, otomatik kilit · ⬜ diğerleri |
+| **Arayüz dili** (not 13): İngilizce, Türkçe, Arapça, Almanca, Fransızca, Rusça, Japonca, Çince (basitleştirilmiş), İspanyolca. Ayarlardan anında değişir, yeniden başlatma gerekmez. Arapça için sağdan sola düzen (kenar çubuğu, sekmeler ve metin hizası aynalanır). Japonca, Çince ve Arapça için yazı tipi yedekleri. Her dil tek bir dosya (`locales/<kod>.yml`, `rust-i18n`; gpui-kit'in kendi metinleri de aynı sistemle çevrilir). Yeni dil eklemek: bir dosya ve dil listesine bir satır. Eksik çeviri İngilizceye düşer; CI eksik anahtarları raporlar. Çeviriler ilk etapta makine çevirisi + gözden geçirme; anadili konuşan katkıcılar düzeltebilir. | ✅ 9 dil, yaklaşık 414 anahtar, anında geçiş, sistem dilinden ilk seçim, eksik anahtar ve yer tutucu testi · ⬜ Arapça için düzen aynalama (metin zaten sağdan sola şekillenir), motor hata mesajlarının çevirisi, gpui-kit'in kendi metinleri (yalnız Çince var), anadili konuşanların gözden geçirmesi |
 | Otomatik güncelleme | ⬜ M |
 | Erişilebilirlik: klavyeyle tam kullanım, yüksek kontrast | ⬜ M |
 | Çökme raporu (isteğe bağlı, varsayılan kapalı) | ⬜ S |
@@ -524,7 +524,7 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 - **Ağ denetçisi (§B2)** (not 9): yerel ağ bilgisi, DNS, TCP, TLS ve sertifika zinciri, zaman şelalesi, yönlendirmeler (L) Network sekmesi ve `apix send --network` ✅; TLS sürümü/şifre takımı, tam zincir ve TCP/TLS ayrı süreler M7'de (not 12).
 - **Gövde tipleri (§A4)** ✅: düzenlenebilir urlencoded form, multipart (metin ve dosya alanları), binary ve GraphQL (renkli sorgu, JSON değişkenler). Motor, uygulama, CLI, "Copy as" (curl, cmd, PowerShell), curl yapıştırma (`-F`, `--form-string`, `--data-binary @dosya`) ve Postman içe aktarma hepsini taşır. Göreli dosya yolları isteğin klasörüne göre çözülür.
 - **Auth tipleri (§A5)** ✅: Digest, OAuth 1.0, OAuth 2.0 (client credentials, password, authorization code + PKCE) ve AWS SigV4. İmzalar `apix_core::sign` içinde (AWS test paketi, RFC 7616, RFC 7636 ve OAuth 1.0 örnek değerleriyle sınanır); motor, CLI, "Copy as" (curl `--digest`, `--aws-sigv4`; PowerShell için kopyalarken imzalanır), curl yapıştırma ve Postman içe aktarma hepsini taşır. Gerçek sunucularda denendi: httpbin Digest (MD5, SHA-256), Postman Echo OAuth 1.0, yerel OAuth 2.0 sunucusu (`cargo run -p apix-http --example oauth_server`).
-- **Ayarlar ekranı ve arayüz dili (§M, not 13)** (L): çeviri altyapısı (`rust-i18n`, tüm metinler anahtarlı), 9 dil, Arapça için sağdan sola, CJK ve Arapça yazı tipi yedekleri, ayarlardan anında dil değişimi. M7'den öne alındı: her yeni ekran yeni metin getirdiği için altyapı ne kadar erken gelirse sonradan o kadar az iş çıkar.
+- **Ayarlar ekranı ve arayüz dili (§M, not 13)** (L) ✅ (Arapça düzen aynalama hariç): çeviri altyapısı (`rust-i18n`, tüm metinler anahtarlı), 9 dil, Arapça için sağdan sola, CJK ve Arapça yazı tipi yedekleri, ayarlardan anında dil değişimi. M7'den öne alındı: her yeni ekran yeni metin getirdiği için altyapı ne kadar erken gelirse sonradan o kadar az iş çıkar.
 - **Dokümantasyon yapısı ve README (§N, not 14, 16)** (M): `Docs/<dil>/` yapısı, `languages.toml`, İngilizce ve Türkçe belgeler (kullanım kılavuzu, mimari, teknik altyapı, iş akışları), README'de "neden Apix" karşılaştırması ve Apix'in tekrarlanabilir performans ölçümleri.
 - İstek ayarları (timeout, SSL, proxy, sertifikalar), çerez yöneticisi
 - Kod üretici (diller), geçmiş
@@ -550,7 +550,7 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 ### M9 — Yayın
 - GitHub Actions: Windows, macOS ve Linux'ta test ve derleme
 - Kurulum paketleri: `.msi` ve winget, `.dmg` ve Homebrew, AppImage, Flatpak ve `.deb`
-- İkili boyutunu izlemek: üst sınır 100 MB (not 11). Şu an release 32.2 MB; içinde 2.2 MB font, simgeler ve tree-sitter var. CJK ve Arapça yazı tipleri eklenince büyür; sınır hız ve akıcılık için tanındı, boyut için ödün verilmez.
+- İkili boyutunu izlemek: üst sınır 100 MB (not 11). Şu an release 33.1 MB; içinde 2.2 MB font, simgeler ve tree-sitter var. CJK ve Arapça yazı tipleri eklenince büyür; sınır hız ve akıcılık için tanındı, boyut için ödün verilmez.
 - **Tüm dillerde dokümantasyon (§N, not 14, 15):** 9 dilde kullanım kılavuzu, mimari, teknik altyapı, iş akışları; her dilin kendi arayüzünden otomatik alınmış ekran görüntüleriyle görselli kılavuz; dokümantasyon sitesinde dil seçici
 - **Karşılaştırmalı performans (not 16):** Apix ile Postman, Insomnia, Bruno ve Hoppscotch aynı makinede, aynı betikle ölçülür; sonuçlar README'de
 - **İmzalı sürümler:** Windows kod imzası (Akıllı Uygulama Denetimi engellemesin diye) ve macOS notarization

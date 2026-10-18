@@ -1,0 +1,415 @@
+_version: 1
+app.error_with_cause: "%{error}: %{cause}"
+app.status.collections: "%{count} koleksiyon"
+app.status.env: "ortam: %{name}"
+app.status.no_collection: Koleksiyon yok
+app.status.no_collections: henüz koleksiyon yok
+app.status.one_collection: 1 koleksiyon
+app.status.one_request: 1 istek
+app.status.requests: "%{count} istek"
+app.status.shortcuts: "%{palette} komutlar  ·  %{send} gönder  ·  Esc iptal"
+app.status.unsaved: Kaydedilmemiş değişiklikler · %{key} kaydet
+auth.add_to: Ekleneceği yer
+auth.client_auth: İstemci kimlik doğrulaması
+auth.client_basic: Basic auth başlığı
+auth.client_body: Gövdede
+auth.describe.aws: "%{service}, bölge %{region}"
+auth.describe.consumer_key: "Consumer key: %{key}"
+auth.describe.key_in_header: "%{key} başlıklarda"
+auth.describe.key_in_query: "%{key} sorgu dizesinde"
+auth.describe.oauth2: "%{grant}, token adresi %{url}"
+auth.describe.token: "Token: %{token}"
+auth.describe.token_set: "Token: ayarlandı"
+auth.describe.username: "Kullanıcı adı: %{name}"
+auth.dialog.collection_note: Bu koleksiyonda kendi yetkilendirmesi olmayan istekler bunu kullanır.
+auth.dialog.collection_title: “%{name}” koleksiyonu için yetkilendirme
+auth.dialog.folder_note: Bu klasörde kendi yetkilendirmesi olmayan istekler bunu kullanır.
+auth.dialog.folder_title: “%{name}” klasörü için yetkilendirme
+auth.dialog.project_note: Bu projede kendi yetkilendirmesi olmayan istekler bunu kullanır.
+auth.dialog.project_title: “%{name}” projesi için yetkilendirme
+auth.field.access_key: Erişim anahtarı
+auth.field.access_token: Erişim token'ı
+auth.field.auth_url: Yetkilendirme URL'si
+auth.field.client_id: İstemci kimliği
+auth.field.client_secret: İstemci gizli anahtarı
+auth.field.consumer_key: Consumer key
+auth.field.consumer_secret: Consumer secret
+auth.field.key: Anahtar
+auth.field.password: Parola
+auth.field.realm: Realm
+auth.field.redirect_url: Yönlendirme URL'si
+auth.field.region: Bölge
+auth.field.scope: Kapsam
+auth.field.secret_key: Gizli anahtar
+auth.field.service: Servis
+auth.field.session_token: Oturum token'ı
+auth.field.token: Token
+auth.field.token_secret: Token gizli anahtarı
+auth.field.token_url: Token URL'si
+auth.field.username: Kullanıcı adı
+auth.field.value: Değer
+auth.grant.authorization_code: Yetkilendirme kodu
+auth.grant.client_credentials: İstemci kimlik bilgileri
+auth.grant.password: Parola
+auth.grant_type: Grant türü
+auth.hint.access_key: "ör. {{aws_access_key}}"
+auth.hint.client_secret: Herkese açık (public) istemci için boş bırakılır
+auth.hint.key: Ad, ör. X-API-Key
+auth.hint.optional: İsteğe bağlı
+auth.hint.redirect_url: "Boş: http://127.0.0.1 üzerinde boş bir port"
+auth.hint.region: ör. eu-central-1
+auth.hint.scope: Boşlukla ayrılmış, ör. read write
+auth.hint.service: ör. execute-api, s3, lambda
+auth.hint.session_token: Yalnızca geçici kimlik bilgileri için
+auth.hint.token: "Token, ör. {{token}}"
+auth.hint.value: "Değer, ör. {{apiKey}}"
+auth.in_header: Başlık
+auth.in_query: Sorgu parametreleri
+auth.inherit.collection_none: Üst düzeylerde yetkilendirme ayarlanmadığı için hiçbiri gönderilmez. Tüm proje için proje menüsünden ayarlayın (Proje yetkilendirmesi…).
+auth.inherit.from_collection: "“%{name}” koleksiyonundan devralınır: %{what}."
+auth.inherit.from_folder: "“%{name}” klasöründen devralınır: %{what}."
+auth.inherit.from_project: "“%{name}” projesinden devralınır: %{what}."
+auth.inherit.project_none: Devralan isteklere yetkilendirme uygulanmaz.
+auth.inherit.request_none: Üst düzeylerde yetkilendirme ayarlanmadığı için hiçbiri gönderilmez. Bir klasör veya koleksiyon için sağ tık menüsünden ayarlayın (Yetkilendirme…).
+auth.kind.api_key: API anahtarı
+auth.kind.aws: AWS Signature
+auth.kind.basic: Basic auth
+auth.kind.bearer: Bearer token
+auth.kind.digest: Digest auth
+auth.kind.inherit: Üst öğeden devral
+auth.kind.none: Yetkilendirme yok
+auth.no_auth.collection: Proje bu koleksiyon için bir yetkilendirme ayarlasa bile hiçbiri gönderilmez.
+auth.no_auth.folder: Bir üst klasör veya koleksiyon bu klasör için yetkilendirme ayarlasa bile hiçbiri gönderilmez.
+auth.no_auth.project: Devralan istekler için yetkilendirme gönderilmez.
+auth.no_auth.request: Bir klasör veya koleksiyon bu istek için yetkilendirme ayarlasa bile hiçbiri gönderilmez.
+auth.note.aws: Her gönderim AWS Signature Version 4 ile imzalanır.
+auth.note.bearer: "Authorization: Bearer <token> olarak gönderilir."
+auth.note.digest: Apix, sunucunun Digest sınamasını (MD5 veya SHA-256) yanıtlar.
+auth.note.oauth1: Her gönderimde yeni bir nonce ve zaman damgasıyla imzalanır.
+auth.note.oauth2: Apix token'ı kendisi alır ve bearer token olarak gönderir. Token'lar bellekte tutulur, asla diske yazılmaz.
+auth.note.variables: "Değerlerde {{variables}} kullanılabilir."
+auth.signature: İmza
+auth.token.expired: Token'ın süresi doldu; sonraki gönderimde yenisi alınır.
+auth.token.forget: Unut
+auth.token.get_new: Yeni token al
+auth.token.getting: Token alınıyor…
+auth.token.none: Henüz token yok. İlk gönderimde alınır.
+auth.token.ready: Token hazır.
+auth.token.valid_for: Token hazır, %{time} boyunca geçerli.
+auth.token.waiting_browser: Tarayıcınızda oturum açılması bekleniyor…
+auth.type: Tür
+auth.use_pkce: PKCE kullan (önerilir)
+auth.what.api_key: API anahtarı
+auth.what.aws: AWS imzası
+auth.what.basic: basic auth
+auth.what.bearer: bearer token
+auth.what.digest: digest auth
+auth.what.none: yetkilendirme yok
+body.binary_hint: Dosyanın baytları gövdeyi oluşturur. Content-Type varsayılan olarak application/octet-stream olur; farklısı için Başlıklar sekmesinde ayarlayın.
+body.binary_placeholder: Gönderilecek dosya, ör. data/upload.bin
+body.binary_size: "%{size} · olduğu gibi gönderilir"
+body.choose: Seç…
+body.choose_file: Dosya seç
+body.choose_files: Dosyaları seç
+body.file_not_found: Dosya bulunamadı
+body.file_path: Dosya yolu
+body.form_hint: Bir HTML formu gibi application/x-www-form-urlencoded olarak gönderilir.
+body.graphql_query: Sorgu
+body.graphql_variables: Değişkenler (JSON)
+body.invalid_json: geçerli JSON değil
+body.kind.binary: İkili
+body.kind.form: Form
+body.kind.none: Yok
+body.kind.text: Metin
+body.multipart_hint: multipart/form-data olarak gönderilir. Dosya yüklemek için bir alanı Dosya olarak değiştirin; koleksiyon içindeki yollar isteğe göre göreli kaydedilir.
+body.none_hint: Bu isteğin gövdesi yok.
+body.part_file: Dosya
+body.part_text: Metin
+body.send_file_instead: Bunun yerine dosya gönder
+body.send_text_instead: Bunun yerine metin gönder
+chips.add_with: "%{key} ile ekleyin (Değişkenler)."
+chips.dynamic: "Dinamik: her gönderimde yeni bir değer"
+chips.empty: (boş)
+chips.missing_in_env: “%{env}” ortamı için tanımlı değil.
+chips.missing_no_env: Tanımlı değil ve seçili bir ortam yok.
+chips.scope.collection: “%{name}” koleksiyonu
+chips.scope.environment: “%{name}” ortamı
+chips.scope.environment_of: “%{collection}” içindeki “%{name}” ortamı
+chips.scope.project: “%{name}” projesi
+chips.secret_scope: "%{scope} · gizli (.local.toml)"
+chips.set_for_run: Bu çalıştırma için ayarla
+collection.choose_folder: Klasör seç…
+collection.create: Oluştur
+collection.create_collection: Koleksiyon oluştur
+collection.create_collection_in: Koleksiyonun oluşturulacağı yer
+collection.create_project_in: Projenin oluşturulacağı yer
+collection.default_name: Koleksiyon
+collection.delete: Sil
+collection.delete_folder_permanent: “%{name}” ve içindeki her şey kalıcı olarak silinecek (şifreli koleksiyonların çöp kutusu yoktur).
+collection.delete_folder_title: Klasör silinsin mi?
+collection.delete_folder_trash: “%{name}” ve içindeki her şey çöp kutusuna taşınacak.
+collection.delete_request_permanent: “%{name}” kalıcı olarak silinecek (şifreli koleksiyonların çöp kutusu yoktur).
+collection.delete_request_title: İstek silinsin mi?
+collection.delete_request_trash: “%{name}” çöp kutusuna taşınacak.
+collection.dont_save: Kaydetme
+collection.new_collection_title: Yeni koleksiyon
+collection.new_folder_title: Yeni klasör
+collection.new_project_title: Yeni proje
+collection.new_request_name: Yeni istek
+collection.no_root: "%{path} veya üst klasörlerinde apix.toml ya da apix-project.toml yok."
+collection.open_first: Önce bir koleksiyon açın veya oluşturun (%{key}).
+collection.open_prompt: Koleksiyon aç
+collection.rename: Yeniden adlandır
+collection.rename_collection_title: Koleksiyonu yeniden adlandır
+collection.rename_folder_title: Klasörü yeniden adlandır
+collection.rename_request_title: İsteği yeniden adlandır
+collection.start_here_text: "%{path} içinde henüz apix.toml yok. Apix bir tane oluşturacak; istekler bu klasörde .apix dosyaları olarak kaydedilir."
+collection.start_here_title: Burada yeni bir koleksiyon başlatılsın mı?
+collection.unsaved_text: Önce “%{name}” üzerindeki değişiklikler kaydedilsin mi?
+collection.unsaved_title: Kaydedilmemiş değişiklikler
+copy.as_shell: "%{shell} olarak kopyala"
+copy.copied: "%{shell} olarak kopyalandı."
+copy.copied_missing: "%{shell} olarak kopyalandı. Tanımsız olduğu için {{…}} olarak bırakıldı: %{names}."
+copy.curl_filled: İstek, yapıştırılan curl komutundan dolduruldu.
+copy.curl_imported: curl içe aktarıldı
+dialog.cancel: İptal
+dialog.close: Kapat
+dialog.save: Kaydet
+env.add_environment: Ortam ekle
+env.add_variable: Değişken ekle
+env.delete: Sil
+env.dialog_title: Değişkenler
+env.dynamic_variables: Dinamik değişkenler
+env.error.defined_twice: "%{key} iki kez tanımlanmış."
+env.error.exists: "%{name} adında bir ortam zaten var."
+env.error.name_clash: İki ortam %{name} adını alacak.
+env.error.needs_name: Ortamın bir adı olmalı.
+env.hint.dynamic: Kopyalamak için bir ada tıklayın. Her kullanımda yeni bir değer üretilir; aynı adla tanımladığınız bir değişken önceliklidir.
+env.hint.environment: Gizli değerler bu bilgisayarda, git'in yok saydığı %{name}.local.toml dosyasında kalır.
+env.hint.shared: Paylaşılan değişkenler her ortamda geçerlidir; ortamdaki değer önceliklidir.
+env.none: Ortam yok
+env.placeholder.name: ad
+env.placeholder.new_environment: Yeni ortam…
+env.placeholder.value: değer
+env.secret: Gizli
+env.secret_tooltip: Yalnızca bu bilgisayarda, .local.toml dosyasına kaydedilir
+env.section.built_in: Yerleşik
+env.section.collection_only: "Yalnızca %{name}"
+env.section.environments: Ortamlar
+env.section.shared: Paylaşılan
+env.title.collection: "%{name} değişkenleri"
+env.title.environment: Ortam
+env.title.project: Proje değişkenleri
+env.undo_delete: Silmeyi geri al
+import.collection_done: Postman koleksiyonu içe aktarıldı
+import.environment_done: Ortam içe aktarıldı
+import.environment_needs_open: Önce bu ortamın ait olduğu koleksiyonu veya projeyi açın, sonra içe aktarın.
+import.environment_saved: “%{title}”, %{count} değişkenle environments/%{name}.toml olarak kaydedildi.
+import.environment_saved_with_secrets: “%{title}”, %{count} değişkenle environments/%{name}.toml olarak kaydedildi. %{secrets} gizli değer, git'in yok saydığı %{name}.local.toml dosyasına yazıldı.
+import.prompt: Postman dışa aktarımını içe aktar
+menu.active_environment: Etkin ortam
+menu.cancel: İptal
+menu.close_tab: Sekmeyi kapat
+menu.collection_auth: Koleksiyon yetkilendirmesi…
+menu.command_palette: Komut paleti…
+menu.copy_as: Farklı kopyala
+menu.documentation: Belgeler
+menu.encrypt_collection: Bu koleksiyonu şifrele…
+menu.environment: Ortam
+menu.file: Dosya
+menu.group_by: Kenar çubuğunu grupla
+menu.group_collection: Koleksiyon
+menu.group_environment: Ortam
+menu.help: Yardım
+menu.import_postman: Postman'dan içe aktar…
+menu.lock_collections: Şifreli koleksiyonları kilitle
+menu.method: Metot
+menu.new_collection: Yeni koleksiyon…
+menu.new_encrypted_collection: Yeni şifreli koleksiyon…
+menu.new_folder: Yeni klasör…
+menu.new_project: Yeni proje…
+menu.new_request: Yeni istek
+menu.new_request_with_method: Metot seçerek yeni istek
+menu.next_tab: Sonraki sekme
+menu.open: Aç…
+menu.open_recent: Son açılanlar
+menu.previous_tab: Önceki sekme
+menu.project_auth: Proje yetkilendirmesi…
+menu.quit: Çıkış
+menu.report_problem: Sorun bildir
+menu.request: İstek
+menu.save: Kaydet
+menu.send: Gönder
+menu.settings: Ayarlar…
+menu.source_code: Kaynak kod
+menu.variables: Değişkenler ve ortamlar…
+menu.view: Görünüm
+network.cert.days_left: "%{count} gün kaldı"
+network.cert.engine_note: HTTP motoru TLS sürümünü veya şifre takımını değil, sunucunun sertifikasını bildirir.
+network.cert.expired_days_ago: "%{count} gün önce sona erdi"
+network.cert.expired_one_day_ago: 1 gün önce sona erdi
+network.cert.issued_by: Veren
+network.cert.issued_to: Verildiği
+network.cert.names: Adlar
+network.cert.not_reported: Şifreli, ancak sertifika bildirilmedi.
+network.cert.one_day_left: 1 gün kaldı
+network.cert.valid: Geçerlilik
+network.cert.valid_range: "%{from} – %{to}"
+network.connection.dns_servers: DNS sunucuları
+network.connection.gateway: Ağ geçidi
+network.connection.none_recorded: Yeni bağlantı kaydedilmedi (yeniden kullanıldı veya proxy üzerinden).
+network.connection.proxy: Proxy
+network.connection.proxy_from: "%{value} (kaynak: %{var})"
+network.connection.proxy_none: ortamda yok
+network.connection.server: Sunucu
+network.connection.this_computer: Bu bilgisayar
+network.connection.unknown_address: bilinmiyor
+network.connection.unknown_interface: bilinmeyen arayüz
+network.connection.via: "%{address}, %{via} üzerinden"
+network.connection.via_vpn: "%{address}, %{via} üzerinden · VPN"
+network.dns.lookup: Sorgu
+network.dns.lookup_result: "%{host} → %{addrs} (%{duration})"
+network.note: Not
+network.plain_http: "Düz HTTP: hiçbir şey şifrelenmez."
+network.redirect.followed: İzlendi
+network.section.certificate: Sertifika
+network.section.connection: Bağlantı
+network.section.dns: DNS
+network.section.encryption: Şifreleme
+network.section.redirects: Yönlendirmeler
+network.section.timing: Zamanlama
+network.timing.connect: Bağlanma (TCP + TLS)
+network.timing.dns: DNS sorgusu
+network.timing.download: İndirme
+network.timing.summary: Toplam %{total} · ilk bayt %{ttfb} sonra
+network.timing.waiting: Sunucu bekleniyor
+palette.copy_as: "%{format} olarak kopyala"
+palette.empty: Eşleşen bir şey yok.
+palette.environment: "Ortam: %{name}"
+palette.environment_none: "Ortam: yok"
+palette.group.commands: Komutlar
+palette.group.requests: İstekler
+palette.group_by_collection: Kenar çubuğunu koleksiyona göre grupla
+palette.group_by_environment: Kenar çubuğunu ortama göre grupla
+palette.new_method_request: Yeni %{method} isteği
+palette.open_folder: Klasör aç…
+palette.open_recent: "Son açılanı aç: %{name}"
+palette.placeholder: İstek ve komut ara…
+palette.save_request: İsteği kaydet
+palette.send_request: İsteği gönder
+request.copy_as_tooltip: cURL veya PowerShell olarak kopyala
+request.error.no_url: İstek göndermek için bir URL girin.
+request.error.undefined_variable: Tanımsız değişken %{name}. %{key} ile tanımlayın (Değişkenler).
+request.error.undefined_variables: "Tanımsız değişkenler: %{names}. %{key} ile tanımlayın (Değişkenler)."
+request.headers_hint: Buraya bir tane eklemediğiniz sürece Content-Type gövde türünden belirlenir.
+request.params_hint: Sorgu parametreleri URL'ye eklenir.
+request.tab.auth: Yetkilendirme
+request.tab.auth_api_key: Yetkilendirme · API anahtarı
+request.tab.auth_kind: Yetkilendirme · %{kind}
+request.tab.auth_none: Yetkilendirme · yok
+request.tab.body: Gövde
+request.tab.body_kind: Gövde · %{kind}
+request.tab.headers: Başlıklar
+request.tab.headers_count: Başlıklar %{count}
+request.tab.params: Parametreler
+request.tab.params_count: Parametreler %{count}
+request.url_placeholder: "https://api.example.com/users   veya   {{base_url}}/users"
+response.cancelled: İstek iptal edildi.
+response.empty: Yanıtı görmek için bir istek gönderin
+response.failed: İstek başarısız oldu
+response.lines: "%{count} satır"
+response.preparing_raw: Ham görünüm hazırlanıyor…
+response.send_hint: "%{key} gönder"
+response.sending: Gönderiliyor…  İptal için Esc
+response.tab.network: Ağ
+response.tab.pretty: Biçimli
+response.tab.raw: Ham
+settings.auto_lock: Şifreli koleksiyonları kilitle
+settings.auto_lock_description: Bu kadar süre boşta kalındığında şifreli koleksiyonlar kilitlenir ve yeniden parola ister.
+settings.auto_lock_hour: 1 saat sonra
+settings.auto_lock_minutes: "%{count} dakika sonra"
+settings.auto_lock_never: Hiçbir zaman
+settings.language: Dil
+settings.language_description: Menülerin, düğmelerin ve iletilerin dili. Hemen değişir.
+settings.theme: Tema
+settings.theme_cyber: Siber cam
+settings.theme_description: Pencerenin renkleri.
+settings.theme_obsidian: Obsidyen
+settings.theme_restart: Apix'in bir sonraki açılışında uygulanır.
+settings.title: Ayarlar
+sidebar.auth: Yetkilendirme…
+sidebar.change_password: Parolayı değiştir…
+sidebar.copy_as_shell: "%{shell} olarak kopyala"
+sidebar.drop_hint: Ya da bir Postman dışa aktarımını veya bir klasörü pencereye bırakın.
+sidebar.duplicate: Çoğalt
+sidebar.edit_variables: Değişkenleri düzenle…
+sidebar.edit_variables_tooltip: Değişkenleri düzenle (%{key})
+sidebar.empty: Boş
+sidebar.encrypt: Şifrele…
+sidebar.import_postman: Postman'dan içe aktar
+sidebar.kind_collection: KOLEKSİYON
+sidebar.kind_project: PROJE
+sidebar.lock: Kilitle
+sidebar.move_to_trash: Çöp kutusuna taşı
+sidebar.new_folder: Yeni klasör
+sidebar.new_request_tooltip: Yeni istek (GET için %{key})
+sidebar.no_collections: "Henüz koleksiyon yok. Yukarıdaki menüyü kullanın: %{item}"
+sidebar.no_environments: Bu projenin henüz ortamı yok. environments/ klasörüne test.toml veya prod.toml ekleyin.
+sidebar.no_requests: Henüz istek yok. Oluşturmak için %{key}.
+sidebar.nothing_open: Açık bir şey yok
+sidebar.open_folder: Klasör aç
+sidebar.recent: SON AÇILANLAR
+sidebar.remove_encryption: Şifrelemeyi kaldır…
+sidebar.rename: Yeniden adlandır…
+sidebar.show_in_environment: Ortamda göster
+table.add: Ekle
+table.key: Anahtar
+table.value: Değer
+time.hours_minutes: "%{hours} sa %{minutes} dk"
+time.minutes: "%{count} dk"
+vault.auto_locked: Şifreli koleksiyonlar %{count} dakika boşta kaldıktan sonra kilitlendi.
+vault.change_password: Parolayı değiştir
+vault.change_password_note: Dosyalar yeniden şifrelenmez; yalnızca onları açan anahtar değişir.
+vault.change_password_title: “%{name}” için yeni parola
+vault.create: Oluştur
+vault.decrypt: Şifrelemeyi kaldır
+vault.decrypt_description: Dosyalar düz metin olarak geri yazılır; klasöre erişimi olan herkes onları okuyabilir. Şifreli dosyalar çöp kutusuna taşınır.
+vault.decrypt_title: “%{name}” koleksiyonunun şifrelemesi kaldırılsın mı?
+vault.decrypted: Koleksiyon artık şifreli değil.
+vault.encrypt: Şifrele
+vault.encrypt_note: Her dosya bu parolayla şifrelenir. Düz dosyalar ardından çöp kutusuna taşınır; kalıcı olarak silmek için çöp kutusunu boşaltın. Klasör git'teyse geçmişinde düz dosyalar yine de bulunur.
+vault.encrypt_title: “%{name}” koleksiyonunu şifrele
+vault.error.locked: Koleksiyon kilitli.
+vault.error.mismatch: İki parola birbirinden farklı.
+vault.error.no_name: Koleksiyona bir ad verin.
+vault.error.no_password: Parolayı girin.
+vault.error.no_recovery_key: Kurtarma anahtarını girin.
+vault.error.open_project_first: Önce bir proje açın veya %{menu} seçeneğini kullanın.
+vault.error.too_short: En az %{count} karakter kullanın.
+vault.error.trash: "Çöp kutusuna taşınamadı: %{error}"
+vault.error.trash_encrypted: "Şifreli dosyalar çöp kutusuna taşınamadı: %{error}"
+vault.error.trash_plain: "Düz dosyalar çöp kutusuna taşınamadı: %{error}"
+vault.error.unlock_first: Önce koleksiyonun kilidini açın.
+vault.locked: Kilitli
+vault.locked_title: Kilitli
+vault.name_placeholder: Koleksiyon adı
+vault.new_needs_project: Şifreli koleksiyon oluşturmak için bir proje açın ya da açık koleksiyonu %{menu} ile şifreleyin.
+vault.new_note: Her istek, ortam ve ad diskte şifrelenir. Güvenli bir yerde saklamanız için bir kurtarma anahtarı alacaksınız.
+vault.new_password_placeholder: Yeni parola (en az %{count} karakter)
+vault.new_title: Yeni şifreli koleksiyon
+vault.password_changed: Parola değiştirildi. Kurtarma anahtarı hâlâ geçerli.
+vault.recovery.copy: Kopyala
+vault.recovery.done: Tamam
+vault.recovery.intro: Parola kaybolursa bu anahtar koleksiyonu açar. Bir parola yöneticisinde saklayın. Apix bunu yalnızca şimdi gösterir.
+vault.recovery.stored: Kurtarma anahtarını güvenli bir yerde sakladım
+vault.recovery.title: Kurtarma anahtarınız
+vault.recovery.warning: Parola ve bu anahtar olmadan siz dahil hiç kimse koleksiyonu açamaz.
+vault.recovery_placeholder: Kurtarma anahtarı, ör. 7K2M-9QXA-…
+vault.repeat_password: Parolayı tekrar girin
+vault.unlock: Kilidi aç
+vault.unlock_note: Bu koleksiyon şifreli. Siz kilitleyene, Apix'ten çıkana veya %{count} dakika boşta kalana kadar kilidi açık kalır.
+vault.unlock_note_no_auto_lock: Bu koleksiyon şifreli. Siz kilitleyene veya Apix'ten çıkana kadar kilidi açık kalır.
+vault.unlock_title: “%{name}” koleksiyonunun kilidini aç
+vault.use_password: Bunun yerine parolayı kullan
+vault.use_recovery: Parolayı mı unuttunuz? Kurtarma anahtarını kullanın
+vault.working: Çalışıyor… anahtar türetme bilerek biraz zaman alır.

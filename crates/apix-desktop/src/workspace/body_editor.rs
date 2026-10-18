@@ -13,6 +13,7 @@ use gpui_kit::*;
 
 use super::{KvRow, Workspace};
 use crate::theme::Palette;
+use crate::tr;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum BodyKind {
@@ -39,16 +40,16 @@ impl BodyKind {
         BodyKind::GraphQl,
     ];
 
-    pub(super) fn label(self) -> &'static str {
+    pub(super) fn label(self) -> SharedString {
         match self {
-            BodyKind::None => "None",
-            BodyKind::Json => "JSON",
-            BodyKind::Text => "Text",
-            BodyKind::Xml => "XML",
-            BodyKind::Form => "Form",
-            BodyKind::Multipart => "Multipart",
-            BodyKind::Binary => "Binary",
-            BodyKind::GraphQl => "GraphQL",
+            BodyKind::None => tr!("body.kind.none"),
+            BodyKind::Json => "JSON".into(),
+            BodyKind::Text => tr!("body.kind.text"),
+            BodyKind::Xml => "XML".into(),
+            BodyKind::Form => tr!("body.kind.form"),
+            BodyKind::Multipart => "Multipart".into(),
+            BodyKind::Binary => tr!("body.kind.binary"),
+            BodyKind::GraphQl => "GraphQL".into(),
         }
     }
 
@@ -104,7 +105,7 @@ struct PartRow {
 
 impl PartRow {
     fn new(part: &FormPart, window: &mut Window, cx: &mut App) -> Self {
-        let input = |placeholder: &'static str, value: &str, window: &mut Window, cx: &mut App| {
+        let input = |placeholder: SharedString, value: &str, window: &mut Window, cx: &mut App| {
             let value = value.to_owned();
             cx.new(|cx| {
                 InputState::new(window, cx)
@@ -118,9 +119,9 @@ impl PartRow {
             (part.value.as_str(), "")
         };
         Self {
-            key: input("Key", &part.key, window, cx),
-            text: input("Value", text, window, cx),
-            path: input("File path", path, window, cx),
+            key: input(tr!("table.key"), &part.key, window, cx),
+            text: input(tr!("table.value"), text, window, cx),
+            path: input(tr!("body.file_path"), path, window, cx),
             file: part.file,
             content_type: part.content_type.clone(),
             enabled: part.enabled,
@@ -170,9 +171,8 @@ impl BodyEditor {
         let text = cx.new(|cx| EditorState::new(window, cx).language("json"));
         let query = cx.new(|cx| EditorState::new(window, cx).language("graphql"));
         let variables = cx.new(|cx| EditorState::new(window, cx).language("json"));
-        let binary = cx.new(|cx| {
-            InputState::new(window, cx).placeholder("File to send, e.g. data/upload.bin")
-        });
+        let binary =
+            cx.new(|cx| InputState::new(window, cx).placeholder(tr!("body.binary_placeholder")));
 
         let mut subscriptions = Vec::new();
         for editor in [&text, &query, &variables] {
@@ -204,6 +204,26 @@ impl BodyEditor {
             variables,
             _subscriptions: subscriptions,
         }
+    }
+
+    /// Placeholders are kept inside the inputs; set them again after a language change.
+    pub(super) fn retranslate(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        self.binary.update(cx, |state, cx| {
+            state.set_placeholder(tr!("body.binary_placeholder"), window, cx)
+        });
+        for row in &self.form {
+            row.retranslate(window, cx);
+        }
+        for row in &self.parts {
+            for (input, text) in [
+                (&row.key, tr!("table.key")),
+                (&row.text, tr!("table.value")),
+                (&row.path, tr!("body.file_path")),
+            ] {
+                input.update(cx, |state, cx| state.set_placeholder(text, window, cx));
+            }
+        }
+        cx.notify();
     }
 
     pub(super) fn kind(&self) -> BodyKind {
@@ -293,7 +313,7 @@ impl BodyEditor {
             files: true,
             directories: false,
             multiple: after.is_some(),
-            prompt: Some("Choose file".into()),
+            prompt: Some(tr!("body.choose_file")),
         });
         let workspace = self.workspace.clone();
         cx.spawn_in(window, async move |this, cx| {
@@ -390,7 +410,7 @@ impl BodyEditor {
                     .push(KvRow::new(&KeyValue::new("", ""), window, cx));
             }))
             .when(self.form.is_empty(), |d| {
-                d.child(self.hint("Sent as application/x-www-form-urlencoded, like an HTML form."))
+                d.child(self.hint(tr!("body.form_hint")))
             })
             .into_any_element()
     }
@@ -414,7 +434,7 @@ impl BodyEditor {
                             .ghost()
                             .xsmall()
                             .icon(IconName::FolderOpen)
-                            .tooltip("Choose files")
+                            .tooltip(tr!("body.choose_files"))
                             .on_click(cx.listener(move |this, _: &ClickEvent, window, cx| {
                                 this.pick_files(path.clone(), Some(ix), window, cx)
                             })),
@@ -446,11 +466,15 @@ impl BodyEditor {
                         .ghost()
                         .xsmall()
                         .w(px(44.))
-                        .label(if row.file { "File" } else { "Text" })
-                        .tooltip(if row.file {
-                            "Send text instead"
+                        .label(if row.file {
+                            tr!("body.part_file")
                         } else {
-                            "Send a file instead"
+                            tr!("body.part_text")
+                        })
+                        .tooltip(if row.file {
+                            tr!("body.send_text_instead")
+                        } else {
+                            tr!("body.send_file_instead")
                         })
                         .on_click(cx.listener(move |this, _: &ClickEvent, _, cx| {
                             if let Some(row) = this.parts.get_mut(ix) {
@@ -477,10 +501,7 @@ impl BodyEditor {
                     .push(PartRow::new(&FormPart::text("", ""), window, cx));
             }))
             .when(self.parts.is_empty(), |d| {
-                d.child(self.hint(
-                    "Sent as multipart/form-data. Switch a field to File to upload a file; \
-                     paths inside the collection are saved relative to the request.",
-                ))
+                d.child(self.hint(tr!("body.multipart_hint")))
             })
             .into_any_element()
     }
@@ -501,13 +522,13 @@ impl BodyEditor {
             };
             Some(match std::fs::metadata(&full) {
                 Ok(meta) if meta.is_file() => (
-                    format!(
-                        "{} · sent as is",
-                        apix_http::human_size(meta.len() as usize)
+                    tr!(
+                        "body.binary_size",
+                        size = apix_http::human_size(meta.len() as usize)
                     ),
                     self.palette.text_muted,
                 ),
-                _ => ("File not found".to_owned(), self.palette.err),
+                _ => (tr!("body.file_not_found"), self.palette.err),
             })
         };
         let target = self.binary.clone();
@@ -527,7 +548,7 @@ impl BodyEditor {
                             .ghost()
                             .small()
                             .icon(IconName::FolderOpen)
-                            .label("Choose…")
+                            .label(tr!("body.choose"))
                             .on_click(cx.listener(move |this, _: &ClickEvent, window, cx| {
                                 this.pick_files(target.clone(), None, window, cx)
                             })),
@@ -535,10 +556,7 @@ impl BodyEditor {
             )
             .child(match status {
                 Some((text, color)) => div().text_xs().text_color(color).child(text),
-                None => self.hint(
-                    "The file's bytes are the body. Content-Type defaults to \
-                     application/octet-stream; set another in Headers.",
-                ),
+                None => self.hint(tr!("body.binary_hint")),
             })
             .into_any_element()
     }
@@ -549,7 +567,7 @@ impl BodyEditor {
         let invalid = !variables.trim().is_empty()
             && !variables.contains("{{")
             && serde_json::from_str::<serde_json::Value>(&variables).is_err();
-        let label = |text: &'static str| {
+        let label = |text: SharedString| {
             div()
                 .text_xs()
                 .font_weight(FontWeight::MEDIUM)
@@ -559,7 +577,7 @@ impl BodyEditor {
         v_flex()
             .size_full()
             .gap_1()
-            .child(label("Query"))
+            .child(label(tr!("body.graphql_query")))
             .child(
                 div()
                     .flex_grow(1.)
@@ -571,9 +589,14 @@ impl BodyEditor {
                 h_flex()
                     .pt_1()
                     .gap_2()
-                    .child(label("Variables (JSON)"))
+                    .child(label(tr!("body.graphql_variables")))
                     .when(invalid, |d| {
-                        d.child(div().text_xs().text_color(p.err).child("not valid JSON"))
+                        d.child(
+                            div()
+                                .text_xs()
+                                .text_color(p.err)
+                                .child(tr!("body.invalid_json")),
+                        )
                     }),
             )
             .child(
@@ -590,7 +613,7 @@ impl BodyEditor {
 impl Render for BodyEditor {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let content = match self.kind {
-            BodyKind::None => self.hint("This request has no body.").into_any_element(),
+            BodyKind::None => self.hint(tr!("body.none_hint")).into_any_element(),
             BodyKind::Json | BodyKind::Text | BodyKind::Xml => {
                 Editor::new(&self.text).h_full().into_any_element()
             }
@@ -632,7 +655,7 @@ fn add_button(
             .ghost()
             .small()
             .icon(IconName::Plus)
-            .label("Add")
+            .label(tr!("table.add"))
             .on_click(cx.listener(move |this, _: &ClickEvent, window, cx| {
                 add(this, window, cx);
                 cx.notify();

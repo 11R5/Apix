@@ -19,7 +19,7 @@ no WebView and no Electron.
    Only the visible rows are laid out (virtual lists), and the body is parsed
    lazily.
 5. **Light and fast to start.** Speed and features come before size. The release
-   binary stays under 100 MB (32.2 MB today; Electron apps are 300 MB+) and
+   binary stays under 100 MB (33.1 MB today; Electron apps are 300 MB+) and
    opens a window in under 150 ms.
 
 ## Crates
@@ -230,17 +230,29 @@ my-api/
   the cipher and the password, not from the format being secret; Apix is open
   source.
 
-## Planned: languages (M4)
+## Languages (M4)
 
-Every string in the UI goes through a key (`t!("menu.file.open")`, `rust-i18n`,
-the same system gpui-kit uses for its own strings). Each language is one file,
-`crates/apix-desktop/locales/<code>.yml`: English (source), Turkish, Arabic,
-German, French, Russian, Japanese, Chinese (Simplified) and Spanish. A missing
-key falls back to English, and CI lists missing or stale keys. The language is
-picked in Settings and applies without a restart. Arabic switches the layout to
-right-to-left (sidebar, tabs, text alignment). Japanese, Chinese and Arabic need
-font fallbacks next to Inter. Adding a language later is one file plus one line
-in the language list; no code change.
+Every text in the desktop UI goes through a key: `tr!("menu.file")` (a thin
+wrapper over `rust_i18n::t!` that returns a `SharedString`). rust-i18n is the
+same system gpui-kit uses, so both follow one process-wide locale; Chinese uses
+`zh-CN`, the code gpui-kit's own texts use. Each language is one flat file,
+`crates/apix-desktop/locales/<code>.yml` (one `key: value` per line, sorted,
+`%{name}` placeholders), compiled into the binary; `build.rs` rebuilds when a
+file changes. A missing text falls back to English, and a unit test fails when a
+language lacks a key, has an unknown one, or uses other placeholders than
+English. Sentences are whole keys with placeholders, never glued from pieces,
+because word order differs between languages.
+
+The language is chosen in Settings (or follows the system language on first
+start) and switches at once: texts are read on every render, and the few texts
+kept inside widgets (input placeholders, picker entries) are set again by
+`Workspace::retranslate`. Glyphs for Japanese, Chinese and Arabic come from the
+platform's font fallback (DirectWrite, Core Text, fontconfig) next to the
+embedded Inter. Arabic text is shaped right to left; mirroring the layout
+itself is still to come. Error messages from the engine crates stay English.
+
+Adding a language: copy `locales/en.yml` to `locales/<code>.yml`, translate
+the values, and add one line to `LANGUAGES` in `src/i18n.rs`.
 
 User documentation lives apart from the plan, one folder per language
 (`Docs/<code>/`: user guide, architecture, technical, workflows, images), listed
@@ -285,7 +297,7 @@ about 407 MB with the body loaded, against 69 MB idle.
 |-------------------------------------|-------------------|-----------------------------|
 | Cold start to first frame           | < 150 ms          | window handle at ~340 ms, not yet profiled |
 | Idle RAM                            | < 60 MB           | 69 MB |
-| Release binary                      | < 100 MB          | 32.2 MB |
+| Release binary                      | < 100 MB          | 33.1 MB |
 | Input to paint latency              | 1 frame (≤ 8 ms at 120 Hz) | not measured |
 | Open and scroll a 100 MB JSON body  | no dropped frames | opens in ~0.33 s; frame times not measured |
 

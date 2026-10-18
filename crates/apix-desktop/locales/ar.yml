@@ -1,0 +1,415 @@
+_version: 1
+app.error_with_cause: "%{error}: %{cause}"
+app.status.collections: "المجموعات: %{count}"
+app.status.env: "البيئة: %{name}"
+app.status.no_collection: لا توجد مجموعة
+app.status.no_collections: لا توجد مجموعات بعد
+app.status.one_collection: مجموعة واحدة
+app.status.one_request: طلب واحد
+app.status.requests: "الطلبات: %{count}"
+app.status.shortcuts: "%{palette} الأوامر  ·  %{send} إرسال  ·  Esc إلغاء"
+app.status.unsaved: تغييرات غير محفوظة · %{key} للحفظ
+auth.add_to: الإضافة إلى
+auth.client_auth: مصادقة العميل
+auth.client_basic: ترويسة مصادقة Basic
+auth.client_body: في المتن
+auth.describe.aws: "%{service} في %{region}"
+auth.describe.consumer_key: "مفتاح المستهلك: %{key}"
+auth.describe.key_in_header: "%{key} في الترويسات"
+auth.describe.key_in_query: "%{key} في سلسلة الاستعلام"
+auth.describe.oauth2: "%{grant}، الرمز المميز من %{url}"
+auth.describe.token: "الرمز المميز: %{token}"
+auth.describe.token_set: "الرمز المميز: مُعيَّن"
+auth.describe.username: "اسم المستخدم: %{name}"
+auth.dialog.collection_note: تستخدم هذه المصادقة طلباتُ هذه المجموعة التي ليست لها مصادقة خاصة بها.
+auth.dialog.collection_title: مصادقة المجموعة «%{name}»
+auth.dialog.folder_note: تستخدم هذه المصادقة طلباتُ هذا المجلد التي ليست لها مصادقة خاصة بها.
+auth.dialog.folder_title: مصادقة المجلد «%{name}»
+auth.dialog.project_note: تستخدم هذه المصادقة طلباتُ هذا المشروع التي ليست لها مصادقة خاصة بها.
+auth.dialog.project_title: مصادقة المشروع «%{name}»
+auth.field.access_key: مفتاح الوصول
+auth.field.access_token: رمز الوصول
+auth.field.auth_url: عنوان URL للتفويض
+auth.field.client_id: معرّف العميل
+auth.field.client_secret: سر العميل
+auth.field.consumer_key: مفتاح المستهلك
+auth.field.consumer_secret: سر المستهلك
+auth.field.key: المفتاح
+auth.field.password: كلمة المرور
+auth.field.realm: المجال (Realm)
+auth.field.redirect_url: عنوان URL لإعادة التوجيه
+auth.field.region: المنطقة
+auth.field.scope: النطاق
+auth.field.secret_key: المفتاح السري
+auth.field.service: الخدمة
+auth.field.session_token: رمز الجلسة
+auth.field.token: الرمز المميز
+auth.field.token_secret: سر الرمز المميز
+auth.field.token_url: عنوان URL للرمز المميز
+auth.field.username: اسم المستخدم
+auth.field.value: القيمة
+auth.grant.authorization_code: رمز التفويض
+auth.grant.client_credentials: بيانات اعتماد العميل
+auth.grant.password: كلمة المرور
+auth.grant_type: نوع المنح
+auth.hint.access_key: "مثلًا {{aws_access_key}}"
+auth.hint.client_secret: فارغ للعميل العام
+auth.hint.key: الاسم، مثلًا X-API-Key
+auth.hint.optional: اختياري
+auth.hint.redirect_url: "فارغ: منفذ حر على http://127.0.0.1"
+auth.hint.region: مثلًا eu-central-1
+auth.hint.scope: مفصولة بمسافات، مثلًا read write
+auth.hint.service: مثلًا execute-api، s3، lambda
+auth.hint.session_token: لبيانات الاعتماد المؤقتة فقط
+auth.hint.token: "الرمز المميز، مثلًا {{token}}"
+auth.hint.value: "القيمة، مثلًا {{apiKey}}"
+auth.in_header: الترويسة
+auth.in_query: معاملات الاستعلام
+auth.inherit.collection_none: لا يعيّن أي مستوى أعلى مصادقة، لذا لا تُرسل أي مصادقة. عيّنها للمشروع كله من قائمة المشروع (مصادقة المشروع…).
+auth.inherit.from_collection: يستخدم %{what} من المجموعة «%{name}».
+auth.inherit.from_folder: يستخدم %{what} من المجلد «%{name}».
+auth.inherit.from_project: يستخدم %{what} من المشروع «%{name}».
+auth.inherit.project_none: لا تحصل الطلبات التي ترث على أي مصادقة.
+auth.inherit.request_none: لا يعيّن أي مستوى أعلى مصادقة، لذا لا تُرسل أي مصادقة. عيّنها لمجلد أو مجموعة من قائمة النقر بزر الماوس الأيمن (المصادقة…).
+auth.kind.api_key: مفتاح API
+auth.kind.aws: AWS Signature
+auth.kind.basic: مصادقة Basic
+auth.kind.bearer: رمز Bearer
+auth.kind.digest: مصادقة Digest
+auth.kind.inherit: الوراثة من الأصل
+auth.kind.none: بلا مصادقة
+auth.no_auth.collection: لا تُرسل أي مصادقة، حتى لو عيّن المشروع مصادقة لهذه المجموعة.
+auth.no_auth.folder: لا تُرسل أي مصادقة، حتى لو عيّن مجلد أصل أو المجموعة مصادقة لهذا المجلد.
+auth.no_auth.project: لا تُرسل أي مصادقة للطلبات التي ترث.
+auth.no_auth.request: لا تُرسل أي مصادقة، حتى لو عيّن مجلد أو مجموعة مصادقة لهذا الطلب.
+auth.note.aws: يُوقَّع كل إرسال باستخدام AWS Signature Version 4.
+auth.note.bearer: "يُرسل بالشكل Authorization: Bearer <token>."
+auth.note.digest: يجيب Apix على تحدي Digest من الخادم (MD5 أو SHA-256).
+auth.note.oauth1: يُوقَّع بقيمة nonce وطابع زمني جديدين في كل إرسال.
+auth.note.oauth2: يحصل Apix على الرمز المميز بنفسه ويرسله كرمز Bearer. تبقى الرموز المميزة في الذاكرة ولا تُكتب على القرص أبدًا.
+auth.note.variables: "يمكن أن تستخدم القيم {{variables}}."
+auth.signature: التوقيع
+auth.token.expired: انتهت صلاحية الرمز المميز؛ سيحصل الإرسال التالي على رمز جديد.
+auth.token.forget: نسيان
+auth.token.get_new: الحصول على رمز جديد
+auth.token.getting: جارٍ الحصول على رمز مميز…
+auth.token.none: لا يوجد رمز مميز بعد. سيُجلب عند أول إرسال.
+auth.token.ready: الرمز المميز جاهز.
+auth.token.valid_for: الرمز المميز جاهز، صالح لمدة %{time}.
+auth.token.waiting_browser: بانتظار تسجيل الدخول في متصفحك…
+auth.type: النوع
+auth.use_pkce: استخدام PKCE (موصى به)
+auth.what.api_key: مفتاح API
+auth.what.aws: توقيع AWS
+auth.what.basic: مصادقة Basic
+auth.what.bearer: رمز Bearer
+auth.what.digest: مصادقة Digest
+auth.what.none: بلا مصادقة
+body.binary_hint: بايتات الملف هي المتن. القيمة الافتراضية لـ Content-Type هي application/octet-stream؛ عيّن قيمة أخرى في الترويسات.
+body.binary_placeholder: الملف المراد إرساله، مثلًا data/upload.bin
+body.binary_size: "%{size} · يُرسل كما هو"
+body.choose: اختيار…
+body.choose_file: اختيار ملف
+body.choose_files: اختيار ملفات
+body.file_not_found: الملف غير موجود
+body.file_path: مسار الملف
+body.form_hint: يُرسل بصيغة application/x-www-form-urlencoded، مثل نموذج HTML.
+body.graphql_query: الاستعلام
+body.graphql_variables: المتغيرات (JSON)
+body.invalid_json: ليس JSON صالحًا
+body.kind.binary: ثنائي
+body.kind.form: نموذج
+body.kind.none: بلا
+body.kind.text: نص
+body.multipart_hint: يُرسل بصيغة multipart/form-data. حوّل حقلًا إلى «ملف» لرفع ملف؛ تُحفظ المسارات داخل المجموعة نسبةً إلى الطلب.
+body.none_hint: لا يحتوي هذا الطلب على متن.
+body.part_file: ملف
+body.part_text: نص
+body.send_file_instead: إرسال ملف بدلًا من ذلك
+body.send_text_instead: إرسال نص بدلًا من ذلك
+chips.add_with: أضفه باستخدام %{key} (المتغيرات).
+chips.dynamic: "ديناميكي: قيمة جديدة في كل إرسال"
+chips.empty: (فارغ)
+chips.missing_in_env: غير معرَّف للبيئة «%{env}».
+chips.missing_no_env: غير معرَّف، ولم تُحدَّد أي بيئة.
+chips.scope.collection: المجموعة «%{name}»
+chips.scope.environment: البيئة «%{name}»
+chips.scope.environment_of: البيئة «%{name}» في «%{collection}»
+chips.scope.project: المشروع «%{name}»
+chips.secret_scope: "%{scope} · سري (.local.toml)"
+chips.set_for_run: تعيين لهذا التشغيل
+collection.choose_folder: اختيار مجلد…
+collection.create: إنشاء
+collection.create_collection: إنشاء مجموعة
+collection.create_collection_in: إنشاء المجموعة في
+collection.create_project_in: إنشاء المشروع في
+collection.default_name: مجموعة
+collection.delete: حذف
+collection.delete_folder_permanent: سيُحذف «%{name}» وكل ما فيه نهائيًا (لا توجد سلة مهملات للمجموعات المشفّرة).
+collection.delete_folder_title: حذف المجلد؟
+collection.delete_folder_trash: سيُنقل «%{name}» وكل ما فيه إلى سلة المهملات.
+collection.delete_request_permanent: سيُحذف «%{name}» نهائيًا (لا توجد سلة مهملات للمجموعات المشفّرة).
+collection.delete_request_title: حذف الطلب؟
+collection.delete_request_trash: سيُنقل «%{name}» إلى سلة المهملات.
+collection.dont_save: عدم الحفظ
+collection.new_collection_title: مجموعة جديدة
+collection.new_folder_title: مجلد جديد
+collection.new_project_title: مشروع جديد
+collection.new_request_name: طلب جديد
+collection.no_root: لا يوجد apix.toml أو apix-project.toml في %{path} أو في المجلدات الأعلى منه.
+collection.open_first: افتح مجموعة أو أنشئ واحدة أولًا (%{key}).
+collection.open_prompt: فتح مجموعة
+collection.rename: إعادة تسمية
+collection.rename_collection_title: إعادة تسمية المجموعة
+collection.rename_folder_title: إعادة تسمية المجلد
+collection.rename_request_title: إعادة تسمية الطلب
+collection.start_here_text: "لا يحتوي %{path} على apix.toml بعد. سينشئ Apix واحدًا، وتُحفظ الطلبات كملفات .apix في هذا المجلد."
+collection.start_here_title: بدء مجموعة جديدة هنا؟
+collection.unsaved_text: حفظ تغييراتك على «%{name}» أولًا؟
+collection.unsaved_title: تغييرات غير محفوظة
+copy.as_shell: نسخ كـ %{shell}
+copy.copied: نُسخ كـ %{shell}.
+copy.copied_missing: "نُسخ كـ %{shell}. غير معرَّفة، تُركت كـ {{…}}: %{names}."
+copy.curl_filled: تمت تعبئة الطلب من أمر curl الملصوق.
+copy.curl_imported: تم استيراد curl
+dialog.cancel: إلغاء
+dialog.close: إغلاق
+dialog.save: حفظ
+env.add_environment: إضافة بيئة
+env.add_variable: إضافة متغير
+env.delete: حذف
+env.dialog_title: المتغيرات
+env.dynamic_variables: المتغيرات الديناميكية
+env.error.defined_twice: "%{key} معرَّف مرتين."
+env.error.exists: توجد بالفعل بيئة باسم %{name}.
+env.error.name_clash: ستحمل بيئتان الاسم %{name}.
+env.error.needs_name: تحتاج البيئة إلى اسم.
+env.hint.dynamic: انقر على اسم لنسخه. كل استخدام يعطي قيمة جديدة، والمتغير الذي تعرّفه بالاسم نفسه له الأولوية.
+env.hint.environment: تبقى الأسرار على هذا الكمبيوتر في %{name}.local.toml، الذي يتجاهله git.
+env.hint.shared: تنطبق المتغيرات المشتركة على كل بيئة، وقيمة البيئة لها الأولوية.
+env.none: بلا بيئة
+env.placeholder.name: الاسم
+env.placeholder.new_environment: بيئة جديدة…
+env.placeholder.value: القيمة
+env.secret: سري
+env.secret_tooltip: يُحفظ على هذا الكمبيوتر فقط، في ملف .local.toml
+env.section.built_in: مدمجة
+env.section.collection_only: "%{name} فقط"
+env.section.environments: البيئات
+env.section.shared: مشتركة
+env.title.collection: "متغيرات %{name}"
+env.title.environment: البيئة
+env.title.project: متغيرات المشروع
+env.undo_delete: التراجع عن الحذف
+import.collection_done: تم استيراد مجموعة Postman
+import.environment_done: تم استيراد البيئة
+import.environment_needs_open: افتح أولًا المجموعة أو المشروع الذي تنتمي إليه هذه البيئة، ثم استوردها.
+import.environment_saved: حُفظت «%{title}» في environments/%{name}.toml، وعدد المتغيرات %{count}.
+import.environment_saved_with_secrets: حُفظت «%{title}» في environments/%{name}.toml، وعدد المتغيرات %{count}. ذهب %{secrets} من الأسرار إلى %{name}.local.toml، الذي يتجاهله git.
+import.prompt: استيراد ملف تصدير من Postman
+menu.active_environment: البيئة النشطة
+menu.cancel: إلغاء
+menu.close_tab: إغلاق علامة التبويب
+menu.collection_auth: مصادقة المجموعة…
+menu.command_palette: لوحة الأوامر…
+menu.copy_as: نسخ كـ
+menu.documentation: الوثائق
+menu.encrypt_collection: تشفير هذه المجموعة…
+menu.environment: البيئة
+menu.file: ملف
+menu.group_by: تجميع الشريط الجانبي حسب
+menu.group_collection: المجموعة
+menu.group_environment: البيئة
+menu.help: تعليمات
+menu.import_postman: استيراد من Postman…
+menu.lock_collections: قفل المجموعات المشفّرة
+menu.method: الطريقة
+menu.new_collection: مجموعة جديدة…
+menu.new_encrypted_collection: مجموعة مشفّرة جديدة…
+menu.new_folder: مجلد جديد…
+menu.new_project: مشروع جديد…
+menu.new_request: طلب جديد
+menu.new_request_with_method: طلب جديد بالطريقة
+menu.next_tab: علامة التبويب التالية
+menu.open: فتح…
+menu.open_recent: فتح الأخيرة
+menu.previous_tab: علامة التبويب السابقة
+menu.project_auth: مصادقة المشروع…
+menu.quit: إنهاء
+menu.report_problem: الإبلاغ عن مشكلة
+menu.request: الطلب
+menu.save: حفظ
+menu.send: إرسال
+menu.settings: الإعدادات…
+menu.source_code: الشيفرة المصدرية
+menu.variables: المتغيرات والبيئات…
+menu.view: عرض
+network.cert.days_left: "الأيام المتبقية: %{count}"
+network.cert.engine_note: يُبلغ محرك HTTP عن شهادة الخادم، لا عن إصدار TLS أو مجموعة التشفير.
+network.cert.expired_days_ago: انتهت الصلاحية منذ %{count} يوم
+network.cert.expired_one_day_ago: انتهت الصلاحية منذ يوم واحد
+network.cert.issued_by: صادرة عن
+network.cert.issued_to: صادرة إلى
+network.cert.names: الأسماء
+network.cert.not_reported: مشفّر، لكن لم يُبلَغ عن الشهادة.
+network.cert.one_day_left: متبقٍ يوم واحد
+network.cert.valid: صالحة
+network.cert.valid_range: "من %{from} إلى %{to}"
+network.connection.dns_servers: خوادم DNS
+network.connection.gateway: البوابة
+network.connection.none_recorded: لم يُسجَّل اتصال جديد (أُعيد استخدام اتصال، أو عبر وكيل).
+network.connection.proxy: الوكيل
+network.connection.proxy_from: "%{value} (من %{var})"
+network.connection.proxy_none: لا يوجد في البيئة
+network.connection.server: الخادم
+network.connection.this_computer: هذا الكمبيوتر
+network.connection.unknown_address: غير معروف
+network.connection.unknown_interface: واجهة غير معروفة
+network.connection.via: "%{address} عبر %{via}"
+network.connection.via_vpn: "%{address} عبر %{via} · VPN"
+network.dns.lookup: البحث
+network.dns.lookup_result: "%{host} → %{addrs} في %{duration}"
+network.note: ملاحظة
+network.plain_http: "HTTP عادي: لا شيء مشفّر."
+network.redirect.followed: تمت المتابعة
+network.section.certificate: الشهادة
+network.section.connection: الاتصال
+network.section.dns: DNS
+network.section.encryption: التشفير
+network.section.redirects: عمليات إعادة التوجيه
+network.section.timing: التوقيت
+network.timing.connect: الاتصال (TCP + TLS)
+network.timing.dns: بحث DNS
+network.timing.download: التنزيل
+network.timing.summary: الإجمالي %{total} · أول بايت بعد %{ttfb}
+network.timing.waiting: انتظار الخادم
+palette.copy_as: نسخ كـ %{format}
+palette.empty: لا توجد نتائج مطابقة.
+palette.environment: "البيئة: %{name}"
+palette.environment_none: "البيئة: بلا"
+palette.group.commands: الأوامر
+palette.group.requests: الطلبات
+palette.group_by_collection: تجميع الشريط الجانبي حسب المجموعة
+palette.group_by_environment: تجميع الشريط الجانبي حسب البيئة
+palette.new_method_request: طلب %{method} جديد
+palette.open_folder: فتح مجلد…
+palette.open_recent: "فتح الأخيرة: %{name}"
+palette.placeholder: البحث في الطلبات والأوامر…
+palette.save_request: حفظ الطلب
+palette.send_request: إرسال الطلب
+request.copy_as_tooltip: نسخ كـ cURL أو PowerShell
+request.error.no_url: أدخل عنوان URL لإرسال طلب.
+request.error.undefined_variable: المتغير %{name} غير معرَّف. عرّفه باستخدام %{key} (المتغيرات).
+request.error.undefined_variables: "متغيرات غير معرَّفة: %{names}. عرّفها باستخدام %{key} (المتغيرات)."
+request.headers_hint: تُعيَّن Content-Type حسب نوع المتن ما لم تضف واحدة هنا.
+request.params_hint: تُلحق معاملات الاستعلام بعنوان URL.
+request.tab.auth: المصادقة
+request.tab.auth_api_key: المصادقة · مفتاح API
+request.tab.auth_kind: المصادقة · %{kind}
+request.tab.auth_none: المصادقة · بلا
+request.tab.body: المتن
+request.tab.body_kind: المتن · %{kind}
+request.tab.headers: الترويسات
+request.tab.headers_count: الترويسات %{count}
+request.tab.params: المعاملات
+request.tab.params_count: المعاملات %{count}
+request.url_placeholder: "https://api.example.com/users   أو   {{base_url}}/users"
+response.cancelled: أُلغي الطلب.
+response.empty: أرسل طلبًا لرؤية الاستجابة
+response.failed: فشل الطلب
+response.lines: "الأسطر: %{count}"
+response.preparing_raw: جارٍ تجهيز العرض الخام…
+response.send_hint: "%{key} للإرسال"
+response.sending: جارٍ الإرسال…  Esc للإلغاء
+response.tab.network: الشبكة
+response.tab.pretty: منسّق
+response.tab.raw: خام
+settings.auto_lock: قفل المجموعات المشفّرة
+settings.auto_lock_description: بعد هذه المدة من الخمول، تُقفل المجموعات المشفّرة وتحتاج إلى كلمة المرور مجددًا.
+settings.auto_lock_hour: بعد ساعة واحدة
+settings.auto_lock_minutes: بعد %{count} دقيقة
+settings.auto_lock_never: أبدًا
+settings.language: اللغة
+settings.language_description: لغة القوائم والأزرار والرسائل. يُطبَّق التغيير فورًا.
+settings.theme: السمة
+settings.theme_cyber: زجاج سيبراني
+settings.theme_description: ألوان النافذة.
+settings.theme_obsidian: أوبسيديان
+settings.theme_restart: يُطبَّق عند تشغيل Apix في المرة القادمة.
+settings.title: الإعدادات
+sidebar.auth: المصادقة…
+sidebar.change_password: تغيير كلمة المرور…
+sidebar.copy_as_shell: نسخ كـ %{shell}
+sidebar.drop_hint: أو أفلت ملف تصدير من Postman أو مجلدًا على النافذة.
+sidebar.duplicate: تكرار
+sidebar.edit_variables: تحرير المتغيرات…
+sidebar.edit_variables_tooltip: تحرير المتغيرات (%{key})
+sidebar.empty: فارغ
+sidebar.encrypt: تشفير…
+sidebar.import_postman: استيراد من Postman
+sidebar.kind_collection: مجموعة
+sidebar.kind_project: مشروع
+sidebar.lock: قفل
+sidebar.move_to_trash: نقل إلى سلة المهملات
+sidebar.new_folder: مجلد جديد
+sidebar.new_request_tooltip: طلب جديد (%{key} لطلب GET)
+sidebar.no_collections: "لا توجد مجموعات بعد. استخدم القائمة أعلاه: %{item}"
+sidebar.no_environments: لا توجد بيئات في هذا المشروع بعد. أضف test.toml أو prod.toml إلى مجلد environments/ الخاص به.
+sidebar.no_requests: لا توجد طلبات بعد. %{key} ينشئ طلبًا.
+sidebar.nothing_open: لا شيء مفتوح
+sidebar.open_folder: فتح مجلد
+sidebar.recent: الأخيرة
+sidebar.remove_encryption: إزالة التشفير…
+sidebar.rename: إعادة تسمية…
+sidebar.show_in_environment: العرض في البيئة
+table.add: إضافة
+table.key: المفتاح
+table.value: القيمة
+time.hours_minutes: "%{hours} س %{minutes} د"
+time.minutes: "%{count} د"
+vault.auto_locked: قُفلت المجموعات المشفّرة بعد %{count} دقيقة من الخمول.
+vault.change_password: تغيير كلمة المرور
+vault.change_password_note: لا يُعاد تشفير الملفات؛ يتغير فقط المفتاح الذي يفتح قفلها.
+vault.change_password_title: كلمة مرور جديدة لـ «%{name}»
+vault.create: إنشاء
+vault.decrypt: إزالة التشفير
+vault.decrypt_description: تُكتب ملفاتها مجددًا كنص عادي يمكن لأي شخص لديه حق الوصول إلى المجلد قراءته. تذهب الملفات المشفّرة إلى سلة المهملات.
+vault.decrypt_title: إزالة التشفير من «%{name}»؟
+vault.decrypted: لم تعد المجموعة مشفّرة.
+vault.encrypt: تشفير
+vault.encrypt_note: يُشفَّر كل ملف بكلمة المرور هذه. تُنقل الملفات غير المشفّرة إلى سلة المهملات بعد ذلك؛ أفرغ سلة المهملات لإزالتها نهائيًا. إذا كان المجلد في git، فسيظل سجله يحتوي على الملفات غير المشفّرة.
+vault.encrypt_title: تشفير «%{name}»
+vault.error.locked: المجموعة مقفلة.
+vault.error.mismatch: كلمتا المرور مختلفتان.
+vault.error.no_name: أدخل اسمًا للمجموعة.
+vault.error.no_password: أدخل كلمة المرور.
+vault.error.no_recovery_key: أدخل مفتاح الاسترداد.
+vault.error.open_project_first: افتح مشروعًا أولًا، أو استخدم %{menu}.
+vault.error.too_short: استخدم %{count} أحرف على الأقل.
+vault.error.trash: "تعذّر النقل إلى سلة المهملات: %{error}"
+vault.error.trash_encrypted: "تعذّر نقل الملفات المشفّرة إلى سلة المهملات: %{error}"
+vault.error.trash_plain: "تعذّر نقل الملفات غير المشفّرة إلى سلة المهملات: %{error}"
+vault.error.unlock_first: افتح قفل المجموعة أولًا.
+vault.locked: مقفلة
+vault.locked_title: مقفلة
+vault.name_placeholder: اسم المجموعة
+vault.new_needs_project: افتح مشروعًا لإنشاء مجموعة مشفّرة فيه، أو شفّر المجموعة المفتوحة باستخدام %{menu}.
+vault.new_note: يُشفَّر على القرص كل طلب وكل بيئة وكل اسم. ستحصل على مفتاح استرداد لتحتفظ به في مكان آمن.
+vault.new_password_placeholder: كلمة مرور جديدة (%{count} أحرف أو أكثر)
+vault.new_title: مجموعة مشفّرة جديدة
+vault.password_changed: تم تغيير كلمة المرور. لا يزال مفتاح الاسترداد يعمل.
+vault.recovery.copy: نسخ
+vault.recovery.done: تم
+vault.recovery.intro: إذا فُقدت كلمة المرور يومًا، فهذا المفتاح يفتح المجموعة. احفظه في مدير كلمات مرور. لا يعرضه Apix إلا الآن.
+vault.recovery.stored: حفظت مفتاح الاسترداد في مكان آمن
+vault.recovery.title: مفتاح الاسترداد الخاص بك
+vault.recovery.warning: بدون كلمة المرور وبدون هذا المفتاح، لا يمكن لأحد، بما في ذلك أنت، فتح المجموعة.
+vault.recovery_placeholder: مفتاح الاسترداد، مثلًا 7K2M-9QXA-…
+vault.repeat_password: أعد إدخال كلمة المرور
+vault.unlock: فتح القفل
+vault.unlock_note: هذه المجموعة مشفّرة. تبقى مفتوحة حتى تقفلها، أو تُنهي Apix، أو تتركها خاملة لمدة %{count} دقيقة.
+vault.unlock_note_no_auto_lock: هذه المجموعة مشفّرة. تبقى مفتوحة حتى تقفلها أو تُنهي Apix.
+vault.unlock_title: فتح قفل «%{name}»
+vault.use_password: استخدام كلمة المرور بدلًا من ذلك
+vault.use_recovery: نسيت كلمة المرور؟ استخدم مفتاح الاسترداد
+vault.working: جارٍ العمل… اشتقاق المفتاح يستغرق لحظة عن قصد.

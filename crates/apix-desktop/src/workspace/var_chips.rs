@@ -13,6 +13,7 @@ use gpui_kit::component::{ActiveTheme as _, Sizable, v_flex};
 use gpui_kit::*;
 
 use super::{Workspace, key_hint};
+use crate::tr;
 
 /// The chip under the pointer, with its bounds in window coordinates.
 #[derive(Debug, Clone, PartialEq)]
@@ -196,7 +197,7 @@ impl Workspace {
         let name = hovered.name.as_str();
         let kind = self.kind(name);
         let mono = cx.theme().mono_font_family.clone();
-        let line = |text: String, color: Hsla| div().text_xs().text_color(color).child(text);
+        let line = |text: SharedString, color: Hsla| div().text_xs().text_color(color).child(text);
 
         let mut card = v_flex()
             .gap_1()
@@ -225,7 +226,7 @@ impl Workspace {
                 let shown = if secret {
                     "•".repeat(resolved.chars().count().clamp(6, 24))
                 } else if resolved.is_empty() {
-                    "(empty)".to_owned()
+                    tr!("chips.empty").into()
                 } else {
                     resolved.clone()
                 };
@@ -237,11 +238,11 @@ impl Workspace {
                         .child(shown),
                 );
                 if raw != resolved && !secret {
-                    card = card.child(line(format!("= {raw}"), p.text_muted));
+                    card = card.child(line(format!("= {raw}").into(), p.text_muted));
                 }
-                let scope = origin.map_or("Set for this run".to_owned(), |o| o.scope.clone());
+                let scope = origin.map_or(tr!("chips.set_for_run"), |o| scope_label(&o.scope));
                 let scope = if secret {
-                    format!("{scope} · secret (.local.toml)")
+                    tr!("chips.secret_scope", scope = scope)
                 } else {
                     scope
                 };
@@ -252,18 +253,17 @@ impl Workspace {
                     .iter()
                     .find(|(d, _)| Some(*d) == name.strip_prefix('$'))
                     .map_or("", |(_, about)| *about);
-                card = card.child(line(about.to_owned(), p.text)).child(line(
-                    "Dynamic: a new value on every send".into(),
-                    p.text_muted,
-                ));
+                card = card
+                    .child(line(about.into(), p.text))
+                    .child(line(tr!("chips.dynamic"), p.text_muted));
             }
             Kind::Missing => {
                 let env = match &self.environment {
-                    Some(env) => format!("Not defined for environment \"{env}\"."),
-                    None => "Not defined, and no environment is selected.".to_owned(),
+                    Some(env) => tr!("chips.missing_in_env", env = env),
+                    None => tr!("chips.missing_no_env"),
                 };
                 card = card.child(line(env, p.err)).child(line(
-                    format!("Add it with {} (Variables).", key_hint("E")),
+                    tr!("chips.add_with", key = key_hint("E")),
                     p.text_muted,
                 ));
             }
@@ -279,6 +279,27 @@ impl Workspace {
             .with_priority(1)
             .into_any_element(),
         )
+    }
+}
+
+/// Where a value comes from, in the interface language. apix-core names it
+/// as `Project "P"`, `Collection "C"`, `Environment "E"` or
+/// `Environment "E" of "C"`; anything else is shown as it is.
+fn scope_label(scope: &str) -> SharedString {
+    let quoted: Vec<&str> = scope.split('"').skip(1).step_by(2).collect();
+    match (
+        scope.split(' ').next().unwrap_or_default(),
+        quoted.as_slice(),
+    ) {
+        ("Project", [name]) => tr!("chips.scope.project", name = name),
+        ("Collection", [name]) => tr!("chips.scope.collection", name = name),
+        ("Environment", [name]) => tr!("chips.scope.environment", name = name),
+        ("Environment", [name, collection]) => tr!(
+            "chips.scope.environment_of",
+            name = name,
+            collection = collection
+        ),
+        _ => scope.to_owned().into(),
     }
 }
 

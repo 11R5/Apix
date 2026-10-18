@@ -53,48 +53,58 @@ impl MenuState {
         if self.open {
             let view = self.view.clone();
             menu = menu
-                .menu("New request", Box::new(NewRequest))
-                .submenu("New request with method", window, cx, move |menu, _, _| {
-                    method_items(menu, view.clone(), None)
-                })
-                .item(self.item("New folder…", |ws, window, cx| {
+                .menu(tr!("menu.new_request"), Box::new(NewRequest))
+                .submenu(
+                    tr!("menu.new_request_with_method"),
+                    window,
+                    cx,
+                    move |menu, _, _| method_items(menu, view.clone(), None),
+                )
+                .item(self.item(tr!("menu.new_folder"), |ws, window, cx| {
                     ws.new_folder(None, window, cx)
                 }));
         }
         menu = menu
-            .item(self.item("New collection…", Workspace::prompt_new_collection))
-            .item(self.item("New project…", Workspace::prompt_new_project))
+            .item(self.item(tr!("menu.new_collection"), Workspace::prompt_new_collection))
+            .item(self.item(tr!("menu.new_project"), Workspace::prompt_new_project))
             .when(self.has_project, |menu| {
                 menu.item(self.item(
-                    "New encrypted collection…",
+                    tr!("menu.new_encrypted_collection"),
                     Workspace::prompt_new_encrypted_collection,
                 ))
             })
             .separator()
-            .menu("Open…", Box::new(OpenCollection));
+            .menu(tr!("menu.open"), Box::new(OpenCollection))
+            .menu(tr!("menu.settings"), Box::new(OpenSettings));
         if !self.recent.is_empty() {
             let (recent, view) = (self.recent.clone(), self.view.clone());
-            menu = menu.submenu("Open recent", window, cx, move |mut menu, _, _| {
-                for dir in &recent {
-                    let (view, target) = (view.clone(), dir.clone());
-                    let name = dir
-                        .file_name()
-                        .map(|n| n.to_string_lossy().into_owned())
-                        .unwrap_or_else(|| dir.display().to_string());
-                    menu = menu.item(PopupMenuItem::new(name).on_click(move |_, window, cx| {
-                        view.update(cx, |this, cx| {
-                            this.open_or_create(target.clone(), window, cx)
-                        })
-                        .ok();
-                    }));
-                }
-                menu
-            });
+            menu = menu.submenu(
+                tr!("menu.open_recent"),
+                window,
+                cx,
+                move |mut menu, _, _| {
+                    for dir in &recent {
+                        let (view, target) = (view.clone(), dir.clone());
+                        let name = dir
+                            .file_name()
+                            .map(|n| n.to_string_lossy().into_owned())
+                            .unwrap_or_else(|| dir.display().to_string());
+                        menu =
+                            menu.item(PopupMenuItem::new(name).on_click(move |_, window, cx| {
+                                view.update(cx, |this, cx| {
+                                    this.open_or_create(target.clone(), window, cx)
+                                })
+                                .ok();
+                            }));
+                    }
+                    menu
+                },
+            );
         }
-        menu = menu.menu("Import from Postman…", Box::new(ImportFile));
+        menu = menu.menu(tr!("menu.import_postman"), Box::new(ImportFile));
         if let Some(root) = self.plain_collection.clone() {
             menu = menu.separator().item(
-                self.item("Encrypt this collection…", move |ws, window, cx| {
+                self.item(tr!("menu.encrypt_collection"), move |ws, window, cx| {
                     ws.prompt_encrypt(root.clone(), window, cx)
                 }),
             );
@@ -102,16 +112,16 @@ impl MenuState {
         if self.unlocked {
             menu = menu
                 .separator()
-                .item(self.item("Lock encrypted collections", Workspace::lock_collections));
+                .item(self.item(tr!("menu.lock_collections"), Workspace::lock_collections));
         }
         if self.open {
             menu = menu
                 .separator()
-                .menu("Save", Box::new(SaveRequest))
-                .menu("Close tab", Box::new(CloseTab));
+                .menu(tr!("menu.save"), Box::new(SaveRequest))
+                .menu(tr!("menu.close_tab"), Box::new(CloseTab));
         }
         menu.separator()
-            .item(PopupMenuItem::new("Quit").on_click(|_, _, cx| cx.quit()))
+            .item(PopupMenuItem::new(tr!("menu.quit")).on_click(|_, _, cx| cx.quit()))
     }
 
     fn request(
@@ -123,10 +133,10 @@ impl MenuState {
         let view = self.view.clone();
         let focus = self.focus.clone();
         menu.action_context(self.focus.clone())
-            .menu("Send", Box::new(SendRequest))
-            .menu("Cancel", Box::new(CancelRequest))
+            .menu(tr!("menu.send"), Box::new(SendRequest))
+            .menu(tr!("menu.cancel"), Box::new(CancelRequest))
             .separator()
-            .submenu("Method", window, cx, move |menu, _, _| {
+            .submenu(tr!("menu.method"), window, cx, move |menu, _, _| {
                 menu.action_context(focus.clone())
                     .menu("GET", Box::new(MethodGet))
                     .menu("POST", Box::new(MethodPost))
@@ -136,7 +146,7 @@ impl MenuState {
                     .menu("HEAD", Box::new(MethodHead))
                     .menu("OPTIONS", Box::new(MethodOptions))
             })
-            .submenu("Copy as", window, cx, move |menu, _, _| {
+            .submenu(tr!("menu.copy_as"), window, cx, move |menu, _, _| {
                 Shell::ALL.into_iter().fold(menu, |menu, shell| {
                     let view = view.clone();
                     menu.item(
@@ -157,7 +167,7 @@ impl MenuState {
     ) -> PopupMenu {
         let mut menu = menu
             .action_context(self.focus.clone())
-            .menu("Variables and environments…", Box::new(EditVariables));
+            .menu(tr!("menu.variables"), Box::new(EditVariables));
         if !self.open {
             return menu;
         }
@@ -166,25 +176,33 @@ impl MenuState {
             self.environment.clone(),
             self.environments.clone(),
         );
-        menu = menu.submenu("Active environment", window, cx, move |menu, _, _| {
-            let pick = |label: String, env: Option<String>| {
-                let view = view.clone();
-                PopupMenuItem::new(label)
-                    .checked(current == env)
-                    .on_click(move |_, window, cx| {
-                        view.update(cx, |this, cx| this.set_environment(env.clone(), window, cx))
+        menu = menu.submenu(
+            tr!("menu.active_environment"),
+            window,
+            cx,
+            move |menu, _, _| {
+                let pick = |label: String, env: Option<String>| {
+                    let view = view.clone();
+                    PopupMenuItem::new(label).checked(current == env).on_click(
+                        move |_, window, cx| {
+                            view.update(cx, |this, cx| {
+                                this.set_environment(env.clone(), window, cx)
+                            })
                             .ok();
-                    })
-            };
-            names.iter().fold(
-                menu.item(pick("No environment".into(), None)).separator(),
-                |menu, name| menu.item(pick(name.clone(), Some(name.clone()))),
-            )
-        });
+                        },
+                    )
+                };
+                names.iter().fold(
+                    menu.item(pick(tr!("env.none").to_string(), None))
+                        .separator(),
+                    |menu, name| menu.item(pick(name.clone(), Some(name.clone()))),
+                )
+            },
+        );
         let auth = if self.has_project {
-            "Project auth…"
+            tr!("menu.project_auth")
         } else {
-            "Collection auth…"
+            tr!("menu.collection_auth")
         };
         menu = menu.separator().item(self.item(auth, |ws, window, cx| {
             let owner = match (&ws.project, ws.collections.first()) {
@@ -195,33 +213,31 @@ impl MenuState {
             ws.open_auth_dialog(owner, window, cx)
         }));
         if let Some(group_by) = self.group_by {
-            let group = |label: &str, by: GroupBy| {
-                self.item(label.to_owned(), move |ws, window, cx| {
-                    ws.set_group_by(by, window, cx)
-                })
-                .checked(group_by == by)
+            let group = |label: SharedString, by: GroupBy| {
+                self.item(label, move |ws, window, cx| ws.set_group_by(by, window, cx))
+                    .checked(group_by == by)
             };
             menu = menu
                 .separator()
-                .label("Group the sidebar by")
-                .item(group("Collection", GroupBy::Collection))
-                .item(group("Environment", GroupBy::Environment));
+                .label(tr!("menu.group_by"))
+                .item(group(tr!("menu.group_collection"), GroupBy::Collection))
+                .item(group(tr!("menu.group_environment"), GroupBy::Environment));
         }
         menu
     }
 
     fn view_menu(&self, menu: PopupMenu) -> PopupMenu {
         menu.action_context(self.focus.clone())
-            .menu("Command palette…", Box::new(OpenPalette))
+            .menu(tr!("menu.command_palette"), Box::new(OpenPalette))
             .separator()
-            .menu("Next tab", Box::new(NextTab))
-            .menu("Previous tab", Box::new(PrevTab))
+            .menu(tr!("menu.next_tab"), Box::new(NextTab))
+            .menu(tr!("menu.previous_tab"), Box::new(PrevTab))
     }
 
     fn help(&self, menu: PopupMenu) -> PopupMenu {
-        menu.link("Documentation", format!("{REPO}#readme"))
-            .link("Report a problem", format!("{REPO}/issues"))
-            .link("Source code", REPO)
+        menu.link(tr!("menu.documentation"), format!("{REPO}#readme"))
+            .link(tr!("menu.report_problem"), format!("{REPO}/issues"))
+            .link(tr!("menu.source_code"), REPO)
             .separator()
             .label(format!("Apix {}", env!("CARGO_PKG_VERSION")))
     }
@@ -254,7 +270,7 @@ impl Workspace {
                 .collect(),
         };
         let button =
-            |id: &'static str, label: &'static str| Button::new(id).ghost().xsmall().label(label);
+            |id: &'static str, label: SharedString| Button::new(id).ghost().xsmall().label(label);
         let (file, request, env, view, help) = (
             state.clone(),
             state.clone(),
@@ -268,20 +284,24 @@ impl Workspace {
             .gap_px()
             .items_center()
             .child(
-                button("menu-file", "File")
+                button("menu-file", tr!("menu.file"))
                     .dropdown_menu(move |menu, window, cx| file.file(menu, window, cx)),
             )
             .child(
-                button("menu-request", "Request")
+                button("menu-request", tr!("menu.request"))
                     .dropdown_menu(move |menu, window, cx| request.request(menu, window, cx)),
             )
             .child(
-                button("menu-environment", "Environment")
+                button("menu-environment", tr!("menu.environment"))
                     .dropdown_menu(move |menu, window, cx| env.environment(menu, window, cx)),
             )
             .child(
-                button("menu-view", "View").dropdown_menu(move |menu, _, _| view.view_menu(menu)),
+                button("menu-view", tr!("menu.view"))
+                    .dropdown_menu(move |menu, _, _| view.view_menu(menu)),
             )
-            .child(button("menu-help", "Help").dropdown_menu(move |menu, _, _| help.help(menu)))
+            .child(
+                button("menu-help", tr!("menu.help"))
+                    .dropdown_menu(move |menu, _, _| help.help(menu)),
+            )
     }
 }

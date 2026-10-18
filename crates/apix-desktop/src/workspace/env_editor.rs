@@ -18,6 +18,7 @@ use gpui_kit::*;
 
 use super::{Workspace, describe};
 use crate::theme::Palette;
+use crate::tr;
 
 /// What one page of the dialog edits.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -135,7 +136,9 @@ impl EnvEditor {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) -> Self {
-        let new_env = cx.new(|cx| InputState::new(window, cx).placeholder("New environment…"));
+        let new_env = cx.new(|cx| {
+            InputState::new(window, cx).placeholder(tr!("env.placeholder.new_environment"))
+        });
         let subscription = cx.subscribe_in(
             &new_env,
             window,
@@ -238,7 +241,7 @@ impl EnvEditor {
                 .is_some_and(|(root, n)| root == self.new_root && n == name && !p.deleted)
         });
         if taken {
-            self.error = Some(format!("An environment named {name} already exists."));
+            self.error = Some(tr!("env.error.exists", name = name).to_string());
             cx.notify();
             return;
         }
@@ -251,7 +254,7 @@ impl EnvEditor {
                 |p| matches!(&p.target, Target::Environment { root, .. } if *root == self.new_root),
             )
             .map(|p| p.section.clone())
-            .unwrap_or_else(|| "Environments".to_owned());
+            .unwrap_or_else(|| tr!("env.section.environments").to_string());
         // After the last page of its section, so the list stays grouped.
         let at = self
             .pages
@@ -286,12 +289,15 @@ impl EnvEditor {
             let mut seen = BTreeSet::new();
             for row in page.current(cx) {
                 if !seen.insert(row.key.clone()) {
-                    return Err((ix, format!("{} is defined twice.", row.key)));
+                    return Err((
+                        ix,
+                        tr!("env.error.defined_twice", key = row.key).to_string(),
+                    ));
                 }
             }
             if let (Some((root, _)), Some(new)) = (page.env_name(), page.new_name(cx)) {
                 if new.is_empty() {
-                    return Err((ix, "The environment needs a name.".into()));
+                    return Err((ix, tr!("env.error.needs_name").to_string()));
                 }
                 let clash = self.pages.iter().enumerate().any(|(other, p)| {
                     other != ix
@@ -300,7 +306,7 @@ impl EnvEditor {
                         && p.new_name(cx).as_deref() == Some(new.as_str())
                 });
                 if clash {
-                    return Err((ix, format!("Two environments would be named {new}.")));
+                    return Err((ix, tr!("env.error.name_clash", name = new).to_string()));
                 }
             }
         }
@@ -370,7 +376,7 @@ impl EnvEditor {
                         .pb_1()
                         .text_xs()
                         .text_color(p.text_muted)
-                        .child(page.section.to_uppercase())
+                        .child(crate::i18n::upper(&page.section))
                         .into_any_element(),
                 );
             }
@@ -438,7 +444,7 @@ impl EnvEditor {
                             .ghost()
                             .xsmall()
                             .icon(IconName::Plus)
-                            .tooltip("Add environment")
+                            .tooltip(tr!("env.add_environment"))
                             .on_click(cx.listener(|this, _: &ClickEvent, window, cx| {
                                 this.add_environment(window, cx)
                             })),
@@ -449,10 +455,10 @@ impl EnvEditor {
     fn render_header(&self, page: &Page, cx: &mut Context<Self>) -> impl IntoElement {
         let p = self.palette;
         let title = match &page.target {
-            Target::ProjectVars(_) => "Project variables".to_owned(),
-            Target::CollectionVars(_) => format!("{} variables", page.label),
-            Target::Environment { .. } => "Environment".to_owned(),
-            Target::Dynamic => "Dynamic variables".to_owned(),
+            Target::ProjectVars(_) => tr!("env.title.project"),
+            Target::CollectionVars(_) => tr!("env.title.collection", name = page.label),
+            Target::Environment { .. } => tr!("env.title.environment"),
+            Target::Dynamic => tr!("env.dynamic_variables"),
         };
         let ix = self.current;
         h_flex()
@@ -472,9 +478,9 @@ impl EnvEditor {
             .child(div().flex_1())
             .when(page.name.is_some(), |bar| {
                 let label = if page.deleted {
-                    "Undo delete"
+                    tr!("env.undo_delete")
                 } else {
-                    "Delete"
+                    tr!("env.delete")
                 };
                 bar.child(
                     Button::new("env-delete")
@@ -518,9 +524,9 @@ impl EnvEditor {
                 .when(can_be_secret, |line| {
                     line.child(
                         Checkbox::new(("env-secret", ix))
-                            .label("Secret")
+                            .label(tr!("env.secret"))
                             .checked(row.secret)
-                            .tooltip("Saved only on this computer, in the .local.toml file")
+                            .tooltip(tr!("env.secret_tooltip"))
                             .on_click(cx.listener(move |this, checked: &bool, window, cx| {
                                 let page = &mut this.pages[this.current];
                                 if let Some(row) = page.rows.as_mut().and_then(|r| r.get_mut(ix)) {
@@ -560,8 +566,17 @@ impl EnvEditor {
                     .gap_2()
                     .text_xs()
                     .text_color(p.text_muted)
-                    .child(div().w(px(180.)).flex_none().child("KEY"))
-                    .child(div().flex_1().child("VALUE")),
+                    .child(
+                        div()
+                            .w(px(180.))
+                            .flex_none()
+                            .child(crate::i18n::upper(&tr!("table.key"))),
+                    )
+                    .child(
+                        div()
+                            .flex_1()
+                            .child(crate::i18n::upper(&tr!("table.value"))),
+                    ),
             )
             .children(rows)
             .child(
@@ -570,7 +585,7 @@ impl EnvEditor {
                         .ghost()
                         .small()
                         .icon(IconName::Plus)
-                        .label("Add variable")
+                        .label(tr!("env.add_variable"))
                         .on_click(
                             cx.listener(|this, _: &ClickEvent, window, cx| {
                                 this.add_row(window, cx)
@@ -635,16 +650,11 @@ impl EnvEditor {
             .children(rows)
     }
 
-    fn hint(&self, page: &Page) -> String {
+    fn hint(&self, page: &Page) -> SharedString {
         match &page.target {
-            Target::Environment { name, .. } => {
-                format!("Secrets stay on this computer in {name}.local.toml, which git ignores.")
-            }
-            Target::Dynamic => {
-                "Click a name to copy it. Every use gets a new value; a variable you define with the same name wins."
-                    .to_owned()
-            }
-            _ => "Shared variables apply in every environment; an environment's value wins.".to_owned(),
+            Target::Environment { name, .. } => tr!("env.hint.environment", name = name),
+            Target::Dynamic => tr!("env.hint.dynamic"),
+            _ => tr!("env.hint.shared"),
         }
     }
 }
@@ -705,7 +715,7 @@ impl Workspace {
             let cancel_view = view.clone();
             dialog
                 .on_close(super::collections::refocus(view.clone()))
-                .title("Variables")
+                .title(tr!("env.dialog_title"))
                 .width(px(880.))
                 .child(editor.clone())
                 // Enter belongs to the fields (it adds an environment), not to the dialog.
@@ -715,18 +725,24 @@ impl Workspace {
                         .w_full()
                         .justify_end()
                         .gap_2()
-                        .child(Button::new("vars-cancel").ghost().label("Cancel").on_click(
-                            move |_, window, cx| {
-                                super::collections::close_dialog(&cancel_view, window, cx)
-                            },
-                        ))
-                        .child(Button::new("vars-save").primary().label("Save").on_click(
-                            move |_, window, cx| {
-                                if save.update(cx, |editor, cx| editor.save(window, cx)) {
-                                    window.close_dialog(cx);
-                                }
-                            },
-                        )),
+                        .child(
+                            Button::new("vars-cancel")
+                                .ghost()
+                                .label(tr!("dialog.cancel"))
+                                .on_click(move |_, window, cx| {
+                                    super::collections::close_dialog(&cancel_view, window, cx)
+                                }),
+                        )
+                        .child(
+                            Button::new("vars-save")
+                                .primary()
+                                .label(tr!("dialog.save"))
+                                .on_click(move |_, window, cx| {
+                                    if save.update(cx, |editor, cx| editor.save(window, cx)) {
+                                        window.close_dialog(cx);
+                                    }
+                                }),
+                        ),
                 )
         });
     }
@@ -735,7 +751,8 @@ impl Workspace {
     /// the dynamic variables.
     fn env_pages(&self, root: &Path) -> Vec<PageSpec> {
         let mut pages = Vec::new();
-        let shared = "Shared".to_owned();
+        let shared = tr!("env.section.shared").to_string();
+        let environments = tr!("env.section.environments").to_string();
         let env = |root: &Path, name: String, section: &str| PageSpec {
             target: Target::Environment {
                 root: root.to_owned(),
@@ -759,12 +776,13 @@ impl Workspace {
                     });
                 }
                 for name in store::environment_names_at(root) {
-                    pages.push(env(root, name, "Environments"));
+                    pages.push(env(root, name, &environments));
                 }
                 // Environments a collection defines for itself.
                 for c in &self.collections {
                     for name in c.environment_names() {
-                        pages.push(env(&c.root, name, &format!("{} only", c.meta.name)));
+                        let section = tr!("env.section.collection_only", name = c.meta.name);
+                        pages.push(env(&c.root, name, &section));
                     }
                 }
             }
@@ -776,15 +794,15 @@ impl Workspace {
                         section: shared,
                     });
                     for name in c.environment_names() {
-                        pages.push(env(&c.root, name, "Environments"));
+                        pages.push(env(&c.root, name, &environments));
                     }
                 }
             }
         }
         pages.push(PageSpec {
             target: Target::Dynamic,
-            label: "Dynamic variables".into(),
-            section: "Built in".into(),
+            label: tr!("env.dynamic_variables").to_string(),
+            section: tr!("env.section.built_in").to_string(),
         });
         pages
     }
@@ -803,12 +821,12 @@ fn new_row(var: &EnvVar, window: &mut Window, cx: &mut App) -> Row {
     Row {
         key: cx.new(|cx| {
             InputState::new(window, cx)
-                .placeholder("name")
+                .placeholder(tr!("env.placeholder.name"))
                 .default_value(key)
         }),
         value: cx.new(|cx| {
             InputState::new(window, cx)
-                .placeholder("value")
+                .placeholder(tr!("env.placeholder.value"))
                 .masked(secret)
                 .default_value(value)
         }),
@@ -865,7 +883,7 @@ fn write_page(page: &Page, cx: &App) -> Result<Option<(String, String)>, String>
             } else if page.is_new {
                 current = page.new_name(cx).unwrap_or_else(|| name.clone());
                 if !store::environment_files(root, &current).is_empty() {
-                    return Err(format!("An environment named {current} already exists."));
+                    return Err(tr!("env.error.exists", name = current).to_string());
                 }
             }
             // A page that was never opened has nothing new to write.

@@ -83,11 +83,28 @@ pub enum Variant {
 }
 
 impl Variant {
-    /// `APIX_THEME=cyber` picks the mockup gradient until the settings screen exists.
-    pub fn from_env() -> Self {
-        match std::env::var("APIX_THEME").as_deref() {
-            Ok(v) if v.eq_ignore_ascii_case("cyber") => Variant::Cyber,
-            _ => Variant::Obsidian,
+    pub const ALL: [Variant; 2] = [Variant::Obsidian, Variant::Cyber];
+
+    /// The name in `settings.toml`.
+    pub fn id(self) -> &'static str {
+        match self {
+            Variant::Obsidian => "obsidian",
+            Variant::Cyber => "cyber",
+        }
+    }
+
+    pub fn from_id(id: &str) -> Self {
+        Self::ALL
+            .into_iter()
+            .find(|v| v.id().eq_ignore_ascii_case(id))
+            .unwrap_or_default()
+    }
+
+    /// The theme from the settings; `APIX_THEME` overrides it.
+    pub fn chosen(settings: &crate::settings::Settings) -> Self {
+        match std::env::var("APIX_THEME") {
+            Ok(id) => Self::from_id(&id),
+            Err(_) => Self::from_id(&settings.theme),
         }
     }
 }
