@@ -248,8 +248,12 @@ start) and switches at once: texts are read on every render, and the few texts
 kept inside widgets (input placeholders, picker entries) are set again by
 `Workspace::retranslate`. Glyphs for Japanese, Chinese and Arabic come from the
 platform's font fallback (DirectWrite, Core Text, fontconfig) next to the
-embedded Inter. Arabic text is shaped right to left; mirroring the layout
-itself is still to come. Error messages from the engine crates stay English.
+embedded Inter. Arabic text is shaped and placed right to left; on Windows
+that needs `vendor/gpui-pre-windows`, gpui 0.3.9's DirectWrite backend with its
+glyph-run placement fixed (patched in from the workspace `Cargo.toml`; drop it
+once upstream fixes it). Still to come: wrapping right-to-left paragraphs (gpui
+cuts a shaped line at glyph positions that assume left to right) and mirroring
+the layout. Error messages from the engine crates stay English.
 
 Adding a language: copy `locales/en.yml` to `locales/<code>.yml`, translate
 the values, and add one line to `LANGUAGES` in `src/i18n.rs`.
