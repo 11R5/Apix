@@ -7,17 +7,17 @@
 **İşaretler:** ✅ yapıldı · 🔜 sıradaki · ⬜ planlandı · 💭 sonra karar verilecek
 **Boyut:** S = birkaç saat · M = 1–3 gün · L = 1 hafta ve üstü
 
-### Durum özeti (17 Ekim 2026)
+### Durum özeti (18 Ekim 2026)
 | Aşama | Durum |
 |---|---|
 | M0 Temel | ✅ |
 | M1 Arayüzden istek | ✅ 100 MB JSON ~0.33 s'de açılıyor |
 | M2 Koleksiyonlar, Postman içe aktarma | ✅ (sekmeler ve sürükle-bırak M3'te tamamlandı) |
-| M3 Simge, projeler, ortamlar, kopyalama, auth | ✅ 9/9 · bitti: simge, ortam seçici ve editörü, dinamik değişkenler, projeler, kabuk komutu olarak kopyalama, metotla yeni istek, değişken çipleri, Auth sekmesi ve miras, komut paleti, sekmeler, sürükle-bırak ile taşıma · küçük kalanlar M3 bölümünün sonunda · sıradaki: M4 |
-| M4 Günlük kullanım | 🔜 · bitti: menü çubuğu, şifreli koleksiyonlar (motor, uygulama, CLI), ağ denetçisi (Network sekmesi) · sıradaki: multipart/binary/GraphQL gövdeleri ve auth tipleri |
+| M3 Simge, projeler, ortamlar, kopyalama, auth | ✅ 9/9 · bitti: simge, ortam seçici ve editörü, dinamik değişkenler, projeler, kabuk komutu olarak kopyalama, metotla yeni istek, değişken çipleri, Auth sekmesi ve miras, komut paleti, sekmeler, sürükle-bırak ile taşıma · küçük kalanlar M3 bölümünün sonunda |
+| M4 Günlük kullanım | 🔜 · bitti: menü çubuğu, şifreli koleksiyonlar (motor, uygulama, CLI), ağ denetçisi (Network sekmesi) · sıradaki: multipart/binary/GraphQL gövdeleri ve auth tipleri · ardından: ayarlar ve 9 dilli arayüz, dokümantasyon yapısı ve README karşılaştırması |
 | M5–M9 | ⬜ |
 
-Release ikili dosyası 31.2 MB (üst sınır ~40 MB). Testler: core 35, vault 7, desktop 4, codegen 11, import 10, http 8 (hepsi geçiyor, clippy uyarısız).
+Release ikili dosyası 31.2 MB (üst sınır 100 MB). Testler: core 35, vault 7, desktop 4, codegen 11, import 10, http 8 (hepsi geçiyor, clippy uyarısız).
 
 ### Kullanıcı notları (17 Ekim 2026) ve plana nasıl işlendikleri
 | # | Not | Nereye işlendi |
@@ -31,7 +31,17 @@ Release ikili dosyası 31.2 MB (üst sınır ~40 MB). Testler: core 35, vault 7,
 | 7 | Koleksiyona metot seçerek istek eklemek gibi temel özellikler | §2-C |
 | 8 | İsteği bash/sh, terminal, PowerShell ve cURL olarak kopyalamak | §2-I, M3'e öne alındı |
 | 9 | Hem yerel tarafın hem hedefin ayrıntılı ağ bilgisi ve haritası | §2-B2 (yeni), M4 ve M7 |
-| 10 | Program boyutu 15 MB'ı geçebilir | §0 ve M9 güncellendi: üst sınır yaklaşık 40 MB |
+| 10 | Program boyutu 15 MB'ı geçebilir | §0 ve M9 güncellendi: üst sınır yaklaşık 40 MB (18 Ekim'de 100 MB'a çıktı, not 11) |
+
+### Kullanıcı notları (18 Ekim 2026) ve plana nasıl işlendikleri
+| # | Not | Nereye işlendi |
+|---|---|---|
+| 11 | Boyut sınırı 100 MB; yeter ki masaüstünde hızlı, akıcı, basit ve güçlü olsun | §0 "Hafif" kuralı ve M9 güncellendi |
+| 12 | Ağ denetçisinde sonraya kalan TLS ayrıntıları (sürüm, şifre takımı, tam zincir, TCP/TLS ayrı süreler) zamanı gelince yapılsın | §B2, M7 (ağ haritasıyla birlikte, kendi bağlayıcımızla) |
+| 13 | Ayarlardan arayüz dili seçilebilmeli: İngilizce, Türkçe, Arapça, Almanca, Fransızca, Rusça, Japonca, Çince, İspanyolca | §M, §N, M4'e öne alındı (M7'deydi): ayarlar ekranı, çeviri altyapısı, 9 dil, Arapça için sağdan sola düzen |
+| 14 | Dokümantasyon ayrı olsun; kullanım kılavuzu, mimari, teknik altyapı ve iş akışları bu dillerde ayrı belgeler olsun; sonradan yeni dil eklenebilsin | §N (yeni), M4 (yapı + İngilizce ve Türkçe), M9 (tüm diller) |
+| 15 | Her dil için görsellerle desteklenmiş kullanım kılavuzu | §N, M9 (ekran görüntüleri her dil için otomatik alınır) |
+| 16 | GitHub sayfasında benzer uygulamalardan farklar, avantajlar ve performans | §N, M4 (README karşılaştırması ve tekrarlanabilir ölçümler) |
 
 ---
 
@@ -42,7 +52,7 @@ Apix, Postman'in yaptığı her şeyi yapan bir API istemcisi olacak. Postman'de
 | Kural | Ne anlama geliyor |
 |---|---|
 | **Minimalist** | Ekranda sadece o an gereken şey görünür. Gerisi Ctrl/⌘+K komut paletinde durur. |
-| **Hafif** | Hız ve özellik boyuttan önce gelir. Program dosyası için üst sınır yaklaşık 40 MB (şu an 31.2 MB; Postman ve Electron uygulamaları 300 MB'ı aşıyor). Açılış 150 ms'nin, boşta bellek kullanımı 60 MB'ın altında kalır (şu an 69 MB ölçüldü). |
+| **Hafif** | Hız, akıcılık ve özellik boyuttan önce gelir. Program dosyası için üst sınır 100 MB (not 11; şu an 31.2 MB; Postman ve Electron uygulamaları 300 MB'ı aşıyor). Açılış 150 ms'nin, boşta bellek kullanımı 60 MB'ın altında kalır (şu an 69 MB ölçüldü). |
 | **Hızlı** | Arayüz hiç donmaz. 100 MB'lık bir yanıt bile kare kaybetmeden kaydırılır. |
 | **Local-first** | Hesap ve bulut zorunlu değildir. Koleksiyonlar düz dosya olarak durur ve git ile versiyonlanır. |
 | **Postman'den kolay geçiş** | Postman koleksiyonları, ortamları ve scriptleri içe aktarılınca çalışır. |
@@ -396,13 +406,38 @@ Bir koleksiyon (veya proje) parola ile şifrelenir. Parolayı bilmeyen hiçbir a
 | Komut paleti (Ctrl/⌘+K, Ctrl/⌘+P) | ✅ |
 | **Menü çubuğu** (başlık çubuğunda): File, Request, Environment, View, Help. Kısayollar menüde görünür. Kenar çubuğundaki "Open or create" menüsünün yerini aldı. Windows'ta başlık çubuğu sürükleme alanı olduğu hâlde tıklanabilir (menü düğmeleri sürükleme alanını örter). macOS'ta yerel menü çubuğu M9'da. | ✅ |
 | Kısayol tablosu ve kısayolları özelleştirme | ⬜ M |
-| Ayarlar ekranı (tema, cam ayarı, font, proxy, güncelleme) | ⬜ M |
-| Türkçe ve İngilizce arayüz (`rust-i18n`, gpui-kit zaten destekliyor) | ⬜ M |
+| **Ayarlar ekranı** (not 13): arayüz dili, tema, cam ayarı, font, proxy, otomatik kilit süresi, güncelleme. Ayarlar kullanıcı klasöründeki `settings.toml`'da tutulur. | ⬜ M (M4) |
+| **Arayüz dili** (not 13): İngilizce, Türkçe, Arapça, Almanca, Fransızca, Rusça, Japonca, Çince (basitleştirilmiş), İspanyolca. Ayarlardan anında değişir, yeniden başlatma gerekmez. Arapça için sağdan sola düzen (kenar çubuğu, sekmeler ve metin hizası aynalanır). Japonca, Çince ve Arapça için yazı tipi yedekleri. Her dil tek bir dosya (`locales/<kod>.yml`, `rust-i18n`; gpui-kit'in kendi metinleri de aynı sistemle çevrilir). Yeni dil eklemek: bir dosya ve dil listesine bir satır. Eksik çeviri İngilizceye düşer; CI eksik anahtarları raporlar. Çeviriler ilk etapta makine çevirisi + gözden geçirme; anadili konuşan katkıcılar düzeltebilir. | ⬜ L (M4) |
 | Otomatik güncelleme | ⬜ M |
 | Erişilebilirlik: klavyeyle tam kullanım, yüksek kontrast | ⬜ M |
 | Çökme raporu (isteğe bağlı, varsayılan kapalı) | ⬜ S |
 
 ---
+
+### N. Dokümantasyon ve tanıtım (not 14, 15, 16)
+Dokümantasyon bu iş planından ayrıdır. Her dilin kendi klasörü vardır ve her biri aynı belge setini içerir:
+
+```
+Docs/
+├── languages.toml           desteklenen diller (kod, ad, yön, kaynak sürüm)
+├── en/                      kaynak dil (diğerleri bundan çevrilir)
+│   ├── user-guide.md        kullanım kılavuzu, ekran görüntüleriyle
+│   ├── architecture.md      mimari
+│   ├── technical.md         teknik altyapı: crate'ler, bağımlılıklar, derleme, performans bütçesi
+│   ├── workflows.md         iş akışları: istek gönderme, koleksiyon, ortam, şifreleme, içe aktarma, CI
+│   └── images/              bu dildeki arayüzün ekran görüntüleri
+├── tr/  ar/  de/  fr/  ru/  ja/  zh/  es/   aynı yapı
+└── IS-PLANI.md, ROADMAP.md  (plan; dokümantasyonun parçası değil)
+```
+
+| Özellik | Ayrıntı | Durum |
+|---|---|---|
+| **Dil başına belge seti** | Kullanım kılavuzu, mimari, teknik altyapı, iş akışları; 9 dilde ayrı dosyalar | ⬜ M4 (yapı, İngilizce, Türkçe) · M9 (tüm diller) |
+| **Dil sürümleri** | Her çeviri hangi İngilizce sürümden çevrildiğini başında yazar; İngilizce değişince eskiyen çeviriler CI'da listelenir | ⬜ S |
+| **Yeni dil ekleme** | `languages.toml`'a bir satır, yeni klasör, arayüz için `locales/<kod>.yml`. Kod değişikliği gerekmez. | ⬜ S |
+| **Görselli kullanım kılavuzu** (not 15) | Her dilde, o dilin arayüzünden alınmış ekran görüntüleri. Görüntüler bir betikle otomatik alınır (uygulama örnek projeyle, ilgili dilde açılır), böylece arayüz değişince kılavuz bir komutla yenilenir. | ⬜ M9 |
+| **README: neden Apix** (not 16) | Postman, Insomnia, Bruno, Hoppscotch ve HTTPie ile karşılaştırma: yerel GPU arayüzü (Electron yok), dosya tabanlı koleksiyonlar, hesap zorunluluğu yok, şifreli koleksiyonlar, ağ denetçisi, CLI ile birebir aynı motor. Sadece doğrulanabilir iddialar. | ⬜ M4 |
+| **Performans ölçümleri** (not 16) | Açılış süresi, boşta bellek, ikili boyutu, 100 MB JSON açma ve kaydırma; ölçüm betiği repoda, sonuçlar README'de ve her sürümde güncellenir. Rakip uygulamalar aynı makinede, aynı betikle ölçülür. | ⬜ M4 (Apix) · M9 (karşılaştırmalı) |
 
 ## 3. Postman → Apix karşılık tablosu
 | Postman | Apix | Aşama |
@@ -486,8 +521,10 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 
 ### M4 — Günlük kullanıma hazır
 - **Şifreli koleksiyonlar (§C2)** (not 2): oluşturma, şifreleme ve şifreyi kaldırma, kilit açma ve otomatik kilit, kurtarma anahtarı, CLI desteği (L). Motor ✅ (`apix-vault`), uygulama ✅ (kilit açma, kilitleme, 15 dk otomatik kilit, şifreleme ve şifreyi kaldırma, parola değiştirme, yeni şifreli koleksiyon), CLI ✅. Kalan: parolayı işletim sistemi anahtarlığında hatırlama.
-- **Ağ denetçisi (§B2)** (not 9): yerel ağ bilgisi, DNS, TCP, TLS ve sertifika zinciri, zaman şelalesi, yönlendirmeler (L) Network sekmesi ve `apix send --network` ✅; TLS sürümü/şifre takımı ve TCP/TLS ayrı süreler için özel bağlayıcı 🔜.
-- multipart, binary ve GraphQL gövdeleri. OAuth 2.0 (M3'ten taşındı), Digest, AWS SigV4 ve OAuth 1.0 auth tipleri.
+- **Ağ denetçisi (§B2)** (not 9): yerel ağ bilgisi, DNS, TCP, TLS ve sertifika zinciri, zaman şelalesi, yönlendirmeler (L) Network sekmesi ve `apix send --network` ✅; TLS sürümü/şifre takımı, tam zincir ve TCP/TLS ayrı süreler M7'de (not 12).
+- 🔜 multipart, binary ve GraphQL gövdeleri. OAuth 2.0 (M3'ten taşındı), Digest, AWS SigV4 ve OAuth 1.0 auth tipleri.
+- **Ayarlar ekranı ve arayüz dili (§M, not 13)** (L): çeviri altyapısı (`rust-i18n`, tüm metinler anahtarlı), 9 dil, Arapça için sağdan sola, CJK ve Arapça yazı tipi yedekleri, ayarlardan anında dil değişimi. M7'den öne alındı: her yeni ekran yeni metin getirdiği için altyapı ne kadar erken gelirse sonradan o kadar az iş çıkar.
+- **Dokümantasyon yapısı ve README (§N, not 14, 16)** (M): `Docs/<dil>/` yapısı, `languages.toml`, İngilizce ve Türkçe belgeler (kullanım kılavuzu, mimari, teknik altyapı, iş akışları), README'de "neden Apix" karşılaştırması ve Apix'in tekrarlanabilir performans ölçümleri.
 - İstek ayarları (timeout, SSL, proxy, sertifikalar), çerez yöneticisi
 - Kod üretici (diller), geçmiş
 - Postman otomatik tanıma ve toplu dışa aktarma, Insomnia, OpenAPI ve HAR içe aktarma, Postman'e dışa aktarma
@@ -502,8 +539,9 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 
 ### M7 — İleri özellikler
 - **Rota ve ağ haritası (§B2)** (not 9): traceroute, çevrimdışı IP konum veritabanı ile dünya haritası
+- **TLS ayrıntıları (§B2, not 12):** kendi bağlayıcımızla (hyper-util + rustls) TLS sürümü, şifre takımı, ALPN, tam sertifika zinciri, TCP ve TLS ayrı süreler, sıkıştırılmış boyut
 - Mock sunucu, dokümantasyon üretme, monitörler, visualizer, yakalama proxy'si
-- Git entegrasyonu, açık tema, i18n, ayarlar ekranı, otomatik güncelleme
+- Git entegrasyonu, açık tema, otomatik güncelleme (ayarlar ekranı ve diller M4'e taşındı)
 
 ### M8 — Apix'e özel
 - Yük testi, yanıt karşılaştırma, zaman yolculuğu, MCP, AI, WASM eklentileri, Flows
@@ -511,7 +549,9 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 ### M9 — Yayın
 - GitHub Actions: Windows, macOS ve Linux'ta test ve derleme
 - Kurulum paketleri: `.msi` ve winget, `.dmg` ve Homebrew, AppImage, Flatpak ve `.deb`
-- İkili boyutunu izlemek: üst sınır yaklaşık 40 MB (not 10). Şu an release 31.2 MB; içinde 2.2 MB font, simgeler ve tree-sitter var. Kolay kazançlar alınır (`panic = "abort"`, kullanılmayan özellikleri kapatmak), ama hız ve özellikten ödün verilmez.
+- İkili boyutunu izlemek: üst sınır 100 MB (not 11). Şu an release 31.2 MB; içinde 2.2 MB font, simgeler ve tree-sitter var. CJK ve Arapça yazı tipleri eklenince büyür; sınır hız ve akıcılık için tanındı, boyut için ödün verilmez.
+- **Tüm dillerde dokümantasyon (§N, not 14, 15):** 9 dilde kullanım kılavuzu, mimari, teknik altyapı, iş akışları; her dilin kendi arayüzünden otomatik alınmış ekran görüntüleriyle görselli kılavuz; dokümantasyon sitesinde dil seçici
+- **Karşılaştırmalı performans (not 16):** Apix ile Postman, Insomnia, Bruno ve Hoppscotch aynı makinede, aynı betikle ölçülür; sonuçlar README'de
 - **İmzalı sürümler:** Windows kod imzası (Akıllı Uygulama Denetimi engellemesin diye) ve macOS notarization
 - Kurulum paketlerinde M3'te hazırlanan simgelerin kullanılması, web sitesi, tanıtım (r/rust, Hacker News)
 
@@ -532,7 +572,7 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 | 1 | ~~İstek dosyası uzantısı~~ | ✅ **Karar verildi: `.apix`** (içerik TOML). `.gitattributes` ile GitHub TOML olarak renklendiriyor. | |
 | 2 | Varsayılan tema | Obsidian (sade) veya Cyber (mockup) | Obsidian varsayılan olsun, Cyber tek tıkla seçilebilsin. |
 | 3 | Postman script uyumluluğu ne kadar olsun | Tam `pm.*` veya kendi API'miz | `pm.*` ile uyumlu ve `apix.*` takma adı. Geçişi kolaylaştırır. |
-| 4 | Arayüz dili | Sadece İngilizce veya TR + EN | TR + EN (M7). Kod ve dokümanlar İngilizce kalır. |
+| 4 | ~~Arayüz dili~~ | ✅ **Karar verildi (not 13):** 9 dil (EN, TR, AR, DE, FR, RU, JA, ZH, ES), M4'te. Kod ve kod yorumları İngilizce kalır; kullanıcı belgeleri her dilde ayrı (§N), kaynak dil İngilizce. | |
 | 5 | Sürüm numarası | `0.x` ile başla | M2 sonunda `0.1.0` ilk açık sürüm. |
 | 6 | İşletim sistemleri için klasör yapısı (not 5) | (a) Windows, macOS ve Linux için ayrı UI klasörleri · (b) tek masaüstü crate'i | **(b) Tek crate.** GPUI ve gpui-kit üç sistemi aynı kodla destekliyor; Zed de böyle çalışıyor. Ortak kısımlar zaten ayrı crate'lerde: `apix-core`, `apix-http`, `apix-import`. Sisteme özel parçalar `crates/apix-desktop/src/platform/{windows,macos,linux}.rs` altına girer: pencere düğmeleri ve başlık çubuğu, blur/vibrancy, macOS menü çubuğu, dosya ilişkilendirme, anahtarlık. Kurulum dosyaları `packaging/{windows,macos,linux}/` altına girer. Bir sistemin gerçekten ayrı bir arayüze ihtiyacı çıkarsa o zaman ayrılır. |
 | 7 | Şifreli koleksiyonun diskteki biçimi | (a) Tek bir şifreli dosya (kasa) · (b) Her dosya ayrı şifreli, dosya adları anlamsız | **(b).** Git hangi isteğin değiştiğini görmeye devam eder (içeriği değil), birleştirme çakışmaları küçük kalır. (a) daha basit ama her değişiklikte tüm dosya değişir. |

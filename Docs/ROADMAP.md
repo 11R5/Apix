@@ -59,8 +59,10 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
   - [ ] Remember the password in the OS keychain
 - [ ] **Network inspector**: local interface/IP/DNS/proxy, DNS answers, TCP/TLS details and certificate chain, timing waterfall, redirects
   - [x] Network tab and `apix send --network`: timing waterfall (DNS, connect, waiting, download), DNS answers, server and local address, interface and VPN hint, gateway, DNS servers, proxy from the environment, redirect chain, server certificate (issuer, validity, days left, names); every send uses a fresh traced connection
-  - [ ] TLS version and cipher, the full certificate chain, separate TCP and TLS times (reqwest does not expose them; needs a custom connector), compressed size
+  - [ ] TLS version and cipher, the full certificate chain, separate TCP and TLS times, compressed size (moved to M7)
 - [ ] multipart, binary and GraphQL bodies; OAuth 2.0 (moved from M3), Digest, AWS SigV4 and OAuth 1.0 auth
+- [ ] **Settings and UI language** (moved from M7): settings screen; English, Turkish, Arabic, German, French, Russian, Japanese, Chinese and Spanish; right-to-left layout for Arabic; switch without restarting; a new language is one file plus one line
+- [ ] **Documentation and README**: per-language docs in `Docs/<lang>/` (user guide, architecture, technical, workflows), English and Turkish first; README section on how Apix differs from Postman, Insomnia, Bruno, Hoppscotch and HTTPie; reproducible performance numbers
 - [ ] Request settings (timeout, TLS, proxy, client certificates), cookie manager
 - [ ] Code snippets in other languages, history
 - [ ] Postman auto-detection and full data-dump import; Insomnia, OpenAPI 3 and HAR import; export to Postman
@@ -76,8 +78,9 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 
 ## M7 — Advanced
 - [ ] Route (traceroute) and network map, with an offline IP-geolocation database
+- [ ] TLS details in the network inspector with our own connector: TLS version, cipher, ALPN, full chain, separate TCP and TLS times, compressed size
 - [ ] Local mock server, docs generation, monitors, visualizer, capture proxy
-- [ ] Git integration, light theme, Turkish and English UI, settings, auto-update
+- [ ] Git integration, light theme, auto-update
 
 ## M8 — Beyond Postman
 - [ ] Load testing (`apix bench`), response diff, time-travel history
@@ -86,9 +89,11 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 ## M9 — Release & distribution
 - [ ] GitHub Actions: test and build on Windows, macOS and Linux
 - [ ] Installers: `.msi`/winget, `.dmg`/Homebrew cask, AppImage/Flatpak/`.deb`, using the M3 icons
-- [ ] Keep the release binary under ~40 MB (31.2 MB today); take easy wins, never at the cost of speed or features
+- [ ] Keep the release binary under 100 MB (31.2 MB today); speed and smoothness come first
 - [ ] Signed Windows builds (so Smart App Control allows them) and notarized macOS builds
-- [ ] Docs site and a launch post (r/rust, Hacker News)
+- [ ] Documentation in all nine languages, an illustrated user guide with screenshots taken from each language's UI, a docs site with a language picker
+- [ ] Side-by-side performance numbers against Postman, Insomnia, Bruno and Hoppscotch, measured on one machine with one script
+- [ ] Launch post (r/rust, Hacker News)
 
 ## Later (decide after M9)
 - [ ] Team mode over Tailscale: share projects across a tailnet without a cloud; to be weighed against git-based collaboration
