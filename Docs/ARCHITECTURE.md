@@ -53,6 +53,7 @@ the others keep their draft, response and in-flight task), `workspace/drag.rs`
 (drag requests and folders to move them), `workspace/shell_copy.rs` (copy as / paste curl), `workspace/var_chips.rs`
 (`{{variable}}` chips in the URL bar and their hover card),
 `large_view.rs` (row-based viewer for huge bodies), `net.rs` (tokio bridge),
+`bidi.rs` (right-to-left layout helpers, see Languages),
 `state.rs` (recent items and per-folder environment in the user's config
 folder), `theme.rs` and `fonts.rs`.
 
@@ -252,8 +253,24 @@ embedded Inter. Arabic text is shaped and placed right to left; on Windows
 that needs `vendor/gpui-pre-windows`, gpui 0.3.9's DirectWrite backend with its
 glyph-run placement fixed (patched in from the workspace `Cargo.toml`; drop it
 once upstream fixes it). Still to come: wrapping right-to-left paragraphs (gpui
-cuts a shaped line at glyph positions that assume left to right) and mirroring
-the layout. Error messages from the engine crates stay English.
+cuts a shaped line at glyph positions that assume left to right). Error
+messages from the engine crates stay English.
+
+In a right-to-left language (`Language::rtl`, Arabic) the window mirrors: the
+sidebar moves to the right, the response pane to the left of the request pane,
+the window controls to the left, and menus, tab strips, form rows and the status
+bar run from the right, with text aligned to the right. GPUI has no layout
+direction, so this is done by `src/bidi.rs`: a `Bidi` trait on every styled
+element (`dir_row` reverses a row, `text_start` / `text_end`, `ps` / `pe`
+paddings and `border_e_1` pick the side by direction, `ltr` pins text left),
+`tab_bar` / `fill_tabs` for gpui-kit's `TabBar` (tabs given in reverse, indices
+mapped back), and `bidi_title` for dialogs (in RTL the close button moves into
+the title row on the left). The helpers read the language while a view renders,
+so a language change mirrors the window at once. Code and response viewers, the
+URL bar, key–value tables (params, headers, form fields, variables) and response
+headers stay left to right in every language. gpui-kit's popup menus and buttons
+keep their own left-to-right inner layout (shortcut on the right, icon before the
+label); menus open towards the left from their button.
 
 Adding a language: copy `locales/en.yml` to `locales/<code>.yml`, translate
 the values, and add one line to `LANGUAGES` in `src/i18n.rs`.

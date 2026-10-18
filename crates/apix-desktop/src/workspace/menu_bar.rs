@@ -15,6 +15,7 @@ use gpui_kit::*;
 use super::auth_editor::AuthOwner;
 use super::collections::method_items;
 use super::*;
+use crate::bidi::{self, Bidi as _};
 
 const REPO: &str = "https://github.com/11R5/Apix";
 
@@ -280,28 +281,39 @@ impl Workspace {
         );
         h_flex()
             .id("menu-bar")
+            .dir_row()
             .occlude()
             .gap_px()
             .items_center()
             .child(
                 button("menu-file", tr!("menu.file"))
-                    .dropdown_menu(move |menu, window, cx| file.file(menu, window, cx)),
+                    .dropdown_menu_with_anchor(bidi::menu_anchor(), move |menu, window, cx| {
+                        file.file(menu, window, cx)
+                    }),
             )
             .child(
                 button("menu-request", tr!("menu.request"))
-                    .dropdown_menu(move |menu, window, cx| request.request(menu, window, cx)),
+                    .dropdown_menu_with_anchor(bidi::menu_anchor(), move |menu, window, cx| {
+                        request.request(menu, window, cx)
+                    }),
             )
             .child(
                 button("menu-environment", tr!("menu.environment"))
-                    .dropdown_menu(move |menu, window, cx| env.environment(menu, window, cx)),
+                    .dropdown_menu_with_anchor(bidi::menu_anchor(), move |menu, window, cx| {
+                        env.environment(menu, window, cx)
+                    }),
             )
             .child(
                 button("menu-view", tr!("menu.view"))
-                    .dropdown_menu(move |menu, _, _| view.view_menu(menu)),
+                    .dropdown_menu_with_anchor(bidi::menu_anchor(), move |menu, _, _| {
+                        view.view_menu(menu)
+                    }),
             )
             .child(
                 button("menu-help", tr!("menu.help"))
-                    .dropdown_menu(move |menu, _, _| help.help(menu)),
+                    .dropdown_menu_with_anchor(bidi::menu_anchor(), move |menu, _, _| {
+                        help.help(menu)
+                    }),
             )
     }
 }

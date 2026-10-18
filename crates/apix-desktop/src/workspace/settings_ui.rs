@@ -6,6 +6,7 @@ use gpui_kit::component::{IndexPath, Sizable, WindowExt as _, h_flex, v_flex};
 use gpui_kit::*;
 
 use super::Workspace;
+use crate::bidi::{Bidi as _, DialogBidi as _};
 use crate::i18n;
 use crate::settings::Settings;
 use crate::theme::{Palette, Variant};
@@ -160,6 +161,7 @@ impl SettingsView {
     ) -> impl IntoElement {
         let p = self.palette;
         h_flex()
+            .dir_row()
             .gap_4()
             .items_center()
             .py_2()
@@ -224,12 +226,12 @@ impl Workspace {
             let close_view = view.clone();
             dialog
                 .on_close(super::collections::refocus(view.clone()))
-                .title(tr!("settings.title"))
+                .bidi_title(tr!("settings.title"))
                 .width(px(620.))
                 .child(editor.clone())
                 .on_ok(|_, _, _| false)
                 .footer(
-                    h_flex().w_full().justify_end().child(
+                    h_flex().dir_row().w_full().justify_end().child(
                         Button::new("settings-close")
                             .primary()
                             .label(tr!("dialog.close"))

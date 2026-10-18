@@ -13,6 +13,7 @@ use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
 use super::{Finished, ResponseState, Workspace};
+use crate::bidi::{self, Bidi as _};
 use crate::large_view::Document;
 use crate::theme;
 
@@ -343,11 +344,12 @@ impl Workspace {
             let (open, close, middle) = (tab.path.clone(), tab.path.clone(), tab.path.clone());
             h_flex()
                 .id(("tab", ix))
+                .dir_row()
                 .flex_none()
                 .gap_2()
                 .items_center()
-                .pl_3()
-                .pr_1()
+                .ps(px(12.))
+                .pe(px(4.))
                 .h(px(30.))
                 .rounded_t_md()
                 .border_b_2()
@@ -402,17 +404,28 @@ impl Workspace {
                         })),
                 )
         });
-        Some(
-            h_flex()
-                .id("tabs")
-                .w_full()
-                .flex_none()
-                .gap_1()
-                .overflow_x_scroll()
-                .border_b_1()
-                .border_color(p.hairline)
-                .children(tabs),
-        )
+        let strip = h_flex()
+            .id("tabs")
+            .w_full()
+            .flex_none()
+            .gap_1()
+            .overflow_x_scroll()
+            .border_b_1()
+            .border_color(p.hairline);
+        // A reversed row would overflow to the left, out of scroll reach, so in
+        // RTL the tabs sit in a row at least as wide as the strip that grows rightwards.
+        Some(if bidi::rtl() {
+            strip.child(
+                h_flex()
+                    .flex_none()
+                    .min_w_full()
+                    .gap_1()
+                    .flex_row_reverse()
+                    .children(tabs),
+            )
+        } else {
+            strip.children(tabs)
+        })
     }
 }
 

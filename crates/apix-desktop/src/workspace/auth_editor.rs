@@ -21,6 +21,7 @@ use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
 use super::Workspace;
+use crate::bidi::{self, Bidi as _, DialogBidi as _};
 use crate::theme::Palette;
 use crate::tr;
 
@@ -524,6 +525,7 @@ impl AuthEditor {
     fn row(&self, label: impl Into<SharedString>, child: impl IntoElement) -> Div {
         let label: SharedString = label.into();
         h_flex()
+            .dir_row()
             .gap_3()
             .items_center()
             .child(
@@ -534,7 +536,15 @@ impl AuthEditor {
                     .text_color(self.palette.text_muted)
                     .child(label),
             )
-            .child(div().flex_1().min_w_0().max_w(px(520.)).child(child))
+            .child(
+                div()
+                    .flex_1()
+                    .min_w_0()
+                    .max_w(px(520.))
+                    // A row in RTL, so a narrower control (a picker) sits next to the label.
+                    .when(bidi::rtl(), |d| d.flex().flex_row_reverse())
+                    .child(child),
+            )
     }
 
     fn field(&self, f: F) -> AnyElement {
@@ -576,6 +586,7 @@ impl AuthEditor {
                 }))
         });
         h_flex()
+            .dir_row()
             .gap_3()
             .items_center()
             .child(
@@ -634,6 +645,7 @@ impl AuthEditor {
                 self.row(
                     "",
                     Checkbox::new("auth-pkce")
+                        .dir_row()
                         .checked(self.pkce)
                         .label(tr!("auth.use_pkce"))
                         .on_click(cx.listener(|this, checked: &bool, _, cx| {
@@ -690,6 +702,8 @@ impl AuthEditor {
             self.row(
                 tr!("auth.field.token"),
                 h_flex()
+                    .flex_1()
+                    .dir_row()
                     .gap_2()
                     .items_center()
                     .child(
@@ -989,12 +1003,13 @@ impl super::Workspace {
                 (editor.clone(), view.clone(), view.clone(), owner.clone());
             dialog
                 .on_close(super::collections::refocus(view.clone()))
-                .title(title.clone())
+                .bidi_title(title.clone())
                 .width(px(620.))
                 .child(div().pb_2().child(editor.clone()))
                 .on_ok(|_, _, _| false)
                 .footer(
                     h_flex()
+                        .dir_row()
                         .w_full()
                         .gap_2()
                         .child(

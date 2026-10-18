@@ -9,6 +9,7 @@ use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
 use super::{Finished, Workspace};
+use crate::bidi::{self, Bidi as _};
 use crate::tr;
 
 impl Workspace {
@@ -41,6 +42,7 @@ impl Workspace {
             let width = (took.as_secs_f32() / total.as_secs_f32()).max(0.004);
             offset += took;
             h_flex()
+                .dir_row()
                 .gap_3()
                 .items_center()
                 .text_xs()
@@ -57,7 +59,14 @@ impl Workspace {
                             .absolute()
                             .top_0()
                             .h_full()
-                            .left(relative(start.min(1.)))
+                            // Time runs in the reading direction.
+                            .map(|bar| {
+                                if bidi::rtl() {
+                                    bar.right(relative(start.min(1.)))
+                                } else {
+                                    bar.left(relative(start.min(1.)))
+                                }
+                            })
                             .w(relative(width.min(1.)))
                             .rounded_sm()
                             .bg(color),
@@ -67,7 +76,7 @@ impl Workspace {
                     div()
                         .w(px(70.))
                         .flex_none()
-                        .text_right()
+                        .text_end()
                         .text_color(p.text)
                         .child(human_duration(took)),
                 )
@@ -75,6 +84,7 @@ impl Workspace {
 
         let row = |label: SharedString, value: SharedString| {
             h_flex()
+                .dir_row()
                 .gap_3()
                 .items_start()
                 .text_sm()
@@ -211,6 +221,7 @@ impl Workspace {
                     ))
                     .child(
                         h_flex()
+                            .dir_row()
                             .gap_3()
                             .text_sm()
                             .child(

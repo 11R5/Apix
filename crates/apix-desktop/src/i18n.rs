@@ -12,9 +12,7 @@ pub struct Language {
     pub code: &'static str,
     /// The language's own name, so anyone can find theirs.
     pub name: &'static str,
-    /// Written right to left. Text is shaped right to left already; mirroring
-    /// the layout (sidebar on the right, …) is still to come.
-    #[allow(dead_code)]
+    /// Written right to left: the layout mirrors (see `crate::bidi`).
     pub rtl: bool,
 }
 

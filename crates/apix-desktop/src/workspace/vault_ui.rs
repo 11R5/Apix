@@ -23,6 +23,7 @@ use gpui_kit::*;
 
 use super::collections::{Then, close_dialog, refocus};
 use super::{Workspace, describe};
+use crate::bidi::{Bidi as _, DialogBidi as _};
 use crate::theme::Palette;
 use crate::tr;
 
@@ -215,7 +216,7 @@ impl Render for PasswordForm {
             .children(self.confirm.as_ref().map(|c| Input::new(c).mask_toggle()))
             .when(self.ask == Ask::Unlock, |col| {
                 col.child(
-                    h_flex().child(
+                    h_flex().dir_row().child(
                         Button::new("vault-recovery")
                             .ghost()
                             .xsmall()
@@ -329,12 +330,13 @@ impl Workspace {
             let (cancel_view, submit) = (view.clone(), submit.clone());
             dialog
                 .on_close(refocus(view.clone()))
-                .title(title.clone())
+                .bidi_title(title.clone())
                 .w(px(460.))
                 .child(form.clone())
                 .on_ok(|_, _, _| false)
                 .footer(
                     h_flex()
+                        .dir_row()
                         .w_full()
                         .justify_end()
                         .gap_2()
@@ -506,6 +508,7 @@ impl Workspace {
             alert
                 .on_close(refocus(view.clone()))
                 .confirm()
+                .text_start()
                 .title(tr!("vault.decrypt_title", name = name))
                 .description(tr!("vault.decrypt_description"))
                 .ok_text(tr!("vault.decrypt"))
@@ -572,7 +575,7 @@ impl Workspace {
             let checked = stored.get();
             dialog
                 .on_close(refocus(view.clone()))
-                .title(tr!("vault.recovery.title"))
+                .bidi_heading(tr!("vault.recovery.title"))
                 .w(px(580.))
                 .close_button(false)
                 .overlay_closable(false)
@@ -583,6 +586,8 @@ impl Workspace {
                         .child(div().text_sm().child(tr!("vault.recovery.intro")))
                         .child(
                             h_flex()
+                                // The key is data: left to right in any language.
+                                .ltr()
                                 .gap_2()
                                 .items_center()
                                 .p_3()
@@ -616,6 +621,7 @@ impl Workspace {
                         )
                         .child(
                             Checkbox::new("recovery-stored")
+                                .dir_row()
                                 .label(tr!("vault.recovery.stored"))
                                 .checked(checked)
                                 .on_click(move |value: &bool, window, _| {
@@ -625,7 +631,7 @@ impl Workspace {
                         ),
                 )
                 .footer(
-                    h_flex().w_full().justify_end().child(
+                    h_flex().dir_row().w_full().justify_end().child(
                         Button::new("recovery-done")
                             .primary()
                             .label(tr!("vault.recovery.done"))
@@ -711,6 +717,7 @@ impl Workspace {
         let p = self.palette;
         let name = folder_name(&root);
         h_flex()
+            .dir_row()
             .id(("locked", ix))
             .gap_2()
             .items_center()

@@ -29,6 +29,7 @@ use gpui_kit::*;
 use super::auth_editor::AuthOwner;
 use super::drag::{DraggedNode, draggable};
 use super::{Workspace, describe, key_hint};
+use crate::bidi::{self, Bidi as _, DialogBidi as _};
 use crate::theme;
 use crate::tr;
 
@@ -369,7 +370,7 @@ impl Workspace {
             let (save_then, discard_then) = (then.clone(), then.clone());
             dialog
                 .on_close(refocus(view.clone()))
-                .title(tr!("collection.unsaved_title"))
+                .bidi_title(tr!("collection.unsaved_title"))
                 .child(
                     div()
                         .text_sm()
@@ -377,6 +378,7 @@ impl Workspace {
                 )
                 .footer(
                     h_flex()
+                        .dir_row()
                         .w_full()
                         .justify_end()
                         .gap_2()
@@ -639,6 +641,7 @@ impl Workspace {
             alert
                 .on_close(refocus(view.clone()))
                 .confirm()
+                .text_start()
                 .title(what)
                 .description(detail)
                 .ok_text(ok)
@@ -701,12 +704,13 @@ impl Workspace {
             let cancel_view = view.clone();
             dialog
                 .on_close(refocus(view.clone()))
-                .title(title.clone())
+                .bidi_title(title.clone())
                 .width(px(420.))
                 .child(Input::new(&input))
                 .on_ok(move |_, window, cx| on_enter(window, cx))
                 .footer(
                     h_flex()
+                        .dir_row()
                         .w_full()
                         .justify_end()
                         .gap_2()
@@ -788,6 +792,7 @@ impl Workspace {
             alert
                 .on_close(refocus(view.clone()))
                 .confirm()
+                .text_start()
                 .title(tr!("collection.start_here_title"))
                 .description(tr!("collection.start_here_text", path = dir.display()))
                 .ok_text(tr!("collection.create_collection"))
@@ -997,6 +1002,7 @@ impl Workspace {
             .child(div().px_1().text_xs().text_color(p.text_muted).child(kind))
             .child(
                 h_flex()
+                    .dir_row()
                     .gap_1()
                     .items_center()
                     .h(px(28.))
@@ -1017,10 +1023,13 @@ impl Workspace {
                                 IconName::Plus,
                                 tr!("sidebar.new_request_tooltip", key = key_hint("N")),
                             )
-                            .dropdown_menu({
-                                let view = cx.entity().downgrade();
-                                move |menu, _, _| method_items(menu, view.clone(), None)
-                            }),
+                            .dropdown_menu_with_anchor(
+                                bidi::menu_anchor(),
+                                {
+                                    let view = cx.entity().downgrade();
+                                    move |menu, _, _| method_items(menu, view.clone(), None)
+                                },
+                            ),
                         )
                         .child(
                             icon_button(
@@ -1039,6 +1048,7 @@ impl Workspace {
 
         let env_row = (open && !by_environment).then(|| {
             h_flex()
+                .dir_row()
                 .px_3()
                 .pb_2()
                 .gap_2()
@@ -1115,7 +1125,7 @@ impl Workspace {
             .w(px(248.))
             .flex_none()
             .h_full()
-            .border_r_1()
+            .border_e_1()
             .border_color(p.hairline)
             .child(header)
             .children(env_row)
@@ -1193,7 +1203,7 @@ impl Workspace {
             }))
             .child(
                 Icon::new(if collapsed {
-                    IconName::ChevronRight
+                    bidi::chevron_collapsed()
                 } else {
                     IconName::ChevronDown
                 })
@@ -1234,7 +1244,7 @@ impl Workspace {
             if out.len() == before {
                 out.push(
                     div()
-                        .pl(px(8. + 14. * (depth + 1) as f32))
+                        .ps(px(8. + 14. * (depth + 1) as f32))
                         .py_1()
                         .text_xs()
                         .text_color(p.text_muted)
@@ -1280,6 +1290,7 @@ impl Workspace {
                 div()
                     .id(("env-group", ix))
                     .flex()
+                    .dir_row()
                     .items_center()
                     .gap_2()
                     .px_2()
@@ -1477,7 +1488,7 @@ impl Workspace {
             }))
             .child(
                 Icon::new(if collapsed {
-                    IconName::ChevronRight
+                    bidi::chevron_collapsed()
                 } else {
                     IconName::ChevronDown
                 })
@@ -1565,10 +1576,11 @@ fn row_base(path: &Path, depth: usize) -> Stateful<Div> {
     div()
         .id(SharedString::from(path.to_string_lossy().into_owned()))
         .flex()
+        .dir_row()
         .items_center()
         .gap_2()
-        .pl(px(8. + 14. * depth as f32))
-        .pr_2()
+        .ps(px(8. + 14. * depth as f32))
+        .pe(px(8.))
         .py_1()
         .rounded_md()
         .text_sm()

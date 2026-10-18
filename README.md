@@ -38,7 +38,8 @@
 - **Copy as / paste:** copy a request as `curl`, `curl.exe` or PowerShell; paste a
   `curl` command to fill the request.
 - **Nine languages:** English, Türkçe, العربية, Deutsch, Français, Русский, 日本語,
-  简体中文 and Español, switched in Settings (Ctrl+,) without a restart.
+  简体中文 and Español, switched in Settings (Ctrl+,) without a restart. In Arabic
+  the window mirrors to right to left.
 
 The menu bar at the top (File, Request, Environment, View, Help) holds every
 command: open, new collection or project, import, environments, auth and more.

@@ -16,6 +16,7 @@ use gpui_kit::*;
 
 use super::auth_editor::AuthOwner;
 use super::{Workspace, key_hint};
+use crate::bidi::Bidi as _;
 use crate::theme;
 use crate::tr;
 
@@ -176,6 +177,7 @@ fn item(entry: &Entry, colors: theme::Palette, mono: SharedString) -> CommandIte
         .checked(entry.checked)
         .child(move |_, _| {
             h_flex()
+                .dir_row()
                 .w_full()
                 .gap_2()
                 .items_center()
@@ -295,6 +297,7 @@ impl Workspace {
                 .on_close(super::collections::refocus(view.clone()))
                 .w(px(680.))
                 .close_button(false)
+                .text_start()
                 .on_ok(|_, _, _| false)
                 .child(palette.clone())
         });
