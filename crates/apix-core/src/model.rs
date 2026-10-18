@@ -235,6 +235,151 @@ pub enum Auth {
         #[serde(default)]
         location: ApiKeyLocation,
     },
+    /// HTTP Digest (RFC 7616): the server's challenge picks the algorithm.
+    Digest {
+        username: String,
+        #[serde(default)]
+        password: String,
+    },
+    #[serde(rename = "oauth1")]
+    OAuth1(OAuth1),
+    #[serde(rename = "oauth2")]
+    OAuth2(OAuth2),
+    /// AWS Signature Version 4.
+    #[serde(rename = "aws_sigv4")]
+    AwsSigV4(AwsSigV4),
+}
+
+fn is_empty(s: &str) -> bool {
+    s.is_empty()
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+pub enum OAuth1Method {
+    #[default]
+    #[serde(rename = "HMAC-SHA1")]
+    HmacSha1,
+    #[serde(rename = "HMAC-SHA256")]
+    HmacSha256,
+    #[serde(rename = "PLAINTEXT")]
+    Plaintext,
+}
+
+impl OAuth1Method {
+    pub const ALL: [OAuth1Method; 3] = [
+        OAuth1Method::HmacSha1,
+        OAuth1Method::HmacSha256,
+        OAuth1Method::Plaintext,
+    ];
+
+    pub fn as_str(self) -> &'static str {
+        match self {
+            OAuth1Method::HmacSha1 => "HMAC-SHA1",
+            OAuth1Method::HmacSha256 => "HMAC-SHA256",
+            OAuth1Method::Plaintext => "PLAINTEXT",
+        }
+    }
+}
+
+/// OAuth 1.0a request signing (RFC 5849), with a token already obtained.
+#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
+pub struct OAuth1 {
+    pub consumer_key: String,
+    #[serde(default)]
+    pub consumer_secret: String,
+    #[serde(default, skip_serializing_if = "is_empty")]
+    pub token: String,
+    #[serde(default, skip_serializing_if = "is_empty")]
+    pub token_secret: String,
+    #[serde(default)]
+    pub signature_method: OAuth1Method,
+    #[serde(default, skip_serializing_if = "is_empty")]
+    pub realm: String,
+    /// Where the `oauth_*` parameters go: the Authorization header or the URL.
+    #[serde(default)]
+    pub location: ApiKeyLocation,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum OAuth2Grant {
+    #[default]
+    ClientCredentials,
+    /// Resource owner password credentials.
+    Password,
+    /// Authorization code, with PKCE unless turned off; the login opens in
+    /// the browser and the code comes back to a loopback address.
+    AuthorizationCode,
+}
+
+impl OAuth2Grant {
+    pub const ALL: [OAuth2Grant; 3] = [
+        OAuth2Grant::ClientCredentials,
+        OAuth2Grant::Password,
+        OAuth2Grant::AuthorizationCode,
+    ];
+
+    pub fn label(self) -> &'static str {
+        match self {
+            OAuth2Grant::ClientCredentials => "Client credentials",
+            OAuth2Grant::Password => "Password",
+            OAuth2Grant::AuthorizationCode => "Authorization code",
+        }
+    }
+}
+
+/// How the client proves who it is at the token endpoint.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ClientAuth {
+    /// HTTP Basic with the client id and secret (RFC 6749's default).
+    #[default]
+    Basic,
+    /// `client_id` and `client_secret` in the form body.
+    Body,
+}
+
+/// OAuth 2.0: Apix gets the access token itself and sends it as a bearer token.
+#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
+pub struct OAuth2 {
+    #[serde(default)]
+    pub grant: OAuth2Grant,
+    pub token_url: String,
+    /// The login page, for the authorization code grant.
+    #[serde(default, skip_serializing_if = "is_empty")]
+    pub auth_url: String,
+    pub client_id: String,
+    #[serde(default, skip_serializing_if = "is_empty")]
+    pub client_secret: String,
+    #[serde(default, skip_serializing_if = "is_empty")]
+    pub scope: String,
+    /// For the password grant.
+    #[serde(default, skip_serializing_if = "is_empty")]
+    pub username: String,
+    #[serde(default, skip_serializing_if = "is_empty")]
+    pub password: String,
+    /// Where the login sends the browser back. Must be a loopback address
+    /// (`http://127.0.0.1:<port>/…` or `http://localhost:<port>/…`); empty
+    /// picks a free port on 127.0.0.1.
+    #[serde(default, skip_serializing_if = "is_empty")]
+    pub redirect_uri: String,
+    #[serde(default = "default_true", skip_serializing_if = "is_true")]
+    pub pkce: bool,
+    #[serde(default)]
+    pub client_auth: ClientAuth,
+}
+
+/// AWS Signature Version 4.
+#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
+pub struct AwsSigV4 {
+    pub access_key: String,
+    #[serde(default)]
+    pub secret_key: String,
+    /// For temporary credentials.
+    #[serde(default, skip_serializing_if = "is_empty")]
+    pub session_token: String,
+    pub region: String,
+    pub service: String,
 }
 
 impl Auth {
@@ -255,6 +400,10 @@ impl Auth {
             Auth::Bearer { .. } => "Bearer token",
             Auth::Basic { .. } => "Basic auth",
             Auth::ApiKey { .. } => "API key",
+            Auth::Digest { .. } => "Digest auth",
+            Auth::OAuth1(_) => "OAuth 1.0",
+            Auth::OAuth2(_) => "OAuth 2.0",
+            Auth::AwsSigV4(_) => "AWS Signature",
         }
     }
 }
@@ -442,5 +591,54 @@ token = "{{token}}"
         let text = toml::to_string(&req).unwrap();
         assert!(text.contains("auth = \"none\""), "{text}");
         assert_eq!(toml::from_str::<Request>(&text).unwrap().auth, Auth::None);
+    }
+
+    #[test]
+    fn signing_auth_types_round_trip_through_toml() {
+        let auths = [
+            Auth::Digest {
+                username: "ada".into(),
+                password: "{{pw}}".into(),
+            },
+            Auth::OAuth1(OAuth1 {
+                consumer_key: "ck".into(),
+                consumer_secret: "cs".into(),
+                token: "t".into(),
+                signature_method: OAuth1Method::HmacSha256,
+                location: ApiKeyLocation::Query,
+                ..OAuth1::default()
+            }),
+            Auth::OAuth2(OAuth2 {
+                grant: OAuth2Grant::AuthorizationCode,
+                token_url: "https://id.example.com/token".into(),
+                auth_url: "https://id.example.com/authorize".into(),
+                client_id: "app".into(),
+                scope: "read write".into(),
+                pkce: true,
+                client_auth: ClientAuth::Body,
+                ..OAuth2::default()
+            }),
+            Auth::AwsSigV4(AwsSigV4 {
+                access_key: "{{aws_key}}".into(),
+                secret_key: "{{aws_secret}}".into(),
+                session_token: String::new(),
+                region: "eu-central-1".into(),
+                service: "execute-api".into(),
+            }),
+        ];
+        for auth in auths {
+            let mut req = Request::new(Method::Get, "x");
+            req.auth = auth;
+            let text = toml::to_string_pretty(&req).unwrap();
+            assert_eq!(toml::from_str::<Request>(&text).unwrap(), req, "{text}");
+        }
+
+        let text =
+            "name = \"x\"\nurl = \"x\"\n[auth.oauth2]\ntoken_url = \"t\"\nclient_id = \"c\"\n";
+        let Auth::OAuth2(o) = toml::from_str::<Request>(text).unwrap().auth else {
+            panic!("oauth2 expected");
+        };
+        assert_eq!(o.grant, OAuth2Grant::ClientCredentials);
+        assert!(o.pkce, "PKCE is on unless turned off");
     }
 }

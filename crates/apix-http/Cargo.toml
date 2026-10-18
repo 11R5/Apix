@@ -14,7 +14,10 @@ reqwest = { workspace = true, features = ["rustls-tls", "multipart"] }
 hyper-util = { version = "0.1", features = ["client-legacy"] }
 # Local interfaces, default gateway and DNS servers for the network inspector.
 netdev = "0"
-tokio = { workspace = true, features = ["net"] }
+# Reads OAuth 2.0 token responses.
+serde_json.workspace = true
+# `net`, `io-util` and `time` for the OAuth 2.0 login redirect on a loopback port.
+tokio = { workspace = true, features = ["net", "io-util", "time"] }
 # Times connection setup inside reqwest.
 tower-layer = "0.3"
 tower-service = "0.3"

@@ -2,14 +2,15 @@
 //! everything the UI needs to show: status, headers, raw body and timings.
 
 mod local;
+pub mod oauth2;
 mod trace;
 
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use apix_core::{ApiKeyLocation, Auth, Body, Request};
+use apix_core::{ApiKeyLocation, Auth, Body, Request, sign};
 use bytes::Bytes;
-use reqwest::header::CONTENT_TYPE;
+use reqwest::header::{AUTHORIZATION, CONTENT_TYPE, WWW_AUTHENTICATE};
 
 pub use local::{LocalNetwork, local_network};
 pub use trace::{Certificate, DnsLookup, NetTrace, Phases, Redirect, read_certificate};
@@ -23,6 +24,8 @@ pub enum HttpError {
     Request(#[from] reqwest::Error),
     #[error("{0}")]
     Body(String),
+    #[error("{0}")]
+    Auth(String),
     #[error("cannot read {path}")]
     File {
         path: String,
@@ -123,7 +126,7 @@ pub fn human_duration(d: Duration) -> String {
     }
 }
 
-const USER_AGENT: &str = concat!("apix/", env!("CARGO_PKG_VERSION"));
+pub(crate) const USER_AGENT: &str = concat!("apix/", env!("CARGO_PKG_VERSION"));
 /// Redirects followed before giving up, like browsers and reqwest's default.
 const MAX_REDIRECTS: usize = 10;
 
@@ -161,22 +164,57 @@ impl HttpClient {
 
     /// Sends a request whose `{{variables}}` have already been resolved.
     pub async fn send(&self, req: &Request) -> Result<Response, HttpError> {
+        // OAuth 2.0 becomes a bearer token first (from the cache, or fetched).
+        let with_token;
+        let req = match &req.auth {
+            Auth::OAuth2(config) => {
+                let token = oauth2::access_token(config).await?;
+                with_token = Request {
+                    auth: Auth::Bearer { token },
+                    ..req.clone()
+                };
+                &with_token
+            }
+            _ => req,
+        };
+
         let recorder = Arc::new(Recorder::default());
         let client = Self::traced(&recorder)?;
-        let builder = build(&client, req)?;
         let started = Instant::now();
-        let response = match builder.send().await {
-            Ok(response) => response,
-            Err(source) => {
-                return Err(match recorder.take().redirects.pop() {
-                    Some(last) => HttpError::Redirected {
-                        to: last.to,
-                        source,
-                    },
-                    None => HttpError::Request(source),
-                });
-            }
-        };
+        let mut response = execute(&client, prepare(&client, req)?, &recorder).await?;
+
+        // Digest: the first answer is a 401 with the challenge; answer it once.
+        if let Auth::Digest { username, password } = &req.auth
+            && response.status() == reqwest::StatusCode::UNAUTHORIZED
+            && let Some(challenge) = response
+                .headers()
+                .get_all(WWW_AUTHENTICATE)
+                .iter()
+                .filter_map(|v| v.to_str().ok())
+                .find_map(sign::parse_digest_challenge)
+        {
+            let mut retry = prepare(&client, req)?;
+            let url = retry.url();
+            let uri = match url.query() {
+                Some(query) => format!("{}?{query}", url.path()),
+                None => url.path().to_owned(),
+            };
+            let value = sign::digest_authorization(
+                &challenge,
+                username,
+                password,
+                retry.method().as_str(),
+                &uri,
+                &sign::random_token(16),
+            )
+            .map_err(HttpError::Auth)?;
+            retry
+                .headers_mut()
+                .insert(AUTHORIZATION, header_value(&value)?);
+            // Reading the 401's body lets the retry reuse the connection.
+            let _ = response.bytes().await;
+            response = execute(&client, retry, &recorder).await?;
+        }
         let ttfb = started.elapsed();
 
         let connection = response
@@ -218,6 +256,95 @@ impl HttpClient {
             trace,
         })
     }
+}
+
+/// Sends one request; a failure after a redirect names the redirect target.
+async fn execute(
+    client: &reqwest::Client,
+    request: reqwest::Request,
+    recorder: &Recorder,
+) -> Result<reqwest::Response, HttpError> {
+    client
+        .execute(request)
+        .await
+        .map_err(|source| match recorder.take().redirects.pop() {
+            Some(last) => HttpError::Redirected {
+                to: last.to,
+                source,
+            },
+            None => HttpError::Request(source),
+        })
+}
+
+/// The request as it goes on the wire, signed for AWS or OAuth 1.0.
+fn prepare(client: &reqwest::Client, req: &Request) -> Result<reqwest::Request, HttpError> {
+    let mut request = build(client, req)?.build()?;
+    match &req.auth {
+        Auth::AwsSigV4(aws) => {
+            let payload_hash = match request.body() {
+                None => sign::sha256_hex(b""),
+                Some(body) => match body.as_bytes() {
+                    Some(bytes) => sign::sha256_hex(bytes),
+                    // A multipart form is a stream.
+                    None => sign::UNSIGNED_PAYLOAD.to_owned(),
+                },
+            };
+            let content_type = request
+                .headers()
+                .get(CONTENT_TYPE)
+                .and_then(|v| v.to_str().ok())
+                .map(str::to_owned);
+            let headers = sign::aws_sigv4(
+                aws,
+                request.method().as_str(),
+                request.url(),
+                content_type.as_deref(),
+                &payload_hash,
+                sign::unix_now(),
+            );
+            for (name, value) in headers {
+                let name = reqwest::header::HeaderName::from_bytes(name.as_bytes())
+                    .expect("signing header names are valid");
+                request.headers_mut().insert(name, header_value(&value)?);
+            }
+        }
+        Auth::OAuth1(o) => {
+            let form: Vec<(String, String)> = match &req.body {
+                Body::Form(rows) => rows
+                    .iter()
+                    .filter(|r| r.enabled)
+                    .map(|r| (r.key.clone(), r.value.clone()))
+                    .collect(),
+                _ => Vec::new(),
+            };
+            let params = sign::oauth1_params(
+                o,
+                request.method().as_str(),
+                request.url(),
+                &form,
+                sign::unix_now(),
+                &sign::random_token(16),
+            );
+            match o.location {
+                ApiKeyLocation::Header => {
+                    let value = sign::oauth1_header(&params, &o.realm);
+                    request
+                        .headers_mut()
+                        .insert(AUTHORIZATION, header_value(&value)?);
+                }
+                ApiKeyLocation::Query => {
+                    request.url_mut().query_pairs_mut().extend_pairs(params);
+                }
+            }
+        }
+        _ => {}
+    }
+    Ok(request)
+}
+
+fn header_value(value: &str) -> Result<reqwest::header::HeaderValue, HttpError> {
+    reqwest::header::HeaderValue::from_str(value)
+        .map_err(|_| HttpError::Auth(format!("`{value}` cannot be sent as a header")))
 }
 
 /// The reqwest request for `req` on `client`.
@@ -276,6 +403,8 @@ fn build(client: &reqwest::Client, req: &Request) -> Result<reqwest::RequestBuil
             location: ApiKeyLocation::Query,
             ..
         } => builder,
+        // Signed in `prepare`, answered in `send`, or turned into a bearer token first.
+        Auth::Digest { .. } | Auth::OAuth1(_) | Auth::AwsSigV4(_) | Auth::OAuth2(_) => builder,
     };
 
     if let Some(content_type) = req.body.default_content_type()

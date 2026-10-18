@@ -50,11 +50,25 @@ fn curl(request: &Request, program: &str, quote: fn(&str) -> String, newline: &s
     first.push_str(&quote(&full_url(request)));
 
     let mut parts = vec![first];
-    for (key, value) in effective_headers(request) {
+    for (key, value) in effective_headers(request, true) {
         parts.push(format!("-H {}", quote(&format!("{key}: {value}"))));
     }
-    if let Auth::Basic { username, password } = &request.auth {
-        parts.push(format!("-u {}", quote(&format!("{username}:{password}"))));
+    match &request.auth {
+        Auth::Basic { username, password } => {
+            parts.push(format!("-u {}", quote(&format!("{username}:{password}"))));
+        }
+        Auth::Digest { username, password } => {
+            parts.push("--digest".into());
+            parts.push(format!("-u {}", quote(&format!("{username}:{password}"))));
+        }
+        // curl 7.75 and later sign for AWS themselves.
+        Auth::AwsSigV4(aws) => {
+            let provider = format!("aws:amz:{}:{}", aws.region, aws.service);
+            parts.push(format!("--aws-sigv4 {}", quote(&provider)));
+            let user = format!("{}:{}", aws.access_key, aws.secret_key);
+            parts.push(format!("-u {}", quote(&user)));
+        }
+        _ => {}
     }
     if let Some(text) = text_body(&request.body) {
         parts.push(format!("--data-raw {}", quote(&text)));
@@ -191,7 +205,7 @@ fn ps_quote(s: &str) -> String {
 }
 
 fn powershell(request: &Request) -> String {
-    let mut headers = effective_headers(request);
+    let mut headers = effective_headers(request, false);
     // Windows PowerShell 5.1 refuses Content-Type in -Headers; it has its own parameter.
     let content_type = headers
         .iter()
@@ -203,6 +217,27 @@ fn powershell(request: &Request) -> String {
     };
 
     let mut out = String::new();
+    let mut extra = String::new();
+    match &request.auth {
+        Auth::OAuth1(_) | Auth::AwsSigV4(_) => {
+            out.push_str("# Signed when copied: copy again for a fresh signature\n");
+        }
+        // .NET answers the Digest challenge for a credential.
+        Auth::Digest { username, password } => {
+            if request.url.starts_with("http:") {
+                out.push_str(
+                    "# Over plain http, PowerShell 7 also needs -AllowUnencryptedAuthentication\n",
+                );
+            }
+            out.push_str(&format!(
+                "$credential = [pscredential]::new({}, (ConvertTo-SecureString {} -AsPlainText -Force))\n",
+                ps_quote(username),
+                ps_quote(password)
+            ));
+            extra.push_str(" -Credential $credential");
+        }
+        _ => {}
+    }
     let has_headers = !headers.is_empty() || basic.is_some();
     if has_headers {
         out.push_str("$headers = @{\n");
@@ -219,7 +254,6 @@ fn powershell(request: &Request) -> String {
     }
 
     let mut has_body = true;
-    let mut extra = String::new();
     if let Some(parts) = multipart_parts(&request.body) {
         // Invoke-RestMethod's -Form arrived in PowerShell 7.
         out.insert_str(0, "# -Form needs PowerShell 7 or later\n");
@@ -292,7 +326,7 @@ fn powershell(request: &Request) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apix_core::{ApiKeyLocation, Body, FormPart, GraphQl, KeyValue};
+    use apix_core::{ApiKeyLocation, Body, FormPart, GraphQl, KeyValue, OAuth1};
 
     fn post_json() -> Request {
         let mut r = Request::new(Method::Post, "https://api.example.com/users");
@@ -430,6 +464,73 @@ mod tests {
             "{}",
             to_shell(&r, Shell::Bash)
         );
+    }
+
+    #[test]
+    fn signing_auth_types_are_signed_when_copied() {
+        let mut r = Request::new(Method::Post, "https://api.x.dev/v1/items?a=1");
+        r.body = Body::Form(vec![KeyValue::new("q", "x y")]);
+        r.auth = Auth::OAuth1(OAuth1 {
+            consumer_key: "ck".into(),
+            consumer_secret: "cs".into(),
+            ..OAuth1::default()
+        });
+        let bash = to_shell(&r, Shell::Bash);
+        assert!(
+            bash.contains("-H 'Authorization: OAuth oauth_consumer_key=\"ck\", oauth_nonce=\""),
+            "{bash}"
+        );
+        let ps = to_shell(&r, Shell::PowerShell);
+        assert!(ps.starts_with("# Signed when copied"), "{ps}");
+
+        r.auth = Auth::OAuth1(OAuth1 {
+            consumer_key: "ck".into(),
+            location: ApiKeyLocation::Query,
+            ..OAuth1::default()
+        });
+        assert!(
+            to_shell(&r, Shell::Bash)
+                .starts_with("curl -X POST 'https://api.x.dev/v1/items?a=1&oauth_consumer_key=ck&")
+        );
+
+        // Unresolved variables cannot be signed.
+        r.auth = Auth::OAuth1(OAuth1 {
+            consumer_key: "{{ck}}".into(),
+            ..OAuth1::default()
+        });
+        assert!(to_shell(&r, Shell::Bash).contains("copy with variables resolved"));
+
+        r.auth = Auth::AwsSigV4(apix_core::AwsSigV4 {
+            access_key: "AK".into(),
+            secret_key: "SK".into(),
+            session_token: String::new(),
+            region: "us-east-1".into(),
+            service: "execute-api".into(),
+        });
+        let ps = to_shell(&r, Shell::PowerShell);
+        assert!(ps.contains("'X-Amz-Date' = '"), "{ps}");
+        assert!(
+            ps.contains("'Authorization' = 'AWS4-HMAC-SHA256 Credential=AK/"),
+            "{ps}"
+        );
+        assert!(
+            ps.contains("SignedHeaders=content-type;host;x-amz-date"),
+            "{ps}"
+        );
+
+        r.auth = Auth::OAuth2(apix_core::OAuth2::default());
+        assert!(to_shell(&r, Shell::Bash).contains("-H 'Authorization: Bearer <access token>'"));
+
+        r.auth = Auth::Digest {
+            username: "u".into(),
+            password: "p".into(),
+        };
+        let ps = to_shell(&r, Shell::PowerShell);
+        assert!(
+            ps.contains("$credential = [pscredential]::new('u', (ConvertTo-SecureString 'p' -AsPlainText -Force))"),
+            "{ps}"
+        );
+        assert!(ps.ends_with(" -Credential $credential"), "{ps}");
     }
 
     #[test]

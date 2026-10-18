@@ -1,6 +1,6 @@
 use std::collections::{BTreeSet, HashMap};
 
-use crate::model::{Auth, Body, FormPart, GraphQl, KeyValue, Request};
+use crate::model::{Auth, AwsSigV4, Body, FormPart, GraphQl, KeyValue, OAuth1, OAuth2, Request};
 
 /// How deep `{{a}}` -> `{{b}}` -> ... chains are followed before giving up,
 /// which also stops self-referencing variables from looping forever.
@@ -175,6 +175,36 @@ impl Request {
                     value: s(value),
                     location: *location,
                 },
+                Auth::Digest { username, password } => Auth::Digest {
+                    username: s(username),
+                    password: s(password),
+                },
+                Auth::OAuth1(o) => Auth::OAuth1(OAuth1 {
+                    consumer_key: s(&o.consumer_key),
+                    consumer_secret: s(&o.consumer_secret),
+                    token: s(&o.token),
+                    token_secret: s(&o.token_secret),
+                    realm: s(&o.realm),
+                    ..o.clone()
+                }),
+                Auth::OAuth2(o) => Auth::OAuth2(OAuth2 {
+                    token_url: s(&o.token_url),
+                    auth_url: s(&o.auth_url),
+                    client_id: s(&o.client_id),
+                    client_secret: s(&o.client_secret),
+                    scope: s(&o.scope),
+                    username: s(&o.username),
+                    password: s(&o.password),
+                    redirect_uri: s(&o.redirect_uri),
+                    ..o.clone()
+                }),
+                Auth::AwsSigV4(a) => Auth::AwsSigV4(AwsSigV4 {
+                    access_key: s(&a.access_key),
+                    secret_key: s(&a.secret_key),
+                    session_token: s(&a.session_token),
+                    region: s(&a.region),
+                    service: s(&a.service),
+                }),
             },
         };
         Resolved { request, missing }

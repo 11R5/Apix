@@ -3,7 +3,7 @@
 use std::path::PathBuf;
 
 use apix_codegen::{Shell, from_curl, looks_like_curl, to_shell};
-use apix_core::Request;
+use apix_core::{Auth, Request};
 use gpui_kit::component::WindowExt as _;
 use gpui_kit::component::menu::{PopupMenu, PopupMenuItem};
 use gpui_kit::component::notification::Notification;
@@ -24,7 +24,15 @@ impl Workspace {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
-        let resolved = request.resolve(&self.vars);
+        let mut resolved = request.resolve(&self.vars);
+        // With a token in hand, the copied command works as is.
+        if let Auth::OAuth2(config) = &resolved.request.auth
+            && let Some(token) = apix_http::oauth2::cached(config)
+        {
+            resolved.request.auth = Auth::Bearer {
+                token: token.access_token,
+            };
+        }
         cx.write_to_clipboard(ClipboardItem::new_string(to_shell(
             &resolved.request,
             shell,

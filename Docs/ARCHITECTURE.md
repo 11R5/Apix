@@ -19,7 +19,7 @@ no WebView and no Electron.
    Only the visible rows are laid out (virtual lists), and the body is parsed
    lazily.
 5. **Light and fast to start.** Speed and features come before size. The release
-   binary stays under 100 MB (31.5 MB today; Electron apps are 300 MB+) and
+   binary stays under 100 MB (32.2 MB today; Electron apps are 300 MB+) and
    opens a window in under 150 ms.
 
 ## Crates
@@ -119,6 +119,18 @@ folder whose `folder.toml` sets one, then the collection (`apix.toml`), then the
 project (`apix-project.toml`); with none, nothing is sent. `auth = "none"` in a
 request (or folder) stops inheritance. `apix_core::project::inherited_auth`
 does the lookup for the desktop app, the CLI and "Copy as" alike.
+
+**Signed auth.** AWS Signature V4, OAuth 1.0a and Digest are pure functions in
+`apix_core::sign`, checked against the AWS test suite, RFC 7616, RFC 7636 and
+the classic OAuth 1.0 example, so the engine and "Copy as" sign the same way.
+The engine builds the `reqwest::Request` first and then signs it (the AWS
+payload hash needs the final body; a multipart stream is sent as
+`UNSIGNED-PAYLOAD`). Digest sends once, reads the 401's challenge and answers
+it on the same connection. OAuth 2.0 lives in `apix_http::oauth2`: the token is
+fetched before sending (client credentials, password, or authorization code
+with PKCE, where the browser comes back to a one-shot listener on 127.0.0.1),
+kept in memory per server, client, grant, scope and user, refreshed with its
+refresh token, and never written to disk.
 
 A request file:
 
@@ -273,7 +285,7 @@ about 407 MB with the body loaded, against 69 MB idle.
 |-------------------------------------|-------------------|-----------------------------|
 | Cold start to first frame           | < 150 ms          | window handle at ~340 ms, not yet profiled |
 | Idle RAM                            | < 60 MB           | 69 MB |
-| Release binary                      | < 100 MB          | 31.5 MB |
+| Release binary                      | < 100 MB          | 32.2 MB |
 | Input to paint latency              | 1 frame (≤ 8 ms at 120 Hz) | not measured |
 | Open and scroll a 100 MB JSON body  | no dropped frames | opens in ~0.33 s; frame times not measured |
 

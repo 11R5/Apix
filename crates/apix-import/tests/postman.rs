@@ -3,7 +3,8 @@ use std::path::{Path, PathBuf};
 
 use apix_core::store::load_request;
 use apix_core::{
-    ApiKeyLocation, Auth, Body, Collection, FormPart, GraphQl, KeyValue, Method, Request,
+    ApiKeyLocation, Auth, Body, ClientAuth, Collection, FormPart, GraphQl, KeyValue, Method,
+    OAuth1Method, OAuth2, OAuth2Grant, Request,
 };
 use apix_import::postman::{Kind, convert_collection, convert_environment, detect};
 use apix_import::{ImportError, PlannedFile};
@@ -173,6 +174,75 @@ fn converts_every_body_mode() {
 }
 
 #[test]
+fn carries_over_signing_auth_types() {
+    let json = r#"{
+        "info": { "name": "Auth", "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json" },
+        "item": [
+            { "name": "Digest", "request": { "method": "GET", "url": "https://x.dev/d",
+                "auth": { "type": "digest", "digest": [
+                    { "key": "username", "value": "ada" }, { "key": "password", "value": "{{pw}}" },
+                    { "key": "algorithm", "value": "MD5" } ] } } },
+            { "name": "AWS", "request": { "method": "GET", "url": "https://x.dev/a",
+                "auth": { "type": "awsv4", "awsv4": [
+                    { "key": "accessKey", "value": "AK" }, { "key": "secretKey", "value": "SK" },
+                    { "key": "region", "value": "eu-west-1" }, { "key": "service", "value": "s3" } ] } } },
+            { "name": "OAuth1", "request": { "method": "GET", "url": "https://x.dev/o",
+                "auth": { "type": "oauth1", "oauth1": [
+                    { "key": "consumerKey", "value": "ck" }, { "key": "consumerSecret", "value": "cs" },
+                    { "key": "signatureMethod", "value": "HMAC-SHA256" },
+                    { "key": "addParamsToHeader", "value": false } ] } } },
+            { "name": "OAuth2", "request": { "method": "GET", "url": "https://x.dev/t",
+                "auth": { "type": "oauth2", "oauth2": [
+                    { "key": "grant_type", "value": "authorization_code_with_pkce" },
+                    { "key": "authUrl", "value": "https://id.x.dev/authorize" },
+                    { "key": "accessTokenUrl", "value": "https://id.x.dev/token" },
+                    { "key": "clientId", "value": "app" },
+                    { "key": "scope", "value": "read" },
+                    { "key": "redirect_uri", "value": "https://oauth.pstmn.io/v1/callback" },
+                    { "key": "client_authentication", "value": "body" } ] } } }
+        ]
+    }"#;
+    let plan = convert_collection(json).unwrap();
+    assert_eq!(
+        request(&plan, "digest.apix").auth,
+        Auth::Digest {
+            username: "ada".into(),
+            password: "{{pw}}".into()
+        }
+    );
+    let Auth::AwsSigV4(aws) = &request(&plan, "aws.apix").auth else {
+        panic!("AWS expected");
+    };
+    assert_eq!(
+        (aws.region.as_str(), aws.service.as_str()),
+        ("eu-west-1", "s3")
+    );
+    let Auth::OAuth1(o) = &request(&plan, "oauth1.apix").auth else {
+        panic!("OAuth 1.0 expected");
+    };
+    assert_eq!(o.signature_method, OAuth1Method::HmacSha256);
+    assert_eq!(o.location, ApiKeyLocation::Query);
+    assert_eq!(
+        request(&plan, "oauth2.apix").auth,
+        Auth::OAuth2(OAuth2 {
+            grant: OAuth2Grant::AuthorizationCode,
+            token_url: "https://id.x.dev/token".into(),
+            auth_url: "https://id.x.dev/authorize".into(),
+            client_id: "app".into(),
+            scope: "read".into(),
+            pkce: true,
+            client_auth: ClientAuth::Body,
+            ..OAuth2::default()
+        })
+    );
+    assert!(warned(
+        &plan,
+        "OAuth2",
+        "redirect URL https://oauth.pstmn.io/v1/callback was dropped"
+    ));
+}
+
+#[test]
 fn carries_over_file_bodies() {
     let json = r#"{
         "info": { "name": "Files", "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json" },
@@ -207,7 +277,7 @@ fn reports_what_it_cannot_carry_over() {
     assert!(warned(
         &plan,
         "Health",
-        "oauth2 authorization is not supported"
+        "ntlm authorization is not supported"
     ));
 
     // Same name twice in one folder: the second file gets a suffix.

@@ -1,4 +1,4 @@
-use apix_core::{Auth, Body, FormPart, KeyValue, Method, Request};
+use apix_core::{Auth, AwsSigV4, Body, FormPart, KeyValue, Method, Request};
 
 /// A request read from a `curl` command, plus anything that was left out.
 #[derive(Debug, Clone, PartialEq)]
@@ -42,6 +42,9 @@ struct Parsed {
     urlencoded: Vec<String>,
     form: Vec<FormPart>,
     user: Option<String>,
+    digest: bool,
+    /// `--aws-sigv4 aws:amz:<region>:<service>`
+    aws_sigv4: Option<String>,
     get: bool,
     head: bool,
     warnings: Vec<String>,
@@ -148,6 +151,15 @@ fn build(args: &[String]) -> CurlImport {
                 }
             }
             "-u" | "--user" => p.user = value(&mut i, arg, &mut p.warnings),
+            "--digest" => p.digest = true,
+            "--basic" => p.digest = false,
+            "--aws-sigv4" => p.aws_sigv4 = value(&mut i, arg, &mut p.warnings),
+            "--oauth2-bearer" => {
+                if let Some(token) = value(&mut i, arg, &mut p.warnings) {
+                    p.headers
+                        .push(("Authorization".into(), format!("Bearer {token}")));
+                }
+            }
             "-A" | "--user-agent" => {
                 if let Some(v) = value(&mut i, arg, &mut p.warnings) {
                     p.headers.push(("User-Agent".into(), v));
@@ -241,9 +253,31 @@ fn finish(mut p: Parsed) -> CurlImport {
     }
     if let Some(user) = p.user {
         let (username, password) = user.split_once(':').unwrap_or((&user, ""));
-        request.auth = Auth::Basic {
-            username: username.to_owned(),
-            password: password.to_owned(),
+        let (username, password) = (username.to_owned(), password.to_owned());
+        request.auth = if let Some(provider) = &p.aws_sigv4 {
+            // A temporary credential's token travels as a header.
+            let session_token = headers
+                .iter()
+                .position(|h| h.key.eq_ignore_ascii_case("x-amz-security-token"))
+                .map(|ix| headers.remove(ix).value)
+                .unwrap_or_default();
+            let (region, service) = aws_scope(provider, &request.url);
+            if region.is_empty() || service.is_empty() {
+                p.warnings.push(format!(
+                    "Set the AWS region and service; {provider} does not name them."
+                ));
+            }
+            Auth::AwsSigV4(AwsSigV4 {
+                access_key: username,
+                secret_key: password,
+                session_token,
+                region,
+                service,
+            })
+        } else if p.digest {
+            Auth::Digest { username, password }
+        } else {
+            Auth::Basic { username, password }
         };
     }
 
@@ -315,6 +349,30 @@ fn finish(mut p: Parsed) -> CurlImport {
         request,
         warnings: p.warnings,
     }
+}
+
+/// Region and service from `aws:amz:<region>:<service>`, or, as curl does,
+/// from a `<service>.<region>.amazonaws.com` host.
+fn aws_scope(provider: &str, url: &str) -> (String, String) {
+    let parts: Vec<&str> = provider.split(':').collect();
+    let mut region = parts.get(2).copied().unwrap_or_default().to_owned();
+    let mut service = parts.get(3).copied().unwrap_or_default().to_owned();
+    let host = url
+        .split_once("://")
+        .map_or(url, |(_, rest)| rest)
+        .split(['/', ':', '?'])
+        .next()
+        .unwrap_or_default();
+    let labels: Vec<&str> = host.split('.').collect();
+    if labels.len() >= 4 && host.ends_with(".amazonaws.com") {
+        if service.is_empty() {
+            service = labels[labels.len() - 4].to_owned();
+        }
+        if region.is_empty() {
+            region = labels[labels.len() - 3].to_owned();
+        }
+    }
+    (region, service)
 }
 
 /// Reads one `-F` value: `name=text`, `name=@file` or `name=<file`, with an
@@ -711,6 +769,40 @@ mod tests {
     }
 
     #[test]
+    fn reads_digest_aws_and_bearer_flags() {
+        let r = from_curl("curl --digest -u ada:pw https://x.dev/a")
+            .unwrap()
+            .request;
+        assert_eq!(
+            r.auth,
+            Auth::Digest {
+                username: "ada".into(),
+                password: "pw".into()
+            }
+        );
+        // Region and service come from the host when the provider leaves them out.
+        let r = from_curl("curl --aws-sigv4 aws:amz -u K:S https://s3.us-east-2.amazonaws.com/b")
+            .unwrap();
+        let Auth::AwsSigV4(aws) = &r.request.auth else {
+            panic!("{:?}", r.request.auth);
+        };
+        assert_eq!(
+            (aws.region.as_str(), aws.service.as_str()),
+            ("us-east-2", "s3")
+        );
+        assert!(r.warnings.is_empty(), "{:?}", r.warnings);
+        let r = from_curl("curl --oauth2-bearer abc https://x.dev")
+            .unwrap()
+            .request;
+        assert_eq!(
+            r.auth,
+            Auth::Bearer {
+                token: "abc".into()
+            }
+        );
+    }
+
+    #[test]
     fn reads_multipart_and_file_bodies() {
         let r = from_curl(
             "curl https://x.dev/up -H 'Content-Type: multipart/form-data; boundary=x' \
@@ -786,7 +878,23 @@ mod tests {
         blob.body = Body::Binary {
             file: "C:\\data\\dump 1.bin".into(),
         };
-        for original in [upload, blob] {
+        let mut digest = Request::new(Method::Get, "https://x.dev/private");
+        digest.auth = Auth::Digest {
+            username: "ada".into(),
+            password: "p:w \"q\"".into(),
+        };
+        let mut aws = Request::new(
+            Method::Get,
+            "https://abc.execute-api.eu-west-1.amazonaws.com/prod",
+        );
+        aws.auth = Auth::AwsSigV4(AwsSigV4 {
+            access_key: "AKID".into(),
+            secret_key: "se/cret+".into(),
+            session_token: "tok".into(),
+            region: "eu-west-1".into(),
+            service: "execute-api".into(),
+        });
+        for original in [upload, blob, digest, aws] {
             for shell in [Shell::Bash, Shell::Cmd] {
                 let command = to_shell(&original, shell);
                 let back = from_curl(&command).unwrap();
