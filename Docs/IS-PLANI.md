@@ -14,7 +14,7 @@
 | M1 Arayüzden istek | ✅ 100 MB JSON ~0.33 s'de açılıyor |
 | M2 Koleksiyonlar, Postman içe aktarma | ✅ (sekmeler ve sürükle-bırak M3'te tamamlandı) |
 | M3 Simge, projeler, ortamlar, kopyalama, auth | ✅ 9/9 · bitti: simge, ortam seçici ve editörü, dinamik değişkenler, projeler, kabuk komutu olarak kopyalama, metotla yeni istek, değişken çipleri, Auth sekmesi ve miras, komut paleti, sekmeler, sürükle-bırak ile taşıma · küçük kalanlar M3 bölümünün sonunda |
-| M4 Günlük kullanım | 🔜 · bitti: menü çubuğu, şifreli koleksiyonlar (motor, uygulama, CLI), ağ denetçisi (Network sekmesi) , multipart/binary/GraphQL gövdeleri · sıradaki: auth tipleri (OAuth 2.0, Digest, AWS SigV4, OAuth 1.0) · ardından: ayarlar ve 9 dilli arayüz, dokümantasyon yapısı ve README karşılaştırması |
+| M4 Günlük kullanım | 🔜 · bitti: menü çubuğu, şifreli koleksiyonlar (motor, uygulama, CLI), ağ denetçisi (Network sekmesi), multipart/binary/GraphQL gövdeleri · sıradaki: auth tipleri (OAuth 2.0, Digest, AWS SigV4, OAuth 1.0) · ardından: ayarlar ve 9 dilli arayüz, dokümantasyon yapısı ve README karşılaştırması |
 | M5–M9 | ⬜ |
 
 Release ikili dosyası 31.5 MB (üst sınır 100 MB). Testler: core 38, vault 7, desktop 6, codegen 13, import 12, http 9 (hepsi geçiyor, clippy uyarısız).
