@@ -234,7 +234,9 @@ my-api/
 ## Languages (M4)
 
 Every text in the desktop UI goes through a key: `tr!("menu.file")` (a thin
-wrapper over `rust_i18n::t!` that returns a `SharedString`). rust-i18n is the
+wrapper over `rust_i18n::t!` that returns a `SharedString` to show; `tr_plain!`
+gives the same text for what is saved, such as a new request's default name).
+rust-i18n is the
 same system gpui-kit uses, so both follow one process-wide locale; Chinese uses
 `zh-CN`, the code gpui-kit's own texts use. Each language is one flat file,
 `crates/apix-desktop/locales/<code>.yml` (one `key: value` per line, sorted,
@@ -257,8 +259,14 @@ paragraph as one line and cuts it at glyph x positions that it assumes grow
 from left to right. So text that may wrap (notes, hints, descriptions,
 messages) goes through `bidi::para`, which in RTL breaks the text at spaces in
 reading order, measuring each candidate line, and paints each line unwrapped
-(`src/bidi/paragraph.rs`). In other languages it is plain gpui text. Error
-messages from the engine crates stay English.
+(`src/bidi/paragraph.rs`). In other languages it is plain gpui text. gpui also
+lays every line out with a left-to-right base direction, so in an RTL language
+`tr!` wraps each text in a right-to-left embedding (U+202B…U+202C; DirectWrite
+ignores the newer isolates). A sentence that starts or ends with a Latin word
+("URL", "OAuth 2.0", "Ctrl+S") then still reads right to left, and
+`i18n::display` does the same for composed texts such as the status bar. The
+marks never reach files: saved texts use `tr_plain!`. Error messages from the
+engine crates stay English.
 
 In a right-to-left language (`Language::rtl`, Arabic) the window mirrors: the
 sidebar moves to the right, the response pane to the left of the request pane,

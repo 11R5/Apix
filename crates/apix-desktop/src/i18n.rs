@@ -65,13 +65,50 @@ pub const LANGUAGES: &[Language] = &[
     },
 ];
 
-/// A text in the current language, as the UI needs it.
+/// A text in the current language, to show.
 /// `tr!("menu.file")`, `tr!("vault.locked", name = name)` for `%{name}`.
+/// In a right-to-left language it reads right to left as a whole (see
+/// [`display`]), so never save it or use it as data: use `tr_plain!` for that.
 #[macro_export]
 macro_rules! tr {
     ($($args:tt)*) => {
+        $crate::i18n::display(rust_i18n::t!($($args)*))
+    };
+}
+
+/// A text in the current language as plain text, for what is saved or used
+/// as data (a default request name written to a file).
+#[macro_export]
+macro_rules! tr_plain {
+    ($($args:tt)*) => {
         gpui_kit::SharedString::from(rust_i18n::t!($($args)*).into_owned())
     };
+}
+
+/// Right-to-left embedding (U+202B) and its end (U+202C). DirectWrite ignores
+/// the newer isolates (U+2067…U+2069), so embeddings it is.
+const RTL_EMBEDDING: char = '\u{202B}';
+const POP_EMBEDDING: char = '\u{202C}';
+
+/// `text` ready to show in the current language. gpui lays every line out
+/// left to right, so in an RTL language a sentence that starts or ends with a
+/// Latin word ("URL", "OAuth 2.0", "Ctrl+S") would come out with that word on
+/// the wrong side. Wrapped in a right-to-left embedding, the text is ordered
+/// right to left whatever it starts with.
+pub fn display(text: impl AsRef<str>) -> SharedString {
+    let text = text.as_ref();
+    if current().rtl && !text.is_empty() {
+        format!("{RTL_EMBEDDING}{text}{POP_EMBEDDING}").into()
+    } else {
+        text.to_owned().into()
+    }
+}
+
+/// `text` without the direction marks [`display`] adds.
+pub fn strip_marks(text: &str) -> String {
+    text.chars()
+        .filter(|c| !matches!(*c, RTL_EMBEDDING | POP_EMBEDDING))
+        .collect()
 }
 
 pub fn language(code: &str) -> Option<&'static Language> {
@@ -209,6 +246,12 @@ mod tests {
         }
         assert_eq!(rust_i18n::t!("menu.file", locale = "tr"), "Dosya");
         assert_eq!(rust_i18n::t!("menu.file", locale = "de"), "Datei");
+    }
+
+    #[test]
+    fn direction_marks_come_off_again() {
+        let marked = format!("{}تُلحق URL.{}", super::RTL_EMBEDDING, super::POP_EMBEDDING);
+        assert_eq!(super::strip_marks(&marked), "تُلحق URL.");
     }
 
     #[test]

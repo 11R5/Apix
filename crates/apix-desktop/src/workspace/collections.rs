@@ -31,7 +31,7 @@ use super::drag::{DraggedNode, draggable};
 use super::{Workspace, describe, key_hint};
 use crate::bidi::{self, Bidi as _, DialogBidi as _};
 use crate::theme;
-use crate::tr;
+use crate::{tr, tr_plain};
 
 /// Keeps the folder watcher alive; dropping it stops watching.
 pub(super) struct Watcher {
@@ -505,7 +505,7 @@ impl Workspace {
             _ => Body::None,
         };
         let request = Request {
-            name: tr!("collection.new_request_name").into(),
+            name: tr_plain!("collection.new_request_name").into(),
             body,
             ..Request::new(method, "")
         };
@@ -804,7 +804,7 @@ impl Workspace {
                         name: dir
                             .file_name()
                             .map(|n| n.to_string_lossy().into_owned())
-                            .unwrap_or_else(|| tr!("collection.default_name").into()),
+                            .unwrap_or_else(|| tr_plain!("collection.default_name").into()),
                         ..CollectionMeta::default()
                     };
                     view.update(cx, |this, cx| {

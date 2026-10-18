@@ -227,7 +227,9 @@ in every language.
 
 - **Language:** English, Türkçe, العربية, Deutsch, Français, Русский, 日本語,
   简体中文 or Español. The change applies at once. On first start Apix follows
-  the system language.
+  the system language. In Arabic the window mirrors: the sidebar is on the
+  right and menus, tabs and forms run from the right, while URLs, code and
+  key–value tables stay left to right.
 - **Theme:** Obsidian or Cyber glass; applies the next time Apix starts.
 - **Lock encrypted collections:** after 5, 15 or 30 minutes, 1 hour, or never.
 

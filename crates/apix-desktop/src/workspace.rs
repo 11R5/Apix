@@ -752,7 +752,12 @@ impl Workspace {
                     .child(div().w(px(6.)))
                     .child(self.render_menu_bar(cx))
                     .child(div().w(px(10.)))
-                    .child(div().text_xs().text_color(p.text_muted).child(name)),
+                    .child(
+                        div()
+                            .text_xs()
+                            .text_color(p.text_muted)
+                            .child(crate::i18n::display(&name)),
+                    ),
             )
     }
 
@@ -1198,7 +1203,13 @@ impl Workspace {
             .border_color(p.hairline)
             .text_xs()
             .text_color(p.text_muted)
-            .child(div().flex_1().min_w_0().truncate().child(location))
+            .child(
+                div()
+                    .flex_1()
+                    .min_w_0()
+                    .truncate()
+                    .child(crate::i18n::display(&location)),
+            )
             .children(environment)
             .children(unsaved)
             .child(tr!(

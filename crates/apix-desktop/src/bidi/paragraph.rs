@@ -5,18 +5,43 @@
 //! runs place their glyphs leftwards, so a wrapped Arabic paragraph came out as
 //! a fragment on the first line and an overflowing second line. This element
 //! breaks the text into lines itself, in reading order at spaces, measures each
-//! candidate line on its own and paints every line as a separate unwrapped line.
+//! candidate line on its own and paints every line as a separate unwrapped line,
+//! each marked right to left (see `i18n::display`).
 
-use std::cell::RefCell;
 use std::rc::Rc;
 
 use gpui_kit::*;
 
-/// The lines of the last measure, painted as they are.
-#[derive(Default)]
-pub struct Lines {
-    lines: Vec<ShapedLine>,
+/// What laying out and painting the text needs, shared by both.
+pub struct Shaper {
+    /// Without direction marks; each line gets its own.
+    text: String,
+    run: TextRun,
+    font_size: Pixels,
     line_height: Pixels,
+    wraps: bool,
+}
+
+impl Shaper {
+    fn shape(&self, line: &str, window: &Window) -> ShapedLine {
+        let line = crate::i18n::display(line);
+        let run = TextRun {
+            len: line.len(),
+            ..self.run.clone()
+        };
+        window
+            .text_system()
+            .shape_line(line, self.font_size, &[run], None)
+    }
+
+    /// The text broken into lines for `width` (`None`: no wrapping).
+    fn lines(&self, width: Option<Pixels>, window: &Window) -> Vec<ShapedLine> {
+        let width = width.filter(|_| self.wraps);
+        break_lines(&self.text, width, |line| self.shape(line, window).width)
+            .iter()
+            .map(|line| self.shape(line, window))
+            .collect()
+    }
 }
 
 pub struct Paragraph {
@@ -38,7 +63,7 @@ impl IntoElement for Paragraph {
 }
 
 impl Element for Paragraph {
-    type RequestLayoutState = Rc<RefCell<Lines>>;
+    type RequestLayoutState = Rc<Shaper>;
     type PrepaintState = ();
 
     fn id(&self) -> Option<ElementId> {
@@ -63,42 +88,32 @@ impl Element for Paragraph {
                 .line_height
                 .to_pixels(font_size.into(), window.rem_size()),
         );
-        let wraps = style.white_space == WhiteSpace::Normal;
-        let run = style.to_run(0);
-        let state = Rc::new(RefCell::new(Lines::default()));
+        let shaper = Rc::new(Shaper {
+            text: crate::i18n::strip_marks(&self.text),
+            run: style.to_run(0),
+            font_size,
+            line_height,
+            wraps: style.white_space == WhiteSpace::Normal,
+        });
         let layout_id = window.request_measured_layout(Default::default(), {
-            let (state, text) = (state.clone(), self.text.clone());
+            let shaper = shaper.clone();
             move |known, available, window, _| {
+                // At its narrowest every word has a line of its own, so a row
+                // holding this text and buttons can still shrink to fit.
                 let width = known.width.or(match available.width {
-                    AvailableSpace::Definite(width) if wraps => Some(width),
-                    _ => None,
+                    AvailableSpace::Definite(width) => Some(width),
+                    AvailableSpace::MinContent => Some(Pixels::ZERO),
+                    AvailableSpace::MaxContent => None,
                 });
-                let shape = |line: &str| {
-                    let run = TextRun {
-                        len: line.len(),
-                        ..run.clone()
-                    };
-                    window.text_system().shape_line(
-                        SharedString::from(line.to_owned()),
-                        font_size,
-                        &[run],
-                        None,
-                    )
-                };
-                let lines: Vec<ShapedLine> = break_lines(&text, width, |line| shape(line).width)
-                    .iter()
-                    .map(|line| shape(line))
-                    .collect();
+                let lines = shaper.lines(width, window);
                 let widest = lines
                     .iter()
                     .map(|l| l.width)
                     .fold(Pixels::ZERO, Pixels::max);
-                let size = size(widest, line_height * lines.len().max(1) as f32);
-                *state.borrow_mut() = Lines { lines, line_height };
-                size
+                size(widest, shaper.line_height * lines.len().max(1) as f32)
             }
         });
-        (layout_id, state)
+        (layout_id, shaper)
     }
 
     fn prepaint(
@@ -117,21 +132,24 @@ impl Element for Paragraph {
         _: Option<&GlobalElementId>,
         _: Option<&InspectorElementId>,
         bounds: Bounds<Pixels>,
-        state: &mut Self::RequestLayoutState,
+        shaper: &mut Self::RequestLayoutState,
         _: &mut Self::PrepaintState,
         window: &mut Window,
         cx: &mut App,
     ) {
+        // Broken again for the final width: the layout may have measured
+        // other widths last. Shaping is cached for the frame.
         let align = window.text_style().text_align;
-        let state = state.borrow();
-        for (ix, line) in state.lines.iter().enumerate() {
-            let origin = point(
-                bounds.origin.x,
-                bounds.origin.y + state.line_height * ix as f32,
-            );
+        let line_height = shaper.line_height;
+        for (ix, line) in shaper
+            .lines(Some(bounds.size.width + px(0.5)), window)
+            .iter()
+            .enumerate()
+        {
+            let origin = point(bounds.origin.x, bounds.origin.y + line_height * ix as f32);
             line.paint(
                 origin,
-                state.line_height,
+                line_height,
                 align,
                 Some(bounds.size.width),
                 window,

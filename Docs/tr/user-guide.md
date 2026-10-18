@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:d9aeec804b84e88d -->
+<!-- translated from en/user-guide.md sha256:5d9950a1707ac152 -->
 
 # Apix kullanım kılavuzu
 
@@ -242,7 +242,9 @@ bulunabilir.
 
 - **Dil:** English, Türkçe, العربية, Deutsch, Français, Русский, 日本語,
   简体中文 veya Español. Değişiklik hemen uygulanır. İlk açılışta Apix sistem
-  dilini izler.
+  dilini izler. Arapçada pencere aynalanır: kenar çubuğu sağdadır, menüler,
+  sekmeler ve formlar sağdan başlar; URL'ler, kod ve anahtar–değer tabloları
+  soldan sağa kalır.
 - **Tema:** Obsidyen veya Siber cam; Apix'in bir sonraki açılışında uygulanır.
 - **Şifreli koleksiyonları kilitle:** 5, 15 veya 30 dakika sonra, 1 saat sonra
   ya da hiçbir zaman.

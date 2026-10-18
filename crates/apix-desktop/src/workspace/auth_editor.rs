@@ -703,6 +703,7 @@ impl AuthEditor {
                 tr!("auth.field.token"),
                 h_flex()
                     .flex_1()
+                    .min_w_0()
                     .dir_row()
                     .gap_2()
                     .items_center()
