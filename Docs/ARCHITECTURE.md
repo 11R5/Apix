@@ -31,6 +31,7 @@ crates/
 ├── apix-http     HTTP engine: reqwest + rustls, timings, response capture
 ├── apix-import   Postman v2.0/v2.1 collections and environments → Apix collections
 ├── apix-codegen  requests ↔ shell commands: curl (bash), curl.exe (cmd), PowerShell; parses pasted curl
+├── apix-vault    encrypted collections: per-file XChaCha20-Poly1305, Argon2id, recovery key
 ├── apix-cli      `apix` binary: send / run / import / shell from terminal & CI
 └── apix-desktop  GPUI desktop app (Windows, macOS and Linux from one crate)
 tools/
@@ -58,7 +59,6 @@ Planned crates:
 |----------------|--------------------------------------------------------------------|
 | `apix-script`  | Pre-request and test scripts (`pm.*`-compatible API) on QuickJS via `rquickjs` |
 | `apix-proto`   | GraphQL, WebSocket (`tokio-tungstenite`), gRPC (`tonic` + reflection), SSE |
-| `apix-vault`   | Encrypted collections: XChaCha20-Poly1305 per file, Argon2id key derivation, opaque file names |
 | `apix-mock`    | A local mock server that serves saved examples (`hyper`)           |
 
 ### One desktop crate for three operating systems
@@ -169,15 +169,34 @@ The CLI (`apix run --env`) and the desktop app use the same function,
 `apix_core::project::variables`. `group_by = "environment"` lays the sidebar out as
 Project → Environment → Collections, and `[pins]` limits a collection to some environments.
 
-### Planned: encrypted collections (M4)
+### Encrypted collections (M4, in progress)
 
-An encrypted collection keeps the same folder layout, but every file is an
-encrypted blob (XChaCha20-Poly1305, random nonce per file). File and folder names
-are random IDs, and the real names live in an encrypted index. The key is derived
-from a password with Argon2id. Its salt and parameters sit in a small plaintext
-header in `apix.toml`, which reveals only that the collection is encrypted. Git
-still sees which file changed, but not what is inside it. Security comes from the
-cipher and the password, not from the format being secret; Apix is open source.
+The format and engine live in `crates/apix-vault` (done, tested); the app and CLI
+integration comes next.
+
+```
+my-api/
+├── apix-vault.toml   plaintext header: format, Argon2id cost and salts,
+│                     the data key wrapped by the password and by the recovery key
+├── .gitignore        objects/local/
+└── objects/
+    ├── index.apixe   the real paths of every file, encrypted
+    ├── 3f9c…e1.apixe one encrypted file each; random names, flat (no folder shape)
+    └── local/        *.local.toml secrets, same format, never committed
+```
+
+- A random 256-bit **data key** encrypts every file with XChaCha20-Poly1305 and
+  a fresh nonce per write. The object id is the associated data, so blobs cannot
+  be swapped or renamed unnoticed.
+- The data key is stored twice: wrapped by a key derived from the **password**
+  (Argon2id, 64 MiB, 3 passes) and by one derived from the **recovery key**
+  (160 random bits, shown once as `XXXX-XXXX-…` Crockford base32). Changing the
+  password rewraps the key; files are not re-encrypted.
+- Renames and moves only touch the encrypted index.
+- The unlocked key lives in memory only (`zeroize` wipes it on lock).
+- Git still sees which object changed, never what is in it. Security comes from
+  the cipher and the password, not from the format being secret; Apix is open
+  source.
 
 ## Threading model (desktop)
 

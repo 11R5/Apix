@@ -1,0 +1,17 @@
+[package]
+name = "apix-vault"
+description = "Password-encrypted Apix collections: XChaCha20-Poly1305 per file, Argon2id keys, opaque names"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+argon2 = "0.5"
+base64 = "0.22"
+chacha20poly1305 = "0.10"
+rand_core = { version = "0.6", features = ["getrandom"] }
+serde.workspace = true
+thiserror.workspace = true
+toml.workspace = true
+zeroize = { version = "1", features = ["derive"] }
