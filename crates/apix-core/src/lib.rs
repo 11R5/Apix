@@ -10,7 +10,7 @@ pub mod text;
 pub mod vars;
 pub mod vfs;
 
-pub use model::{ApiKeyLocation, Auth, Body, KeyValue, Method, Request};
+pub use model::{ApiKeyLocation, Auth, Body, FormPart, GraphQl, KeyValue, Method, Request};
 pub use project::{GroupBy, Project};
 pub use store::{Collection, Environment, StoreError};
 pub use vars::{Resolved, Variables};

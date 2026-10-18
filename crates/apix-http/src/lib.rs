@@ -21,6 +21,14 @@ pub enum HttpError {
     InvalidUrl { url: String, reason: String },
     #[error(transparent)]
     Request(#[from] reqwest::Error),
+    #[error("{0}")]
+    Body(String),
+    #[error("cannot read {path}")]
+    File {
+        path: String,
+        #[source]
+        source: std::io::Error,
+    },
     /// reqwest names the first URL even when a redirect target failed.
     #[error("while following a redirect to {to}")]
     Redirected {
@@ -241,7 +249,16 @@ fn build(client: &reqwest::Client, req: &Request) -> Result<reqwest::RequestBuil
         .expect("every apix Method is a valid HTTP method");
     let mut builder = client.request(method, url);
 
+    let multipart_body = matches!(req.body, Body::Multipart(_));
     for header in req.headers.iter().filter(|h| h.enabled) {
+        // A multipart Content-Type without our boundary would break the body
+        // (Postman collections often carry one); the engine writes its own.
+        if multipart_body
+            && header.key.eq_ignore_ascii_case(CONTENT_TYPE.as_str())
+            && header.value.to_ascii_lowercase().starts_with("multipart/")
+        {
+            continue;
+        }
         builder = builder.header(&header.key, &header.value);
     }
 
@@ -277,9 +294,55 @@ fn build(client: &reqwest::Client, req: &Request) -> Result<reqwest::RequestBuil
                 .collect();
             builder.form(&fields)
         }
+        Body::Multipart(parts) => builder.multipart(multipart(parts)?),
+        Body::Binary { file } => builder.body(read_file(file)?),
+        Body::GraphQl(gql) => builder.body(Body::graphql_json(gql).map_err(HttpError::Body)?),
     };
 
     Ok(builder)
+}
+
+/// Reads a file the request sends. Files are read whole when sending.
+fn read_file(path: &str) -> Result<Vec<u8>, HttpError> {
+    if path.trim().is_empty() {
+        return Err(HttpError::Body("choose a file to send".into()));
+    }
+    std::fs::read(path).map_err(|source| HttpError::File {
+        path: path.to_owned(),
+        source,
+    })
+}
+
+fn multipart(parts: &[apix_core::FormPart]) -> Result<reqwest::multipart::Form, HttpError> {
+    let mut form = reqwest::multipart::Form::new();
+    for part in parts.iter().filter(|p| p.enabled && !p.key.is_empty()) {
+        let mut piece = if part.file {
+            let name = std::path::Path::new(&part.value)
+                .file_name()
+                .map(|n| n.to_string_lossy().into_owned())
+                .unwrap_or_else(|| "file".into());
+            reqwest::multipart::Part::bytes(read_file(&part.value)?)
+                .file_name(name)
+                .mime_str("application/octet-stream")
+                .expect("a valid MIME type")
+        } else {
+            reqwest::multipart::Part::text(part.value.clone())
+        };
+        if let Some(mime) = part
+            .content_type
+            .as_deref()
+            .filter(|m| !m.trim().is_empty())
+        {
+            piece = piece.mime_str(mime).map_err(|_| {
+                HttpError::Body(format!(
+                    "`{mime}` is not a valid content type for {}",
+                    part.key
+                ))
+            })?;
+        }
+        form = form.part(part.key.clone(), piece);
+    }
+    Ok(form)
 }
 
 #[cfg(test)]
@@ -325,6 +388,56 @@ mod tests {
             .build()
             .unwrap();
         assert_eq!(built.headers()[CONTENT_TYPE], "application/vnd.api+json");
+    }
+
+    #[test]
+    fn builds_multipart_binary_and_graphql_bodies() {
+        let dir = std::env::temp_dir().join(format!("apix-http-body-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let file = dir.join("a.bin");
+        std::fs::write(&file, b"\x00\x01data").unwrap();
+        let path = file.to_string_lossy().into_owned();
+        let client = reqwest::Client::new();
+
+        let mut req = Request::new(Method::Post, "https://example.com");
+        req.headers
+            .push(KeyValue::new("Content-Type", "multipart/form-data"));
+        req.body = Body::Multipart(vec![
+            apix_core::FormPart::text("name", "Ada"),
+            apix_core::FormPart::file("doc", &path),
+        ]);
+        let built = build(&client, &req).unwrap().build().unwrap();
+        let content_type = built.headers()[CONTENT_TYPE].to_str().unwrap();
+        assert!(
+            content_type.starts_with("multipart/form-data; boundary="),
+            "the boundary-less header is replaced: {content_type}"
+        );
+
+        req.headers.clear();
+        req.body = Body::Binary { file: path.clone() };
+        let built = build(&client, &req).unwrap().build().unwrap();
+        assert_eq!(built.headers()[CONTENT_TYPE], "application/octet-stream");
+        assert_eq!(
+            built.body().and_then(|b| b.as_bytes()),
+            Some(&b"\x00\x01data"[..])
+        );
+
+        req.body = Body::Binary {
+            file: dir.join("missing.bin").to_string_lossy().into_owned(),
+        };
+        assert!(matches!(build(&client, &req), Err(HttpError::File { .. })));
+
+        req.body = Body::GraphQl(apix_core::GraphQl {
+            query: "{ me }".into(),
+            variables: "{\"a\":1}".into(),
+        });
+        let built = build(&client, &req).unwrap().build().unwrap();
+        assert_eq!(built.headers()[CONTENT_TYPE], "application/json");
+        assert_eq!(
+            built.body().and_then(|b| b.as_bytes()),
+            Some(&br#"{"query":"{ me }","variables":{"a":1}}"#[..])
+        );
+        std::fs::remove_dir_all(&dir).ok();
     }
 
     #[test]

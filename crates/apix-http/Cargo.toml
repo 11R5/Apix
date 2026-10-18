@@ -9,7 +9,7 @@ repository.workspace = true
 [dependencies]
 apix-core.workspace = true
 bytes.workspace = true
-reqwest = { workspace = true, features = ["rustls-tls"] }
+reqwest = { workspace = true, features = ["rustls-tls", "multipart"] }
 # The connection details reqwest keeps in a response (local and remote address).
 hyper-util = { version = "0.1", features = ["client-legacy"] }
 # Local interfaces, default gateway and DNS servers for the network inspector.

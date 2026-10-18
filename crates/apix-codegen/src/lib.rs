@@ -13,7 +13,7 @@ mod shell;
 pub use curl_import::{CurlImport, from_curl, looks_like_curl};
 pub use shell::{Shell, to_shell};
 
-use apix_core::{ApiKeyLocation, Auth, Body, KeyValue, Request};
+use apix_core::{ApiKeyLocation, Auth, Body, FormPart, KeyValue, Request};
 
 /// The URL with enabled query rows (and a query API key) appended, encoded
 /// the same way the HTTP engine encodes them.
@@ -79,9 +79,25 @@ fn form_fields(body: &Body) -> Option<Vec<&KeyValue>> {
     }
 }
 
-fn text_body(body: &Body) -> Option<&str> {
+/// The body as text, for bodies sent as text (GraphQL becomes its JSON).
+fn text_body(body: &Body) -> Option<String> {
     match body {
-        Body::Json(t) | Body::Text(t) | Body::Xml(t) => Some(t),
+        Body::Json(t) | Body::Text(t) | Body::Xml(t) => Some(t.clone()),
+        // Invalid variables: show the query alone rather than nothing.
+        Body::GraphQl(gql) => Some(Body::graphql_json(gql).unwrap_or_else(|_| gql.query.clone())),
+        _ => None,
+    }
+}
+
+/// Enabled multipart fields that have a name.
+fn multipart_parts(body: &Body) -> Option<Vec<&FormPart>> {
+    match body {
+        Body::Multipart(parts) => Some(
+            parts
+                .iter()
+                .filter(|p| p.enabled && !p.key.is_empty())
+                .collect(),
+        ),
         _ => None,
     }
 }

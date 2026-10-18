@@ -22,11 +22,18 @@ gpui-kit = { workspace = true, features = ["tree-sitter"] }
 # Same version gpui-component already builds, so it is not compiled twice.
 notify = "8.2.0"
 serde.workspace = true
+serde_json.workspace = true
 tokio.workspace = true
 toml.workspace = true
 # Deleting from the sidebar moves files to the OS trash instead of removing them.
 trash = "5"
+# GraphQL highlighting in the body editor; gpui-component has no highlight query for it.
+tree-sitter-graphql = "0.1.0"
 
 [build-dependencies]
 # Embeds the app icon and version info into the Windows exe.
 embed-resource = "3"
+
+[dev-dependencies]
+# Checks that the GraphQL highlight query compiles; same version gpui-component uses.
+tree-sitter = "0.26"
