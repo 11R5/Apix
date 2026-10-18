@@ -327,6 +327,9 @@ impl Workspace {
                 )
                 .keys("S"),
             );
+            if !self.tabs.is_empty() {
+                out.push(Entry::command("Close tab", run(Workspace::close_front_tab)).keys("W"));
+            }
             out.push(
                 Entry::command(
                     "New request",

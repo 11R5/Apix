@@ -657,6 +657,48 @@ pub fn rename_request(path: &Path, new_name: &str) -> Result<PathBuf, StoreError
     Ok(new_path)
 }
 
+/// Moves a request (and its scripts) into `dir`, keeping its file name
+/// unless that is taken there. Returns the new path.
+pub fn move_request(path: &Path, dir: &Path) -> Result<PathBuf, StoreError> {
+    if path.parent() == Some(dir) {
+        return Ok(path.to_owned());
+    }
+    let old_stem = stem_of(path);
+    let target = unique_path(dir, &old_stem, REQUEST_EXTENSION);
+    let new_stem = stem_of(&target);
+    let scripts = sidecars(path);
+    fs::rename(path, &target).map_err(io_error(path))?;
+    for script in scripts {
+        let name = script.file_name().unwrap_or_default().to_string_lossy();
+        let to = dir.join(format!("{new_stem}{}", &name[old_stem.len()..]));
+        if !to.exists() {
+            fs::rename(&script, &to).map_err(io_error(&script))?;
+        }
+    }
+    Ok(target)
+}
+
+/// Moves a folder into `dir`. Refuses to move a folder into itself or one
+/// of its own subfolders. Returns the new path.
+pub fn move_folder(path: &Path, dir: &Path) -> Result<PathBuf, StoreError> {
+    if path.parent() == Some(dir) {
+        return Ok(path.to_owned());
+    }
+    if dir.starts_with(path) {
+        return Err(StoreError::Io {
+            path: dir.to_owned(),
+            source: std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "a folder cannot move into itself",
+            ),
+        });
+    }
+    let name = path.file_name().unwrap_or_default().to_string_lossy();
+    let target = unique_path(dir, &name, "");
+    fs::rename(path, &target).map_err(io_error(path))?;
+    Ok(target)
+}
+
 /// Copies a request (and its scripts) next to it as "<name> copy".
 pub fn duplicate_request(path: &Path) -> Result<PathBuf, StoreError> {
     let mut request = load_request(path)?;
@@ -796,6 +838,40 @@ mod tests {
         assert_eq!(folder, root.join("admin-tools"));
         assert_eq!(rename_folder(&folder, "Admin").unwrap(), root.join("admin"));
         assert!(root.join("admin").is_dir() && !folder.exists());
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn moves_requests_with_scripts_and_folders() {
+        let root = temp_collection("move");
+        let health = root.join("health.apix");
+        fs::write(root.join("health.test.js"), "t").unwrap();
+        let users = root.join("users");
+
+        let moved = move_request(&health, &users).unwrap();
+        assert_eq!(moved, users.join("health.apix"));
+        assert!(!health.exists() && users.join("health.test.js").is_file());
+        assert_eq!(
+            move_request(&moved, &users).unwrap(),
+            moved,
+            "same folder: no-op"
+        );
+
+        // A name clash gets a suffix, and the scripts follow it.
+        save_request(&root.join("health.apix"), &Request::new(Method::Get, "x")).unwrap();
+        fs::write(root.join("health.test.js"), "t2").unwrap();
+        let second = move_request(&root.join("health.apix"), &users).unwrap();
+        assert_eq!(second, users.join("health-2.apix"));
+        assert_eq!(
+            fs::read_to_string(users.join("health-2.test.js")).unwrap(),
+            "t2"
+        );
+
+        let admin = create_folder(&users, "admin").unwrap();
+        assert!(move_folder(&users, &admin).is_err(), "not into itself");
+        let top = move_folder(&admin, &root).unwrap();
+        assert_eq!(top, root.join("admin"));
+        assert!(top.is_dir() && !admin.exists());
         fs::remove_dir_all(root).unwrap();
     }
 

@@ -41,7 +41,10 @@ Inside `apix-desktop/src`: `workspace.rs` (request editor, response panel,
 actions and key bindings), `workspace/collections.rs` (sidebar, projects,
 file operations, import, file watching), `workspace/env_editor.rs` (the
 variables dialog), `workspace/auth_editor.rs` (the Auth tab and the folder/collection/project
-Auth dialog), `workspace/palette.rs` (the command palette and its fuzzy matcher), `workspace/shell_copy.rs` (copy as / paste curl), `workspace/var_chips.rs`
+Auth dialog), `workspace/palette.rs` (the command palette and its fuzzy matcher),
+`workspace/tabs.rs` (open requests; the front tab lives in the editor widgets,
+the others keep their draft, response and in-flight task), `workspace/drag.rs`
+(drag requests and folders to move them), `workspace/shell_copy.rs` (copy as / paste curl), `workspace/var_chips.rs`
 (`{{variable}}` chips in the URL bar and their hover card),
 `large_view.rs` (row-based viewer for huge bodies), `net.rs` (tokio bridge),
 `state.rs` (recent items and per-folder environment in the user's config

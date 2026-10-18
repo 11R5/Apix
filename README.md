@@ -19,8 +19,11 @@
 - **Responses:** status, timing (TTFB and total), size, highlighted and foldable JSON,
   raw and headers views. A 100 MB JSON response opens in about a third of a second.
 - **Collections and projects:** a sidebar built from the files on disk, with new,
-  rename, duplicate and delete (to the trash). Projects group collections, share
-  environments, and can show the sidebar as Project → Environment → Collections.
+  rename, duplicate and delete (to the trash); drag a request or folder to move it.
+  Projects group collections, share environments, and can show the sidebar as
+  Project → Environment → Collections.
+- **Tabs:** open several requests at once. Each tab keeps its unsaved edits, its last
+  response and even a request still in flight.
 - **Variables:** project, collection and environment layers, secrets kept out of git,
   an in-app editor and dynamic values such as `{{$guid}}`. In the URL bar every
   `{{variable}}` is a coloured chip; hover it to see its value and where it comes from.
@@ -40,8 +43,10 @@
 | Ctrl+K or Ctrl+P | Command palette: find any request or command |
 | Ctrl+E | Variables and environments |
 | Alt+1…7 | Switch the method |
+| Ctrl+W | Close the tab (middle-click works too) |
+| Ctrl+Tab / Ctrl+Shift+Tab | Next / previous tab |
 
-On macOS, use ⌘ instead of Ctrl.
+On macOS, use ⌘ instead of Ctrl (Ctrl+Tab stays Ctrl).
 
 ## Build
 

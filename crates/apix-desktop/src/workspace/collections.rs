@@ -26,6 +26,7 @@ use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
 use super::auth_editor::AuthOwner;
+use super::drag::{DraggedNode, draggable};
 use super::{NO_ENVIRONMENT, Workspace, describe, key_hint};
 use crate::theme;
 
@@ -36,7 +37,7 @@ pub(super) struct Watcher {
 }
 
 /// Something to do once unsaved changes are saved or discarded.
-type Then = Rc<dyn Fn(&mut Workspace, &mut Window, &mut Context<Workspace>)>;
+pub(super) type Then = Rc<dyn Fn(&mut Workspace, &mut Window, &mut Context<Workspace>)>;
 
 impl Workspace {
     // -----------------------------------------------------------------------
@@ -92,6 +93,7 @@ impl Workspace {
         self.watcher = watch(&root, window, cx);
         self.collapsed.clear();
         self.selected = None;
+        self.tabs.clear();
         self.reload(window, cx);
 
         // Inside a project, start in the collection that was opened, if any.
@@ -192,14 +194,12 @@ impl Workspace {
         // A folder.toml or apix.toml may have changed what the open request inherits.
         self.refresh_inherited_auth(cx);
 
+        self.sync_parked_tabs();
         if let Some(path) = self.selected.clone() {
             let dirty = self.is_dirty(cx);
             match self.requests.get(&path).cloned() {
-                // Deleted or moved outside Apix: keep unsaved edits, otherwise clear.
-                None if !dirty => {
-                    self.selected = None;
-                    self.show_request(Request::default(), window, cx);
-                }
+                // Deleted or moved outside Apix: keep unsaved edits, otherwise close the tab.
+                None if !dirty => self.forget_tabs(&path, window, cx),
                 Some(on_disk) if on_disk != self.base && !dirty => {
                     self.show_request(on_disk, window, cx);
                 }
@@ -305,29 +305,23 @@ impl Workspace {
             .is_some_and(|name| name.to_lowercase().contains("prod"))
     }
 
-    /// Opens a request in the editor, asking first if the current one has unsaved edits.
+    /// Opens a request in a tab (or brings its tab to the front). Unsaved
+    /// edits stay in their own tab, so there is nothing to ask.
     pub(super) fn select(&mut self, path: PathBuf, window: &mut Window, cx: &mut Context<Self>) {
-        if self.selected.as_ref() == Some(&path) {
-            return;
-        }
-        self.guard_unsaved(
-            window,
-            cx,
-            Rc::new(move |this, window, cx| this.open_path(path.clone(), window, cx)),
-        );
+        self.open_tab(path, window, cx);
     }
 
     fn open_path(&mut self, path: PathBuf, window: &mut Window, cx: &mut Context<Self>) {
-        let Some(request) = self.requests.get(&path).cloned() else {
-            return;
-        };
-        self.set_active_collection(&path, window, cx);
-        self.selected = Some(path);
-        self.show_request(request, window, cx);
+        self.open_tab(path, window, cx);
     }
 
     /// Makes the collection that holds `path` the one whose variables apply.
-    fn set_active_collection(&mut self, path: &Path, window: &mut Window, cx: &mut Context<Self>) {
+    pub(super) fn set_active_collection(
+        &mut self,
+        path: &Path,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         let Some(found) = self.collection_for(path).cloned() else {
             return;
         };
@@ -347,7 +341,12 @@ impl Workspace {
     }
 
     /// Runs `then` now, or after the user saves or discards unsaved edits.
-    fn guard_unsaved(&mut self, window: &mut Window, cx: &mut Context<Self>, then: Then) {
+    pub(super) fn guard_unsaved(
+        &mut self,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+        then: Then,
+    ) {
         if !self.is_dirty(cx) {
             then(self, window, cx);
             return;
@@ -441,6 +440,9 @@ impl Workspace {
         let created = self.selected.is_none();
         self.base = request.clone();
         self.requests.insert(path.clone(), request);
+        if created {
+            self.tabs.push(super::tabs::Tab::new(path.clone()));
+        }
         self.selected = Some(path);
         if created {
             self.reload(window, cx);
@@ -480,30 +482,24 @@ impl Workspace {
             );
             return;
         };
-        self.guard_unsaved(
-            window,
-            cx,
-            Rc::new(move |this, window, cx| {
-                let body = match method {
-                    Method::Post | Method::Put | Method::Patch => Body::Json("{\n  \n}".into()),
-                    _ => Body::None,
-                };
-                let request = Request {
-                    name: "New request".into(),
-                    body,
-                    ..Request::new(method, "")
-                };
-                match store::create_request(&dir, &request) {
-                    Ok(path) => {
-                        this.collapsed.remove(&dir);
-                        this.reload(window, cx);
-                        this.open_path(path, window, cx);
-                        this.url.update(cx, |state, cx| state.focus(window, cx));
-                    }
-                    Err(e) => this.notify_error(describe(&e), window, cx),
-                }
-            }),
-        );
+        // A new tab: whatever is open keeps its edits in its own tab.
+        let body = match method {
+            Method::Post | Method::Put | Method::Patch => Body::Json("{\n  \n}".into()),
+            _ => Body::None,
+        };
+        let request = Request {
+            name: "New request".into(),
+            body,
+            ..Request::new(method, "")
+        };
+        match store::create_request(&dir, &request) {
+            Ok(path) => {
+                self.collapsed.remove(&dir);
+                self.reload(window, cx);
+                self.open_path(path, window, cx);
+            }
+            Err(e) => self.notify_error(describe(&e), window, cx),
+        }
     }
 
     pub(super) fn new_folder(
@@ -546,9 +542,12 @@ impl Workspace {
             cx,
             move |this, name, window, cx| match store::rename_request(&path, &name) {
                 Ok(new_path) => {
-                    if this.selected.as_ref() == Some(&path) {
-                        this.selected = Some(new_path);
+                    let front = this.selected.as_ref() == Some(&path);
+                    this.retarget_tabs(&path, &new_path);
+                    if front {
                         this.base.name = name;
+                    } else {
+                        this.rename_parked(&new_path, &name);
                     }
                     this.reload(window, cx);
                 }
@@ -567,13 +566,7 @@ impl Workspace {
             cx,
             move |this, name, window, cx| match store::rename_folder(&path, &name) {
                 Ok(new_path) => {
-                    if let Some(rest) = this
-                        .selected
-                        .as_ref()
-                        .and_then(|s| s.strip_prefix(&path).ok())
-                    {
-                        this.selected = Some(new_path.join(rest));
-                    }
+                    this.retarget_tabs(&path, &new_path);
                     this.reload(window, cx);
                 }
                 Err(e) => this.notify_error(describe(&e), window, cx),
@@ -644,10 +637,7 @@ impl Workspace {
             self.notify_error(format!("Could not move to the trash: {e}"), window, cx);
             return;
         }
-        if self.selected.as_ref().is_some_and(|s| s.starts_with(&path)) {
-            self.selected = None;
-            self.show_request(Request::default(), window, cx);
-        }
+        self.forget_tabs(&path, window, cx);
         self.reload(window, cx);
     }
 
@@ -743,7 +733,7 @@ impl Workspace {
         cx: &mut Context<Self>,
     ) {
         if Collection::find_root(&dir).is_some() {
-            self.guard_unsaved(
+            self.guard_all_tabs(
                 window,
                 cx,
                 Rc::new(move |this, window, cx| this.open_collection_dir(&dir, window, cx)),
@@ -773,7 +763,7 @@ impl Workspace {
                     view.update(cx, |this, cx| match store::save_collection_meta(&dir, &meta) {
                         Ok(()) => {
                             let dir = dir.clone();
-                            this.guard_unsaved(window, cx, Rc::new(move |this, window, cx| {
+                            this.guard_all_tabs(window, cx, Rc::new(move |this, window, cx| {
                                 this.open_collection_dir(&dir, window, cx)
                             }));
                         }
@@ -865,7 +855,7 @@ impl Workspace {
                 let report = plan.report.to_string();
                 let has_warnings = !plan.report.warnings.is_empty();
                 let root = root.clone();
-                this.guard_unsaved(
+                this.guard_all_tabs(
                     window,
                     cx,
                     Rc::new(move |this, window, cx| this.open_collection_dir(&root, window, cx)),
@@ -1084,14 +1074,19 @@ impl Workspace {
             .border_color(p.hairline)
             .child(header)
             .children(env_row)
-            .child(
-                div()
+            .child({
+                let list = div()
                     .id("sidebar-list")
                     .flex_1()
                     .min_h_0()
                     .overflow_y_scroll()
-                    .child(body),
-            )
+                    .child(body);
+                // A single collection has no header row: its empty space is the root.
+                match (&self.project, self.collections.first()) {
+                    (None, Some(c)) => self.drop_target(list, c.root.clone(), cx),
+                    _ => list,
+                }
+            })
             .children(self.load_errors.iter().map(|e| {
                 div()
                     .px_4()
@@ -1138,41 +1133,45 @@ impl Workspace {
             (all, shown)
         });
         out.push(
-            row_base(&collection.root, depth)
-                .font_weight(FontWeight::SEMIBOLD)
-                .text_color(if active { p.text } else { p.text_muted })
-                .on_click(cx.listener(move |this, _: &ClickEvent, _, cx| {
-                    if !this.collapsed.remove(&toggle) {
-                        this.collapsed.insert(toggle.clone());
-                    }
-                    cx.notify();
-                }))
-                .child(
-                    Icon::new(if collapsed {
-                        IconName::ChevronRight
-                    } else {
-                        IconName::ChevronDown
-                    })
-                    .xsmall(),
-                )
-                .child(
-                    div()
-                        .flex_1()
-                        .min_w_0()
-                        .truncate()
-                        .child(collection.meta.name.clone()),
-                )
-                .context_menu(move |menu: PopupMenu, window, cx| {
-                    collection_menu(
-                        menu,
-                        view.clone(),
-                        menu_root.clone(),
-                        pins.clone(),
-                        window,
-                        cx,
-                    )
+            self.drop_target(
+                row_base(&collection.root, depth),
+                collection.root.clone(),
+                cx,
+            )
+            .font_weight(FontWeight::SEMIBOLD)
+            .text_color(if active { p.text } else { p.text_muted })
+            .on_click(cx.listener(move |this, _: &ClickEvent, _, cx| {
+                if !this.collapsed.remove(&toggle) {
+                    this.collapsed.insert(toggle.clone());
+                }
+                cx.notify();
+            }))
+            .child(
+                Icon::new(if collapsed {
+                    IconName::ChevronRight
+                } else {
+                    IconName::ChevronDown
                 })
-                .into_any_element(),
+                .xsmall(),
+            )
+            .child(
+                div()
+                    .flex_1()
+                    .min_w_0()
+                    .truncate()
+                    .child(collection.meta.name.clone()),
+            )
+            .context_menu(move |menu: PopupMenu, window, cx| {
+                collection_menu(
+                    menu,
+                    view.clone(),
+                    menu_root.clone(),
+                    pins.clone(),
+                    window,
+                    cx,
+                )
+            })
+            .into_any_element(),
         );
         if !collapsed
             && let Some((_, tree)) = self.trees.iter().find(|(root, _)| *root == collection.root)
@@ -1411,7 +1410,11 @@ impl Workspace {
         let view = cx.entity().downgrade();
         let toggle_path = path.to_path_buf();
         let menu_path = path.to_path_buf();
-        row_base(path, depth)
+        let row = draggable(
+            row_base(path, depth),
+            DraggedNode::new(path, true, name.to_owned(), p),
+        );
+        self.drop_target(row, path.to_path_buf(), cx)
             .text_color(p.text_muted)
             .on_click(cx.listener(move |this, _: &ClickEvent, _, cx| {
                 if !this.collapsed.remove(&toggle_path) {
@@ -1442,7 +1445,7 @@ impl Workspace {
     ) -> impl IntoElement {
         let p = self.palette;
         let selected = self.selected.as_deref() == Some(path);
-        let dirty = selected && self.is_dirty(cx);
+        let dirty = self.path_dirty(path, cx);
         // The open request shows the editor's method, so the badge follows edits.
         let method = if selected {
             self.current_method(cx)
@@ -1452,7 +1455,12 @@ impl Workspace {
         let view = cx.entity().downgrade();
         let open_path = path.to_path_buf();
         let menu_path = path.to_path_buf();
-        row_base(path, depth)
+        let row = draggable(
+            row_base(path, depth),
+            DraggedNode::new(path, false, request.name.clone(), p),
+        );
+        let folder = path.parent().unwrap_or(path).to_path_buf();
+        self.drop_target(row, folder, cx)
             .when(selected, |row| row.bg(p.accent.opacity(0.14)))
             .on_click(cx.listener(move |this, _: &ClickEvent, window, cx| {
                 this.select(open_path.clone(), window, cx)
@@ -1769,7 +1777,7 @@ impl Workspace {
                     {
                         this.update_in(cx, |this, window, cx| {
                             match project::create_project(&parent, &name, &["test", "prod"]) {
-                                Ok(root) => this.guard_unsaved(
+                                Ok(root) => this.guard_all_tabs(
                                     window,
                                     cx,
                                     Rc::new(move |this, window, cx| {
@@ -1827,7 +1835,7 @@ impl Workspace {
                     {
                         this.update_in(cx, |this, window, cx| {
                             match project::create_collection(&parent, &name) {
-                                Ok(root) => this.guard_unsaved(
+                                Ok(root) => this.guard_all_tabs(
                                     window,
                                     cx,
                                     Rc::new(move |this, window, cx| {

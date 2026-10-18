@@ -12,11 +12,11 @@
 |---|---|
 | M0 Temel | ✅ |
 | M1 Arayüzden istek | ✅ 100 MB JSON ~0.33 s'de açılıyor |
-| M2 Koleksiyonlar, Postman içe aktarma | ✅ 8/10 · sekmeler ve sürükle-bırak M3'e taşındı |
-| M3 Simge, projeler, ortamlar, kopyalama, auth | 🔜 8/9 · bitti: simge, ortam seçici ve editörü, dinamik değişkenler, projeler, kabuk komutu olarak kopyalama, metotla yeni istek, değişken çipleri, Auth sekmesi ve miras, komut paleti · sıradaki: sekmeler ve sürükle-bırak |
+| M2 Koleksiyonlar, Postman içe aktarma | ✅ (sekmeler ve sürükle-bırak M3'te tamamlandı) |
+| M3 Simge, projeler, ortamlar, kopyalama, auth | ✅ 9/9 · bitti: simge, ortam seçici ve editörü, dinamik değişkenler, projeler, kabuk komutu olarak kopyalama, metotla yeni istek, değişken çipleri, Auth sekmesi ve miras, komut paleti, sekmeler, sürükle-bırak ile taşıma · küçük kalanlar M3 bölümünün sonunda · sıradaki: M4 |
 | M4–M9 | ⬜ |
 
-Release ikili dosyası 27.7 MB (üst sınır ~40 MB). Testler: core 32, desktop 4, codegen 11, import 10, http 4 (hepsi geçiyor, clippy uyarısız).
+Release ikili dosyası 27.7 MB (üst sınır ~40 MB). Testler: core 33, desktop 4, codegen 11, import 10, http 4 (hepsi geçiyor, clippy uyarısız).
 
 ### Kullanıcı notları (17 Ekim 2026) ve plana nasıl işlendikleri
 | # | Not | Nereye işlendi |
@@ -235,7 +235,7 @@ Her istek için "Network" sekmesi: istek gerçekte nasıl ve nereden geçti?
 | **Ağaç görünümü** | Klasörler açılıp kapanır, her istekte metot rozeti görünür. | ✅ |
 | **Oluştur / yeniden adlandır / çoğalt / sil** | Sağ tık menüsünden ve kısayollardan. Silinen dosyalar çöp kutusuna gider, hemen kalıcı silinmez. | ✅ |
 | **Metot seçerek yeni istek** (not 7) | "+" menüsünde GET, POST, PUT, PATCH, DELETE … seçilir; istek o metotla ve uygun gövde tipiyle açılır (POST/PUT/PATCH için JSON). | ✅ |
-| **Sürükle-bırak** | İstekleri ve klasörleri taşıma ve sıralama | ⬜ M |
+| **Sürükle-bırak** | İstekleri ve klasörleri taşıma ve sıralama. Bir istek veya klasör, başka bir klasörün, koleksiyonun ya da isteğin üstüne bırakılınca oraya taşınır (scriptler ve `folder.toml` da gider; koleksiyonlar arası da olur). | ✅ taşıma · ⬜ elle sıralama (şimdilik ada göre) |
 | **Miras alma** | Klasör ve koleksiyon seviyesinde auth, header, değişken ve script tanımlanabilir. Alt öğeler bunları devralır. Auth için klasörde `folder.toml`, koleksiyonda `apix.toml`, projede `apix-project.toml` kullanılır (sağ tık → Auth…). | ✅ auth · ⬜ header ve script M |
 | **Dokümantasyon** | Her koleksiyon, klasör ve istek için Markdown açıklama | ⬜ S |
 | **Örnekler (examples)** | Kaydedilmiş istek ve yanıt çiftleri | ⬜ M |
@@ -243,7 +243,7 @@ Her istek için "Network" sekmesi: istek gerçekte nasıl ve nereden geçti?
 | **Çoklu koleksiyon** | Bir çalışma alanında birden fazla koleksiyon açılabilir. | ✅ projelerle (§C1) |
 | **Dosya izleme** | Dosya diskte değişirse (git pull veya başka bir editör) uygulama anında günceller. | ✅ |
 | **Git durumu** | Kenar çubuğunda değişen dosyalar işaretlenir. Durum çubuğunda branch adı görünür. | ⬜ M |
-| **Sekmeler** | Birden çok istek sekmede açık durur. Kaydedilmemiş değişiklik işareti olur. Ctrl+Tab ile sekmeler arası geçilir. | ⬜ M |
+| **Sekmeler** | Birden çok istek sekmede açık durur. Kaydedilmemiş değişiklik işareti olur. Ctrl+Tab ile sekmeler arası geçilir. Her sekme kendi taslağını, yanıtını ve sürmekte olan isteğini saklar; Ctrl+W ve orta tık kapatır. | ✅ · ⬜ açık sekmeleri oturumlar arasında hatırlama |
 | **Geçmiş** | Gönderilen her istek yanıtıyla birlikte kaydedilir. Aranabilir ve tekrar gönderilebilir. | ⬜ M |
 
 ### C1. Projeler: Proje → Ortam → Koleksiyonlar (not 6)
@@ -451,13 +451,13 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 
 **Bitti sayılması için:** jsonplaceholder'a arayüzden GET ve POST gönderilip yanıt renkli olarak görülebilmeli.
 
-### M2 — Koleksiyonlar ve Postman içe aktarma ⭐ (10 maddeden 8'i bitti; kalan ikisi M3'ün 9. maddesine taşındı)
+### M2 — Koleksiyonlar ve Postman içe aktarma ⭐ ✅ (tamamlandı; son iki madde M3'te bitti)
 1. [x] Klasör açma (Ctrl+O). Apix olmayan bir klasör seçilirse orada yeni koleksiyon oluşturmayı önerir. Klasör pencereye sürüklenince de açılır. "En son açılanlar" listesi M3'te eklendi. (S)
 2. [x] Kenar çubuğu ağacı: gerçek dosyalardan, iç içe ve açılıp kapanan klasörler, metot rozetleri (M)
 3. [x] İstek seçme, düzenleme ve kaydetme (Ctrl+S). Kaydedilmemiş değişiklik işareti var. Başka isteğe geçerken "Kaydet / Kaydetme / Vazgeç" sorusu çıkar. (M)
 4. [x] Yeni istek (Ctrl+N) ve yeni klasör, yeniden adlandırma, çoğaltma, çöp kutusuna silme. Sağ tık menüsünden yapılır. Scriptler istekle birlikte taşınır. (M)
-5. [ ] Sürükle-bırak ile taşıma ve sıralama (M)
-6. [ ] Sekmeler (M)
+5. [x] Sürükle-bırak ile taşıma (M3'te yapıldı). Elle sıralama sonraya kaldı. (M)
+6. [x] Sekmeler (M3'te yapıldı) (M)
 7. [x] **Postman v2.1/v2.0 koleksiyon içe aktarma** ve içe aktarma raporu (L). Kenar çubuğu düğmesi, sürükle-bırak ve CLI ile yapılabilir.
 8. [x] **Postman environment içe aktarma** (S). `secret` değerler git'e girmeyen `*.local.toml` dosyasına yazılır.
 9. [x] `apix import <dosya> [--out klasör] [--into koleksiyon]` CLI komutu, dosya türünü kendisi algılar (S)
@@ -465,7 +465,7 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 
 **Bitti sayılması için:** gerçek bir Postman koleksiyonu içe aktarılıp arayüzden gezilebilmeli ve istekleri çalıştırılabilmeli.
 
-### M3 — Simge, projeler, ortamlar, kopyalama, auth 🔜 (9 maddeden 8'i bitti)
+### M3 — Simge, projeler, ortamlar, kopyalama, auth ✅ (9 maddenin hepsi bitti; küçük kalanlar aşağıda)
 1. [x] **Uygulama simgesi** (not 4) (M). `tools/icongen` aracı logodan PNG, ICO, ICNS ve Linux hicolor dosyalarını üretir. Simge exe'ye gömülü, başlık çubuğunda da görünüyor.
    - `Logo/LogoFirst.jpg` kırpılır: alttaki yansıma atılır, zemin squircle dışında saydam yapılır.
    - 16–32 px için sadeleştirilmiş bir sürüm hazırlanır (sadece kuş ve X). Küçük boyutta ince çizgiler kaybolur.
@@ -478,7 +478,9 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 6. [x] **Değişken çipleri** (§A2): URL çubuğunda renkli çipler, üstüne gelince değer, kapsam ve gizlilik bilgisi. Kalan: Params, Headers ve Body alanları. (M)
 7. [x] **Auth sekmesi:** Inherit, No auth, Bearer, Basic, API key. Klasör, koleksiyon ve proje auth'u (sağ tık → Auth…, proje menüsü), istekler en yakın üst öğeden miras alır; masaüstü, CLI ve "Copy as" aynı kuralı kullanır. Postman içe aktarma auth'u olduğu yerde bırakır. OAuth 2.0 M4'e taşındı. (L)
 8. [x] **Komut paleti** (Ctrl+K veya Ctrl+P): tüm istekler ve komutlar içinde bulanık arama ("crus" → "Create user"). Komutlar: gönder, kaydet, metotla yeni istek, klasör, koleksiyon, proje, aç, içe aktar, değişkenler, ortam seçimi, kopyala, auth, gruplama, son açılanlar. (M)
-9. [ ] M2'den kalanlar: sekmeler, sürükle-bırak ile taşıma ve sıralama (M)
+9. [x] **M2'den kalanlar:** sekmeler (her sekme taslağını, yanıtını ve süren isteğini saklar; Ctrl+W, Ctrl+Tab, orta tık), sürükle-bırak ile istek ve klasör taşıma (koleksiyonlar arası dahil). Elle sıralama sonraya kaldı. (M)
+
+**M3'ten küçük kalanlar:** OS anahtarlığı, proje renkleri, koleksiyonu sürükleyerek projeye taşıma, prod onay penceresi, fish/HTTPie/wget kopyalama, Params/Headers/Body alanlarında değişken çipleri, sidebar'da elle sıralama, açık sekmeleri hatırlama.
 
 ### M4 — Günlük kullanıma hazır
 - **Şifreli koleksiyonlar (§C2)** (not 2): oluşturma, şifreleme ve şifreyi kaldırma, kilit açma ve otomatik kilit, kurtarma anahtarı, CLI desteği (L)
