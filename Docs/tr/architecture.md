@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:6beb5b9849f81de4 -->
+<!-- translated from en/architecture.md sha256:407f90f941e5c114 -->
 
 # Apix mimarisi
 
@@ -58,7 +58,7 @@ tutar), `workspace/drag.rs` (istekleri ve klasörleri taşımak için sürüklem
 `workspace/shell_copy.rs` (farklı kopyala / curl yapıştır), `workspace/var_chips.rs`
 (URL çubuğundaki `{{variable}}` çipleri ve üzerine gelince açılan kartları),
 `large_view.rs` (devasa gövdeler için satır tabanlı görüntüleyici), `net.rs`
-(tokio köprüsü), `state.rs` (kullanıcının yapılandırma klasöründe son kullanılan
+(tokio köprüsü), `bidi.rs` (sağdan sola yerleşim yardımcıları, bkz. Diller), `state.rs` (kullanıcının yapılandırma klasöründe son kullanılan
 öğeler ve klasör başına ortam), `theme.rs` ve `fonts.rs`.
 
 Planlanan crate'ler:
@@ -248,7 +248,9 @@ my-api/
 ## Diller (M4)
 
 Masaüstü arayüzündeki her metin bir anahtardan geçer: `tr!("menu.file")`
-(`rust_i18n::t!` üzerine kurulu, `SharedString` döndüren ince bir sarmalayıcı).
+(`rust_i18n::t!` üzerine kurulu, gösterilecek bir `SharedString` döndüren ince
+bir sarmalayıcı; kaydedilen metinler, örneğin yeni bir isteğin varsayılan adı,
+için aynı metni `tr_plain!` verir).
 rust-i18n, gpui-kit'in kullandığı sistemin aynısıdır; bu yüzden ikisi de süreç
 genelinde tek bir locale'i izler. Çince için gpui-kit'in kendi metinlerinin
 kullandığı kod olan `zh-CN` kullanılır. Her dil tek bir düz dosyadır:
@@ -268,10 +270,35 @@ font fallback mekanizmasından (DirectWrite, Core Text, fontconfig) gelir. Arap�
 metin sağdan sola şekillendirilir ve yerleştirilir; Windows'ta bunun için glyph
 run yerleşimi düzeltilmiş gpui 0.3.9 DirectWrite backend'i olan
 `vendor/gpui-pre-windows` gerekir (workspace `Cargo.toml` üzerinden patch'lenir;
-upstream düzelttiğinde kaldırılacak). Henüz yapılmayanlar: sağdan sola
-paragrafların satır kaydırması (gpui, şekillendirilmiş bir satırı soldan sağa
-varsayan glif konumlarından keser) ve yerleşimin aynalanması. Motor crate'lerinden
-gelen hata iletileri İngilizce kalır.
+upstream düzelttiğinde kaldırılacak). gpui sağdan sola metni satıra
+kaydıramaz: bir paragrafı tek satır olarak şekillendirir ve soldan sağa arttığını
+varsaydığı glif x konumlarından keser. Bu yüzden satıra kayabilecek metinler
+(notlar, ipuçları, açıklamalar, iletiler) `bidi::para` üzerinden geçer; o da
+RTL'de metni okuma sırasıyla boşluklardan böler, her aday satırı ölçer ve her
+satırı kaydırmadan ayrı çizer (`src/bidi/paragraph.rs`). Diğer dillerde düz gpui
+metnidir. gpui her satırı ayrıca soldan sağa temel yönle yerleştirir; bu yüzden
+RTL bir dilde `tr!` her metni sağdan sola gömmeyle (U+202B…U+202C; DirectWrite
+yeni yalıtım karakterlerini yok sayar) sarar. Böylece Latin bir sözcükle
+("URL", "OAuth 2.0", "Ctrl+S") başlayan ya da biten bir cümle de sağdan sola
+okunur; durum çubuğu gibi birleştirilmiş metinler için aynısını `i18n::display`
+yapar. Bu işaretler dosyalara asla ulaşmaz: kaydedilen metinler `tr_plain!`
+kullanır. Motor crate'lerinden gelen hata iletileri İngilizce kalır.
+
+Sağdan sola bir dilde (`Language::rtl`, Arapça) pencere aynalanır: kenar çubuğu
+sağa, yanıt paneli istek panelinin soluna, pencere düğmeleri sola geçer; menüler,
+sekme şeritleri, form satırları ve durum çubuğu sağdan başlar, metin sağa
+hizalanır. GPUI'de yerleşim yönü yoktur, bu yüzden bunu `src/bidi.rs` yapar:
+stil alan her öğe için bir `Bidi` trait'i (`dir_row` bir satırı ters çevirir;
+`text_start` / `text_end`, `ps` / `pe` dolguları ve `border_e_1` tarafı yöne göre
+seçer; `ltr` metni sola sabitler), gpui-kit'in `TabBar`'ı için `tab_bar` /
+`fill_tabs` (sekmeler ters sırayla verilir, indeksler geri eşlenir) ve diyaloglar
+için `bidi_title` (RTL'de kapatma düğmesi başlık satırının soluna taşınır).
+Yardımcılar dili görünüm render edilirken okur, böylece dil değişince pencere
+anında aynalanır. Kod ve yanıt görüntüleyicileri, URL çubuğu, anahtar–değer
+tabloları (parametreler, başlıklar, form alanları, değişkenler) ve yanıt
+başlıkları her dilde soldan sağa kalır. gpui-kit'in açılır menüleri ve düğmeleri
+kendi soldan sağa iç yerleşimlerini korur (kısayol sağda, ikon etiketin önünde);
+menüler düğmelerinden sola doğru açılır.
 
 Dil eklemek: `locales/en.yml` dosyasını `locales/<code>.yml` olarak kopyalayın,
 değerleri çevirin ve `src/i18n.rs` içindeki `LANGUAGES` listesine bir satır ekleyin.

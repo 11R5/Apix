@@ -12,6 +12,7 @@ use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
 use super::{KvRow, Workspace};
+use crate::bidi::{self, Bidi as _};
 use crate::theme::Palette;
 use crate::tr;
 
@@ -353,14 +354,15 @@ impl BodyEditor {
     fn picker(&self, cx: &mut Context<Self>) -> impl IntoElement {
         let selected = BodyKind::ALL.iter().position(|k| *k == self.kind);
         // Small, so all eight fit; on a narrow pane the strip scrolls.
-        let mut bar = TabBar::new("body-kind").segmented().small();
-        if let Some(ix) = selected {
-            bar = bar.selected_index(ix);
-        }
-        BodyKind::ALL
-            .iter()
-            .fold(bar, |bar, kind| bar.child(Tab::new().label(kind.label())))
-            .on_click(cx.listener(|this, ix: &usize, _, cx| this.set_kind(BodyKind::ALL[*ix], cx)))
+        bidi::fill_tabs(
+            TabBar::new("body-kind").segmented().small(),
+            selected,
+            BodyKind::ALL
+                .iter()
+                .map(|kind| Tab::new().label(kind.label()))
+                .collect(),
+            cx.listener(|this, ix: &usize, _, cx| this.set_kind(BodyKind::ALL[*ix], cx)),
+        )
     }
 
     fn hint(&self, text: impl Into<SharedString>) -> Div {
@@ -368,7 +370,7 @@ impl BodyEditor {
             .pt_2()
             .text_xs()
             .text_color(self.palette.text_muted)
-            .child(text.into())
+            .child(bidi::para(text))
     }
 
     fn render_form(&self, cx: &mut Context<Self>) -> AnyElement {
@@ -555,7 +557,7 @@ impl BodyEditor {
                     ),
             )
             .child(match status {
-                Some((text, color)) => div().text_xs().text_color(color).child(text),
+                Some((text, color)) => div().text_xs().text_color(color).child(bidi::para(text)),
                 None => self.hint(tr!("body.binary_hint")),
             })
             .into_any_element()
@@ -587,6 +589,7 @@ impl BodyEditor {
             )
             .child(
                 h_flex()
+                    .dir_row()
                     .pt_1()
                     .gap_2()
                     .child(label(tr!("body.graphql_variables")))
@@ -625,7 +628,7 @@ impl Render for BodyEditor {
         v_flex()
             .size_full()
             .gap_2()
-            .child(h_flex().w_full().min_w_0().child(self.picker(cx)))
+            .child(h_flex().dir_row().w_full().min_w_0().child(self.picker(cx)))
             .child(div().flex_1().min_h_0().child(content))
     }
 }

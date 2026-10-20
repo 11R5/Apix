@@ -65,7 +65,9 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [ ] **Settings and UI language** (moved from M7): settings screen; English, Turkish, Arabic, German, French, Russian, Japanese, Chinese and Spanish; right-to-left layout for Arabic; switch without restarting; a new language is one file plus one line
   - [x] Settings dialog (Ctrl+,): language, theme, auto-lock time for encrypted collections; saved to `settings.toml` at once
   - [x] Every UI text behind a key (about 414), nine languages, switch without restarting, first start follows the system language, a test for missing keys and placeholders
-  - [ ] Right-to-left layout for Arabic (the text itself is already shaped right to left), translated engine error messages, native-speaker review
+  - [x] Right-to-left layout for Arabic: sidebar, panes, window controls, menus, tabs, form rows, dialogs and the status bar mirror; code, URLs and key–value tables stay left to right; switches at once
+  - [x] Wrapped right-to-left text (notes, hints, descriptions) breaks into lines in reading order
+  - [ ] Translated engine error messages, native-speaker review
 - [x] **Documentation and README**: per-language docs in `Docs/<lang>/` (user guide with screenshots, architecture, technical, workflows) in English and Turkish, `Docs/languages.toml`, `cargo run -p docs-check` for stale translations; README on how Apix differs from Postman, Insomnia, Bruno and Hoppscotch; `scripts/measure.ps1` for reproducible performance numbers
 - [ ] Request settings (timeout, TLS, proxy, client certificates), cookie manager
 - [ ] Code snippets in other languages, history

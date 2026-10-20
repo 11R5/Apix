@@ -319,6 +319,8 @@ impl Render for LargeView {
 
         div()
             .id("large-view")
+            // Code: left to right in any interface language.
+            .text_left()
             .key_context(CONTEXT)
             .track_focus(&self.focus)
             .relative()

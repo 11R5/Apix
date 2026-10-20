@@ -30,7 +30,8 @@
   connection, waiting and download time, addresses, VPN hints, redirects and the
   server certificate.
 - **In your language.** English, Türkçe, العربية, Deutsch, Français, Русский,
-  日本語, 简体中文 and Español, switched at once in Settings.
+  日本語, 简体中文 and Español, switched at once in Settings; in Arabic the
+  window mirrors to right to left.
 
 ### Compared with similar tools
 

@@ -21,6 +21,7 @@ use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
 use super::Workspace;
+use crate::bidi::{self, Bidi as _, DialogBidi as _};
 use crate::theme::Palette;
 use crate::tr;
 
@@ -524,6 +525,7 @@ impl AuthEditor {
     fn row(&self, label: impl Into<SharedString>, child: impl IntoElement) -> Div {
         let label: SharedString = label.into();
         h_flex()
+            .dir_row()
             .gap_3()
             .items_center()
             .child(
@@ -534,7 +536,15 @@ impl AuthEditor {
                     .text_color(self.palette.text_muted)
                     .child(label),
             )
-            .child(div().flex_1().min_w_0().max_w(px(520.)).child(child))
+            .child(
+                div()
+                    .flex_1()
+                    .min_w_0()
+                    .max_w(px(520.))
+                    // A row in RTL, so a narrower control (a picker) sits next to the label.
+                    .when(bidi::rtl(), |d| d.flex().flex_row_reverse())
+                    .child(child),
+            )
     }
 
     fn field(&self, f: F) -> AnyElement {
@@ -551,7 +561,7 @@ impl AuthEditor {
         div()
             .text_sm()
             .text_color(self.palette.text_muted)
-            .child(text.into())
+            .child(bidi::para(text))
             .into_any_element()
     }
 
@@ -576,6 +586,7 @@ impl AuthEditor {
                 }))
         });
         h_flex()
+            .dir_row()
             .gap_3()
             .items_center()
             .child(
@@ -634,6 +645,7 @@ impl AuthEditor {
                 self.row(
                     "",
                     Checkbox::new("auth-pkce")
+                        .dir_row()
                         .checked(self.pkce)
                         .label(tr!("auth.use_pkce"))
                         .on_click(cx.listener(|this, checked: &bool, _, cx| {
@@ -690,6 +702,9 @@ impl AuthEditor {
             self.row(
                 tr!("auth.field.token"),
                 h_flex()
+                    .flex_1()
+                    .min_w_0()
+                    .dir_row()
                     .gap_2()
                     .items_center()
                     .child(
@@ -698,7 +713,7 @@ impl AuthEditor {
                             .min_w_0()
                             .text_sm()
                             .text_color(color)
-                            .child(status),
+                            .child(bidi::para(status)),
                     )
                     .child(
                         Button::new("auth-get-token")
@@ -726,7 +741,7 @@ impl AuthEditor {
             div()
                 .text_xs()
                 .text_color(p.text_muted.opacity(0.8))
-                .child(tr!("auth.note.oauth2"))
+                .child(bidi::para(tr!("auth.note.oauth2")))
                 .into_any_element(),
         );
         out
@@ -788,7 +803,7 @@ impl Render for AuthEditor {
                         div()
                             .text_xs()
                             .text_color(p.text_muted.opacity(0.8))
-                            .child(detail)
+                            .child(bidi::para(detail))
                             .into_any_element(),
                     );
                 }
@@ -850,7 +865,7 @@ impl Render for AuthEditor {
                     div()
                         .text_xs()
                         .text_color(p.text_muted.opacity(0.8))
-                        .child(tr!("auth.note.variables")),
+                        .child(bidi::para(tr!("auth.note.variables"))),
                 )
             })
     }
@@ -989,12 +1004,13 @@ impl super::Workspace {
                 (editor.clone(), view.clone(), view.clone(), owner.clone());
             dialog
                 .on_close(super::collections::refocus(view.clone()))
-                .title(title.clone())
+                .bidi_title(title.clone())
                 .width(px(620.))
                 .child(div().pb_2().child(editor.clone()))
                 .on_ok(|_, _, _| false)
                 .footer(
                     h_flex()
+                        .dir_row()
                         .w_full()
                         .gap_2()
                         .child(
@@ -1002,11 +1018,11 @@ impl super::Workspace {
                                 .flex_1()
                                 .text_xs()
                                 .text_color(palette.text_muted)
-                                .child(match label {
+                                .child(bidi::para(match label {
                                     "folder" => tr!("auth.dialog.folder_note"),
                                     "collection" => tr!("auth.dialog.collection_note"),
                                     _ => tr!("auth.dialog.project_note"),
-                                }),
+                                })),
                         )
                         .child(
                             Button::new("auth-cancel")

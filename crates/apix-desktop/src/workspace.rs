@@ -28,7 +28,7 @@ use gpui_kit::component::input::{Editor, EditorState, Input, InputEvent, InputSt
 use gpui_kit::component::menu::DropdownMenu as _;
 use gpui_kit::component::select::{Select, SelectEvent, SelectState};
 use gpui_kit::component::spinner::Spinner;
-use gpui_kit::component::tab::{Tab, TabBar};
+use gpui_kit::component::tab::Tab;
 use gpui_kit::component::{
     IconName, IndexPath, Sizable, TitleBar, WindowExt as _, h_flex, h_resizable, resizable_panel,
     v_flex,
@@ -36,6 +36,7 @@ use gpui_kit::component::{
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
+use crate::bidi::{self, Bidi as _};
 use crate::large_view::{Document, LARGE_BODY_BYTES, LargeView};
 use crate::net;
 use crate::settings::Settings;
@@ -725,11 +726,19 @@ impl Workspace {
             (None, Some(c)) => c.meta.name.clone(),
             (None, None) => String::new(),
         };
+        // In RTL the window controls move to the left, as in native RTL apps.
+        // macOS draws its own controls on the left, so there only the content mirrors.
+        let rtl = bidi::rtl();
         TitleBar::new()
             .bg(transparent_black())
             .border_color(p.hairline)
+            .when(rtl && !cfg!(target_os = "macos"), |bar| {
+                bar.flex_row_reverse().pl_0().pr_3()
+            })
             .child(
                 h_flex()
+                    .when(rtl, |row| row.flex_1())
+                    .dir_row()
                     .gap_2()
                     .items_center()
                     .child(img(theme::app_icon()).size(px(16.)).flex_none())
@@ -743,7 +752,12 @@ impl Workspace {
                     .child(div().w(px(6.)))
                     .child(self.render_menu_bar(cx))
                     .child(div().w(px(10.)))
-                    .child(div().text_xs().text_color(p.text_muted).child(name)),
+                    .child(
+                        div()
+                            .text_xs()
+                            .text_color(p.text_muted)
+                            .child(crate::i18n::display(&name)),
+                    ),
             )
     }
 
@@ -845,19 +859,20 @@ impl Workspace {
             .border_1()
             .border_color(p.hairline)
             .overflow_hidden()
-            .child(
-                TabBar::new("request-tabs")
-                    .underline()
-                    .selected_index(self.request_tab)
-                    .child(Tab::new().label(params_label))
-                    .child(Tab::new().label(headers_label))
-                    .child(Tab::new().label(auth_label))
-                    .child(Tab::new().label(body_label))
-                    .on_click(cx.listener(|this, ix: &usize, _, cx| {
-                        this.request_tab = *ix;
-                        cx.notify();
-                    })),
-            )
+            .child(bidi::tab_bar(
+                "request-tabs",
+                self.request_tab,
+                vec![
+                    Tab::new().label(params_label),
+                    Tab::new().label(headers_label),
+                    Tab::new().label(auth_label),
+                    Tab::new().label(body_label),
+                ],
+                cx.listener(|this, ix: &usize, _, cx| {
+                    this.request_tab = *ix;
+                    cx.notify();
+                }),
+            ))
             .child(div().flex_1().min_h_0().p_2().child(content))
     }
 
@@ -926,10 +941,10 @@ impl Workspace {
                         .pt_2()
                         .text_xs()
                         .text_color(p.text_muted)
-                        .child(match table {
+                        .child(bidi::para(match table {
                             Table::Params => tr!("request.params_hint"),
                             Table::Headers => tr!("request.headers_hint"),
-                        }),
+                        })),
                 )
             })
     }
@@ -968,8 +983,8 @@ impl Workspace {
                     .gap_1()
                     .text_sm()
                     .text_color(p.text_muted)
-                    .child(tr!("response.empty"))
-                    .child(div().text_xs().child(send_hint()))
+                    .child(bidi::para(tr!("response.empty")))
+                    .child(div().text_xs().child(bidi::para(send_hint())))
                     .into_any_element(),
             )),
             ResponseState::Loading => shell.child(centered(
@@ -993,7 +1008,11 @@ impl Workspace {
                             .text_color(p.err)
                             .child(tr!("response.failed")),
                     )
-                    .child(div().text_color(p.text_muted).child(message.clone()))
+                    .child(
+                        div()
+                            .text_color(p.text_muted)
+                            .child(bidi::para(message.clone())),
+                    )
                     .into_any_element(),
             )),
             ResponseState::Done(done) => {
@@ -1027,6 +1046,7 @@ impl Workspace {
                 shell
                     .child(
                         h_flex()
+                            .dir_row()
                             .gap_3()
                             .items_center()
                             .px_3()
@@ -1053,18 +1073,19 @@ impl Workspace {
                             .child(response.version.clone())
                             .children(viewer_note),
                     )
-                    .child(
-                        TabBar::new("response-tabs")
-                            .underline()
-                            .selected_index(self.response_tab)
-                            .child(Tab::new().label(tr!("response.tab.pretty")))
-                            .child(Tab::new().label(tr!("response.tab.raw")))
-                            .child(Tab::new().label(headers_label))
-                            .child(Tab::new().label(tr!("response.tab.network")))
-                            .on_click(cx.listener(|this, ix: &usize, window, cx| {
-                                this.set_response_tab(*ix, window, cx)
-                            })),
-                    )
+                    .child(bidi::tab_bar(
+                        "response-tabs",
+                        self.response_tab,
+                        vec![
+                            Tab::new().label(tr!("response.tab.pretty")),
+                            Tab::new().label(tr!("response.tab.raw")),
+                            Tab::new().label(headers_label),
+                            Tab::new().label(tr!("response.tab.network")),
+                        ],
+                        cx.listener(|this, ix: &usize, window, cx| {
+                            this.set_response_tab(*ix, window, cx)
+                        }),
+                    ))
                     .child(div().flex_1().min_h_0().p_2().child(content))
             }
         }
@@ -1072,8 +1093,10 @@ impl Workspace {
 
     fn render_response_headers(&self, response: &Response) -> impl IntoElement {
         let p = self.palette;
+        // Header names and values are data: left to right in any language.
         v_flex()
             .id("response-headers")
+            .ltr()
             .size_full()
             .overflow_y_scroll()
             .gap_1()
@@ -1090,6 +1113,35 @@ impl Workspace {
                     )
                     .child(div().flex_1().min_w_0().child(value.clone()))
             }))
+    }
+
+    /// The request pane beside the response pane, request on the reading side.
+    fn render_split(&self, cx: &mut Context<Self>) -> impl IntoElement {
+        let request = resizable_panel()
+            .size(px(520.))
+            .size_range(px(300.)..px(1400.))
+            .child(
+                div()
+                    .size_full()
+                    .pe(px(4.))
+                    .child(self.render_request_pane(cx)),
+            );
+        let response = resizable_panel().child(
+            div()
+                .size_full()
+                .ps(px(4.))
+                .child(self.render_response_pane(cx)),
+        );
+        // The group remembers panel sizes by position, so each direction keeps its own.
+        if bidi::rtl() {
+            h_resizable("response-request")
+                .child(response)
+                .child(request)
+        } else {
+            h_resizable("request-response")
+                .child(request)
+                .child(response)
+        }
     }
 
     fn render_status_bar(&self, cx: &App) -> impl IntoElement {
@@ -1141,6 +1193,7 @@ impl Workspace {
                 .child(tr!("app.status.unsaved", key = key_hint("S")))
         });
         h_flex()
+            .dir_row()
             .justify_between()
             .gap_3()
             .px_3()
@@ -1150,7 +1203,13 @@ impl Workspace {
             .border_color(p.hairline)
             .text_xs()
             .text_color(p.text_muted)
-            .child(div().flex_1().min_w_0().truncate().child(location))
+            .child(
+                div()
+                    .flex_1()
+                    .min_w_0()
+                    .truncate()
+                    .child(crate::i18n::display(&location)),
+            )
             .children(environment)
             .children(unsaved)
             .child(tr!(
@@ -1242,6 +1301,7 @@ impl Render for Workspace {
             .size_full()
             .bg(p.background())
             .text_color(p.text)
+            .text_start()
             .child(self.render_title_bar(cx))
             // Hard to miss: requests in a production environment touch real data.
             .when(self.is_prod(), |d| {
@@ -1249,6 +1309,7 @@ impl Render for Workspace {
             })
             .child(
                 h_flex()
+                    .dir_row()
                     .flex_1()
                     .min_h_0()
                     .child(self.render_sidebar(cx))
@@ -1261,30 +1322,7 @@ impl Render for Workspace {
                             .gap_3()
                             .children(self.render_tabs(cx))
                             .child(self.render_url_bar(cx))
-                            .child(
-                                div().flex_1().min_h_0().child(
-                                    h_resizable("request-response")
-                                        .child(
-                                            resizable_panel()
-                                                .size(px(520.))
-                                                .size_range(px(300.)..px(1400.))
-                                                .child(
-                                                    div()
-                                                        .size_full()
-                                                        .pr_1()
-                                                        .child(self.render_request_pane(cx)),
-                                                ),
-                                        )
-                                        .child(
-                                            resizable_panel().child(
-                                                div()
-                                                    .size_full()
-                                                    .pl_1()
-                                                    .child(self.render_response_pane(cx)),
-                                            ),
-                                        ),
-                                ),
-                            ),
+                            .child(div().flex_1().min_h_0().child(self.render_split(cx))),
                     ),
             )
             .child(self.render_status_bar(cx))

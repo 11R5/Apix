@@ -17,6 +17,7 @@ use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
 use super::{Workspace, describe};
+use crate::bidi::{self, Bidi as _, DialogBidi as _};
 use crate::theme::Palette;
 use crate::tr;
 
@@ -389,6 +390,7 @@ impl EnvEditor {
                 div()
                     .id(("env-page", ix))
                     .flex()
+                    .dir_row()
                     .items_center()
                     .gap_2()
                     .px_2()
@@ -415,9 +417,9 @@ impl EnvEditor {
             .w(px(200.))
             .flex_none()
             .h_full()
-            .border_r_1()
+            .border_e_1()
             .border_color(p.hairline)
-            .pr_2()
+            .pe(px(8.))
             .child(
                 div()
                     .id("env-pages")
@@ -428,6 +430,7 @@ impl EnvEditor {
             )
             .child(
                 h_flex()
+                    .dir_row()
                     .mt_2()
                     .pt_2()
                     .gap_1()
@@ -462,6 +465,7 @@ impl EnvEditor {
         };
         let ix = self.current;
         h_flex()
+            .dir_row()
             .gap_2()
             .items_center()
             .pb_2()
@@ -556,6 +560,8 @@ impl EnvEditor {
         });
         v_flex()
             .id("env-rows")
+            // Names and values are data: left to right in any language.
+            .ltr()
             .flex_1()
             .min_h_0()
             .gap_1()
@@ -644,6 +650,7 @@ impl EnvEditor {
         );
         div()
             .id("dynamic-rows")
+            .ltr()
             .flex_1()
             .min_h_0()
             .overflow_y_scroll()
@@ -672,6 +679,7 @@ impl Render for EnvEditor {
         };
         let hint = self.hint(page);
         h_flex()
+            .dir_row()
             .h(px(480.))
             .gap_3()
             .items_start()
@@ -683,9 +691,21 @@ impl Render for EnvEditor {
                     .h_full()
                     .child(self.render_header(page, cx))
                     .child(content)
-                    .child(div().pt_2().text_xs().text_color(p.text_muted).child(hint))
+                    .child(
+                        div()
+                            .pt_2()
+                            .text_xs()
+                            .text_color(p.text_muted)
+                            .child(bidi::para(hint)),
+                    )
                     .when_some(self.error.clone(), |col, error| {
-                        col.child(div().pt_1().text_xs().text_color(p.err).child(error))
+                        col.child(
+                            div()
+                                .pt_1()
+                                .text_xs()
+                                .text_color(p.err)
+                                .child(bidi::para(error)),
+                        )
                     }),
             )
             .into_any_element()
@@ -715,13 +735,14 @@ impl Workspace {
             let cancel_view = view.clone();
             dialog
                 .on_close(super::collections::refocus(view.clone()))
-                .title(tr!("env.dialog_title"))
+                .bidi_title(tr!("env.dialog_title"))
                 .width(px(880.))
                 .child(editor.clone())
                 // Enter belongs to the fields (it adds an environment), not to the dialog.
                 .on_ok(|_, _, _| false)
                 .footer(
                     h_flex()
+                        .dir_row()
                         .w_full()
                         .justify_end()
                         .gap_2()

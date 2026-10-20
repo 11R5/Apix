@@ -3,6 +3,7 @@
 
 mod assets;
 mod bench;
+mod bidi;
 mod fonts;
 mod i18n;
 mod large_view;

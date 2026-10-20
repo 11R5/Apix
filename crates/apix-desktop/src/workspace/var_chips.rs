@@ -13,6 +13,7 @@ use gpui_kit::component::{ActiveTheme as _, Sizable, v_flex};
 use gpui_kit::*;
 
 use super::{Workspace, key_hint};
+use crate::bidi;
 use crate::tr;
 
 /// The chip under the pointer, with its bounds in window coordinates.
@@ -197,7 +198,9 @@ impl Workspace {
         let name = hovered.name.as_str();
         let kind = self.kind(name);
         let mono = cx.theme().mono_font_family.clone();
-        let line = |text: SharedString, color: Hsla| div().text_xs().text_color(color).child(text);
+        let line = |text: SharedString, color: Hsla| {
+            div().text_xs().text_color(color).child(bidi::para(text))
+        };
 
         let mut card = v_flex()
             .gap_1()

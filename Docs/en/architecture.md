@@ -53,6 +53,7 @@ the others keep their draft, response and in-flight task), `workspace/drag.rs`
 (drag requests and folders to move them), `workspace/shell_copy.rs` (copy as / paste curl), `workspace/var_chips.rs`
 (`{{variable}}` chips in the URL bar and their hover card),
 `large_view.rs` (row-based viewer for huge bodies), `net.rs` (tokio bridge),
+`bidi.rs` (right-to-left layout helpers, see Languages),
 `state.rs` (recent items and per-folder environment in the user's config
 folder), `theme.rs` and `fonts.rs`.
 
@@ -233,7 +234,9 @@ my-api/
 ## Languages (M4)
 
 Every text in the desktop UI goes through a key: `tr!("menu.file")` (a thin
-wrapper over `rust_i18n::t!` that returns a `SharedString`). rust-i18n is the
+wrapper over `rust_i18n::t!` that returns a `SharedString` to show; `tr_plain!`
+gives the same text for what is saved, such as a new request's default name).
+rust-i18n is the
 same system gpui-kit uses, so both follow one process-wide locale; Chinese uses
 `zh-CN`, the code gpui-kit's own texts use. Each language is one flat file,
 `crates/apix-desktop/locales/<code>.yml` (one `key: value` per line, sorted,
@@ -251,9 +254,35 @@ platform's font fallback (DirectWrite, Core Text, fontconfig) next to the
 embedded Inter. Arabic text is shaped and placed right to left; on Windows
 that needs `vendor/gpui-pre-windows`, gpui 0.3.9's DirectWrite backend with its
 glyph-run placement fixed (patched in from the workspace `Cargo.toml`; drop it
-once upstream fixes it). Still to come: wrapping right-to-left paragraphs (gpui
-cuts a shaped line at glyph positions that assume left to right) and mirroring
-the layout. Error messages from the engine crates stay English.
+once upstream fixes it). gpui cannot wrap right-to-left text: it shapes a
+paragraph as one line and cuts it at glyph x positions that it assumes grow
+from left to right. So text that may wrap (notes, hints, descriptions,
+messages) goes through `bidi::para`, which in RTL breaks the text at spaces in
+reading order, measuring each candidate line, and paints each line unwrapped
+(`src/bidi/paragraph.rs`). In other languages it is plain gpui text. gpui also
+lays every line out with a left-to-right base direction, so in an RTL language
+`tr!` wraps each text in a right-to-left embedding (U+202B…U+202C; DirectWrite
+ignores the newer isolates). A sentence that starts or ends with a Latin word
+("URL", "OAuth 2.0", "Ctrl+S") then still reads right to left, and
+`i18n::display` does the same for composed texts such as the status bar. The
+marks never reach files: saved texts use `tr_plain!`. Error messages from the
+engine crates stay English.
+
+In a right-to-left language (`Language::rtl`, Arabic) the window mirrors: the
+sidebar moves to the right, the response pane to the left of the request pane,
+the window controls to the left, and menus, tab strips, form rows and the status
+bar run from the right, with text aligned to the right. GPUI has no layout
+direction, so this is done by `src/bidi.rs`: a `Bidi` trait on every styled
+element (`dir_row` reverses a row, `text_start` / `text_end`, `ps` / `pe`
+paddings and `border_e_1` pick the side by direction, `ltr` pins text left),
+`tab_bar` / `fill_tabs` for gpui-kit's `TabBar` (tabs given in reverse, indices
+mapped back), and `bidi_title` for dialogs (in RTL the close button moves into
+the title row on the left). The helpers read the language while a view renders,
+so a language change mirrors the window at once. Code and response viewers, the
+URL bar, key–value tables (params, headers, form fields, variables) and response
+headers stay left to right in every language. gpui-kit's popup menus and buttons
+keep their own left-to-right inner layout (shortcut on the right, icon before the
+label); menus open towards the left from their button.
 
 Adding a language: copy `locales/en.yml` to `locales/<code>.yml`, translate
 the values, and add one line to `LANGUAGES` in `src/i18n.rs`.
