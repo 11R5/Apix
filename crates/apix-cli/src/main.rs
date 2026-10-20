@@ -38,6 +38,15 @@ enum Command {
         /// Print what happened on the network: DNS, connection, redirects, TLS, local side
         #[arg(short = 'n', long)]
         network: bool,
+        /// Give up after this many seconds (overrides the request's settings)
+        #[arg(long, value_name = "SECONDS")]
+        timeout: Option<f64>,
+        /// Do not verify the server certificate
+        #[arg(short = 'k', long)]
+        insecure: bool,
+        /// Send through this proxy (overrides the environment)
+        #[arg(long, value_name = "URL")]
+        proxy: Option<String>,
     },
     /// Send every request in a collection folder; exits non-zero if any fails
     Run {
@@ -176,11 +185,17 @@ impl Scope {
         })
     }
 
-    /// Loads a request and fills in the auth it inherits from its folders,
-    /// collection or project.
+    /// Loads a request and fills in the auth and transport settings it
+    /// inherits from its folders, collection or project.
     fn load(&self, path: &Path) -> Result<Request> {
         let mut request = load_request(path)?;
         apix_core::project::apply_inherited_auth(
+            &mut request,
+            path,
+            self.collection.as_ref(),
+            self.project.as_ref(),
+        )?;
+        apix_core::project::apply_inherited_settings(
             &mut request,
             path,
             self.collection.as_ref(),
@@ -240,11 +255,20 @@ async fn run(cli: Cli) -> Result<bool> {
             vars,
             include_headers,
             network,
+            timeout,
+            insecure,
+            proxy,
         } => {
             unlock_around(&file, &var)?;
             let scope = Scope::find(&file)?;
             let vars = vars.build(&scope)?;
-            let response = send_file(&client, &scope, &file, &vars).await?;
+            let overrides = apix_core::RequestSettings {
+                timeout_ms: timeout.map(|s| (s * 1000.0) as u64),
+                tls_verify: insecure.then_some(false),
+                proxy,
+                ..Default::default()
+            };
+            let response = send_file(&client, &scope, &file, &vars, &overrides).await?;
             print_status(&style, &response);
             if include_headers {
                 for (k, v) in &response.headers {
@@ -273,7 +297,7 @@ async fn run(cli: Cli) -> Result<bool> {
                     .unwrap_or(&path)
                     .display()
                     .to_string();
-                match send_file(&client, &scope, &path, &vars).await {
+                match send_file(&client, &scope, &path, &vars, &Default::default()).await {
                     Ok(response) => {
                         if response.is_success() {
                             passed += 1
@@ -419,8 +443,10 @@ async fn send_file(
     scope: &Scope,
     path: &Path,
     vars: &Variables,
+    overrides: &apix_core::RequestSettings,
 ) -> Result<Response> {
-    let request = scope.load(path)?;
+    let mut request = scope.load(path)?;
+    request.settings = overrides.clone().or_inherit(&request.settings);
     let resolved = request.resolve(vars);
     if !resolved.missing.is_empty() {
         let names: Vec<_> = resolved.missing.into_iter().collect();

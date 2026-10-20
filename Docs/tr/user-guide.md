@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:5d9950a1707ac152 -->
+<!-- translated from en/user-guide.md sha256:d10fcc437b8be1c7 -->
 
 # Apix kullanım kılavuzu
 
@@ -19,6 +19,8 @@ veya CI'da çalıştırır.
 - [Parametreler ve başlıklar](#parametreler-ve-başlıklar)
 - [Gövde](#gövde)
 - [Yetkilendirme](#yetkilendirme)
+- [İstek ayarları](#istek-ayarları)
+- [Çerezler](#çerezler)
 - [Değişkenler ve ortamlar](#değişkenler-ve-ortamlar)
 - [Yanıt](#yanıt)
 - [Ağ sekmesi](#ağ-sekmesi)
@@ -49,8 +51,8 @@ klasörle başlatmak (`apix-desktop path/to/collection`) o klasörü doğrudan a
   dosyalardan okunur ve dosyalar değiştikçe güncel tutulur. Koleksiyon adının
   altındaki seçici etkin ortamı belirler.
 - **Sekmeler (üst):** açtığınız her istek bir sekme alır.
-- **İstek bölmesi:** metot, URL ve Parametreler, Başlıklar, Yetkilendirme ve
-  Gövde sekmeleri.
+- **İstek bölmesi:** metot, URL ve Parametreler, Başlıklar, Yetkilendirme,
+  Gövde ve Ayarlar sekmeleri.
 - **Yanıt bölmesi (sağ):** durum, süre, boyut ve yanıt gövdesi.
 - **Durum çubuğu (alt):** koleksiyon, açık isteğin dosyası ve en kullanışlı
   kısayollar.
@@ -125,6 +127,56 @@ da istemci için kaydettiğiniz **Yönlendirme URL'si**).
 ayarlamak üzere bir klasöre veya koleksiyona sağ tıklayıp **Yetkilendirme…**
 seçin; **Ortam › Proje yetkilendirmesi…** aynısını tüm bir proje için yapar.
 Yetkilendirmesi *Üst öğeden devral* olan istekler bunu kullanır.
+
+## İstek ayarları
+
+Ayarlar sekmesi isteğin nasıl yol alacağını belirler:
+
+| Ayar | Varsayılan |
+|---|---|
+| Zaman aşımı (saniye) | yok — istek bitene ya da siz iptal edene kadar sürer; `0` da zaman aşımı yok demektir |
+| Yönlendirmeleri izle | açık |
+| En çok yönlendirme | 10 |
+| TLS sertifikasını doğrula | açık — yalnızca güvendiğiniz test sunucuları için kapatın |
+| Proxy | ortamdan (`HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY`); *Kapalı* bunları da yok sayar; bir URL proxy'yi açıkça belirtir |
+| İstemci sertifikası | yok — PEM dosyası; anahtar aynı dosyada ya da ayrı bir dosyada |
+| Çerez gönder | açık |
+
+Boş bırakılan (ya da *Miras*ta kalan) her alan, onu ayarlayan en yakın
+klasörden, koleksiyondan veya projeden, en sonunda da yukarıdaki
+varsayılanlardan değer alır — yetkilendirmeyle aynı zincir. Bir klasöre veya
+koleksiyona sağ tıklayıp **İstek ayarları…** seçerek içindeki her şey için bir
+kez ayarlayın; **Ortam › Proje istek ayarları…** aynısını tüm bir proje için
+yapar. Formun altındaki satır isteğin sonunda neyi kullanacağını gösterir.
+Proxy ve sertifika alanlarında `{{değişkenler}}` çalışır; göreli sertifika
+yolları, onları ayarlayan dosyaya göre çözülür.
+
+İstek dosyasında (ve `folder.toml`, `apix.toml`, `apix-project.toml`
+dosyalarında) ayarlar bir `[settings]` tablosudur:
+
+```toml
+[settings]
+timeout_ms = 5000
+tls_verify = false
+proxy = ""          # "" = proxy yok, ortam ayarlasa bile
+client_cert = "certs/client.pem"
+```
+
+**Komut olarak kopyala** karşılık gelen curl bayraklarını yazar (`-m`,
+`-L --max-redirs`, `-k`, `-x`, `--cert`, `--key`); bu bayrakları taşıyan bir
+curl komutu yapıştırıldığında sekme dolar. `apix send` komutunda dosyayı ezen
+`--timeout`, `--insecure` ve `--proxy` bayrakları vardır. Postman'ın istek
+başına seçenekleri (`protocolProfileBehavior`) içe aktarılır.
+
+## Çerezler
+
+Apix tek bir çerez kavanozu tutar: `Set-Cookie` yanıtları kendiliğinden
+saklanır ve aynı siteye sonraki isteklerle gönderilir; yeniden başlatmalarda da
+korunur (uygulama ayarlarının yanındaki `cookies.json`; oturum çerezleri
+uygulamayla birlikte silinir). **İstek › Çerezler…** hepsini listeler, tek tek
+siler ya da kavanozu boşaltır. Ayarlar sekmesindeki **Çerez gönder**, kavanozu
+bir istek, klasör, koleksiyon veya proje için kapatır. CLI her çalıştırmada boş
+bir kavanozla başlar.
 
 ## Değişkenler ve ortamlar
 

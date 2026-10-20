@@ -11,7 +11,7 @@ use std::path::{Path, PathBuf};
 use apix_core::store::{self, CollectionMeta, FolderMeta, VarMap};
 use apix_core::{
     ApiKeyLocation, Auth, AwsSigV4, Body, ClientAuth, FormPart, GraphQl, KeyValue, Method, OAuth1,
-    OAuth1Method, OAuth2, OAuth2Grant, Request,
+    OAuth1Method, OAuth2, OAuth2Grant, Request, RequestSettings,
 };
 use serde::Deserialize;
 use serde_json::Value;
@@ -60,6 +60,24 @@ struct PmCollection {
     auth: Option<PmAuth>,
     #[serde(default)]
     event: Vec<PmEvent>,
+    #[serde(rename = "protocolProfileBehavior")]
+    ppb: Option<PmProfile>,
+}
+
+/// Postman's per-item (or per-collection) transport options.
+#[derive(Deserialize, Default)]
+struct PmProfile {
+    #[serde(rename = "followRedirects")]
+    follow_redirects: Option<bool>,
+    #[serde(rename = "maxRedirects")]
+    max_redirects: Option<Value>,
+    #[serde(rename = "strictSSL")]
+    strict_ssl: Option<bool>,
+    #[serde(rename = "disableCookies")]
+    disable_cookies: Option<bool>,
+    /// Anything else is reported, not imported.
+    #[serde(flatten)]
+    other: serde_json::Map<String, Value>,
 }
 
 #[derive(Deserialize)]
@@ -101,6 +119,8 @@ struct PmItem {
     event: Vec<PmEvent>,
     auth: Option<PmAuth>,
     description: Option<PmDescription>,
+    #[serde(rename = "protocolProfileBehavior")]
+    ppb: Option<PmProfile>,
 }
 
 #[derive(Deserialize)]
@@ -342,6 +362,7 @@ pub fn convert_collection(json: &str) -> Result<Plan, ImportError> {
     ctx.items(&pm.item, Path::new(""), "");
     // Auth stays where Postman set it; requests without their own inherit it.
     let auth = ctx.auth(pm.auth.as_ref(), "Collection");
+    let settings = ctx.profile(pm.ppb.as_ref(), "Collection");
 
     let meta = CollectionMeta {
         name: if pm.info.name.is_empty() {
@@ -357,6 +378,7 @@ pub fn convert_collection(json: &str) -> Result<Plan, ImportError> {
             .unwrap_or_default(),
         vars,
         auth,
+        settings,
     };
     Ok(Plan {
         meta,
@@ -397,8 +419,9 @@ impl Converter<'_> {
                 }
                 self.scripts(&item.event, &sub, "_folder", &label);
                 let auth = self.auth(item.auth.as_ref(), &label);
-                if !auth.is_inherit() {
-                    let meta = FolderMeta { auth };
+                let settings = self.profile(item.ppb.as_ref(), &label);
+                if !auth.is_inherit() || !settings.is_inherit() {
+                    let meta = FolderMeta { auth, settings };
                     self.files.push(PlannedFile::Folder {
                         path: sub.clone(),
                         meta,
@@ -452,6 +475,7 @@ impl Converter<'_> {
                 .unwrap_or_default(),
             ..Request::default()
         };
+        out.settings = self.profile(item.ppb.as_ref(), label);
         let full = match request {
             PmRequest::Url(url) => {
                 out.url = url.clone();
@@ -683,6 +707,28 @@ impl Converter<'_> {
                 );
                 Body::None
             }
+        }
+    }
+
+    /// `protocolProfileBehavior` becomes `[settings]`; unknown keys are reported.
+    fn profile(&mut self, ppb: Option<&PmProfile>, label: &str) -> RequestSettings {
+        let Some(ppb) = ppb else {
+            return RequestSettings::default();
+        };
+        for key in ppb.other.keys() {
+            self.report
+                .warn(label, format!("Option {key} is not imported."));
+        }
+        RequestSettings {
+            follow_redirects: ppb.follow_redirects,
+            max_redirects: ppb
+                .max_redirects
+                .as_ref()
+                .and_then(|v| v.as_u64().or_else(|| v.as_str()?.parse().ok()))
+                .map(|n| n as u32),
+            tls_verify: ppb.strict_ssl,
+            send_cookies: ppb.disable_cookies.map(|off| !off),
+            ..RequestSettings::default()
         }
     }
 

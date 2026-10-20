@@ -3,11 +3,13 @@
 mod auth_editor;
 mod body_editor;
 mod collections;
+mod cookies_ui;
 mod drag;
 mod env_editor;
 mod menu_bar;
 mod network;
 mod palette;
+mod settings_editor;
 mod settings_ui;
 mod shell_copy;
 mod tabs;
@@ -250,6 +252,8 @@ pub struct Workspace {
     auth_editor: Entity<auth_editor::AuthEditor>,
     /// The Body tab.
     body_editor: Entity<body_editor::BodyEditor>,
+    /// The Settings tab (timeout, redirects, TLS, proxy, certificates, cookies).
+    settings_editor: Entity<settings_editor::SettingsEditor>,
     /// URL length before the last change, to tell a paste from typing.
     last_url_len: usize,
     /// The URL text whose references were last turned into chips.
@@ -304,9 +308,11 @@ impl Workspace {
         let weak = cx.weak_entity();
         let auth_editor =
             cx.new(|cx| auth_editor::AuthEditor::new(palette, "request", weak, window, cx));
+        let settings_editor = cx.new(|cx| settings_editor::SettingsEditor::new(palette, window, cx));
         let subscriptions = vec![
             // Typing in the Auth tab changes the unsaved marker.
             cx.observe(&auth_editor, |_, _, cx| cx.notify()),
+            cx.observe(&settings_editor, |_, _, cx| cx.notify()),
             cx.subscribe_in(
                 &url,
                 window,
@@ -367,6 +373,7 @@ impl Workspace {
             base: Request::default(),
             auth_editor,
             body_editor,
+            settings_editor,
             last_url_len: 0,
             last_chipped: None,
             hovered_var: None,
@@ -427,6 +434,8 @@ impl Workspace {
             .update(cx, |editor, cx| editor.retranslate(window, cx));
         self.body_editor
             .update(cx, |editor, cx| editor.retranslate(window, cx));
+        self.settings_editor
+            .update(cx, |editor, cx| editor.retranslate(window, cx));
         self.refresh_environments(window, cx);
         cx.notify();
     }
@@ -485,6 +494,10 @@ impl Workspace {
         self.auth_editor
             .update(cx, |editor, cx| editor.set_auth(&auth, window, cx));
         self.refresh_inherited_auth(cx);
+        let settings = request.settings.clone();
+        self.settings_editor
+            .update(cx, |editor, cx| editor.set_settings(&settings, window, cx));
+        self.refresh_inherited_settings(cx);
         cx.notify();
     }
 
@@ -524,11 +537,13 @@ impl Workspace {
             .filter_map(|r| r.to_key_value(cx))
             .collect();
         request.body = self.body_editor.read(cx).body(cx);
+        request.settings = self.settings_editor.read(cx).settings(cx);
         request
     }
 
     pub(super) fn send(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         let request = self.with_inherited_auth(self.build_request(cx), self.selected.as_deref());
+        let request = self.with_inherited_settings(request, self.selected.as_deref());
         if request.url.is_empty() {
             self.fail(tr!("request.error.no_url"), cx);
             return;
@@ -842,12 +857,26 @@ impl Workspace {
             Auth::AwsSigV4(_) => auth_kind("AWS"),
         };
 
+        // The Settings tab is labelled with a dot when the request sets anything.
+        let settings_label = if self.settings_editor.read(cx).settings(cx).is_inherit() {
+            tr!("request.tab.settings")
+        } else {
+            tr!("request.tab.settings_set")
+        };
+
         let content = match self.request_tab {
             0 => self.render_table(Table::Params, cx).into_any_element(),
             1 => self.render_table(Table::Headers, cx).into_any_element(),
             2 => div()
                 .p_2()
                 .child(self.auth_editor.clone())
+                .into_any_element(),
+            4 => div()
+                .id("request-settings")
+                .p_2()
+                .size_full()
+                .overflow_y_scroll()
+                .child(self.settings_editor.clone())
                 .into_any_element(),
             _ => self.body_editor.clone().into_any_element(),
         };
@@ -867,6 +896,7 @@ impl Workspace {
                     Tab::new().label(headers_label),
                     Tab::new().label(auth_label),
                     Tab::new().label(body_label),
+                    Tab::new().label(settings_label),
                 ],
                 cx.listener(|this, ix: &usize, _, cx| {
                     this.request_tab = *ix;

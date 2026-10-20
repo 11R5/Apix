@@ -5,12 +5,14 @@ mod local;
 pub mod oauth2;
 mod trace;
 
+use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use apix_core::{ApiKeyLocation, Auth, Body, Request, sign};
+use apix_core::{ApiKeyLocation, Auth, Body, EffectiveSettings, ProxyChoice, Request, sign};
 use bytes::Bytes;
 use reqwest::header::{AUTHORIZATION, CONTENT_TYPE, WWW_AUTHENTICATE};
+use reqwest_cookie_store::CookieStoreMutex;
 
 pub use local::{LocalNetwork, local_network};
 pub use trace::{Certificate, DnsLookup, NetTrace, Phases, Redirect, read_certificate};
@@ -39,6 +41,11 @@ pub enum HttpError {
         #[source]
         source: reqwest::Error,
     },
+    #[error("the request timed out")]
+    TimedOut,
+    /// A request setting (proxy URL, client certificate) that cannot be used.
+    #[error("{0}")]
+    Settings(String),
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -127,39 +134,164 @@ pub fn human_duration(d: Duration) -> String {
 }
 
 pub(crate) const USER_AGENT: &str = concat!("apix/", env!("CARGO_PKG_VERSION"));
-/// Redirects followed before giving up, like browsers and reqwest's default.
-const MAX_REDIRECTS: usize = 10;
+
+/// One cookie in the shared jar, for the cookie manager.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CookieInfo {
+    pub domain: String,
+    pub path: String,
+    pub name: String,
+    pub value: String,
+    /// `None` is a session cookie.
+    pub expires: Option<std::time::SystemTime>,
+    pub secure: bool,
+    pub http_only: bool,
+}
 
 /// Sends requests. Each send builds its own short-lived connection so its
 /// network trace (DNS, connection setup, redirects) belongs to that request.
+/// All sends share one cookie jar, which `cookies`, `remove_cookie` and
+/// `clear_cookies` expose to the cookie manager.
 #[derive(Debug, Clone)]
 pub struct HttpClient {
-    _private: (),
+    cookies: Arc<CookieStoreMutex>,
+    /// When set, the jar is written back here (JSON) after every change.
+    cookie_file: Option<PathBuf>,
 }
 
 impl HttpClient {
+    /// A client whose cookies live only for this run.
     pub fn new() -> Result<Self, HttpError> {
-        Ok(Self { _private: () })
+        Ok(Self {
+            cookies: Arc::new(CookieStoreMutex::default()),
+            cookie_file: None,
+        })
     }
 
-    /// A client whose DNS lookups, connections and redirects are recorded.
-    fn traced(recorder: &Arc<Recorder>) -> Result<reqwest::Client, HttpError> {
+    /// A client whose cookies persist in `path` across runs. A missing or
+    /// unreadable file starts an empty jar.
+    pub fn with_cookie_file(path: impl Into<PathBuf>) -> Result<Self, HttpError> {
+        let path = path.into();
+        let store = std::fs::File::open(&path)
+            .ok()
+            .and_then(|f| cookie_store::serde::json::load(std::io::BufReader::new(f)).ok())
+            .unwrap_or_default();
+        Ok(Self {
+            cookies: Arc::new(CookieStoreMutex::new(store)),
+            cookie_file: Some(path),
+        })
+    }
+
+    /// Every unexpired cookie, sorted by domain, then name.
+    pub fn cookies(&self) -> Vec<CookieInfo> {
+        let store = self.cookies.lock().unwrap();
+        let mut out: Vec<CookieInfo> = store
+            .iter_unexpired()
+            .map(|c| CookieInfo {
+                // The domain as stored (host-only cookies carry no Domain
+                // attribute, but the store files them under the host).
+                domain: String::from(&c.domain),
+                path: c.path().unwrap_or("/").to_owned(),
+                name: c.name().to_owned(),
+                value: c.value().to_owned(),
+                // The store's own expiry covers Max-Age as well as Expires.
+                expires: match c.expires {
+                    cookie_store::CookieExpiration::AtUtc(at) => {
+                        Some(std::time::SystemTime::from(at))
+                    }
+                    cookie_store::CookieExpiration::SessionEnd => None,
+                },
+                secure: c.secure().unwrap_or(false),
+                http_only: c.http_only().unwrap_or(false),
+            })
+            .collect();
+        drop(store);
+        out.sort_by(|a, b| (a.domain.as_str(), a.name.as_str()).cmp(&(&b.domain, &b.name)));
+        out
+    }
+
+    pub fn remove_cookie(&self, domain: &str, path: &str, name: &str) {
+        self.cookies.lock().unwrap().remove(domain, path, name);
+        self.persist_cookies();
+    }
+
+    pub fn clear_cookies(&self) {
+        self.cookies.lock().unwrap().clear();
+        self.persist_cookies();
+    }
+
+    fn persist_cookies(&self) {
+        let Some(path) = &self.cookie_file else {
+            return;
+        };
+        let store = self.cookies.lock().unwrap();
+        if let Some(dir) = path.parent() {
+            let _ = std::fs::create_dir_all(dir);
+        }
+        if let Ok(mut file) = std::fs::File::create(path) {
+            let _ = cookie_store::serde::json::save(&store, &mut file);
+        }
+    }
+
+    /// A client whose DNS lookups, connections and redirects are recorded,
+    /// configured by the request's effective settings.
+    fn traced(
+        &self,
+        recorder: &Arc<Recorder>,
+        eff: &EffectiveSettings,
+    ) -> Result<reqwest::Client, HttpError> {
         let redirects = recorder.clone();
+        let follow = eff.follow_redirects;
+        let max_redirects = eff.max_redirects as usize;
         let policy = reqwest::redirect::Policy::custom(move |attempt| {
+            if !follow {
+                // The 3xx answer itself is the response.
+                return attempt.stop();
+            }
             redirects.redirect(attempt.status().as_u16(), attempt.url().to_string());
-            if attempt.previous().len() > MAX_REDIRECTS {
+            if attempt.previous().len() > max_redirects {
                 attempt.error("too many redirects")
             } else {
                 attempt.follow()
             }
         });
-        Ok(reqwest::Client::builder()
+        let mut builder = reqwest::Client::builder()
             .user_agent(USER_AGENT)
             .tls_info(true)
             .dns_resolver(Arc::new(TimedResolver(recorder.clone())))
             .connector_layer(TimingLayer(recorder.clone()))
-            .redirect(policy)
-            .build()?)
+            .redirect(policy);
+        if let Some(timeout) = eff.timeout {
+            builder = builder.timeout(timeout);
+        }
+        if !eff.tls_verify {
+            builder = builder.danger_accept_invalid_certs(true);
+        }
+        match &eff.proxy {
+            // reqwest reads HTTP_PROXY/HTTPS_PROXY/ALL_PROXY by itself.
+            ProxyChoice::Environment => {}
+            ProxyChoice::Off => builder = builder.no_proxy(),
+            ProxyChoice::Url(url) => {
+                let proxy = reqwest::Proxy::all(url)
+                    .map_err(|e| HttpError::Settings(format!("invalid proxy `{url}`: {e}")))?;
+                builder = builder.proxy(proxy);
+            }
+        }
+        if let Some(cert) = &eff.client_cert {
+            let mut pem = read_file(cert)?;
+            if let Some(key) = eff.client_key.as_deref().filter(|key| *key != cert) {
+                pem.push(b'\n');
+                pem.extend(read_file(key)?);
+            }
+            let identity = reqwest::Identity::from_pem(&pem).map_err(|e| {
+                HttpError::Settings(format!("cannot load the client certificate: {e}"))
+            })?;
+            builder = builder.identity(identity);
+        }
+        if eff.send_cookies {
+            builder = builder.cookie_provider(self.cookies.clone());
+        }
+        Ok(builder.build()?)
     }
 
     /// Sends a request whose `{{variables}}` have already been resolved.
@@ -179,7 +311,7 @@ impl HttpClient {
         };
 
         let recorder = Arc::new(Recorder::default());
-        let client = Self::traced(&recorder)?;
+        let client = self.traced(&recorder, &req.settings.effective())?;
         let started = Instant::now();
         let mut response = execute(&client, prepare(&client, req)?, &recorder).await?;
 
@@ -239,8 +371,15 @@ impl HttpClient {
                 )
             })
             .collect();
-        let body = response.bytes().await?;
+        let body = response.bytes().await.map_err(|e| {
+            if e.is_timeout() {
+                HttpError::TimedOut
+            } else {
+                HttpError::Request(e)
+            }
+        })?;
         let total = started.elapsed();
+        self.persist_cookies();
 
         let mut trace = recorder.take();
         trace.local_addr = connection.map(|(local, _)| local);
@@ -264,16 +403,18 @@ async fn execute(
     request: reqwest::Request,
     recorder: &Recorder,
 ) -> Result<reqwest::Response, HttpError> {
-    client
-        .execute(request)
-        .await
-        .map_err(|source| match recorder.take().redirects.pop() {
+    client.execute(request).await.map_err(|source| {
+        if source.is_timeout() {
+            return HttpError::TimedOut;
+        }
+        match recorder.take().redirects.pop() {
             Some(last) => HttpError::Redirected {
                 to: last.to,
                 source,
             },
             None => HttpError::Request(source),
-        })
+        }
+    })
 }
 
 /// The request as it goes on the wire, signed for AWS or OAuth 1.0.

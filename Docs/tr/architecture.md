@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:407f90f941e5c114 -->
+<!-- translated from en/architecture.md sha256:f1f78b33f9c6a9a0 -->
 
 # Apix mimarisi
 
@@ -127,6 +127,16 @@ koleksiyondan (`apix.toml`), sonra projeden (`apix-project.toml`) devralır;
 hiçbiri yoksa hiçbir şey gönderilmez. Bir istekte (veya klasörde)
 `auth = "none"` devralmayı durdurur. Bu aramayı masaüstü uygulaması, CLI ve
 "Komut olarak kopyala" için aynı şekilde `apix_core::project::inherited_auth` yapar.
+
+**İstek ayarları.** Aynı dört düzeyde bir `[settings]` tablosu bulunur (zaman
+aşımı, yönlendirmeler, TLS doğrulama, proxy, istemci sertifikası, çerezler).
+Her alan bir `Option`'dır: `None`, aynı zincir üzerinden alan alan devralır
+(`apix_core::project::inherited_settings`); yine boş kalanlar
+`RequestSettings::effective` içindeki varsayılanlara düşer — zaman aşımı yok,
+en çok 10 yönlendirme izlenir, TLS doğrulanır, proxy ortamdan, çerezler açık.
+Motor sonucu her gönderimin `reqwest::Client`'ını kurarken uygular; paylaşılan
+çerez kavanozu (çerez yöneticisinin listeleyip düzenleyebildiği bir
+`cookie_store`) istek çerezleri kapatmadıkça o istemciye verilir.
 
 **İmzalı yetkilendirme.** AWS Signature V4, OAuth 1.0a ve Digest,
 `apix_core::sign` içinde saf fonksiyonlardır; AWS test paketine, RFC 7616'ya,

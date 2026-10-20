@@ -167,6 +167,13 @@ collection.start_here_text: "В %{path} ещё нет apix.toml. Apix созда
 collection.start_here_title: Создать здесь новую коллекцию?
 collection.unsaved_text: Сначала сохранить изменения в «%{name}»?
 collection.unsaved_title: Несохранённые изменения
+cookies.clear_all: Удалить все
+cookies.empty: Пока нет cookie. Ответы Set-Cookie попадают сюда автоматически.
+cookies.expired: истёк
+cookies.expires_in: через %{left}
+cookies.note: Cookie отправляются автоматически и сохраняются между запусками; вкладка «Настройки» запроса может их отключить.
+cookies.session: сеанс
+cookies.title: Cookie
 copy.as_shell: Копировать как %{shell}
 copy.copied: Скопировано как %{shell}.
 copy.copied_missing: "Скопировано как %{shell}. Не заданы и оставлены как {{…}}: %{names}."
@@ -211,7 +218,9 @@ menu.active_environment: Активное окружение
 menu.cancel: Отменить
 menu.close_tab: Закрыть вкладку
 menu.collection_auth: Авторизация коллекции…
+menu.collection_settings: Настройки запросов коллекции…
 menu.command_palette: Палитра команд…
+menu.cookies: Cookie…
 menu.copy_as: Копировать как
 menu.documentation: Документация
 menu.encrypt_collection: Зашифровать эту коллекцию…
@@ -235,6 +244,7 @@ menu.open: Открыть…
 menu.open_recent: Открыть недавние
 menu.previous_tab: Предыдущая вкладка
 menu.project_auth: Авторизация проекта…
+menu.project_settings: Настройки запросов проекта…
 menu.quit: Выход
 menu.report_problem: Сообщить о проблеме
 menu.request: Запрос
@@ -297,6 +307,30 @@ palette.open_recent: "Открыть недавнее: %{name}"
 palette.placeholder: Поиск запросов и команд…
 palette.save_request: Сохранить запрос
 palette.send_request: Отправить запрос
+reqset.client_cert: Клиентский сертификат
+reqset.client_key: Ключ сертификата
+reqset.dialog.collection_title: Настройки запросов «%{name}»
+reqset.dialog.folder_title: Настройки запросов папки «%{name}»
+reqset.dialog.note: Действует для каждого запроса ниже, не задавшего свои.
+reqset.dialog.project_title: Настройки запросов проекта «%{name}»
+reqset.effective: "Действует: тайм-аут %{timeout} · перенаправления %{redirects} · проверка TLS %{tls} · прокси %{proxy} · cookie %{cookies}"
+reqset.follow: Следовать перенаправлениям
+reqset.hint.cert: Файл PEM; пусто = наследовать
+reqset.hint.inherit: пусто = наследовать
+reqset.hint.key: Ключ PEM; пусто = файл сертификата
+reqset.inherit: Наследовать
+reqset.max_redirects: Макс. перенаправлений
+reqset.note: Пустые поля наследуются от папки, коллекции и проекта; затем действуют значения по умолчанию. 0 секунд — без тайм-аута.
+reqset.off: Выкл.
+reqset.on: Вкл.
+reqset.proxy: Прокси
+reqset.proxy_url: URL прокси
+reqset.send_cookies: Отправлять cookie
+reqset.timeout: Тайм-аут (секунды)
+reqset.tls_verify: Проверять сертификат TLS
+reqset.val.no_timeout: нет
+reqset.val.proxy_env: из окружения
+reqset.val.redirects: вкл. (до %{count})
 request.copy_as_tooltip: Копировать как cURL или PowerShell
 request.error.no_url: Введите URL, чтобы отправить запрос.
 request.error.undefined_variable: Переменная %{name} не задана. Задайте её через %{key} (Переменные).
@@ -313,6 +347,8 @@ request.tab.headers: Заголовки
 request.tab.headers_count: Заголовки %{count}
 request.tab.params: Параметры
 request.tab.params_count: Параметры %{count}
+request.tab.settings: Настройки
+request.tab.settings_set: Настройки ●
 request.url_placeholder: "https://api.example.com/users   или   {{base_url}}/users"
 response.cancelled: Запрос отменён.
 response.empty: Отправьте запрос, чтобы увидеть ответ
@@ -361,6 +397,7 @@ sidebar.open_folder: Открыть папку
 sidebar.recent: НЕДАВНИЕ
 sidebar.remove_encryption: Снять шифрование…
 sidebar.rename: Переименовать…
+sidebar.settings: Настройки запросов…
 sidebar.show_in_environment: Показать в окружении
 table.add: Добавить
 table.key: Ключ

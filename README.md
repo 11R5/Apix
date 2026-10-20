@@ -70,6 +70,11 @@ Measurements of the other tools on the same machine are planned.
   credentials, password, authorization code with PKCE in the browser) and AWS
   Signature V4. Folders, collections and projects can set auth once; requests
   inherit it.
+- **Request settings:** timeout, redirects, TLS verification, proxy, client
+  certificates and cookies on/off per request, inherited from folders,
+  collections and projects like auth.
+- **Cookies:** one persistent jar filled from `Set-Cookie` answers, with a
+  manager to list, delete and clear.
 - **Responses:** status, timing, size, highlighted and foldable JSON, raw and
   headers views, and the Network tab.
 - **Collections and projects:** a sidebar built from the files on disk, tabs that

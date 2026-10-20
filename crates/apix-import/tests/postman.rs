@@ -44,6 +44,52 @@ fn bearer() -> Auth {
 }
 
 #[test]
+fn maps_protocol_profile_behavior_to_settings() {
+    let json = r#"{
+      "info": { "name": "PPB", "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json" },
+      "protocolProfileBehavior": { "strictSSL": false },
+      "item": [
+        {
+          "name": "Admin",
+          "protocolProfileBehavior": { "disableCookies": true },
+          "item": [
+            {
+              "name": "audit",
+              "protocolProfileBehavior": {
+                "followRedirects": false,
+                "maxRedirects": 3,
+                "followOriginalHttpMethod": true
+              },
+              "request": { "method": "GET", "url": "https://example.com/audit" }
+            }
+          ]
+        }
+      ]
+    }"#;
+    let plan = convert_collection(json).unwrap();
+    assert_eq!(plan.meta.settings.tls_verify, Some(false));
+
+    let folder = plan
+        .files
+        .iter()
+        .find_map(|f| match f {
+            PlannedFile::Folder { meta, .. } => Some(meta),
+            _ => None,
+        })
+        .expect("the folder carries settings");
+    assert_eq!(folder.settings.send_cookies, Some(false));
+
+    let req = request(&plan, "admin/audit.apix");
+    assert_eq!(req.settings.follow_redirects, Some(false));
+    assert_eq!(req.settings.max_redirects, Some(3));
+    assert!(warned(
+        &plan,
+        "Admin / audit",
+        "Option followOriginalHttpMethod is not imported."
+    ));
+}
+
+#[test]
 fn detects_export_kinds() {
     assert_eq!(detect(SHOP).unwrap(), Kind::Collection);
     assert_eq!(detect(STAGING).unwrap(), Kind::Environment);

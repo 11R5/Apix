@@ -14,10 +14,10 @@
 | M1 Arayüzden istek | ✅ 100 MB JSON ~0.33 s'de açılıyor |
 | M2 Koleksiyonlar, Postman içe aktarma | ✅ (sekmeler ve sürükle-bırak M3'te tamamlandı) |
 | M3 Simge, projeler, ortamlar, kopyalama, auth | ✅ 9/9 · bitti: simge, ortam seçici ve editörü, dinamik değişkenler, projeler, kabuk komutu olarak kopyalama, metotla yeni istek, değişken çipleri, Auth sekmesi ve miras, komut paleti, sekmeler, sürükle-bırak ile taşıma · küçük kalanlar M3 bölümünün sonunda |
-| M4 Günlük kullanım | 🔜 · bitti: menü çubuğu, şifreli koleksiyonlar (motor, uygulama, CLI), ağ denetçisi (Network sekmesi), multipart/binary/GraphQL gövdeleri, auth tipleri (Digest, OAuth 1.0, OAuth 2.0, AWS SigV4), ayarlar ekranı ve 9 dilli arayüz, Arapça için sağdan sola düzen, dokümantasyon yapısı (İngilizce, Türkçe), README karşılaştırması ve performans ölçümü · sıradaki: istek ayarları ve çerez yöneticisi |
+| M4 Günlük kullanım | 🔜 · bitti: menü çubuğu, şifreli koleksiyonlar (motor, uygulama, CLI), ağ denetçisi (Network sekmesi), multipart/binary/GraphQL gövdeleri, auth tipleri (Digest, OAuth 1.0, OAuth 2.0, AWS SigV4), ayarlar ekranı ve 9 dilli arayüz, Arapça için sağdan sola düzen, dokümantasyon yapısı (İngilizce, Türkçe), README karşılaştırması ve performans ölçümü, istek ayarları (zaman aşımı, yönlendirmeler, TLS doğrulama, proxy, istemci sertifikaları; klasör/koleksiyon/proje kalıtımıyla) ve çerez yöneticisi · sıradaki: kod üretimi (diğer diller) ve geçmiş |
 | M5–M9 | ⬜ |
 
-Release ikili dosyası 33.1 MB (üst sınır 100 MB). Testler: core 44, vault 7, desktop 12, codegen 15, import 13, http 14 (hepsi geçiyor, clippy uyarısız).
+Release ikili dosyası 33.6 MB (üst sınır 100 MB). Testler: core 46, vault 7, desktop 12, codegen 16, import 14, http 18 (hepsi geçiyor, clippy uyarısız).
 
 ### Kullanıcı notları (17 Ekim 2026) ve plana nasıl işlendikleri
 | # | Not | Nereye işlendi |
@@ -200,9 +200,10 @@ Apix, Postman'in yaptığı her şeyi yapan bir API istemcisi olacak. Postman'de
 | Hawk, NTLM, Akamai EdgeGrid, JWT Bearer (JWT'yi Apix imzalar) | ⬜ M her biri |
 
 #### A6. İstek ayarları
-- ⬜ Zaman aşımı, yönlendirmeleri takip et/etme, SSL doğrulamasını kapatma, istek başına proxy.
+- ✅ Zaman aşımı, yönlendirmeleri takip et/etme ve üst sınır, TLS doğrulamasını kapatma, istek başına proxy (boş dize proxy'yi tümden kapatır), çerez gönderimini kapatma. `.apix` dosyasında `[settings]` tablosu; alan alan klasör → koleksiyon → proje kalıtımı (auth ile aynı zincir), Ayarlar sekmesi + paylaşılan ayar diyalogları, CLI (`--timeout`, `--insecure`, `--proxy`), "Copy as" bayrakları, curl yapıştırma ve Postman `protocolProfileBehavior` içe aktarma.
+- ✅ İstemci sertifikaları (mTLS): PEM sertifika + anahtar dosyası.
 - ⬜ HTTP sürümü seçimi (1.1 / 2). HTTP/3, reqwest'te kararlı hâle gelince eklenecek.
-- ⬜ İstemci sertifikaları (mTLS) ve özel CA sertifikası.
+- ⬜ Özel CA sertifikası.
 
 ### B. Yanıt paneli
 | Özellik | Açıklama | Durum |
@@ -368,7 +369,7 @@ Bir koleksiyon (veya proje) parola ile şifrelenir. Parolayı bilmeyen hiçbir a
 | **Kabuk komutu olarak kopyala** (not 8): sağ tık ve URL çubuğundaki "Kopyala ▾" menüsü. Değişkenler çözülmüş veya `{{değişken}}` olarak bırakılabilir. Gizli değerler maskelenip maskelenmeyeceği sorulur. Seçenekler: **bash/zsh/sh** için `curl` (tek tırnak kaçışlı) · **Windows cmd** için `curl.exe` (`^` satır devamı) · **PowerShell** için `Invoke-RestMethod` ve `Invoke-WebRequest` ile `curl.exe` sürümü · **fish** · **HTTPie** · **wget** | ✅ bash, cmd, PowerShell (gerçek kabuklarda httpbin ile doğrulandı) · ⬜ fish, HTTPie, wget |
 | **Kabuk komutundan içe aktar:** URL çubuğuna yapıştırılan `curl` (bash veya cmd biçimi) ve PowerShell `Invoke-RestMethod` komutları isteğe dönüşür | ✅ curl (bash ve cmd biçimi, tarayıcıların "Copy as cURL" çıktısı dahil) · ⬜ PowerShell |
 | **Kod üretici:** fetch, axios, Python requests, Go, **Rust reqwest**, C#, Java, PHP, Swift, Kotlin, Node | ⬜ M |
-| Çerez yöneticisi: alan adına göre listeleme, düzenleme, silme | ⬜ M |
+| Çerez yöneticisi: alan adına göre listeleme, silme, tümünü boşaltma; kavanoz `cookies.json` içinde kalıcı, istek başına kapatılabilir (İstek › Çerezler…) | ✅ listeleme, silme, kalıcılık · ⬜ elle ekleme/düzenleme |
 | **Yakalama proxy'si:** tarayıcı veya telefon trafiğini kaydedip koleksiyona dönüştürme | ⬜ L |
 | Sertifika yöneticisi | ⬜ S |
 | Ağ konsolu: gerçekte gönderilen ham isteği ve gelen yanıtı gösterir | ⬜ M |
@@ -526,7 +527,7 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 - **Auth tipleri (§A5)** ✅: Digest, OAuth 1.0, OAuth 2.0 (client credentials, password, authorization code + PKCE) ve AWS SigV4. İmzalar `apix_core::sign` içinde (AWS test paketi, RFC 7616, RFC 7636 ve OAuth 1.0 örnek değerleriyle sınanır); motor, CLI, "Copy as" (curl `--digest`, `--aws-sigv4`; PowerShell için kopyalarken imzalanır), curl yapıştırma ve Postman içe aktarma hepsini taşır. Gerçek sunucularda denendi: httpbin Digest (MD5, SHA-256), Postman Echo OAuth 1.0, yerel OAuth 2.0 sunucusu (`cargo run -p apix-http --example oauth_server`).
 - **Ayarlar ekranı ve arayüz dili (§M, not 13)** (L) ✅: çeviri altyapısı (`rust-i18n`, tüm metinler anahtarlı), 9 dil, Arapça için sağdan sola, CJK ve Arapça yazı tipi yedekleri, ayarlardan anında dil değişimi. M7'den öne alındı: her yeni ekran yeni metin getirdiği için altyapı ne kadar erken gelirse sonradan o kadar az iş çıkar.
 - **Dokümantasyon yapısı ve README (§N, not 14, 16)** (M) ✅: `Docs/<dil>/` yapısı, `languages.toml`, İngilizce ve Türkçe belgeler (kullanım kılavuzu, mimari, teknik altyapı, iş akışları), README'de "neden Apix" karşılaştırması ve Apix'in tekrarlanabilir performans ölçümleri.
-- İstek ayarları (timeout, SSL, proxy, sertifikalar), çerez yöneticisi
+- **İstek ayarları ve çerez yöneticisi (§A6)** (M) ✅: `.apix` dosyasında `[settings]` (zaman aşımı, yönlendirmeler ve üst sınır, TLS doğrulama, proxy, PEM istemci sertifikası + anahtar, çerez gönderimi); alan alan klasör → koleksiyon → proje kalıtımı; Ayarlar sekmesi (geçerli değerler satırıyla) ve klasör/koleksiyon/proje ayar diyalogları; motor her gönderimde ayarları uygular; tek çerez kavanozu `cookies.json` içinde kalıcı ve İstek › Çerezler… diyaloğundan yönetilir; CLI bayrakları (`--timeout`, `--insecure`, `--proxy`), "Copy as" curl/PowerShell bayrakları, curl yapıştırma ve Postman `protocolProfileBehavior` içe aktarma. Yerel sunucuya karşı testlerle doğrulandı.
 - Kod üretici (diller), geçmiş
 - Postman otomatik tanıma ve toplu dışa aktarma, Insomnia, OpenAPI ve HAR içe aktarma, Postman'e dışa aktarma
 

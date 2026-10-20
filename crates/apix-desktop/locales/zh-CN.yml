@@ -167,6 +167,13 @@ collection.start_here_text: "%{path} 中还没有 apix.toml。Apix 将创建一�
 collection.start_here_title: 在此新建集合？
 collection.unsaved_text: 是否先保存对“%{name}”的更改？
 collection.unsaved_title: 未保存的更改
+cookies.clear_all: 全部删除
+cookies.empty: 还没有 Cookie。Set-Cookie 响应会自动出现在这里。
+cookies.expired: 已过期
+cookies.expires_in: "%{left}后"
+cookies.note: Cookie 会自动发送并在重启后保留；可在请求的“设置”标签页关闭。
+cookies.session: 会话
+cookies.title: Cookie
 copy.as_shell: 复制为 %{shell}
 copy.copied: 已复制为 %{shell}。
 copy.copied_missing: "已复制为 %{shell}。以下变量未定义，保留为 {{…}}：%{names}。"
@@ -211,7 +218,9 @@ menu.active_environment: 当前环境
 menu.cancel: 取消
 menu.close_tab: 关闭标签页
 menu.collection_auth: 集合认证…
+menu.collection_settings: 集合请求设置…
 menu.command_palette: 命令面板…
+menu.cookies: Cookie…
 menu.copy_as: 复制为
 menu.documentation: 文档
 menu.encrypt_collection: 加密此集合…
@@ -235,6 +244,7 @@ menu.open: 打开…
 menu.open_recent: 最近打开
 menu.previous_tab: 上一个标签页
 menu.project_auth: 项目认证…
+menu.project_settings: 项目请求设置…
 menu.quit: 退出
 menu.report_problem: 报告问题
 menu.request: 请求
@@ -297,6 +307,30 @@ palette.open_recent: "最近打开：%{name}"
 palette.placeholder: 搜索请求和命令…
 palette.save_request: 保存请求
 palette.send_request: 发送请求
+reqset.client_cert: 客户端证书
+reqset.client_key: 证书密钥
+reqset.dialog.collection_title: “%{name}”的请求设置
+reqset.dialog.folder_title: 文件夹“%{name}”的请求设置
+reqset.dialog.note: 适用于其下所有未自行设置的请求。
+reqset.dialog.project_title: 项目“%{name}”的请求设置
+reqset.effective: "生效: 超时 %{timeout} · 重定向 %{redirects} · TLS 验证 %{tls} · 代理 %{proxy} · Cookie %{cookies}"
+reqset.follow: 跟随重定向
+reqset.hint.cert: PEM 文件；留空 = 继承
+reqset.hint.inherit: 留空 = 继承
+reqset.hint.key: PEM 密钥；留空 = 证书文件
+reqset.inherit: 继承
+reqset.max_redirects: 最大重定向次数
+reqset.note: 空白字段从文件夹、集合和项目继承；之后使用默认值。0 秒表示不限时。
+reqset.off: 关
+reqset.on: 开
+reqset.proxy: 代理
+reqset.proxy_url: 代理 URL
+reqset.send_cookies: 发送 Cookie
+reqset.timeout: 超时（秒）
+reqset.tls_verify: 验证 TLS 证书
+reqset.val.no_timeout: 无
+reqset.val.proxy_env: 来自环境变量
+reqset.val.redirects: 开（最多 %{count}）
 request.copy_as_tooltip: 复制为 cURL 或 PowerShell
 request.error.no_url: 请输入 URL 以发送请求。
 request.error.undefined_variable: 未定义变量 %{name}。可按 %{key} 定义（变量）。
@@ -313,6 +347,8 @@ request.tab.headers: 请求头
 request.tab.headers_count: 请求头 %{count}
 request.tab.params: 参数
 request.tab.params_count: 参数 %{count}
+request.tab.settings: 设置
+request.tab.settings_set: 设置 ●
 request.url_placeholder: "https://api.example.com/users   或   {{base_url}}/users"
 response.cancelled: 请求已取消。
 response.empty: 发送请求以查看响应
@@ -361,6 +397,7 @@ sidebar.open_folder: 打开文件夹
 sidebar.recent: 最近
 sidebar.remove_encryption: 移除加密…
 sidebar.rename: 重命名…
+sidebar.settings: 请求设置…
 sidebar.show_in_environment: 在环境中显示
 table.add: 添加
 table.key: 键

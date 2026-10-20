@@ -167,6 +167,13 @@ collection.start_here_text: "%{path} aún no tiene apix.toml. Apix creará uno; 
 collection.start_here_title: ¿Crear una colección nueva aquí?
 collection.unsaved_text: ¿Guardar primero los cambios en “%{name}”?
 collection.unsaved_title: Cambios sin guardar
+cookies.clear_all: Eliminar todo
+cookies.empty: Aún no hay cookies. Las respuestas Set-Cookie llegan aquí automáticamente.
+cookies.expired: caducada
+cookies.expires_in: en %{left}
+cookies.note: Las cookies se envían automáticamente y sobreviven a los reinicios; la pestaña Ajustes de la petición puede desactivarlas.
+cookies.session: sesión
+cookies.title: Cookies
 copy.as_shell: Copiar como %{shell}
 copy.copied: Copiado como %{shell}.
 copy.copied_missing: "Copiado como %{shell}. Sin definir, se dejaron como {{…}}: %{names}."
@@ -211,7 +218,9 @@ menu.active_environment: Entorno activo
 menu.cancel: Cancelar
 menu.close_tab: Cerrar pestaña
 menu.collection_auth: Autenticación de la colección…
+menu.collection_settings: Ajustes de petición de la colección…
 menu.command_palette: Paleta de comandos…
+menu.cookies: Cookies…
 menu.copy_as: Copiar como
 menu.documentation: Documentación
 menu.encrypt_collection: Cifrar esta colección…
@@ -235,6 +244,7 @@ menu.open: Abrir…
 menu.open_recent: Abrir recientes
 menu.previous_tab: Pestaña anterior
 menu.project_auth: Autenticación del proyecto…
+menu.project_settings: Ajustes de petición del proyecto…
 menu.quit: Salir
 menu.report_problem: Informar de un problema
 menu.request: Solicitud
@@ -297,6 +307,30 @@ palette.open_recent: "Abrir reciente: %{name}"
 palette.placeholder: Buscar solicitudes y comandos…
 palette.save_request: Guardar solicitud
 palette.send_request: Enviar solicitud
+reqset.client_cert: Certificado de cliente
+reqset.client_key: Clave del certificado
+reqset.dialog.collection_title: Ajustes de petición de «%{name}»
+reqset.dialog.folder_title: Ajustes de petición de la carpeta «%{name}»
+reqset.dialog.note: Se aplica a toda petición debajo que no defina los suyos.
+reqset.dialog.project_title: Ajustes de petición del proyecto «%{name}»
+reqset.effective: "En vigor: tiempo límite %{timeout} · redirecciones %{redirects} · verificación TLS %{tls} · proxy %{proxy} · cookies %{cookies}"
+reqset.follow: Seguir redirecciones
+reqset.hint.cert: Archivo PEM; vacío = heredar
+reqset.hint.inherit: vacío = heredar
+reqset.hint.key: Clave PEM; vacío = el archivo del certificado
+reqset.inherit: Heredar
+reqset.max_redirects: Redirecciones máx.
+reqset.note: Los campos vacíos heredan de la carpeta, la colección y el proyecto; después se aplican los valores por defecto. 0 segundos significa sin tiempo límite.
+reqset.off: Desactivado
+reqset.on: Activado
+reqset.proxy: Proxy
+reqset.proxy_url: URL del proxy
+reqset.send_cookies: Enviar cookies
+reqset.timeout: Tiempo límite (segundos)
+reqset.tls_verify: Verificar el certificado TLS
+reqset.val.no_timeout: ninguno
+reqset.val.proxy_env: del entorno
+reqset.val.redirects: activado (hasta %{count})
 request.copy_as_tooltip: Copiar como cURL o PowerShell
 request.error.no_url: Escribe una URL para enviar una solicitud.
 request.error.undefined_variable: La variable %{name} no está definida. Defínela con %{key} (Variables).
@@ -313,6 +347,8 @@ request.tab.headers: Encabezados
 request.tab.headers_count: Encabezados %{count}
 request.tab.params: Parámetros
 request.tab.params_count: Parámetros %{count}
+request.tab.settings: Ajustes
+request.tab.settings_set: Ajustes ●
 request.url_placeholder: "https://api.example.com/users   o   {{base_url}}/users"
 response.cancelled: Solicitud cancelada.
 response.empty: Envía una solicitud para ver la respuesta
@@ -361,6 +397,7 @@ sidebar.open_folder: Abrir una carpeta
 sidebar.recent: RECIENTES
 sidebar.remove_encryption: Quitar el cifrado…
 sidebar.rename: Cambiar nombre…
+sidebar.settings: Ajustes de petición…
 sidebar.show_in_environment: Mostrar en el entorno
 table.add: Añadir
 table.key: Clave

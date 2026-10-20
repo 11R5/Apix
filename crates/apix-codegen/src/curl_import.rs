@@ -47,16 +47,20 @@ struct Parsed {
     aws_sigv4: Option<String>,
     get: bool,
     head: bool,
+    /// `-m` in seconds.
+    timeout: Option<f64>,
+    follow: bool,
+    max_redirs: Option<u32>,
+    insecure: bool,
+    proxy: Option<String>,
+    cert: Option<String>,
+    key: Option<String>,
     warnings: Vec<String>,
 }
 
 /// Flags that take no value and change nothing Apix needs to keep.
 const IGNORED_FLAGS: &[&str] = &[
     "--compressed",
-    "-L",
-    "--location",
-    "-k",
-    "--insecure",
     "-s",
     "--silent",
     "-S",
@@ -80,20 +84,13 @@ const IGNORED_FLAGS: &[&str] = &[
 const SKIPPED_WITH_VALUE: &[&str] = &[
     "-o",
     "--output",
-    "-m",
-    "--max-time",
     "--connect-timeout",
-    "-x",
-    "--proxy",
     "--retry",
     "-w",
     "--write-out",
     "-c",
     "--cookie-jar",
     "--cacert",
-    "--cert",
-    "--key",
-    "-E",
     "--resolve",
     "--limit-rate",
 ];
@@ -182,6 +179,37 @@ fn build(args: &[String]) -> CurlImport {
             "--url" => p.url = value(&mut i, arg, &mut p.warnings),
             "-G" | "--get" => p.get = true,
             "-I" | "--head" => p.head = true,
+            "-m" | "--max-time" => {
+                if let Some(v) = value(&mut i, arg, &mut p.warnings) {
+                    match v.parse::<f64>() {
+                        Ok(secs) if secs > 0.0 => p.timeout = Some(secs),
+                        _ => p.warnings.push(format!("{arg} {v} is not a duration.")),
+                    }
+                }
+            }
+            "-L" | "--location" => p.follow = true,
+            "--max-redirs" => {
+                if let Some(v) = value(&mut i, arg, &mut p.warnings) {
+                    match v.parse::<u32>() {
+                        Ok(n) => p.max_redirs = Some(n),
+                        _ => p.warnings.push(format!("{arg} {v} is not a number.")),
+                    }
+                }
+            }
+            "-k" | "--insecure" => p.insecure = true,
+            "-x" | "--proxy" => p.proxy = value(&mut i, arg, &mut p.warnings),
+            "--noproxy" => {
+                if let Some(v) = value(&mut i, arg, &mut p.warnings) {
+                    if v == "*" {
+                        p.proxy = Some(String::new());
+                    } else {
+                        p.warnings
+                            .push(format!("Option --noproxy {v} is not imported."));
+                    }
+                }
+            }
+            "-E" | "--cert" => p.cert = value(&mut i, arg, &mut p.warnings),
+            "--key" => p.key = value(&mut i, arg, &mut p.warnings),
             _ if IGNORED_FLAGS.contains(&arg) => {}
             _ if SKIPPED_WITH_VALUE.contains(&arg) => {
                 value(&mut i, arg, &mut p.warnings);
@@ -193,7 +221,11 @@ fn build(args: &[String]) -> CurlImport {
             _ if arg.starts_with('-')
                 && !arg.starts_with("--")
                 && arg.len() > 2
-                && arg[1..].chars().all(|c| "sSLkivfgN#".contains(c)) => {}
+                && arg[1..].chars().all(|c| "sSLkivfgN#".contains(c)) =>
+            {
+                p.follow |= arg.contains('L');
+                p.insecure |= arg.contains('k');
+            }
             _ if arg.starts_with('-') && arg.len() > 1 => {
                 p.warnings.push(format!("Option {arg} is not imported."));
             }
@@ -331,6 +363,16 @@ fn finish(mut p: Parsed) -> CurlImport {
         };
     }
     request.headers = headers;
+    request.settings = apix_core::RequestSettings {
+        timeout_ms: p.timeout.map(|secs| (secs * 1000.0) as u64),
+        follow_redirects: p.follow.then_some(true),
+        max_redirects: p.max_redirs,
+        tls_verify: p.insecure.then_some(false),
+        proxy: p.proxy,
+        client_cert: p.cert,
+        client_key: p.key,
+        ..Default::default()
+    };
 
     let method = match (&p.method, p.head) {
         (Some(m), _) => m.to_ascii_uppercase(),
@@ -745,6 +787,30 @@ mod tests {
     }
 
     #[test]
+    fn reads_transport_settings() {
+        let r = from_curl(
+            "curl -m 2.5 -sSLk --max-redirs 3 -x http://p:8080 --cert client.pem --key client.key https://x.dev",
+        )
+        .unwrap();
+        assert!(r.warnings.is_empty(), "{:?}", r.warnings);
+        let s = &r.request.settings;
+        assert_eq!(s.timeout_ms, Some(2500));
+        assert_eq!(s.follow_redirects, Some(true));
+        assert_eq!(s.max_redirects, Some(3));
+        assert_eq!(s.tls_verify, Some(false));
+        assert_eq!(s.proxy.as_deref(), Some("http://p:8080"));
+        assert_eq!(s.client_cert.as_deref(), Some("client.pem"));
+        assert_eq!(s.client_key.as_deref(), Some("client.key"));
+
+        // And back out through bash: the same request comes home.
+        let script = crate::to_shell(&r.request, crate::Shell::Bash);
+        assert_eq!(from_curl(&script).unwrap().request, r.request);
+
+        let off = from_curl("curl --noproxy '*' https://x.dev").unwrap().request;
+        assert_eq!(off.settings.proxy.as_deref(), Some(""));
+    }
+
+    #[test]
     fn reports_what_it_skips() {
         let imported = from_curl(
             "curl -o out.json --proxy http://p:8080 -F 'f=@a.png;filename=b.png' -F 'k=<n.txt' https://x.dev/up",
@@ -758,9 +824,10 @@ mod tests {
             ])
         );
         let all = imported.warnings.join("\n");
-        assert!(
-            all.contains("-o is not imported") && all.contains("--proxy is not imported"),
-            "{all}"
+        assert!(all.contains("-o is not imported"), "{all}");
+        assert_eq!(
+            imported.request.settings.proxy.as_deref(),
+            Some("http://p:8080")
         );
         assert!(all.contains("filename=b.png is not imported"), "{all}");
         assert!(all.contains("imported as a file"), "{all}");

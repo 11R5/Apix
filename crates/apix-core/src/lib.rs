@@ -12,8 +12,9 @@ pub mod vars;
 pub mod vfs;
 
 pub use model::{
-    ApiKeyLocation, Auth, AwsSigV4, Body, ClientAuth, FormPart, GraphQl, KeyValue, Method, OAuth1,
-    OAuth1Method, OAuth2, OAuth2Grant, Request,
+    ApiKeyLocation, Auth, AwsSigV4, Body, ClientAuth, EffectiveSettings, FormPart, GraphQl,
+    KeyValue, Method, OAuth1, OAuth1Method, OAuth2, OAuth2Grant, ProxyChoice, Request,
+    RequestSettings,
 };
 pub use project::{GroupBy, Project};
 pub use store::{Collection, Environment, StoreError};

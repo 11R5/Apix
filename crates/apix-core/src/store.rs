@@ -20,7 +20,7 @@ use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 
-use crate::model::{Auth, Request};
+use crate::model::{Auth, Request, RequestSettings};
 
 pub const COLLECTION_FILE: &str = "apix.toml";
 pub const ENVIRONMENTS_DIR: &str = "environments";
@@ -94,6 +94,9 @@ pub struct CollectionMeta {
     /// Auth for requests in the collection that do not set their own.
     #[serde(default, skip_serializing_if = "Auth::is_inherit")]
     pub auth: Auth,
+    /// Transport settings for requests that do not set their own.
+    #[serde(default, skip_serializing_if = "RequestSettings::is_inherit")]
+    pub settings: RequestSettings,
 }
 
 /// Writes `apix.toml` into `root`.
@@ -109,6 +112,9 @@ pub struct FolderMeta {
     /// Auth for requests in the folder that do not set their own.
     #[serde(default, skip_serializing_if = "Auth::is_inherit")]
     pub auth: Auth,
+    /// Transport settings for requests in the folder that do not set their own.
+    #[serde(default, skip_serializing_if = "RequestSettings::is_inherit")]
+    pub settings: RequestSettings,
 }
 
 /// Reads `<dir>/folder.toml`; a folder without one has default settings.

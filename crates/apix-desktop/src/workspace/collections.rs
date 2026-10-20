@@ -1688,6 +1688,9 @@ fn folder_menu(
         .item(item(tr!("sidebar.auth"), |this, path, window, cx| {
             this.open_auth_dialog(AuthOwner::Folder(path), window, cx)
         }))
+        .item(item(tr!("sidebar.settings"), |this, path, window, cx| {
+            this.open_settings_dialog(AuthOwner::Folder(path), window, cx)
+        }))
         .separator()
         .item(item(
             tr!("sidebar.move_to_trash"),
@@ -1723,6 +1726,9 @@ fn collection_menu(
         }))
         .item(item(tr!("sidebar.auth"), |this, root, window, cx| {
             this.open_auth_dialog(AuthOwner::Collection(root), window, cx)
+        }))
+        .item(item(tr!("sidebar.settings"), |this, root, window, cx| {
+            this.open_settings_dialog(AuthOwner::Collection(root), window, cx)
         }))
         .separator();
     menu = if vfs::is_virtual(&root) {

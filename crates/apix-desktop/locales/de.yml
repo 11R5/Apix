@@ -167,6 +167,13 @@ collection.start_here_text: "%{path} hat noch keine apix.toml. Apix erstellt ein
 collection.start_here_title: Hier eine neue Sammlung beginnen?
 collection.unsaved_text: Änderungen an „%{name}“ zuerst speichern?
 collection.unsaved_title: Ungespeicherte Änderungen
+cookies.clear_all: Alle entfernen
+cookies.empty: Noch keine Cookies. Set-Cookie-Antworten landen automatisch hier.
+cookies.expired: abgelaufen
+cookies.expires_in: in %{left}
+cookies.note: Cookies werden automatisch gesendet und bleiben über Neustarts erhalten; der Reiter „Einstellungen“ der Anfrage kann sie abschalten.
+cookies.session: Sitzung
+cookies.title: Cookies
 copy.as_shell: Als %{shell} kopieren
 copy.copied: Als %{shell} kopiert.
 copy.copied_missing: "Als %{shell} kopiert. Nicht definiert, als {{…}} belassen: %{names}."
@@ -211,7 +218,9 @@ menu.active_environment: Aktive Umgebung
 menu.cancel: Abbrechen
 menu.close_tab: Tab schließen
 menu.collection_auth: Sammlungs-Authentifizierung…
+menu.collection_settings: Anfrage-Einstellungen der Sammlung…
 menu.command_palette: Befehlspalette…
+menu.cookies: Cookies…
 menu.copy_as: Kopieren als
 menu.documentation: Dokumentation
 menu.encrypt_collection: Diese Sammlung verschlüsseln…
@@ -235,6 +244,7 @@ menu.open: Öffnen…
 menu.open_recent: Zuletzt geöffnet
 menu.previous_tab: Vorheriger Tab
 menu.project_auth: Projekt-Authentifizierung…
+menu.project_settings: Anfrage-Einstellungen des Projekts…
 menu.quit: Beenden
 menu.report_problem: Problem melden
 menu.request: Anfrage
@@ -297,6 +307,30 @@ palette.open_recent: "Zuletzt geöffnet: %{name}"
 palette.placeholder: Anfragen und Befehle durchsuchen…
 palette.save_request: Anfrage speichern
 palette.send_request: Anfrage senden
+reqset.client_cert: Client-Zertifikat
+reqset.client_key: Zertifikatsschlüssel
+reqset.dialog.collection_title: Anfrage-Einstellungen für „%{name}“
+reqset.dialog.folder_title: Anfrage-Einstellungen für Ordner „%{name}“
+reqset.dialog.note: Gilt für jede Anfrage darunter, die nichts Eigenes setzt.
+reqset.dialog.project_title: Anfrage-Einstellungen für Projekt „%{name}“
+reqset.effective: "Wirksam: Timeout %{timeout} · Weiterleitungen %{redirects} · TLS-Prüfung %{tls} · Proxy %{proxy} · Cookies %{cookies}"
+reqset.follow: Weiterleitungen folgen
+reqset.hint.cert: PEM-Datei; leer = erben
+reqset.hint.inherit: leer = erben
+reqset.hint.key: PEM-Schlüssel; leer = die Zertifikatsdatei
+reqset.inherit: Erben
+reqset.max_redirects: Max. Weiterleitungen
+reqset.note: Leere Felder erben von Ordner, Sammlung und Projekt; danach gelten die Vorgaben. 0 Sekunden heißt kein Timeout.
+reqset.off: Aus
+reqset.on: An
+reqset.proxy: Proxy
+reqset.proxy_url: Proxy-URL
+reqset.send_cookies: Cookies senden
+reqset.timeout: Timeout (Sekunden)
+reqset.tls_verify: TLS-Zertifikat prüfen
+reqset.val.no_timeout: keiner
+reqset.val.proxy_env: aus der Umgebung
+reqset.val.redirects: an (bis zu %{count})
 request.copy_as_tooltip: Als cURL oder PowerShell kopieren
 request.error.no_url: Geben Sie eine URL ein, um eine Anfrage zu senden.
 request.error.undefined_variable: Undefinierte Variable %{name}. Definieren Sie sie mit %{key} (Variablen).
@@ -313,6 +347,8 @@ request.tab.headers: Header
 request.tab.headers_count: Header %{count}
 request.tab.params: Parameter
 request.tab.params_count: Parameter %{count}
+request.tab.settings: Einstellungen
+request.tab.settings_set: Einstellungen ●
 request.url_placeholder: "https://api.example.com/users   oder   {{base_url}}/users"
 response.cancelled: Anfrage abgebrochen.
 response.empty: Senden Sie eine Anfrage, um die Antwort zu sehen
@@ -361,6 +397,7 @@ sidebar.open_folder: Ordner öffnen
 sidebar.recent: ZULETZT
 sidebar.remove_encryption: Verschlüsselung entfernen…
 sidebar.rename: Umbenennen…
+sidebar.settings: Anfrage-Einstellungen…
 sidebar.show_in_environment: In Umgebung anzeigen
 table.add: Hinzufügen
 table.key: Schlüssel

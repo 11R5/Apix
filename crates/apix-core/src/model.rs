@@ -408,6 +408,116 @@ impl Auth {
     }
 }
 
+/// Transport settings for a request, stored as a `[settings]` table.
+/// Every field is optional: `None` means "inherit", falling back
+/// folder → collection → project and finally to [`EffectiveSettings`]'
+/// built-in defaults, the same chain as [`Auth::Inherit`].
+#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
+pub struct RequestSettings {
+    /// Whole-request timeout. `0` means "no timeout" explicitly.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub timeout_ms: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub follow_redirects: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_redirects: Option<u32>,
+    /// Verify the server certificate. Turning this off sends the request
+    /// over TLS without checking who answers.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tls_verify: Option<bool>,
+    /// Proxy URL. An empty string turns the proxy off even when the
+    /// environment sets HTTP_PROXY/HTTPS_PROXY.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub proxy: Option<String>,
+    /// Path to a PEM file with the client certificate chain.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub client_cert: Option<String>,
+    /// Path to the PEM private key; defaults to `client_cert` when the
+    /// certificate file carries the key too.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub client_key: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub send_cookies: Option<bool>,
+}
+
+impl RequestSettings {
+    pub fn is_inherit(&self) -> bool {
+        *self == Self::default()
+    }
+
+    /// Fill every `None` from `parent`: the nearest value wins, per field.
+    pub fn or_inherit(mut self, parent: &RequestSettings) -> Self {
+        self.timeout_ms = self.timeout_ms.or(parent.timeout_ms);
+        self.follow_redirects = self.follow_redirects.or(parent.follow_redirects);
+        self.max_redirects = self.max_redirects.or(parent.max_redirects);
+        self.tls_verify = self.tls_verify.or(parent.tls_verify);
+        self.proxy = self.proxy.take().or_else(|| parent.proxy.clone());
+        self.client_cert = self.client_cert.take().or_else(|| parent.client_cert.clone());
+        self.client_key = self.client_key.take().or_else(|| parent.client_key.clone());
+        self.send_cookies = self.send_cookies.or(parent.send_cookies);
+        self
+    }
+
+    /// The final values the engine uses, after inheritance.
+    pub fn effective(&self) -> EffectiveSettings {
+        EffectiveSettings {
+            timeout: match self.timeout_ms {
+                None | Some(0) => None,
+                Some(ms) => Some(std::time::Duration::from_millis(ms)),
+            },
+            follow_redirects: self.follow_redirects.unwrap_or(true),
+            max_redirects: self.max_redirects.unwrap_or(10),
+            tls_verify: self.tls_verify.unwrap_or(true),
+            proxy: match self.proxy.as_deref() {
+                None => ProxyChoice::Environment,
+                Some("") => ProxyChoice::Off,
+                Some(url) => ProxyChoice::Url(url.to_string()),
+            },
+            client_cert: self.client_cert.clone().filter(|s| !s.is_empty()),
+            client_key: self.client_key.clone().filter(|s| !s.is_empty()),
+            send_cookies: self.send_cookies.unwrap_or(true),
+        }
+    }
+
+    /// Certificate and key paths made absolute against `dir`, the folder
+    /// of the file that defined them.
+    pub fn with_files_relative_to(mut self, dir: &std::path::Path) -> Self {
+        for path in [&mut self.client_cert, &mut self.client_key]
+            .into_iter()
+            .flatten()
+        {
+            if !path.is_empty() && std::path::Path::new(path).is_relative() {
+                *path = dir.join(&*path).to_string_lossy().into_owned();
+            }
+        }
+        self
+    }
+}
+
+/// What a request resolves to once every `None` fell through to the
+/// defaults: no timeout, follow up to 10 redirects, verify TLS, proxy
+/// from the environment, no client certificate, cookies on.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EffectiveSettings {
+    pub timeout: Option<std::time::Duration>,
+    pub follow_redirects: bool,
+    pub max_redirects: u32,
+    pub tls_verify: bool,
+    pub proxy: ProxyChoice,
+    pub client_cert: Option<String>,
+    pub client_key: Option<String>,
+    pub send_cookies: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ProxyChoice {
+    /// Honour HTTP_PROXY/HTTPS_PROXY/ALL_PROXY.
+    Environment,
+    /// No proxy, even when the environment sets one.
+    Off,
+    Url(String),
+}
+
 /// One request, stored as one human-readable TOML file.
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub struct Request {
@@ -426,6 +536,8 @@ pub struct Request {
     pub body: Body,
     #[serde(default, skip_serializing_if = "Auth::is_inherit")]
     pub auth: Auth,
+    #[serde(default, skip_serializing_if = "RequestSettings::is_inherit")]
+    pub settings: RequestSettings,
 }
 
 impl Request {
@@ -441,6 +553,7 @@ impl Request {
     /// against `dir`, the folder of the request file.
     pub fn with_files_relative_to(mut self, dir: &std::path::Path) -> Self {
         self.body = self.body.with_files_relative_to(dir);
+        self.settings = self.settings.with_files_relative_to(dir);
         self
     }
 
@@ -471,6 +584,42 @@ json = '{ "name": "Ada" }'
 [auth.bearer]
 token = "{{token}}"
 "#;
+
+    #[test]
+    fn settings_round_trip_and_defaults() {
+        let toml_text = r#"
+name = "r"
+url = "https://example.com"
+
+[settings]
+timeout_ms = 5000
+tls_verify = false
+proxy = ""
+"#;
+        let req: Request = toml::from_str(toml_text).unwrap();
+        assert_eq!(req.settings.timeout_ms, Some(5000));
+        assert_eq!(req.settings.tls_verify, Some(false));
+        assert_eq!(req.settings.follow_redirects, None);
+
+        let eff = req.settings.effective();
+        assert_eq!(eff.timeout, Some(std::time::Duration::from_secs(5)));
+        assert!(!eff.tls_verify);
+        assert!(eff.follow_redirects, "unset falls back to the default");
+        assert_eq!(eff.max_redirects, 10);
+        assert_eq!(eff.proxy, ProxyChoice::Off, "empty string turns it off");
+        assert!(eff.send_cookies);
+
+        // An untouched [settings] table is not written back to disk.
+        let out = toml::to_string(&Request::new(Method::Get, "x")).unwrap();
+        assert!(!out.contains("[settings]"));
+        // timeout_ms = 0 means "no timeout" explicitly.
+        let eff = RequestSettings {
+            timeout_ms: Some(0),
+            ..Default::default()
+        }
+        .effective();
+        assert_eq!(eff.timeout, None);
+    }
 
     #[test]
     fn parses_request_file() {

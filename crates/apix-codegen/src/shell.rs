@@ -70,6 +70,32 @@ fn curl(request: &Request, program: &str, quote: fn(&str) -> String, newline: &s
         }
         _ => {}
     }
+    let settings = &request.settings;
+    if let Some(ms) = settings.timeout_ms.filter(|ms| *ms > 0) {
+        parts.push(format!("-m {}", ms as f64 / 1000.0));
+    }
+    if settings.follow_redirects == Some(true)
+        || (settings.follow_redirects.is_none() && settings.max_redirects.is_some())
+    {
+        parts.push("-L".into());
+    }
+    if let Some(n) = settings.max_redirects {
+        parts.push(format!("--max-redirs {n}"));
+    }
+    if settings.tls_verify == Some(false) {
+        parts.push("-k".into());
+    }
+    match settings.proxy.as_deref() {
+        None => {}
+        Some("") => parts.push(format!("--noproxy {}", quote("*"))),
+        Some(url) => parts.push(format!("-x {}", quote(url))),
+    }
+    if let Some(cert) = &settings.client_cert {
+        parts.push(format!("--cert {}", quote(cert)));
+    }
+    if let Some(key) = &settings.client_key {
+        parts.push(format!("--key {}", quote(key)));
+    }
     if let Some(text) = text_body(&request.body) {
         parts.push(format!("--data-raw {}", quote(&text)));
     } else if let Some(fields) = form_fields(&request.body) {
@@ -237,6 +263,36 @@ fn powershell(request: &Request) -> String {
             extra.push_str(" -Credential $credential");
         }
         _ => {}
+    }
+    let settings = &request.settings;
+    if let Some(ms) = settings.timeout_ms.filter(|ms| *ms > 0) {
+        extra.push_str(&format!(" -TimeoutSec {}", ms.div_ceil(1000)));
+    }
+    if settings.follow_redirects == Some(false) {
+        out.push_str("# PowerShell treats a stopped redirect as an error\n");
+        extra.push_str(" -MaximumRedirection 0");
+    } else if let Some(n) = settings.max_redirects {
+        extra.push_str(&format!(" -MaximumRedirection {n}"));
+    }
+    if settings.tls_verify == Some(false) {
+        out.push_str("# -SkipCertificateCheck needs PowerShell 7 or later\n");
+        extra.push_str(" -SkipCertificateCheck");
+    }
+    match settings.proxy.as_deref() {
+        None => {}
+        Some("") => out.push_str("# The proxy is off for this request; Invoke-RestMethod has no flag for that\n"),
+        Some(url) => extra.push_str(&format!(" -Proxy {}", ps_quote(url))),
+    }
+    if let Some(cert) = &settings.client_cert {
+        out.push_str("# CreateFromPemFile needs PowerShell 7.1 or later\n");
+        let args = match settings.client_key.as_deref().filter(|k| *k != cert.as_str()) {
+            Some(key) => format!("{}, {}", ps_quote(cert), ps_quote(key)),
+            None => ps_quote(cert),
+        };
+        out.push_str(&format!(
+            "$certificate = [System.Security.Cryptography.X509Certificates.X509Certificate2]::CreateFromPemFile({args})\n"
+        ));
+        extra.push_str(" -Certificate $certificate");
     }
     let has_headers = !headers.is_empty() || basic.is_some();
     if has_headers {

@@ -121,6 +121,16 @@ project (`apix-project.toml`); with none, nothing is sent. `auth = "none"` in a
 request (or folder) stops inheritance. `apix_core::project::inherited_auth`
 does the lookup for the desktop app, the CLI and "Copy as" alike.
 
+**Request settings.** A `[settings]` table (timeout, redirects, TLS verify,
+proxy, client certificate, cookies) lives at the same four levels. Every field
+is an `Option`: `None` inherits per field through the same chain
+(`apix_core::project::inherited_settings`), and what is still unset falls back
+to the defaults in `RequestSettings::effective` — no timeout, follow up to 10
+redirects, verify TLS, proxy from the environment, cookies on. The engine
+applies the result when it builds each send's `reqwest::Client`; the shared
+cookie jar (a `cookie_store` the cookie manager can list and edit) is handed to
+that client unless the request turns cookies off.
+
 **Signed auth.** AWS Signature V4, OAuth 1.0a and Digest are pure functions in
 `apix_core::sign`, checked against the AWS test suite, RFC 7616, RFC 7636 and
 the classic OAuth 1.0 example, so the engine and "Copy as" sign the same way.
