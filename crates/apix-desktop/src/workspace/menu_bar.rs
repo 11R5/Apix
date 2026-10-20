@@ -158,6 +158,10 @@ impl MenuState {
                     )
                 })
             })
+            .separator()
+            .item(self.item(tr!("menu.cookies"), |ws, window, cx| {
+                ws.open_cookies(window, cx)
+            }))
     }
 
     fn environment(
@@ -212,6 +216,19 @@ impl MenuState {
                 (None, None) => return,
             };
             ws.open_auth_dialog(owner, window, cx)
+        }));
+        let settings = if self.has_project {
+            tr!("menu.project_settings")
+        } else {
+            tr!("menu.collection_settings")
+        };
+        menu = menu.item(self.item(settings, |ws, window, cx| {
+            let owner = match (&ws.project, ws.collections.first()) {
+                (Some(p), _) => AuthOwner::Project(p.root.clone()),
+                (None, Some(c)) => AuthOwner::Collection(c.root.clone()),
+                (None, None) => return,
+            };
+            ws.open_settings_dialog(owner, window, cx)
         }));
         if let Some(group_by) = self.group_by {
             let group = |label: SharedString, by: GroupBy| {

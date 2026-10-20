@@ -167,6 +167,13 @@ collection.start_here_text: "%{path} ne contient pas encore de fichier apix.toml
 collection.start_here_title: Démarrer une nouvelle collection ici ?
 collection.unsaved_text: Enregistrer d'abord vos modifications de « %{name} » ?
 collection.unsaved_title: Modifications non enregistrées
+cookies.clear_all: Tout supprimer
+cookies.empty: Pas encore de cookies. Les réponses Set-Cookie arrivent ici automatiquement.
+cookies.expired: expiré
+cookies.expires_in: dans %{left}
+cookies.note: Les cookies sont envoyés automatiquement et survivent aux redémarrages ; l’onglet Réglages de la requête peut les désactiver.
+cookies.session: session
+cookies.title: Cookies
 copy.as_shell: Copier en %{shell}
 copy.copied: Copié en %{shell}.
 copy.copied_missing: "Copié en %{shell}. Non définies, laissées en {{…}} : %{names}."
@@ -211,7 +218,9 @@ menu.active_environment: Environnement actif
 menu.cancel: Annuler
 menu.close_tab: Fermer l'onglet
 menu.collection_auth: Authentification de la collection…
+menu.collection_settings: Réglages de requête de la collection…
 menu.command_palette: Palette de commandes…
+menu.cookies: Cookies…
 menu.copy_as: Copier en
 menu.documentation: Documentation
 menu.encrypt_collection: Chiffrer cette collection…
@@ -235,6 +244,7 @@ menu.open: Ouvrir…
 menu.open_recent: Ouvrir récent
 menu.previous_tab: Onglet précédent
 menu.project_auth: Authentification du projet…
+menu.project_settings: Réglages de requête du projet…
 menu.quit: Quitter
 menu.report_problem: Signaler un problème
 menu.request: Requête
@@ -297,6 +307,30 @@ palette.open_recent: "Ouvrir récent : %{name}"
 palette.placeholder: Rechercher des requêtes et des commandes…
 palette.save_request: Enregistrer la requête
 palette.send_request: Envoyer la requête
+reqset.client_cert: Certificat client
+reqset.client_key: Clé du certificat
+reqset.dialog.collection_title: Réglages de requête de « %{name} »
+reqset.dialog.folder_title: Réglages de requête du dossier « %{name} »
+reqset.dialog.note: S’applique à toute requête en dessous qui ne définit rien elle-même.
+reqset.dialog.project_title: Réglages de requête du projet « %{name} »
+reqset.effective: "En vigueur : délai %{timeout} · redirections %{redirects} · vérification TLS %{tls} · proxy %{proxy} · cookies %{cookies}"
+reqset.follow: Suivre les redirections
+reqset.hint.cert: Fichier PEM ; vide = hériter
+reqset.hint.inherit: vide = hériter
+reqset.hint.key: Clé PEM ; vide = le fichier du certificat
+reqset.inherit: Hériter
+reqset.max_redirects: Redirections max
+reqset.note: Les champs vides héritent du dossier, de la collection et du projet ; ensuite les valeurs par défaut s’appliquent. 0 seconde signifie aucun délai.
+reqset.off: Désactivé
+reqset.on: Activé
+reqset.proxy: Proxy
+reqset.proxy_url: URL du proxy
+reqset.send_cookies: Envoyer les cookies
+reqset.timeout: Délai (secondes)
+reqset.tls_verify: Vérifier le certificat TLS
+reqset.val.no_timeout: aucun
+reqset.val.proxy_env: depuis l’environnement
+reqset.val.redirects: activé (jusqu’à %{count})
 request.copy_as_tooltip: Copier en cURL ou PowerShell
 request.error.no_url: Saisissez une URL pour envoyer une requête.
 request.error.undefined_variable: Variable %{name} non définie. Définissez-la avec %{key} (Variables).
@@ -313,6 +347,8 @@ request.tab.headers: En-têtes
 request.tab.headers_count: En-têtes %{count}
 request.tab.params: Paramètres
 request.tab.params_count: Paramètres %{count}
+request.tab.settings: Réglages
+request.tab.settings_set: Réglages ●
 request.url_placeholder: "https://api.example.com/users   ou   {{base_url}}/users"
 response.cancelled: Requête annulée.
 response.empty: Envoyez une requête pour voir la réponse
@@ -361,6 +397,7 @@ sidebar.open_folder: Ouvrir un dossier
 sidebar.recent: RÉCENTS
 sidebar.remove_encryption: Supprimer le chiffrement…
 sidebar.rename: Renommer…
+sidebar.settings: Réglages de requête…
 sidebar.show_in_environment: Afficher dans l'environnement
 table.add: Ajouter
 table.key: Clé

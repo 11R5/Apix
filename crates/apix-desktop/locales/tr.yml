@@ -167,6 +167,13 @@ collection.start_here_text: "%{path} içinde henüz apix.toml yok. Apix bir tane
 collection.start_here_title: Burada yeni bir koleksiyon başlatılsın mı?
 collection.unsaved_text: Önce “%{name}” üzerindeki değişiklikler kaydedilsin mi?
 collection.unsaved_title: Kaydedilmemiş değişiklikler
+cookies.clear_all: Tümünü sil
+cookies.empty: Henüz çerez yok. Set-Cookie yanıtları buraya kendiliğinden eklenir.
+cookies.expired: süresi doldu
+cookies.expires_in: "%{left} sonra"
+cookies.note: Çerezler kendiliğinden gönderilir ve yeniden başlatmalarda korunur; isteğin Ayarlar sekmesinden kapatılabilir.
+cookies.session: oturum
+cookies.title: Çerezler
 copy.as_shell: "%{shell} olarak kopyala"
 copy.copied: "%{shell} olarak kopyalandı."
 copy.copied_missing: "%{shell} olarak kopyalandı. Tanımsız olduğu için {{…}} olarak bırakıldı: %{names}."
@@ -211,7 +218,9 @@ menu.active_environment: Etkin ortam
 menu.cancel: İptal
 menu.close_tab: Sekmeyi kapat
 menu.collection_auth: Koleksiyon yetkilendirmesi…
+menu.collection_settings: Koleksiyon istek ayarları…
 menu.command_palette: Komut paleti…
+menu.cookies: Çerezler…
 menu.copy_as: Komut olarak kopyala
 menu.documentation: Belgeler
 menu.encrypt_collection: Bu koleksiyonu şifrele…
@@ -235,6 +244,7 @@ menu.open: Aç…
 menu.open_recent: Son açılanlar
 menu.previous_tab: Önceki sekme
 menu.project_auth: Proje yetkilendirmesi…
+menu.project_settings: Proje istek ayarları…
 menu.quit: Çıkış
 menu.report_problem: Sorun bildir
 menu.request: İstek
@@ -297,6 +307,30 @@ palette.open_recent: "Son açılanı aç: %{name}"
 palette.placeholder: İstek ve komut ara…
 palette.save_request: İsteği kaydet
 palette.send_request: İsteği gönder
+reqset.client_cert: İstemci sertifikası
+reqset.client_key: Sertifika anahtarı
+reqset.dialog.collection_title: "“%{name}” istek ayarları"
+reqset.dialog.folder_title: "“%{name}” klasörünün istek ayarları"
+reqset.dialog.note: Altındaki, kendi ayarını koymayan her isteğe uygulanır.
+reqset.dialog.project_title: "“%{name}” projesinin istek ayarları"
+reqset.effective: "Geçerli: zaman aşımı %{timeout} · yönlendirme %{redirects} · TLS doğrulama %{tls} · proxy %{proxy} · çerezler %{cookies}"
+reqset.follow: Yönlendirmeleri izle
+reqset.hint.cert: PEM dosyası; boş = miras
+reqset.hint.inherit: boş = miras
+reqset.hint.key: PEM anahtarı; boş = sertifika dosyası
+reqset.inherit: Miras
+reqset.max_redirects: En çok yönlendirme
+reqset.note: Boş alanlar klasörden, koleksiyondan ve projeden miras alır; sonrasında varsayılanlar geçerlidir. 0 saniye, zaman aşımı yok demektir.
+reqset.off: Kapalı
+reqset.on: Açık
+reqset.proxy: Proxy
+reqset.proxy_url: Proxy adresi
+reqset.send_cookies: Çerez gönder
+reqset.timeout: Zaman aşımı (saniye)
+reqset.tls_verify: TLS sertifikasını doğrula
+reqset.val.no_timeout: yok
+reqset.val.proxy_env: ortamdan
+reqset.val.redirects: açık (en çok %{count})
 request.copy_as_tooltip: cURL veya PowerShell olarak kopyala
 request.error.no_url: İstek göndermek için bir URL girin.
 request.error.undefined_variable: Tanımsız değişken %{name}. %{key} ile tanımlayın (Değişkenler).
@@ -313,6 +347,8 @@ request.tab.headers: Başlıklar
 request.tab.headers_count: Başlıklar %{count}
 request.tab.params: Parametreler
 request.tab.params_count: Parametreler %{count}
+request.tab.settings: Ayarlar
+request.tab.settings_set: Ayarlar ●
 request.url_placeholder: "https://api.example.com/users   veya   {{base_url}}/users"
 response.cancelled: İstek iptal edildi.
 response.empty: Yanıtı görmek için bir istek gönderin
@@ -361,6 +397,7 @@ sidebar.open_folder: Klasör aç
 sidebar.recent: SON AÇILANLAR
 sidebar.remove_encryption: Şifrelemeyi kaldır…
 sidebar.rename: Yeniden adlandır…
+sidebar.settings: İstek ayarları…
 sidebar.show_in_environment: Ortamda göster
 table.add: Ekle
 table.key: Anahtar

@@ -169,6 +169,13 @@ collection.start_here_text: "%{path} has no apix.toml yet. Apix will create one;
 collection.start_here_title: Start a new collection here?
 collection.unsaved_text: Save your changes to “%{name}” first?
 collection.unsaved_title: Unsaved changes
+cookies.clear_all: Remove all
+cookies.empty: No cookies yet. Set-Cookie answers land here automatically.
+cookies.expired: expired
+cookies.expires_in: in %{left}
+cookies.note: Cookies are sent automatically and persist across restarts; the request’s Settings tab can turn them off.
+cookies.session: session
+cookies.title: Cookies
 copy.as_shell: Copy as %{shell}
 copy.copied: Copied as %{shell}.
 copy.copied_missing: "Copied as %{shell}. Not defined, left as {{…}}: %{names}."
@@ -213,7 +220,9 @@ menu.active_environment: Active environment
 menu.cancel: Cancel
 menu.close_tab: Close tab
 menu.collection_auth: Collection auth…
+menu.collection_settings: Collection request settings…
 menu.command_palette: Command palette…
+menu.cookies: Cookies…
 menu.copy_as: Copy as
 menu.documentation: Documentation
 menu.encrypt_collection: Encrypt this collection…
@@ -237,6 +246,7 @@ menu.open: Open…
 menu.open_recent: Open recent
 menu.previous_tab: Previous tab
 menu.project_auth: Project auth…
+menu.project_settings: Project request settings…
 menu.quit: Quit
 menu.report_problem: Report a problem
 menu.request: Request
@@ -299,6 +309,30 @@ palette.open_recent: "Open recent: %{name}"
 palette.placeholder: Search requests and commands…
 palette.save_request: Save request
 palette.send_request: Send request
+reqset.client_cert: Client certificate
+reqset.client_key: Certificate key
+reqset.dialog.collection_title: Request settings for “%{name}”
+reqset.dialog.folder_title: Request settings for folder “%{name}”
+reqset.dialog.note: Applies to every request below that does not set its own.
+reqset.dialog.project_title: Request settings for project “%{name}”
+reqset.effective: "In effect: timeout %{timeout} · redirects %{redirects} · TLS verify %{tls} · proxy %{proxy} · cookies %{cookies}"
+reqset.follow: Follow redirects
+reqset.hint.cert: PEM file; empty = inherit
+reqset.hint.inherit: empty = inherit
+reqset.hint.key: PEM key; empty = the certificate file
+reqset.inherit: Inherit
+reqset.max_redirects: Max redirects
+reqset.note: Empty fields inherit from the folder, collection and project; after that the defaults apply. 0 seconds means no timeout.
+reqset.off: "Off"
+reqset.on: "On"
+reqset.proxy: Proxy
+reqset.proxy_url: Proxy URL
+reqset.send_cookies: Send cookies
+reqset.timeout: Timeout (seconds)
+reqset.tls_verify: Verify TLS certificate
+reqset.val.no_timeout: none
+reqset.val.proxy_env: from the environment
+reqset.val.redirects: on (up to %{count})
 request.copy_as_tooltip: Copy as cURL or PowerShell
 request.error.no_url: Enter a URL to send a request.
 request.error.undefined_variable: Undefined variable %{name}. Define it with %{key} (Variables).
@@ -315,6 +349,8 @@ request.tab.headers: Headers
 request.tab.headers_count: Headers %{count}
 request.tab.params: Params
 request.tab.params_count: Params %{count}
+request.tab.settings: Settings
+request.tab.settings_set: Settings ●
 request.url_placeholder: "https://api.example.com/users   or   {{base_url}}/users"
 response.cancelled: Request cancelled.
 response.empty: Send a request to see the response
@@ -363,6 +399,7 @@ sidebar.open_folder: Open a folder
 sidebar.recent: RECENT
 sidebar.remove_encryption: Remove encryption…
 sidebar.rename: Rename…
+sidebar.settings: Request settings…
 sidebar.show_in_environment: Show in environment
 table.add: Add
 table.key: Key

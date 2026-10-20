@@ -167,6 +167,13 @@ collection.start_here_text: "%{path} にはまだ apix.toml がありません�
 collection.start_here_title: ここで新しいコレクションを始めますか？
 collection.unsaved_text: 先に「%{name}」への変更を保存しますか？
 collection.unsaved_title: 未保存の変更
+cookies.clear_all: すべて削除
+cookies.empty: まだCookieはありません。Set-Cookie応答は自動的にここに入ります。
+cookies.expired: 期限切れ
+cookies.expires_in: "%{left}後"
+cookies.note: Cookieは自動的に送信され、再起動後も保持されます。リクエストの設定タブで無効にできます。
+cookies.session: セッション
+cookies.title: Cookie
 copy.as_shell: "%{shell} としてコピー"
 copy.copied: "%{shell} としてコピーしました。"
 copy.copied_missing: "%{shell} としてコピーしました。未定義のため {{…}} のまま: %{names}。"
@@ -211,7 +218,9 @@ menu.active_environment: アクティブな環境
 menu.cancel: キャンセル
 menu.close_tab: タブを閉じる
 menu.collection_auth: コレクションの認証…
+menu.collection_settings: コレクションのリクエスト設定…
 menu.command_palette: コマンドパレット…
+menu.cookies: Cookie…
 menu.copy_as: 形式を指定してコピー
 menu.documentation: ドキュメント
 menu.encrypt_collection: このコレクションを暗号化…
@@ -235,6 +244,7 @@ menu.open: 開く…
 menu.open_recent: 最近使ったものを開く
 menu.previous_tab: 前のタブ
 menu.project_auth: プロジェクトの認証…
+menu.project_settings: プロジェクトのリクエスト設定…
 menu.quit: 終了
 menu.report_problem: 問題を報告
 menu.request: リクエスト
@@ -297,6 +307,30 @@ palette.open_recent: "最近使ったものを開く: %{name}"
 palette.placeholder: リクエストとコマンドを検索…
 palette.save_request: リクエストを保存
 palette.send_request: リクエストを送信
+reqset.client_cert: クライアント証明書
+reqset.client_key: 証明書の鍵
+reqset.dialog.collection_title: 「%{name}」のリクエスト設定
+reqset.dialog.folder_title: フォルダー「%{name}」のリクエスト設定
+reqset.dialog.note: 下にある、独自に設定しないすべてのリクエストに適用されます。
+reqset.dialog.project_title: プロジェクト「%{name}」のリクエスト設定
+reqset.effective: "有効: タイムアウト %{timeout} · リダイレクト %{redirects} · TLS検証 %{tls} · プロキシ %{proxy} · Cookie %{cookies}"
+reqset.follow: リダイレクトに従う
+reqset.hint.cert: PEMファイル。空 = 継承
+reqset.hint.inherit: 空 = 継承
+reqset.hint.key: PEM鍵。空 = 証明書ファイル
+reqset.inherit: 継承
+reqset.max_redirects: 最大リダイレクト数
+reqset.note: 空の項目はフォルダー、コレクション、プロジェクトから継承し、その後は既定値が使われます。0秒はタイムアウトなしです。
+reqset.off: オフ
+reqset.on: オン
+reqset.proxy: プロキシ
+reqset.proxy_url: プロキシURL
+reqset.send_cookies: Cookieを送信
+reqset.timeout: タイムアウト（秒）
+reqset.tls_verify: TLS証明書を検証
+reqset.val.no_timeout: なし
+reqset.val.proxy_env: 環境変数から
+reqset.val.redirects: オン（最大 %{count}）
 request.copy_as_tooltip: cURL または PowerShell としてコピー
 request.error.no_url: リクエストを送信するには URL を入力してください。
 request.error.undefined_variable: 変数 %{name} は定義されていません。%{key}（変数）で定義してください。
@@ -313,6 +347,8 @@ request.tab.headers: ヘッダー
 request.tab.headers_count: ヘッダー %{count}
 request.tab.params: パラメーター
 request.tab.params_count: パラメーター %{count}
+request.tab.settings: 設定
+request.tab.settings_set: 設定 ●
 request.url_placeholder: "https://api.example.com/users   または   {{base_url}}/users"
 response.cancelled: リクエストをキャンセルしました。
 response.empty: リクエストを送信するとレスポンスが表示されます
@@ -361,6 +397,7 @@ sidebar.open_folder: フォルダーを開く
 sidebar.recent: 最近使った項目
 sidebar.remove_encryption: 暗号化を解除…
 sidebar.rename: 名前を変更…
+sidebar.settings: リクエスト設定…
 sidebar.show_in_environment: 環境で表示
 table.add: 追加
 table.key: キー

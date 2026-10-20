@@ -452,11 +452,26 @@ impl Workspace {
             (None, None) => None,
         };
         if let Some((label, owner)) = owner {
+            let settings_label = match &owner {
+                AuthOwner::Project(_) => name!("menu.project_settings"),
+                _ => name!("menu.collection_settings"),
+            };
+            let settings_owner = owner.clone();
             out.push(Entry::command(
                 label,
                 Rc::new(move |ws, window, cx| ws.open_auth_dialog(owner.clone(), window, cx)),
             ));
+            out.push(Entry::command(
+                settings_label,
+                Rc::new(move |ws, window, cx| {
+                    ws.open_settings_dialog(settings_owner.clone(), window, cx)
+                }),
+            ));
         }
+        out.push(Entry::command(
+            name!("menu.cookies"),
+            Rc::new(move |ws, window, cx| ws.open_cookies(window, cx)),
+        ));
         if let Some(project) = &self.project {
             for (label, by) in [
                 (name!("palette.group_by_collection"), GroupBy::Collection),

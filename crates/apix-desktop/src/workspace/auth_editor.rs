@@ -1060,7 +1060,10 @@ impl super::Workspace {
         cx: &mut Context<Self>,
     ) -> bool {
         let result = match owner {
-            AuthOwner::Folder(dir) => store::save_folder_meta(dir, &store::FolderMeta { auth }),
+            AuthOwner::Folder(dir) => store::load_folder_meta(dir).and_then(|mut meta| {
+                meta.auth = auth;
+                store::save_folder_meta(dir, &meta)
+            }),
             AuthOwner::Collection(root) => Collection::open(root).and_then(|mut c| {
                 c.meta.auth = auth;
                 store::save_collection_meta(root, &c.meta)

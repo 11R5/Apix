@@ -10,6 +10,10 @@ repository.workspace = true
 apix-core.workspace = true
 bytes.workspace = true
 reqwest = { workspace = true, features = ["rustls-tls", "multipart"] }
+# A cookie jar the cookie manager can list and edit (reqwest's own `Jar`
+# cannot be enumerated), shared by every per-send client.
+reqwest_cookie_store = "0.8"
+cookie_store = { version = "0.21", features = ["serde_json"] }
 # The connection details reqwest keeps in a response (local and remote address).
 hyper-util = { version = "0.1", features = ["client-legacy"] }
 # Local interfaces, default gateway and DNS servers for the network inspector.

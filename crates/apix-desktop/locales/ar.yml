@@ -167,6 +167,13 @@ collection.start_here_text: "لا يحتوي %{path} على apix.toml بعد. س
 collection.start_here_title: بدء مجموعة جديدة هنا؟
 collection.unsaved_text: حفظ تغييراتك على «%{name}» أولًا؟
 collection.unsaved_title: تغييرات غير محفوظة
+cookies.clear_all: حذف الكل
+cookies.empty: لا توجد ملفات تعريف ارتباط بعد. تصل ردود Set-Cookie إلى هنا تلقائيًا.
+cookies.expired: منتهية
+cookies.expires_in: خلال %{left}
+cookies.note: تُرسل ملفات تعريف الارتباط تلقائيًا وتبقى بعد إعادة التشغيل؛ يمكن إيقافها من تبويب إعدادات الطلب.
+cookies.session: جلسة
+cookies.title: ملفات تعريف الارتباط
 copy.as_shell: نسخ كـ %{shell}
 copy.copied: نُسخ كـ %{shell}.
 copy.copied_missing: "نُسخ كـ %{shell}. غير معرَّفة، تُركت كـ {{…}}: %{names}."
@@ -211,7 +218,9 @@ menu.active_environment: البيئة النشطة
 menu.cancel: إلغاء
 menu.close_tab: إغلاق علامة التبويب
 menu.collection_auth: مصادقة المجموعة…
+menu.collection_settings: إعدادات طلبات المجموعة…
 menu.command_palette: لوحة الأوامر…
+menu.cookies: ملفات تعريف الارتباط…
 menu.copy_as: نسخ كـ
 menu.documentation: الوثائق
 menu.encrypt_collection: تشفير هذه المجموعة…
@@ -235,6 +244,7 @@ menu.open: فتح…
 menu.open_recent: فتح الأخيرة
 menu.previous_tab: علامة التبويب السابقة
 menu.project_auth: مصادقة المشروع…
+menu.project_settings: إعدادات طلبات المشروع…
 menu.quit: إنهاء
 menu.report_problem: الإبلاغ عن مشكلة
 menu.request: الطلب
@@ -297,6 +307,30 @@ palette.open_recent: "فتح الأخيرة: %{name}"
 palette.placeholder: البحث في الطلبات والأوامر…
 palette.save_request: حفظ الطلب
 palette.send_request: إرسال الطلب
+reqset.client_cert: شهادة العميل
+reqset.client_key: مفتاح الشهادة
+reqset.dialog.collection_title: إعدادات طلبات «%{name}»
+reqset.dialog.folder_title: إعدادات طلبات المجلد «%{name}»
+reqset.dialog.note: تنطبق على كل طلب أدناه لا يضع إعداداته الخاصة.
+reqset.dialog.project_title: إعدادات طلبات المشروع «%{name}»
+reqset.effective: "المفعول: المهلة %{timeout} · إعادة التوجيه %{redirects} · تحقق TLS %{tls} · الوكيل %{proxy} · الكوكيز %{cookies}"
+reqset.follow: اتباع إعادة التوجيه
+reqset.hint.cert: ملف PEM؛ فارغ = وراثة
+reqset.hint.inherit: فارغ = وراثة
+reqset.hint.key: مفتاح PEM؛ فارغ = ملف الشهادة
+reqset.inherit: وراثة
+reqset.max_redirects: الحد الأقصى لإعادة التوجيه
+reqset.note: الحقول الفارغة ترث من المجلد والمجموعة والمشروع؛ ثم تسري القيم الافتراضية. 0 ثانية تعني بلا مهلة.
+reqset.off: مغلق
+reqset.on: مفعّل
+reqset.proxy: الوكيل
+reqset.proxy_url: عنوان الوكيل
+reqset.send_cookies: إرسال الكوكيز
+reqset.timeout: المهلة (ثوانٍ)
+reqset.tls_verify: التحقق من شهادة TLS
+reqset.val.no_timeout: بلا
+reqset.val.proxy_env: من البيئة
+reqset.val.redirects: مفعّل (حتى %{count})
 request.copy_as_tooltip: نسخ كـ cURL أو PowerShell
 request.error.no_url: أدخل عنوان URL لإرسال طلب.
 request.error.undefined_variable: المتغير %{name} غير معرَّف. عرّفه باستخدام %{key} (المتغيرات).
@@ -313,6 +347,8 @@ request.tab.headers: الترويسات
 request.tab.headers_count: الترويسات %{count}
 request.tab.params: المعاملات
 request.tab.params_count: المعاملات %{count}
+request.tab.settings: الإعدادات
+request.tab.settings_set: الإعدادات ●
 request.url_placeholder: "https://api.example.com/users   أو   {{base_url}}/users"
 response.cancelled: أُلغي الطلب.
 response.empty: أرسل طلبًا لرؤية الاستجابة
@@ -361,6 +397,7 @@ sidebar.open_folder: فتح مجلد
 sidebar.recent: الأخيرة
 sidebar.remove_encryption: إزالة التشفير…
 sidebar.rename: إعادة تسمية…
+sidebar.settings: إعدادات الطلب…
 sidebar.show_in_environment: العرض في البيئة
 table.add: إضافة
 table.key: المفتاح

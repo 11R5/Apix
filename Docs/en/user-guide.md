@@ -16,6 +16,8 @@ command line runs the same requests in a terminal or CI.
 - [Params and headers](#params-and-headers)
 - [Body](#body)
 - [Auth](#auth)
+- [Request settings](#request-settings)
+- [Cookies](#cookies)
 - [Variables and environments](#variables-and-environments)
 - [The response](#the-response)
 - [The Network tab](#the-network-tab)
@@ -45,7 +47,8 @@ with a folder (`apix-desktop path/to/collection`) opens it directly.
   files on disk and kept up to date when they change. The picker under the
   collection name chooses the active environment.
 - **Tabs (top):** every request you open gets a tab.
-- **Request pane:** method, URL and the Params, Headers, Auth and Body tabs.
+- **Request pane:** method, URL and the Params, Headers, Auth, Body and
+  Settings tabs.
 - **Response pane (right):** status, timing, size and the response body.
 - **Status bar (bottom):** the collection, the file of the open request and the
   most useful shortcuts.
@@ -116,6 +119,55 @@ browser and receives the answer on `http://127.0.0.1` (a free port, or the
 **Shared auth.** Right-click a folder or collection and choose **Auth…** to set
 auth once for everything inside; **Environment › Project auth…** does the same
 for a whole project. Requests whose auth is *Inherit from parent* use it.
+
+## Request settings
+
+The Settings tab controls how the request travels:
+
+| Setting | Default |
+|---|---|
+| Timeout (seconds) | none — a request runs until it finishes or you cancel it; `0` also means no timeout |
+| Follow redirects | on |
+| Max redirects | 10 |
+| Verify TLS certificate | on — turn it off only for test servers you trust |
+| Proxy | from the environment (`HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY`); *Off* ignores those; a URL names one explicitly |
+| Client certificate | none — a PEM file, with the key in the same file or a separate one |
+| Send cookies | on |
+
+Every field left empty (or on *Inherit*) falls back to the nearest folder,
+collection or project that sets it, and finally to the defaults above — the
+same chain as auth. Right-click a folder or collection and choose **Request
+settings…** to set them once for everything inside; **Environment › Project
+request settings…** does the same for a whole project. The line under the form
+shows what the request ends up using. `{{variables}}` work in the proxy and
+certificate fields, and relative certificate paths are resolved against the
+file that sets them.
+
+In a request file (and in `folder.toml`, `apix.toml` and `apix-project.toml`)
+the settings are a `[settings]` table:
+
+```toml
+[settings]
+timeout_ms = 5000
+tls_verify = false
+proxy = ""          # "" = no proxy, even when the environment sets one
+client_cert = "certs/client.pem"
+```
+
+**Copy as** writes the matching curl flags (`-m`, `-L --max-redirs`, `-k`,
+`-x`, `--cert`, `--key`) and pasting a curl command with those flags fills the
+tab. `apix send` has `--timeout`, `--insecure` and `--proxy`, which override
+the file. Postman's per-request options (`protocolProfileBehavior`) are
+imported.
+
+## Cookies
+
+Apix keeps one cookie jar: `Set-Cookie` answers are stored automatically and
+sent with later requests to the same site, including across restarts
+(`cookies.json` next to the app settings; session cookies die with the app).
+**Request › Cookies…** lists them, deletes single cookies, or empties the jar.
+The Settings tab's **Send cookies** turns the jar off for a request, a folder,
+a collection or a project. The CLI starts with an empty jar on every run.
 
 ## Variables and environments
 

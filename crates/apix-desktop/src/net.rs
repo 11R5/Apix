@@ -27,8 +27,18 @@ fn net() -> &'static Net {
             .enable_all()
             .build()
             .expect("failed to start the network runtime"),
-        client: HttpClient::new().expect("failed to build the HTTP client"),
+        client: match dirs::config_dir() {
+            // Cookies live next to settings.toml and survive restarts.
+            Some(dir) => HttpClient::with_cookie_file(dir.join("Apix").join("cookies.json")),
+            None => HttpClient::new(),
+        }
+        .expect("failed to build the HTTP client"),
     })
+}
+
+/// The shared client, for the cookie manager.
+pub fn client() -> &'static HttpClient {
+    &net().client
 }
 
 /// Sends an already-resolved request on the network runtime.

@@ -73,6 +73,7 @@ release build of the desktop app takes a few minutes.
 |---|---|
 | `<config>/Apix/settings.toml` | language, theme, auto-lock time |
 | `<config>/Apix/state.toml` | recently opened collections, the chosen environment per collection |
+| `<config>/Apix/cookies.json` | the cookie jar (session cookies are not persisted) |
 
 `<config>` is `%APPDATA%` on Windows, `~/Library/Application Support` on macOS
 and `~/.config` on Linux. OAuth 2.0 tokens and passwords of encrypted

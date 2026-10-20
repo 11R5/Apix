@@ -1,4 +1,4 @@
-<!-- translated from en/technical.md sha256:17e17fc0d6b2e80a -->
+<!-- translated from en/technical.md sha256:7677cf30664e5bbc -->
 
 # Teknik notlar
 
@@ -74,6 +74,7 @@ Masaüstü uygulamasının tam bir release derlemesi birkaç dakika sürer.
 |---|---|
 | `<config>/Apix/settings.toml` | dil, tema, otomatik kilit süresi |
 | `<config>/Apix/state.toml` | son açılan koleksiyonlar, koleksiyon başına seçilen ortam |
+| `<config>/Apix/cookies.json` | çerez kavanozu (oturum çerezleri kalıcı değildir) |
 
 `<config>`, Windows'ta `%APPDATA%`, macOS'te `~/Library/Application Support`,
 Linux'ta `~/.config` klasörüdür. OAuth 2.0 token'ları ve şifreli koleksiyonların

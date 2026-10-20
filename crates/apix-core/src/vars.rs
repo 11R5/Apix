@@ -206,6 +206,12 @@ impl Request {
                     service: s(&a.service),
                 }),
             },
+            settings: crate::model::RequestSettings {
+                proxy: self.settings.proxy.as_deref().map(&mut s),
+                client_cert: self.settings.client_cert.as_deref().map(&mut s),
+                client_key: self.settings.client_key.as_deref().map(&mut s),
+                ..self.settings.clone()
+            },
         };
         Resolved { request, missing }
     }

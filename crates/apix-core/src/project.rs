@@ -17,7 +17,7 @@ use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 
-use crate::model::{Auth, Request};
+use crate::model::{Auth, Request, RequestSettings};
 use crate::store::{
     self, COLLECTION_FILE, Collection, CollectionMeta, StoreError, VarMap, environment_names_at,
     io_error, read_toml, slug, unique_path, write_toml,
@@ -58,6 +58,9 @@ pub struct ProjectMeta {
     /// Auth for every request in the project that does not set its own.
     #[serde(default, skip_serializing_if = "Auth::is_inherit")]
     pub auth: Auth,
+    /// Transport settings for requests that do not set their own.
+    #[serde(default, skip_serializing_if = "RequestSettings::is_inherit")]
+    pub settings: RequestSettings,
 }
 
 #[derive(Debug, Clone)]
@@ -273,6 +276,47 @@ pub fn apply_inherited_auth(
     Ok(())
 }
 
+/// What a request in `dir` inherits for the `None` fields of its
+/// `[settings]`: folder settings between `dir` and the collection root
+/// (nearest folder first), then the collection's, then the project's.
+/// Relative certificate paths are made absolute against the folder of
+/// the file that defined them.
+pub fn inherited_settings(
+    dir: &Path,
+    collection: Option<&Collection>,
+    project: Option<&Project>,
+) -> Result<RequestSettings, StoreError> {
+    let mut merged = RequestSettings::default();
+    if let Some(c) = collection {
+        let folders = dir
+            .ancestors()
+            .take_while(|d| d.starts_with(&c.root) && *d != c.root.as_path());
+        for folder in folders {
+            let meta = store::load_folder_meta(folder)?;
+            merged = merged.or_inherit(&meta.settings.with_files_relative_to(folder));
+        }
+        merged = merged.or_inherit(&c.meta.settings.clone().with_files_relative_to(&c.root));
+    }
+    if let Some(p) = project {
+        merged = merged.or_inherit(&p.meta.settings.clone().with_files_relative_to(&p.root));
+    }
+    Ok(merged)
+}
+
+/// Fills the `None` fields of `request.settings` (saved at `path`) with
+/// what they inherit.
+pub fn apply_inherited_settings(
+    request: &mut Request,
+    path: &Path,
+    collection: Option<&Collection>,
+    project: Option<&Project>,
+) -> Result<(), StoreError> {
+    let dir = path.parent().unwrap_or(Path::new("."));
+    let inherited = inherited_settings(dir, collection, project)?;
+    request.settings = request.settings.clone().or_inherit(&inherited);
+    Ok(())
+}
+
 /// Every variable layer that applies to a request in `collection` under
 /// `environment`, in order. Fails if the environment is defined nowhere.
 pub fn variables(
@@ -411,6 +455,7 @@ mod tests {
         store::save_collection_meta(&croot, &meta).unwrap();
         let admin = store::FolderMeta {
             auth: bearer("admin"),
+            ..Default::default()
         };
         store::save_folder_meta(&croot.join("admin"), &admin).unwrap();
         let (p, c) = load();
@@ -437,6 +482,55 @@ mod tests {
         // Back to the default: folder.toml goes away.
         store::save_folder_meta(&croot.join("admin"), &store::FolderMeta::default()).unwrap();
         assert!(!croot.join("admin").join(store::FOLDER_FILE).exists());
+        fs::remove_dir_all(parent).unwrap();
+    }
+
+    #[test]
+    fn settings_merge_per_field_from_the_nearest_parent() {
+        let parent = temp("settings");
+        let root = create_project(&parent, "Shop", &[]).unwrap();
+        let croot = create_collection(&root, "Users").unwrap();
+        let deep = croot.join("admin");
+        fs::create_dir_all(&deep).unwrap();
+
+        let mut p = Project::open(&root).unwrap();
+        p.meta.settings.timeout_ms = Some(30_000);
+        p.meta.settings.tls_verify = Some(false);
+        p.meta.settings.client_cert = Some("certs/project.pem".into());
+        p.save().unwrap();
+
+        let c = Collection::open(&croot).unwrap();
+        let mut cmeta = c.meta.clone();
+        cmeta.settings.tls_verify = Some(true);
+        store::save_collection_meta(&croot, &cmeta).unwrap();
+
+        let folder = store::FolderMeta {
+            settings: RequestSettings {
+                proxy: Some("http://127.0.0.1:8888".into()),
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        store::save_folder_meta(&deep, &folder).unwrap();
+
+        let p = Project::open(&root).unwrap();
+        let c = Collection::open(&croot).unwrap();
+        let merged = inherited_settings(&deep, Some(&c), Some(&p)).unwrap();
+        assert_eq!(merged.timeout_ms, Some(30_000), "from the project");
+        assert_eq!(merged.tls_verify, Some(true), "the collection wins");
+        assert_eq!(merged.proxy.as_deref(), Some("http://127.0.0.1:8888"));
+        // A relative cert path is absolute against its defining folder.
+        assert_eq!(
+            merged.client_cert.as_deref(),
+            Some(root.join("certs/project.pem").to_string_lossy().as_ref())
+        );
+
+        // The request's own value still wins over everything.
+        let mut request = Request::new(Method::Get, "x");
+        request.settings.timeout_ms = Some(5);
+        apply_inherited_settings(&mut request, &deep.join("r.apix"), Some(&c), Some(&p)).unwrap();
+        assert_eq!(request.settings.timeout_ms, Some(5));
+        assert_eq!(request.settings.tls_verify, Some(true));
         fs::remove_dir_all(parent).unwrap();
     }
 
