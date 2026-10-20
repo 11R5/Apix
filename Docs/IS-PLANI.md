@@ -7,14 +7,14 @@
 **İşaretler:** ✅ yapıldı · 🔜 sıradaki · ⬜ planlandı · 💭 sonra karar verilecek
 **Boyut:** S = birkaç saat · M = 1–3 gün · L = 1 hafta ve üstü
 
-### Durum özeti (18 Ekim 2026)
+### Durum özeti (20 Ekim 2026)
 | Aşama | Durum |
 |---|---|
 | M0 Temel | ✅ |
 | M1 Arayüzden istek | ✅ 100 MB JSON ~0.33 s'de açılıyor |
 | M2 Koleksiyonlar, Postman içe aktarma | ✅ (sekmeler ve sürükle-bırak M3'te tamamlandı) |
 | M3 Simge, projeler, ortamlar, kopyalama, auth | ✅ 9/9 · bitti: simge, ortam seçici ve editörü, dinamik değişkenler, projeler, kabuk komutu olarak kopyalama, metotla yeni istek, değişken çipleri, Auth sekmesi ve miras, komut paleti, sekmeler, sürükle-bırak ile taşıma · küçük kalanlar M3 bölümünün sonunda |
-| M4 Günlük kullanım | 🔜 · bitti: menü çubuğu, şifreli koleksiyonlar (motor, uygulama, CLI), ağ denetçisi (Network sekmesi), multipart/binary/GraphQL gövdeleri, auth tipleri (Digest, OAuth 1.0, OAuth 2.0, AWS SigV4), ayarlar ekranı ve 9 dilli arayüz, dokümantasyon yapısı (İngilizce, Türkçe), README karşılaştırması ve performans ölçümü · sürüyor: Arapça düzen aynalama (ayrı oturum) · sıradaki: istek ayarları ve çerez yöneticisi |
+| M4 Günlük kullanım | 🔜 · bitti: menü çubuğu, şifreli koleksiyonlar (motor, uygulama, CLI), ağ denetçisi (Network sekmesi), multipart/binary/GraphQL gövdeleri, auth tipleri (Digest, OAuth 1.0, OAuth 2.0, AWS SigV4), ayarlar ekranı ve 9 dilli arayüz, dokümantasyon yapısı (İngilizce, Türkçe), README karşılaştırması ve performans ölçümü · hazır, merge bekliyor: Arapça düzen aynalama (`feat/m4-rtl`) · sıradaki: istek ayarları ve çerez yöneticisi |
 | M5–M9 | ⬜ |
 
 Release ikili dosyası 33.1 MB (üst sınır 100 MB). Testler: core 44, vault 7, desktop 9, codegen 15, import 13, http 14 (hepsi geçiyor, clippy uyarısız).
