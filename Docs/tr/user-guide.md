@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:b91d94787dc5feaf -->
+<!-- translated from en/user-guide.md sha256:e54194808eab8c11 -->
 
 # Apix kullanım kılavuzu
 
@@ -30,6 +30,7 @@ veya CI'da çalıştırır.
 - [Şifreli koleksiyonlar](#şifreli-koleksiyonlar)
 - [Komut olarak kopyala ve curl yapıştırma](#komut-olarak-kopyala-ve-curl-yapıştırma)
 - [Postman'dan içe aktarma](#postmandan-içe-aktarma)
+- [Insomnia, OpenAPI ve HAR'dan içe aktarma](#insomnia-openapi-ve-hardan-içe-aktarma)
 - [Geçmiş](#geçmiş)
 - [Komut paleti](#komut-paleti)
 - [Ayarlar ve dil](#ayarlar-ve-dil)
@@ -88,7 +89,7 @@ Gövde sekmesi şunları sunar:
 | Tür | Gönderilen |
 |---|---|
 | Yok | Gövde yok. |
-| JSON, Metin, XML | Metin, yazıldığı gibi; söz dizimi vurgulamasıyla. |
+| JSON, Metin, XML, HTML | Metin, yazıldığı gibi; söz dizimi vurgulamasıyla (bir başlık aksini belirtmedikçe `application/json`, `text/plain`, `application/xml`, `text/html`). |
 | Form | `application/x-www-form-urlencoded` anahtar–değer satırları. |
 | Multipart | `multipart/form-data`. Her alan **Metin** veya **Dosya** olur; klasör düğmesi bir veya birden fazla dosya seçer. |
 | İkili | Tek bir dosyanın baytları; bir başlık aksini belirtmedikçe `application/octet-stream` olarak. Apix dosya boyutunu ya da “Dosya bulunamadı” uyarısını gösterir. |
@@ -208,9 +209,20 @@ hepsini örnek bir değerle listeler.
 
 Yanıt bölmesi durumu, ilk bayta kadar geçen süreyi ve toplam süreyi, ayrıca
 boyutu gösterir. **Biçimli** JSON'u biçimlendirir (blokları oklarla katlayın),
-**Ham** gövdeyi alındığı gibi gösterir, **Başlıklar** yanıt başlıklarını
-listeler. Çok büyük gövdeler (onlarca megabayt) yalnızca görünen satırları çizen
-hızlı bir görüntüleyicide açılır.
+XML ve HTML'i girintiler ve renklendirir; **Ham** gövdeyi alındığı gibi
+gösterir, **Başlıklar** yanıt başlıklarını listeler, **Hex** baytları gösterir.
+Çok büyük gövdeler (onlarca megabayt) yalnızca görünen satırları çizen hızlı
+bir görüntüleyicide açılır.
+
+Apix gövdenin türünü `Content-Type`'tan, tür bir şey söylemiyorsa baytların
+kendisinden anlar. Resimler (PNG, JPEG, GIF, WebP, BMP, SVG) **Biçimli**
+sekmesinde gösterilir; diğer ikili içerik (PDF, zip…) okunamaz metin yerine
+kısa bir özetle görünür. İsteğe bağlı kapanış etiketlerini atlayan HTML
+yeniden biçimlendirilmez, geldiği gibi gösterilir.
+
+Durum satırının sonundaki **↓** düğmesi gövdeyi bayt bayt bir dosyaya kaydeder.
+Önerilen ad sunucunun `Content-Disposition` başlığından ya da URL'den gelir;
+uzantı içeriğe göre seçilir.
 
 ## Ağ sekmesi
 
@@ -287,7 +299,7 @@ yetkilendirme ve gövde.
 
 ## Postman'dan içe aktarma
 
-**Dosya › Postman'dan içe aktar…** menüsünü kullanın ya da bir Postman dışa
+**Dosya › İçe aktar…** menüsünü kullanın ya da bir Postman dışa
 aktarımını pencereye bırakın. Koleksiyonlar (v2.0 ve v2.1) ve ortamlar
 desteklenir. Klasörler, istekler, gövdeler, yetkilendirme ve değişkenler
 aktarılır; Apix'in henüz devralamadığı her şey bir raporda listelenir.
@@ -314,6 +326,20 @@ aktarılır. Bildirim, nelerin aktarılmadığını listeler.
 
 Komut satırında: `apix import <dosya, klasör veya zip>` ve
 `apix export <koleksiyon> --out <klasör>`.
+
+## Insomnia, OpenAPI ve HAR'dan içe aktarma
+
+**Dosya › İçe aktar…** (veya dosyayı pencereye bırakmak) bunları da okur; biçim
+içerikten tanınır, bir klasör ya da zip bunları karışık içerebilir:
+
+| Biçim | Ne elde edersiniz |
+|---|---|
+| Insomnia v4 (JSON dışa aktarım) | Her çalışma alanı için bir koleksiyon, auth'larıyla klasörler, koleksiyon değişkeni olarak temel ortam ve ortam olarak her alt ortam. `{{ _.ad }}`, `{{ad}}` olur. |
+| OpenAPI 3 / Swagger 2 (JSON veya YAML) | Her işlem için bir istek, her etiket için bir klasör. Sunucu `baseUrl` değişkeni olur (birden fazla sunucu varsa her biri bir ortam), yol parametreleri örnek değerleriyle değişken olur, zorunlu sorgu ve başlık parametreleri açık gelir, gövdeler örneklerden alınır ya da şemadan üretilir, güvenlik tanımları da bir ortamda doldurulacak boş kimlik değişkenleriyle (`bearerToken`, `apiKey`, …) auth'a dönüşür. |
+| HAR (tarayıcı geliştirici araçlarında "Save all as HAR") | Yalnızca API çağrıları, ana makine başına bir klasör. Betikler, stiller, resimler ve fontlar, `data:` adresleri ve tekrarlar alınmaz; tarayıcının oturumunu taşıdığı için `Cookie` başlıkları da alınmaz. |
+
+Tek dosyadan tek koleksiyon çıkarsa koleksiyon olarak, birden fazlası proje
+olarak içe aktarılır. Rapor, aktarılamayan her şeyi listeler.
 
 ## Geçmiş
 

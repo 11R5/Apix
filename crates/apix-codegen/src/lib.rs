@@ -219,7 +219,7 @@ fn form_fields(body: &Body) -> Option<Vec<&KeyValue>> {
 /// The body as text, for bodies sent as text (GraphQL becomes its JSON).
 fn text_body(body: &Body) -> Option<String> {
     match body {
-        Body::Json(t) | Body::Text(t) | Body::Xml(t) => Some(t.clone()),
+        Body::Json(t) | Body::Text(t) | Body::Xml(t) | Body::Html(t) => Some(t.clone()),
         // Invalid variables: show the query alone rather than nothing.
         Body::GraphQl(gql) => Some(Body::graphql_json(gql).unwrap_or_else(|_| gql.query.clone())),
         _ => None,

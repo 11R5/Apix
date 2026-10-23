@@ -304,6 +304,7 @@ fn body_json(body: &Body) -> Option<Value> {
         Body::None => return None,
         Body::Json(text) => raw(text, "json"),
         Body::Xml(text) => raw(text, "xml"),
+        Body::Html(text) => raw(text, "html"),
         Body::Text(text) => raw(text, "text"),
         Body::Form(rows) => json!({ "mode": "urlencoded", "urlencoded": kv_list(rows) }),
         Body::Multipart(parts) => {

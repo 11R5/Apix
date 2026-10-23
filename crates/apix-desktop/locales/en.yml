@@ -234,13 +234,14 @@ import.environment_needs_open: Open the collection or project this environment b
 import.environment_saved: “%{title}” saved as environments/%{name}.toml with %{count} variables.
 import.environment_saved_with_secrets: “%{title}” saved as environments/%{name}.toml with %{count} variables. %{secrets} secrets went to %{name}.local.toml, which git ignores.
 import.found_ok: Import
-import.found_text: "%{path} holds Postman exports: %{collections} collections with %{requests} requests and %{environments} environments. Import them as an Apix project?"
-import.found_title: Postman export found
+import.found_text: "%{path} holds API exports (Postman, Insomnia, OpenAPI, HAR): %{collections} collections with %{requests} requests and %{environments} environments. Import them as an Apix project?"
+import.found_title: API exports found
 import.nothing_found: No Postman collections or environments were found in %{path}.
-import.project_done: Postman export imported
-import.project_in: Create the project in…
+import.project_done: Import finished
+import.project_in: Create it in…
 import.project_summary: "%{collections} collections, %{requests} requests and %{environments} environments are now in %{name}."
-import.prompt: Import Postman export
+import.prompt: Import a Postman, Insomnia, OpenAPI or HAR file
+import.unknown_format: "%{path} is not an export Apix reads (Postman, Insomnia v4, OpenAPI/Swagger, HAR)."
 menu.active_environment: Active environment
 menu.cancel: Cancel
 menu.close_tab: Close tab
@@ -259,7 +260,7 @@ menu.group_collection: Collection
 menu.group_environment: Environment
 menu.help: Help
 menu.history: History…
-menu.import_postman: Import from Postman…
+menu.import_postman: Import (Postman, Insomnia, OpenAPI, HAR)…
 menu.lock_collections: Lock encrypted collections
 menu.method: Method
 menu.new_collection: New collection…
@@ -379,11 +380,18 @@ request.tab.params_count: Params %{count}
 request.tab.settings: Settings
 request.tab.settings_set: Settings ●
 request.url_placeholder: "https://api.example.com/users   or   {{base_url}}/users"
+response.binary_hint: The bytes are in the Hex tab; Raw shows them as text. Save the body to open it in another program.
+response.binary_title: Binary content
 response.cancelled: Request cancelled.
 response.empty: Send a request to see the response
 response.failed: Request failed
+response.image_title: Image
+response.image_too_big: Image (too large to preview)
 response.lines: "%{count} lines"
+response.preparing_hex: Preparing the hex view…
 response.preparing_raw: Preparing the raw view…
+response.save: Save body to a file…
+response.saved: Saved %{size} to %{path}.
 response.send_hint: "%{key} send"
 response.sending: Sending…  Esc to cancel
 response.tab.network: Network
@@ -408,13 +416,13 @@ sidebar.auth: Auth…
 sidebar.change_password: Change password…
 sidebar.copy_as_code: Copy as code
 sidebar.copy_as_shell: Copy as %{shell}
-sidebar.drop_hint: Or drop a Postman export or a folder onto the window.
+sidebar.drop_hint: Or drop an export (Postman, Insomnia, OpenAPI, HAR) or a folder onto the window.
 sidebar.duplicate: Duplicate
 sidebar.edit_variables: Edit variables…
 sidebar.edit_variables_tooltip: Edit variables (%{key})
 sidebar.empty: Empty
 sidebar.encrypt: Encrypt…
-sidebar.import_postman: Import from Postman
+sidebar.import_postman: Import…
 sidebar.kind_collection: COLLECTION
 sidebar.kind_project: PROJECT
 sidebar.lock: Lock

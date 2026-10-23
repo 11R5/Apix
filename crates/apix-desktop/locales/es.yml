@@ -232,13 +232,14 @@ import.environment_needs_open: Abre primero la colección o el proyecto al que p
 import.environment_saved: “%{title}” se guardó como environments/%{name}.toml con %{count} variables.
 import.environment_saved_with_secrets: “%{title}” se guardó como environments/%{name}.toml con %{count} variables. %{secrets} secretos se guardaron en %{name}.local.toml, que git ignora.
 import.found_ok: Importar
-import.found_text: "%{path} contiene exportaciones de Postman: %{collections} colecciones con %{requests} peticiones y %{environments} entornos. ¿Importarlas como proyecto de Apix?"
-import.found_title: Exportación de Postman encontrada
+import.found_text: "%{path} contiene exportaciones de API (Postman, Insomnia, OpenAPI, HAR): %{collections} colecciones con %{requests} peticiones y %{environments} entornos. ¿Importarlas como proyecto de Apix?"
+import.found_title: Exportaciones de API encontradas
 import.nothing_found: No se encontraron colecciones ni entornos de Postman en %{path}.
-import.project_done: Exportación de Postman importada
-import.project_in: Crear el proyecto en…
+import.project_done: Importación terminada
+import.project_in: Crear en…
 import.project_summary: "%{collections} colecciones, %{requests} peticiones y %{environments} entornos están ahora en %{name}."
-import.prompt: Importar exportación de Postman
+import.prompt: Importar un archivo de Postman, Insomnia, OpenAPI o HAR
+import.unknown_format: "%{path} no es una exportación que Apix pueda leer (Postman, Insomnia v4, OpenAPI/Swagger, HAR)."
 menu.active_environment: Entorno activo
 menu.cancel: Cancelar
 menu.close_tab: Cerrar pestaña
@@ -257,7 +258,7 @@ menu.group_collection: Colección
 menu.group_environment: Entorno
 menu.help: Ayuda
 menu.history: Historial…
-menu.import_postman: Importar desde Postman…
+menu.import_postman: Importar (Postman, Insomnia, OpenAPI, HAR)…
 menu.lock_collections: Bloquear colecciones cifradas
 menu.method: Método
 menu.new_collection: Nueva colección…
@@ -377,11 +378,18 @@ request.tab.params_count: Parámetros %{count}
 request.tab.settings: Ajustes
 request.tab.settings_set: Ajustes ●
 request.url_placeholder: "https://api.example.com/users   o   {{base_url}}/users"
+response.binary_hint: Los bytes están en la pestaña Hex; Sin formato los muestra como texto. Guarda el cuerpo para abrirlo en otro programa.
+response.binary_title: Contenido binario
 response.cancelled: Solicitud cancelada.
 response.empty: Envía una solicitud para ver la respuesta
 response.failed: La solicitud falló
+response.image_title: Imagen
+response.image_too_big: Imagen (demasiado grande para la vista previa)
 response.lines: "%{count} líneas"
+response.preparing_hex: Preparando la vista hexadecimal…
 response.preparing_raw: Preparando la vista sin formato…
+response.save: Guardar el cuerpo en un archivo…
+response.saved: "%{size} guardados en %{path}."
 response.send_hint: "%{key} enviar"
 response.sending: Enviando…  Esc para cancelar
 response.tab.network: Red
@@ -406,13 +414,13 @@ sidebar.auth: Autenticación…
 sidebar.change_password: Cambiar contraseña…
 sidebar.copy_as_code: Copiar como código
 sidebar.copy_as_shell: Copiar como %{shell}
-sidebar.drop_hint: O suelta una exportación de Postman o una carpeta en la ventana.
+sidebar.drop_hint: O suelta una exportación (Postman, Insomnia, OpenAPI, HAR) o una carpeta en la ventana.
 sidebar.duplicate: Duplicar
 sidebar.edit_variables: Editar variables…
 sidebar.edit_variables_tooltip: Editar variables (%{key})
 sidebar.empty: Vacío
 sidebar.encrypt: Cifrar…
-sidebar.import_postman: Importar desde Postman
+sidebar.import_postman: Importar…
 sidebar.kind_collection: COLECCIÓN
 sidebar.kind_project: PROYECTO
 sidebar.lock: Bloquear

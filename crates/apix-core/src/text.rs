@@ -317,9 +317,342 @@ pub fn json_tokens(line: &str) -> Vec<(Range<usize>, JsonToken)> {
     out
 }
 
+/// One piece of an XML document, as `pretty_xml` reads it.
+enum XmlPart<'a> {
+    /// `<?…?>`, `<!--…-->`, `<!DOCTYPE …>`: kept as written, on a line of its own.
+    Verbatim(&'a str),
+    Open {
+        name: &'a str,
+        tag: &'a str,
+    },
+    Close {
+        name: &'a str,
+        tag: &'a str,
+    },
+    SelfClosing(&'a str),
+    /// Text or CDATA, trimmed.
+    Text(&'a str),
+}
+
+/// The end of the tag that starts at `start` (just after its `>`), skipping
+/// `>` inside quoted attribute values.
+fn tag_end(s: &str, start: usize) -> Option<usize> {
+    let b = s.as_bytes();
+    let mut quote = None;
+    for (i, &c) in b.iter().enumerate().skip(start) {
+        match (quote, c) {
+            (None, b'"' | b'\'') => quote = Some(c),
+            (Some(q), c) if c == q => quote = None,
+            (None, b'>') => return Some(i + 1),
+            _ => {}
+        }
+    }
+    None
+}
+
+fn tag_name(tag: &str) -> &str {
+    let inner = tag.trim_start_matches(['<', '/']);
+    let end = inner
+        .find(|c: char| c.is_whitespace() || c == '>' || c == '/')
+        .unwrap_or(inner.len());
+    &inner[..end]
+}
+
+/// HTML elements that never have a closing tag.
+const HTML_VOID: [&str; 14] = [
+    "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source",
+    "track", "wbr",
+];
+
+fn xml_parts(s: &str, html: bool) -> Option<Vec<XmlPart<'_>>> {
+    let mut parts = Vec::new();
+    let mut i = 0;
+    while i < s.len() {
+        let rest = &s[i..];
+        if !rest.starts_with('<') {
+            let end = rest.find('<').map_or(s.len(), |n| i + n);
+            let text = s[i..end].trim();
+            if !text.is_empty() {
+                parts.push(XmlPart::Text(text));
+            }
+            i = end;
+            continue;
+        }
+        let (end, part) = if rest.starts_with("<!--") {
+            let end = i + rest.find("-->")? + 3;
+            (end, XmlPart::Verbatim(&s[i..end]))
+        } else if rest.starts_with("<![CDATA[") {
+            let end = i + rest.find("]]>")? + 3;
+            (end, XmlPart::Text(&s[i..end]))
+        } else if rest.starts_with("<?") {
+            let end = i + rest.find("?>")? + 2;
+            (end, XmlPart::Verbatim(&s[i..end]))
+        } else if rest.starts_with("<!") {
+            // A DOCTYPE may carry an internal subset in brackets.
+            let mut depth = 0;
+            let mut end = None;
+            for (n, c) in rest.char_indices() {
+                match c {
+                    '[' => depth += 1,
+                    ']' => depth -= 1,
+                    '>' if depth == 0 => {
+                        end = Some(i + n + 1);
+                        break;
+                    }
+                    _ => {}
+                }
+            }
+            let end = end?;
+            (end, XmlPart::Verbatim(&s[i..end]))
+        } else {
+            let end = tag_end(s, i)?;
+            let tag = &s[i..end];
+            let name = tag_name(tag);
+            if name.is_empty() {
+                return None;
+            }
+            let void = html && HTML_VOID.iter().any(|v| v.eq_ignore_ascii_case(name));
+            let part = if tag.starts_with("</") {
+                XmlPart::Close { name, tag }
+            } else if tag.ends_with("/>") || void {
+                XmlPart::SelfClosing(tag)
+            } else {
+                XmlPart::Open { name, tag }
+            };
+            // Script and style hold code, not markup: kept as one piece.
+            let raw_text = html
+                && matches!(part, XmlPart::Open { .. })
+                && (name.eq_ignore_ascii_case("script") || name.eq_ignore_ascii_case("style"));
+            parts.push(part);
+            i = end;
+            if raw_text {
+                let close = format!("</{}", name.to_ascii_lowercase());
+                let len = s[i..].to_ascii_lowercase().find(&close)?;
+                let code = s[i..i + len].trim();
+                if !code.is_empty() {
+                    parts.push(XmlPart::Verbatim(code));
+                }
+                i += len;
+            }
+            continue;
+        };
+        parts.push(part);
+        i = end;
+    }
+    Some(parts)
+}
+
+/// Re-indents an XML document, two spaces per level. An element holding
+/// only text stays on one line. Comments, CDATA, `<?…?>` and DOCTYPE are
+/// kept as written; text is trimmed. Returns `None` for anything that is not
+/// well-formed enough to indent (unbalanced or unclosed tags), so the caller
+/// shows the body as it came.
+pub fn pretty_xml(input: &[u8]) -> Option<String> {
+    pretty_markup(input, false)
+}
+
+/// Like [`pretty_xml`], for HTML: void elements (`<br>`, `<img>`, `<meta>`…)
+/// need no closing tag, `<script>` and `<style>` keep their code as written,
+/// and tag names match in any case. HTML that leaves out optional closing
+/// tags (`<p>`, `<li>`) is returned as `None`, so it shows unchanged.
+pub fn pretty_html(input: &[u8]) -> Option<String> {
+    pretty_markup(input, true)
+}
+
+fn pretty_markup(input: &[u8], html: bool) -> Option<String> {
+    let s = std::str::from_utf8(input).ok()?;
+    let parts = xml_parts(s, html)?;
+    let same = |a: &str, b: &str| {
+        if html {
+            a.eq_ignore_ascii_case(b)
+        } else {
+            a == b
+        }
+    };
+    let mut out = String::with_capacity(s.len() + s.len() / 4);
+    let mut stack: Vec<&str> = Vec::new();
+    let mut elements = 0;
+    let line = |out: &mut String, depth: usize, text: &str| {
+        if !out.is_empty() {
+            out.push('\n');
+        }
+        for _ in 0..depth {
+            out.push_str("  ");
+        }
+        out.push_str(text);
+    };
+    let mut i = 0;
+    while i < parts.len() {
+        match &parts[i] {
+            XmlPart::Verbatim(text) | XmlPart::Text(text) => line(&mut out, stack.len(), text),
+            XmlPart::SelfClosing(tag) => {
+                elements += 1;
+                line(&mut out, stack.len(), tag);
+            }
+            XmlPart::Open { name, tag } => {
+                elements += 1;
+                // <a>text</a> and <a></a> stay on one line.
+                match (parts.get(i + 1), parts.get(i + 2)) {
+                    (
+                        Some(XmlPart::Text(text)),
+                        Some(XmlPart::Close {
+                            name: close,
+                            tag: end,
+                        }),
+                    ) if same(close, name) => {
+                        line(&mut out, stack.len(), &format!("{tag}{text}{end}"));
+                        i += 3;
+                        continue;
+                    }
+                    (
+                        Some(XmlPart::Close {
+                            name: close,
+                            tag: end,
+                        }),
+                        _,
+                    ) if same(close, name) => {
+                        line(&mut out, stack.len(), &format!("{tag}{end}"));
+                        i += 2;
+                        continue;
+                    }
+                    _ => {}
+                }
+                line(&mut out, stack.len(), tag);
+                stack.push(name);
+            }
+            XmlPart::Close { name, tag } => {
+                if !same(stack.pop()?, name) {
+                    return None;
+                }
+                line(&mut out, stack.len(), tag);
+            }
+        }
+        i += 1;
+    }
+    (stack.is_empty() && elements > 0).then(|| {
+        out.push('\n');
+        out
+    })
+}
+
+/// Bytes as a hex dump, 8 per line so it fits a narrow pane: offset, hex
+/// and the printable ASCII. At most `max` bytes; a last line says how many
+/// were left out.
+pub fn hex_dump(bytes: &[u8], max: usize) -> String {
+    use std::fmt::Write as _;
+    const PER_LINE: usize = 8;
+    let shown = &bytes[..bytes.len().min(max)];
+    let mut out = String::with_capacity(shown.len() * 6 + 80);
+    for (n, chunk) in shown.chunks(PER_LINE).enumerate() {
+        let _ = write!(out, "{:08x}  ", n * PER_LINE);
+        for i in 0..PER_LINE {
+            match chunk.get(i) {
+                Some(b) => {
+                    let _ = write!(out, "{b:02x} ");
+                }
+                None => out.push_str("   "),
+            }
+        }
+        out.push_str(" |");
+        out.extend(chunk.iter().map(|&b| {
+            if (0x20..0x7f).contains(&b) {
+                b as char
+            } else {
+                '.'
+            }
+        }));
+        out.push_str("|\n");
+    }
+    if bytes.len() > shown.len() {
+        let _ = writeln!(out, "… {} more bytes", bytes.len() - shown.len());
+    }
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn indents_xml_and_keeps_text_elements_on_one_line() {
+        let raw = br#"<?xml version="1.0"?><!-- list --><users count="2"><user id="1" note="a>b"><name>Ada</name><tags/></user><user id="2"><name><![CDATA[<Grace>]]></name><empty></empty></user></users>"#;
+        assert_eq!(
+            pretty_xml(raw).unwrap(),
+            r#"<?xml version="1.0"?>
+<!-- list -->
+<users count="2">
+  <user id="1" note="a>b">
+    <name>Ada</name>
+    <tags/>
+  </user>
+  <user id="2">
+    <name><![CDATA[<Grace>]]></name>
+    <empty></empty>
+  </user>
+</users>
+"#
+        );
+        // Already indented input comes out the same.
+        let once = pretty_xml(raw).unwrap();
+        assert_eq!(pretty_xml(once.as_bytes()).unwrap(), once);
+        let doctype = b"<!DOCTYPE note [<!ELEMENT note (#PCDATA)>]><note>hi</note>";
+        assert_eq!(
+            pretty_xml(doctype).unwrap(),
+            "<!DOCTYPE note [<!ELEMENT note (#PCDATA)>]>\n<note>hi</note>\n"
+        );
+    }
+
+    #[test]
+    fn indents_html_with_void_elements_and_scripts() {
+        let raw = b"<!DOCTYPE html><HTML><head><meta charset=\"utf-8\"><title>Apix</title>\
+            <script>if (a < b && c > d) { go(); }</script></head>\
+            <body><h1 class=\"hero\">Hello</h1><br><img src=\"x.png\"><p>Text</P></body></html>";
+        assert_eq!(
+            pretty_html(raw).unwrap(),
+            "<!DOCTYPE html>
+<HTML>
+  <head>
+    <meta charset=\"utf-8\">
+    <title>Apix</title>
+    <script>
+      if (a < b && c > d) { go(); }
+    </script>
+  </head>
+  <body>
+    <h1 class=\"hero\">Hello</h1>
+    <br>
+    <img src=\"x.png\">
+    <p>Text</P>
+  </body>
+</html>
+"
+        );
+        // Optional closing tags left out: shown as it came.
+        assert!(pretty_html(b"<ul><li>a<li>b</ul>").is_none());
+        // In XML mode a <br> is an open tag like any other.
+        assert!(pretty_xml(b"<p><br></p>").is_none());
+    }
+
+    #[test]
+    fn leaves_broken_xml_alone() {
+        assert!(pretty_xml(b"<a><b></a>").is_none(), "mismatched");
+        assert!(pretty_xml(b"<a>").is_none(), "unclosed");
+        assert!(pretty_xml(b"<a attr=\"x>").is_none(), "unterminated tag");
+        assert!(pretty_xml(b"just text").is_none());
+        assert!(pretty_xml(&[0xff, 0xfe]).is_none(), "not UTF-8");
+    }
+
+    #[test]
+    fn dumps_hex() {
+        let dump = hex_dump(b"Hello, Apix!\x00\x01\xff end", 64);
+        assert_eq!(
+            dump,
+            "00000000  48 65 6c 6c 6f 2c 20 41  |Hello, A|\n\
+             00000008  70 69 78 21 00 01 ff 20  |pix!... |\n\
+             00000010  65 6e 64                 |end|\n"
+        );
+        assert!(hex_dump(&[0u8; 40], 16).ends_with("… 24 more bytes\n"));
+    }
 
     #[test]
     fn pretty_matches_two_space_layout() {

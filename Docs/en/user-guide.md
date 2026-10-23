@@ -27,6 +27,7 @@ command line runs the same requests in a terminal or CI.
 - [Encrypted collections](#encrypted-collections)
 - [Copy as and paste curl](#copy-as-and-paste-curl)
 - [Importing from Postman](#importing-from-postman)
+- [Importing from Insomnia, OpenAPI and HAR](#importing-from-insomnia-openapi-and-har)
 - [History](#history)
 - [Command palette](#command-palette)
 - [Settings and language](#settings-and-language)
@@ -81,7 +82,7 @@ The Body tab offers:
 | Type | What is sent |
 |---|---|
 | None | No body. |
-| JSON, Text, XML | The text as written, with syntax highlighting. |
+| JSON, Text, XML, HTML | The text as written, with syntax highlighting (`application/json`, `text/plain`, `application/xml`, `text/html` unless a header says otherwise). |
 | Form | `application/x-www-form-urlencoded` key–value rows. |
 | Multipart | `multipart/form-data`. Each field is **Text** or **File**; the folder button picks one or more files. |
 | Binary | The bytes of one file, as `application/octet-stream` unless a header says otherwise. Apix shows the file size, or "File not found". |
@@ -196,10 +197,21 @@ more; the **Dynamic variables** page of the Variables dialog lists them all with
 ## The response
 
 The response pane shows the status, the time to the first byte and in total,
-and the size. **Pretty** formats JSON (fold blocks with the arrows), **Raw**
-shows the body as received, **Headers** lists the response headers. Very large
+and the size. **Pretty** formats JSON (fold blocks with the arrows) and
+indents and colours XML and HTML; **Raw** shows the body as received,
+**Headers** lists the response headers and **Hex** shows the bytes. Very large
 bodies (tens of megabytes) open in a fast viewer that only draws the visible
 lines.
+
+Apix tells the body's kind from its `Content-Type`, or from the bytes when the
+type says nothing useful. Images (PNG, JPEG, GIF, WebP, BMP, SVG) are shown
+in **Pretty**; other binary content (a PDF, a zip…) gets a short summary
+instead of unreadable text. HTML that leaves out optional closing tags is shown
+as it came rather than reformatted.
+
+The **↓** button at the end of the status line saves the body, byte for byte,
+to a file. The suggested name comes from the server's `Content-Disposition`
+or from the URL, with an extension that fits the content.
 
 ## The Network tab
 
@@ -273,7 +285,7 @@ auth and body.
 
 ## Importing from Postman
 
-**File › Import from Postman…**, or drop a Postman export onto the window.
+**File › Import…**, or drop a Postman export onto the window.
 Collections (v2.0 and v2.1) and environments are supported. Folders, requests,
 bodies, auth and variables are carried over; anything Apix cannot take over yet
 is listed in a report. Pre-request and test scripts are kept as `.js` files next
@@ -297,6 +309,20 @@ exported with their names only; the notification lists what was left out.
 
 On the command line: `apix import <file, folder or zip>` and
 `apix export <collection> --out <folder>`.
+
+## Importing from Insomnia, OpenAPI and HAR
+
+**File › Import…** (or dropping the file on the window) also reads these; the
+format is recognised by content, and a folder or zip may mix them:
+
+| Format | What you get |
+|---|---|
+| Insomnia v4 (JSON export) | A collection per workspace, folders with their auth, the base environment as collection variables and every sub-environment as an environment. `{{ _.name }}` becomes `{{name}}`. |
+| OpenAPI 3 / Swagger 2 (JSON or YAML) | A request per operation, a folder per tag. The server becomes the `baseUrl` variable (several servers: an environment each), path parameters become variables with their example values, required query and header parameters are switched on, bodies come from examples or are built from the schema, and security schemes become auth with empty credential variables (`bearerToken`, `apiKey`, …) to fill in an environment. |
+| HAR (browser DevTools "Save all as HAR") | API calls only, a folder per host. Scripts, styles, images and fonts, `data:` URLs and repeats are left out, and so are `Cookie` headers: they carry the browser's session. |
+
+One collection from one file is imported as a collection; several become a
+project. The report lists everything that could not be carried over.
 
 ## History
 

@@ -22,6 +22,7 @@ pub(super) enum BodyKind {
     Json,
     Text,
     Xml,
+    Html,
     Form,
     Multipart,
     Binary,
@@ -30,11 +31,12 @@ pub(super) enum BodyKind {
 
 impl BodyKind {
     /// In picker order.
-    const ALL: [BodyKind; 8] = [
+    const ALL: [BodyKind; 9] = [
         BodyKind::None,
         BodyKind::Json,
         BodyKind::Text,
         BodyKind::Xml,
+        BodyKind::Html,
         BodyKind::Form,
         BodyKind::Multipart,
         BodyKind::Binary,
@@ -47,6 +49,7 @@ impl BodyKind {
             BodyKind::Json => "JSON".into(),
             BodyKind::Text => tr!("body.kind.text"),
             BodyKind::Xml => "XML".into(),
+            BodyKind::Html => "HTML".into(),
             BodyKind::Form => tr!("body.kind.form"),
             BodyKind::Multipart => "Multipart".into(),
             BodyKind::Binary => tr!("body.kind.binary"),
@@ -60,6 +63,7 @@ impl BodyKind {
             Body::Json(_) => BodyKind::Json,
             Body::Text(_) => BodyKind::Text,
             Body::Xml(_) => BodyKind::Xml,
+            Body::Html(_) => BodyKind::Html,
             Body::Form(_) => BodyKind::Form,
             Body::Multipart(_) => BodyKind::Multipart,
             Body::Binary { .. } => BodyKind::Binary,
@@ -70,6 +74,8 @@ impl BodyKind {
     fn language(self) -> &'static str {
         match self {
             BodyKind::Json => "json",
+            // XML is close enough to HTML for colouring tags and attributes.
+            BodyKind::Xml | BodyKind::Html => "html",
             _ => "text",
         }
     }
@@ -238,7 +244,7 @@ impl BodyEditor {
         self.parts.clear();
         match body {
             Body::None => {}
-            Body::Json(t) | Body::Text(t) | Body::Xml(t) => text = t.as_str(),
+            Body::Json(t) | Body::Text(t) | Body::Xml(t) | Body::Html(t) => text = t.as_str(),
             Body::Form(rows) => {
                 self.form = rows.iter().map(|kv| KvRow::new(kv, window, cx)).collect();
             }
@@ -281,6 +287,7 @@ impl BodyEditor {
             BodyKind::Json => Body::Json(text()),
             BodyKind::Text => Body::Text(text()),
             BodyKind::Xml => Body::Xml(text()),
+            BodyKind::Html => Body::Html(text()),
             BodyKind::Form => Body::Form(
                 self.form
                     .iter()
@@ -353,7 +360,7 @@ impl BodyEditor {
 
     fn picker(&self, cx: &mut Context<Self>) -> impl IntoElement {
         let selected = BodyKind::ALL.iter().position(|k| *k == self.kind);
-        // Small, so all eight fit; on a narrow pane the strip scrolls.
+        // Small, so all nine fit a wide pane; on a narrow one the strip scrolls.
         bidi::fill_tabs(
             TabBar::new("body-kind").segmented().small(),
             selected,
@@ -617,7 +624,7 @@ impl Render for BodyEditor {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let content = match self.kind {
             BodyKind::None => self.hint(tr!("body.none_hint")).into_any_element(),
-            BodyKind::Json | BodyKind::Text | BodyKind::Xml => {
+            BodyKind::Json | BodyKind::Text | BodyKind::Xml | BodyKind::Html => {
                 Editor::new(&self.text).h_full().into_any_element()
             }
             BodyKind::Form => self.render_form(cx),

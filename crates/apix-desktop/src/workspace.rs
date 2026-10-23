@@ -24,7 +24,7 @@ use std::sync::Arc;
 
 use apix_core::store::TreeNode;
 use apix_core::{Auth, Collection, KeyValue, Method, Request, Variables};
-use apix_http::{Response, group_digits, human_duration, human_size};
+use apix_http::{BodyKind, ImageKind, Response, group_digits, human_duration, human_size};
 use gpui_kit::component::button::{Button, ButtonVariants};
 use gpui_kit::component::checkbox::Checkbox;
 use gpui_kit::component::input::{Editor, EditorState, Input, InputEvent, InputState};
@@ -177,22 +177,51 @@ struct Finished {
     /// Too big for the code editor; shown in the virtualized viewer.
     large: bool,
     json: bool,
+    kind: BodyKind,
+    /// An image body, decoded by gpui when it is first drawn.
+    image: Option<Arc<gpui_kit::Image>>,
     /// This machine's side of the connection, read once per response.
     local: apix_http::LocalNetwork,
 }
 
+/// Images bigger than this are not previewed (save them instead).
+const MAX_PREVIEW_BYTES: usize = 32 * 1024 * 1024;
+/// Bytes shown in the Hex tab.
+const MAX_HEX_BYTES: usize = 4 * 1024 * 1024;
+
 impl Finished {
     /// Linear in the body size. Runs on a background thread.
     fn prepare(response: Response) -> Self {
-        let json = response.is_json();
+        let kind = response.body_kind();
+        let json = kind == BodyKind::Json;
         let large = response.body.len() >= LARGE_BODY_BYTES;
-        let formatted = json
-            .then(|| apix_core::text::pretty_json(&response.body))
-            .flatten();
+        let formatted = match kind {
+            BodyKind::Json => apix_core::text::pretty_json(&response.body),
+            BodyKind::Xml => apix_core::text::pretty_xml(&response.body),
+            BodyKind::Html => apix_core::text::pretty_html(&response.body),
+            _ => None,
+        };
+        let image = match kind {
+            BodyKind::Image(image) if response.body.len() <= MAX_PREVIEW_BYTES => {
+                let format = match image {
+                    ImageKind::Png => gpui_kit::ImageFormat::Png,
+                    ImageKind::Jpeg => gpui_kit::ImageFormat::Jpeg,
+                    ImageKind::Gif => gpui_kit::ImageFormat::Gif,
+                    ImageKind::Webp => gpui_kit::ImageFormat::Webp,
+                    ImageKind::Bmp => gpui_kit::ImageFormat::Bmp,
+                    ImageKind::Svg => gpui_kit::ImageFormat::Svg,
+                };
+                Some(Arc::new(gpui_kit::Image::from_bytes(
+                    format,
+                    response.body.to_vec(),
+                )))
+            }
+            _ => None,
+        };
         let (pretty, raw) = match formatted {
             Some(text) => {
                 let raw = (!large).then(|| raw_document(&response, json));
-                (Arc::new(Document::new(text, true)), raw)
+                (Arc::new(Document::new(text, json)), raw)
             }
             // Nothing to format: Pretty and Raw are the same text.
             None => {
@@ -207,9 +236,58 @@ impl Finished {
             raw,
             large,
             json,
+            kind,
+            image,
             local,
         }
     }
+}
+
+/// A file name for saving `response`: the server's `Content-Disposition`
+/// name, else the URL's last path segment, with an extension that fits the body.
+fn suggested_file_name(response: &Response, url: &str) -> String {
+    let from_header = response.header("content-disposition").and_then(|v| {
+        let at = v.to_ascii_lowercase().find("filename=")?;
+        let name = v[at + "filename=".len()..].split(';').next()?;
+        Some(name.trim().trim_matches('"').to_owned())
+    });
+    let extension = match response.body_kind() {
+        BodyKind::Json => "json",
+        BodyKind::Xml => "xml",
+        BodyKind::Html => "html",
+        BodyKind::Text => "txt",
+        BodyKind::Image(ImageKind::Png) => "png",
+        BodyKind::Image(ImageKind::Jpeg) => "jpg",
+        BodyKind::Image(ImageKind::Gif) => "gif",
+        BodyKind::Image(ImageKind::Webp) => "webp",
+        BodyKind::Image(ImageKind::Bmp) => "bmp",
+        BodyKind::Image(ImageKind::Svg) => "svg",
+        BodyKind::Binary => "bin",
+    };
+    let from_url = || {
+        let path = url.split(['?', '#']).next().unwrap_or_default();
+        let last = path
+            .trim_end_matches('/')
+            .rsplit('/')
+            .next()
+            .unwrap_or_default();
+        let last = if last.contains("://") || last.contains("{{") {
+            ""
+        } else {
+            last
+        };
+        match last {
+            "" => format!("response.{extension}"),
+            name if name.contains('.') => name.to_owned(),
+            name => format!("{name}.{extension}"),
+        }
+    };
+    let name = from_header
+        .filter(|n| !n.is_empty())
+        .unwrap_or_else(from_url);
+    name.chars()
+        .map(|c| if "\\/:*?\"<>|".contains(c) { '_' } else { c })
+        .collect()
 }
 
 fn raw_document(response: &Response, json: bool) -> Arc<Document> {
@@ -276,6 +354,9 @@ pub struct Workspace {
     /// Raw view of a large body, built on first use.
     raw_doc: Option<Arc<Document>>,
     raw_task: Option<Task<()>>,
+    /// The Hex tab's dump, with the response it was made for.
+    hex_doc: Option<(usize, Arc<Document>)>,
+    hex_task: Option<Task<()>>,
     /// When the user last clicked or typed, for auto-lock.
     last_input: std::cell::Cell<std::time::Instant>,
     /// When the `APIX_BENCH=json` request was sent.
@@ -393,6 +474,8 @@ impl Workspace {
             large_view: None,
             raw_doc: None,
             raw_task: None,
+            hex_doc: None,
+            hex_task: None,
             task: None,
             last_input: std::cell::Cell::new(std::time::Instant::now()),
             bench_sent: None,
@@ -450,6 +533,8 @@ impl Workspace {
         self.base = request;
         self.task = None;
         self.raw_task = None;
+        self.hex_doc = None;
+        self.hex_task = None;
         self.raw_doc = None;
         self.large_view = None;
         self.response = ResponseState::Idle;
@@ -631,6 +716,8 @@ impl Workspace {
         self.task = None;
         self.raw_doc = None;
         self.raw_task = None;
+        self.hex_doc = None;
+        self.hex_task = None;
         match result {
             Ok(finished) => {
                 self.response = ResponseState::Done(Rc::new(finished));
@@ -662,9 +749,16 @@ impl Workspace {
             return;
         };
         let done = done.clone();
+        let binary = matches!(done.kind, BodyKind::Binary | BodyKind::Image(_));
         let doc = match ix {
+            // Pretty for an image or binary body is drawn by `render_binary`.
+            0 if binary => {
+                cx.notify();
+                return;
+            }
             0 => Some(done.pretty.clone()),
             1 => done.raw.clone().or_else(|| self.raw_doc.clone()),
+            4 => return self.show_hex(&done, window, cx),
             _ => {
                 cx.notify();
                 return;
@@ -677,7 +771,11 @@ impl Workspace {
                 self.large_view = Some(cx.new(|cx| LargeView::new(doc, palette, cx)));
             }
             Some(doc) => {
-                let lang = if ix == 0 && done.json { "json" } else { "text" };
+                let lang = match done.kind {
+                    BodyKind::Json if ix == 0 => "json",
+                    BodyKind::Xml | BodyKind::Html => "html",
+                    _ => "text",
+                };
                 let text = doc.text().to_owned();
                 self.response_body.update(cx, |state, cx| {
                     state.set_highlighter(lang, cx);
@@ -708,6 +806,72 @@ impl Workspace {
             None => {}
         }
         cx.notify();
+    }
+
+    /// The Hex tab: a dump of the first `MAX_HEX_BYTES`, built in the
+    /// background once per response and shown in the virtualized viewer.
+    fn show_hex(&mut self, done: &Rc<Finished>, window: &mut Window, cx: &mut Context<Self>) {
+        let key = Rc::as_ptr(done) as usize;
+        if let Some((for_response, doc)) = &self.hex_doc
+            && *for_response == key
+        {
+            let (doc, palette) = (doc.clone(), self.palette);
+            self.large_view = Some(cx.new(|cx| LargeView::new(doc, palette, cx)));
+            cx.notify();
+            return;
+        }
+        let body = done.response.body.clone();
+        self.hex_task = Some(cx.spawn_in(window, async move |this, cx| {
+            let doc = cx
+                .background_spawn(async move {
+                    Arc::new(Document::new(
+                        apix_core::text::hex_dump(&body, MAX_HEX_BYTES),
+                        false,
+                    ))
+                })
+                .await;
+            this.update_in(cx, |this, window, cx| {
+                this.hex_doc = Some((key, doc));
+                this.hex_task = None;
+                if this.response_tab == 4 {
+                    this.set_response_tab(4, window, cx);
+                }
+            })
+            .ok();
+        }));
+        cx.notify();
+    }
+
+    /// Writes the response body, byte for byte, to a file the user picks.
+    fn save_response_body(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let ResponseState::Done(done) = &self.response else {
+            return;
+        };
+        let body = done.response.body.clone();
+        let name = suggested_file_name(&done.response, &self.build_request(cx).url);
+        let dir = dirs::download_dir()
+            .or_else(dirs::home_dir)
+            .unwrap_or_else(|| PathBuf::from("."));
+        let picked = cx.prompt_for_new_path(&dir, Some(&name));
+        cx.spawn_in(window, async move |this, cx| {
+            let Ok(Ok(Some(path))) = picked.await else {
+                return;
+            };
+            let result = std::fs::write(&path, &body);
+            this.update_in(cx, |this, window, cx| match result {
+                Ok(()) => window.push_notification(
+                    gpui_kit::component::notification::Notification::success(tr!(
+                        "response.saved",
+                        size = human_size(body.len()),
+                        path = path.display()
+                    )),
+                    cx,
+                ),
+                Err(e) => this.notify_error(format!("{}: {e}", path.display()), window, cx),
+            })
+            .ok();
+        })
+        .detach();
     }
 
     fn rows_mut(&mut self, table: Table) -> &mut Vec<KvRow> {
@@ -1062,10 +1226,23 @@ impl Workspace {
                 let status = p.status(response.status);
                 let headers_label =
                     tr!("request.tab.headers_count", count = response.headers.len());
+                let binary = matches!(done.kind, BodyKind::Binary | BodyKind::Image(_));
                 let content = match (&self.large_view, self.response_tab) {
                     (_, 2) => self.render_response_headers(response).into_any_element(),
                     (_, 3) => self.render_network(done).into_any_element(),
+                    (None, 0) if binary => self.render_binary(done, cx).into_any_element(),
                     (Some(view), _) => view.clone().into_any_element(),
+                    (None, 4) => centered(
+                        h_flex()
+                            .gap_2()
+                            .items_center()
+                            .text_sm()
+                            .text_color(p.text_muted)
+                            .child(Spinner::new().small().color(p.accent))
+                            .child(tr!("response.preparing_hex"))
+                            .into_any_element(),
+                    )
+                    .into_any_element(),
                     (None, _) if done.large => centered(
                         h_flex()
                             .gap_2()
@@ -1079,7 +1256,7 @@ impl Workspace {
                     .into_any_element(),
                     (None, _) => Editor::new(&self.response_body).h_full().into_any_element(),
                 };
-                let viewer_note = done.large.then(|| {
+                let viewer_note = (done.large && !binary).then(|| {
                     tr!(
                         "response.lines",
                         count = group_digits(done.pretty.lines().into())
@@ -1113,7 +1290,18 @@ impl Workspace {
                             .child(format!("TTFB {}", human_duration(response.timing.ttfb)))
                             .child(human_size(response.body.len()))
                             .child(response.version.clone())
-                            .children(viewer_note),
+                            .children(viewer_note)
+                            .child(div().flex_1())
+                            .child(
+                                Button::new("save-body")
+                                    .ghost()
+                                    .xsmall()
+                                    .icon(IconName::ArrowDown)
+                                    .tooltip(tr!("response.save"))
+                                    .on_click(cx.listener(|this, _: &ClickEvent, window, cx| {
+                                        this.save_response_body(window, cx)
+                                    })),
+                            ),
                     )
                     .child(bidi::tab_bar(
                         "response-tabs",
@@ -1123,6 +1311,7 @@ impl Workspace {
                             Tab::new().label(tr!("response.tab.raw")),
                             Tab::new().label(headers_label),
                             Tab::new().label(tr!("response.tab.network")),
+                            Tab::new().label("Hex"),
                         ],
                         cx.listener(|this, ix: &usize, window, cx| {
                             this.set_response_tab(*ix, window, cx)
@@ -1131,6 +1320,71 @@ impl Workspace {
                     .child(div().flex_1().min_h_0().p_2().child(content))
             }
         }
+    }
+
+    /// Pretty for an image or other binary body: what it is, the image when
+    /// there is one, and how to see or keep the bytes.
+    fn render_binary(&self, done: &Finished, cx: &mut Context<Self>) -> impl IntoElement {
+        let p = self.palette;
+        let response = &done.response;
+        let content_type = response
+            .header("content-type")
+            .unwrap_or("application/octet-stream")
+            .to_owned();
+        let title = match (&done.image, done.kind) {
+            (Some(_), _) => tr!("response.image_title"),
+            (None, BodyKind::Image(_)) => tr!("response.image_too_big"),
+            _ => tr!("response.binary_title"),
+        };
+        v_flex()
+            .id("binary-body")
+            .size_full()
+            .gap_3()
+            .p_2()
+            .overflow_y_scroll()
+            .child(
+                h_flex()
+                    .dir_row()
+                    .gap_2()
+                    .items_center()
+                    .text_sm()
+                    .child(div().font_weight(FontWeight::BOLD).child(title))
+                    .child(div().text_color(p.text_muted).child(format!(
+                        "{content_type} · {}",
+                        human_size(response.body.len())
+                    ))),
+            )
+            .children(done.image.clone().map(|image| {
+                div()
+                    .flex()
+                    .justify_center()
+                    .p_2()
+                    .rounded_md()
+                    .border_1()
+                    .border_color(p.hairline)
+                    .child(
+                        gpui_kit::img(image)
+                            .max_w_full()
+                            .max_h(px(480.))
+                            .object_fit(gpui_kit::ObjectFit::Contain),
+                    )
+            }))
+            .child(
+                div()
+                    .text_xs()
+                    .text_color(p.text_muted)
+                    .child(bidi::para(tr!("response.binary_hint"))),
+            )
+            .child(
+                h_flex().dir_row().child(
+                    Button::new("save-binary")
+                        .small()
+                        .label(tr!("response.save"))
+                        .on_click(cx.listener(|this, _: &ClickEvent, window, cx| {
+                            this.save_response_body(window, cx)
+                        })),
+                ),
+            )
     }
 
     fn render_response_headers(&self, response: &Response) -> impl IntoElement {

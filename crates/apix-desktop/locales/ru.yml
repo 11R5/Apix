@@ -232,13 +232,14 @@ import.environment_needs_open: Сначала откройте коллекци�
 import.environment_saved: "Окружение «%{title}» сохранено как environments/%{name}.toml (переменных: %{count})."
 import.environment_saved_with_secrets: "Окружение «%{title}» сохранено как environments/%{name}.toml (переменных: %{count}). Секреты (%{secrets}) записаны в %{name}.local.toml, который игнорируется git."
 import.found_ok: Импортировать
-import.found_text: "В %{path} есть экспорт Postman: коллекций %{collections} (запросов %{requests}) и окружений %{environments}. Импортировать как проект Apix?"
-import.found_title: Найден экспорт Postman
+import.found_text: "В %{path} есть экспорт API (Postman, Insomnia, OpenAPI, HAR): коллекций %{collections} (запросов %{requests}) и окружений %{environments}. Импортировать как проект Apix?"
+import.found_title: Найден экспорт API
 import.nothing_found: В %{path} не найдено коллекций или окружений Postman.
-import.project_done: Экспорт Postman импортирован
-import.project_in: Создать проект в…
+import.project_done: Импорт завершён
+import.project_in: Создать в…
 import.project_summary: "Коллекций %{collections}, запросов %{requests} и окружений %{environments} теперь в %{name}."
-import.prompt: Импортировать экспорт Postman
+import.prompt: Импорт файла Postman, Insomnia, OpenAPI или HAR
+import.unknown_format: "%{path} — не экспорт, который умеет читать Apix (Postman, Insomnia v4, OpenAPI/Swagger, HAR)."
 menu.active_environment: Активное окружение
 menu.cancel: Отменить
 menu.close_tab: Закрыть вкладку
@@ -257,7 +258,7 @@ menu.group_collection: Коллекциям
 menu.group_environment: Окружениям
 menu.help: Справка
 menu.history: История…
-menu.import_postman: Импорт из Postman…
+menu.import_postman: Импорт (Postman, Insomnia, OpenAPI, HAR)…
 menu.lock_collections: Заблокировать зашифрованные коллекции
 menu.method: Метод
 menu.new_collection: Новая коллекция…
@@ -377,11 +378,18 @@ request.tab.params_count: Параметры %{count}
 request.tab.settings: Настройки
 request.tab.settings_set: Настройки ●
 request.url_placeholder: "https://api.example.com/users   или   {{base_url}}/users"
+response.binary_hint: Байты на вкладке Hex; «Исходный» показывает их как текст. Сохраните тело, чтобы открыть его в другой программе.
+response.binary_title: Двоичные данные
 response.cancelled: Запрос отменён.
 response.empty: Отправьте запрос, чтобы увидеть ответ
 response.failed: Ошибка запроса
+response.image_title: Изображение
+response.image_too_big: Изображение (слишком большое для предпросмотра)
 response.lines: "Строк: %{count}"
+response.preparing_hex: Подготовка шестнадцатеричного вида…
 response.preparing_raw: Подготовка исходного вида…
+response.save: Сохранить тело в файл…
+response.saved: "%{size} сохранено в %{path}."
 response.send_hint: "%{key} отправить"
 response.sending: Отправка…  Esc для отмены
 response.tab.network: Сеть
@@ -406,13 +414,13 @@ sidebar.auth: Авторизация…
 sidebar.change_password: Сменить пароль…
 sidebar.copy_as_code: Копировать как код
 sidebar.copy_as_shell: Копировать как %{shell}
-sidebar.drop_hint: Или перетащите в окно экспорт Postman или папку.
+sidebar.drop_hint: Или перетащите в окно экспорт (Postman, Insomnia, OpenAPI, HAR) или папку.
 sidebar.duplicate: Дублировать
 sidebar.edit_variables: Изменить переменные…
 sidebar.edit_variables_tooltip: Изменить переменные (%{key})
 sidebar.empty: Пусто
 sidebar.encrypt: Зашифровать…
-sidebar.import_postman: Импорт из Postman
+sidebar.import_postman: Импорт…
 sidebar.kind_collection: КОЛЛЕКЦИЯ
 sidebar.kind_project: ПРОЕКТ
 sidebar.lock: Заблокировать
