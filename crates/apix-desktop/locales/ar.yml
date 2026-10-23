@@ -420,6 +420,7 @@ sidebar.edit_variables: تحرير المتغيرات…
 sidebar.edit_variables_tooltip: تحرير المتغيرات (%{key})
 sidebar.empty: فارغ
 sidebar.encrypt: تشفير…
+sidebar.forget_password: نسيان كلمة المرور المحفوظة
 sidebar.import_postman: استيراد…
 sidebar.kind_collection: مجموعة
 sidebar.kind_project: مشروع
@@ -465,6 +466,7 @@ vault.error.trash: "تعذّر النقل إلى سلة المهملات: %{erro
 vault.error.trash_encrypted: "تعذّر نقل الملفات المشفّرة إلى سلة المهملات: %{error}"
 vault.error.trash_plain: "تعذّر نقل الملفات غير المشفّرة إلى سلة المهملات: %{error}"
 vault.error.unlock_first: افتح قفل المجموعة أولًا.
+vault.forgotten: نُسيت كلمة المرور المحفوظة لـ %{name}.
 vault.locked: مقفلة
 vault.locked_title: مقفلة
 vault.name_placeholder: اسم المجموعة
@@ -480,6 +482,10 @@ vault.recovery.stored: حفظت مفتاح الاسترداد في مكان آم
 vault.recovery.title: مفتاح الاسترداد الخاص بك
 vault.recovery.warning: بدون كلمة المرور وبدون هذا المفتاح، لا يمكن لأحد، بما في ذلك أنت، فتح المجموعة.
 vault.recovery_placeholder: مفتاح الاسترداد، مثلًا 7K2M-9QXA-…
+vault.remember: تذكّرها على هذا الحاسوب
+vault.remember_failed: "تعذّر تذكّر كلمة المرور: %{error}"
+vault.remember_note: تُحفظ في مخزن بيانات الاعتماد في النظام؛ وتُفتح المجموعة بعدها دون سؤال ما دمت مسجّل الدخول على هذا الحاسوب.
+vault.remembered_stale: لم تعد كلمة المرور المحفوظة تعمل، لذا نُسيت.
 vault.repeat_password: أعد إدخال كلمة المرور
 vault.unlock: فتح القفل
 vault.unlock_note: هذه المجموعة مشفّرة. تبقى مفتوحة حتى تقفلها، أو تُنهي Apix، أو تتركها خاملة لمدة %{count} دقيقة.

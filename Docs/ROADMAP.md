@@ -53,10 +53,10 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [ ] Manual ordering in the sidebar (now sorted by name)
 
 ## M4 — Daily driver
-- [ ] **Encrypted collections**: password-protected (XChaCha20-Poly1305, Argon2id), per-file encryption with opaque file names, unlock prompt and auto-lock, recovery key, `--password-env` for CI
+- [x] **Encrypted collections**: password-protected (XChaCha20-Poly1305, Argon2id), per-file encryption with opaque file names, unlock prompt and auto-lock, recovery key, `--password-env` for CI
   - [x] Format and engine (`apix-vault`): per-file XChaCha20-Poly1305 with opaque names and an encrypted index, Argon2id password key, recovery key, password change without re-encrypting, tamper detection, local secrets kept out of git
   - [x] Open and edit encrypted collections in the app (unlock prompt, recovery key, lock, auto-lock after 15 idle minutes, encrypt or decrypt in place, change password, new encrypted collection) and the CLI (`--password-env`, `apix encrypt`, `apix decrypt`); nothing decrypted is written to disk
-  - [ ] Remember the password in the OS keychain
+  - [x] Remember the password in the OS keychain (Windows Credential Manager, macOS Keychain, Linux Secret Service): opt in when unlocking, forget it from the File or collection menu; a stale password is dropped and asked for again; the CLI uses it too
 - [ ] **Network inspector**: local interface/IP/DNS/proxy, DNS answers, TCP/TLS details and certificate chain, timing waterfall, redirects
   - [x] Network tab and `apix send --network`: timing waterfall (DNS, connect, waiting, download), DNS answers, server and local address, interface and VPN hint, gateway, DNS servers, proxy from the environment, redirect chain, server certificate (issuer, validity, days left, names); every send uses a fresh traced connection
   - [ ] TLS version and cipher, the full certificate chain, separate TCP and TLS times, compressed size (moved to M7)

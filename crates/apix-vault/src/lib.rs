@@ -22,6 +22,8 @@
 //! in it. Security rests on the cipher and the password, not on secrecy of
 //! the format: Apix is open source.
 
+pub mod keychain;
+
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 use std::fs;

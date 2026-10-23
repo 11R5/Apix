@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:16382526e50144f9 -->
+<!-- translated from en/architecture.md sha256:dd7e437d4e2c7303 -->
 
 # Apix mimarisi
 
@@ -189,8 +189,9 @@ Açık sorular:
   `environments/<name>.local.toml`, `<name>.toml` üzerine katmanlanır. Böyle bir
   dosya yazıldığında, eksikse `environments/` yanındaki `.gitignore` dosyasına
   `*.local.toml` eklenir. Bir gizli değer paylaşılan dosyada bir yer tutucuyla
-  kalabilir; böylece ekip arkadaşları adını görür. Sırada `keyring` crate'i
-  üzerinden işletim sistemi anahtar zincirinde saklama var.
+  kalabilir; böylece ekip arkadaşları adını görür. Şifreli koleksiyon parolaları
+  zaten `keyring` crate'i üzerinden işletim sistemi anahtar zincirinde
+  hatırlanabiliyor; ortam gizli değerleri için aynı depo sırada.
 - **Dinamik değişkenler.** `{{$name}}`, bu adla tanımlı bir değişken yoksa
   `apix_core::dynamic` tarafından doldurulur; her geçişte yeni bir değer üretilir
   (`$guid`, `$timestamp`, `$isoTimestamp`, `$randomEmail`, …). Ek crate yok:
@@ -254,6 +255,14 @@ my-api/
 - Git yine de hangi nesnenin değiştiğini görür, ama içinde ne olduğunu asla
   görmez. Güvenlik formatın gizli olmasından değil, şifreleme algoritmasından ve
   paroladan gelir; Apix açık kaynaktır.
+- Parola işletim sisteminin kimlik bilgisi deposunda hatırlanabilir
+  (`apix_vault::keychain`, `keyring` crate'i üzerinden: Credential Manager,
+  macOS Anahtar Zinciri, Secret Service). Her kasa için `Apix` servisi altında
+  bir kayıt tutulur; adı `vault:<mutlak klasör yolu>` (Windows'ta küçük harf).
+  Kilit açma penceresinden isteğe bağlı açılır; uygulama ve CLI sormadan önce
+  onu dener, kasayı artık açmayan bir parola silinip yeniden sorulur, parola
+  değişince kayıt güncellenir, şifre kaldırılınca silinir. Depo yoksa Apix
+  eskisi gibi parolayı sorar.
 
 ## Diller (M4)
 

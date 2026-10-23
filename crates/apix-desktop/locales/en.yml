@@ -422,6 +422,7 @@ sidebar.edit_variables: Edit variables…
 sidebar.edit_variables_tooltip: Edit variables (%{key})
 sidebar.empty: Empty
 sidebar.encrypt: Encrypt…
+sidebar.forget_password: Forget saved password
 sidebar.import_postman: Import…
 sidebar.kind_collection: COLLECTION
 sidebar.kind_project: PROJECT
@@ -467,6 +468,7 @@ vault.error.trash: "Could not move to the trash: %{error}"
 vault.error.trash_encrypted: "Could not move the encrypted files to the trash: %{error}"
 vault.error.trash_plain: "Could not move the plain files to the trash: %{error}"
 vault.error.unlock_first: Unlock the collection first.
+vault.forgotten: The saved password of %{name} was forgotten.
 vault.locked: Locked
 vault.locked_title: Locked
 vault.name_placeholder: Collection name
@@ -482,6 +484,10 @@ vault.recovery.stored: I stored the recovery key somewhere safe
 vault.recovery.title: Your recovery key
 vault.recovery.warning: Without the password and without this key, nobody, including you, can open the collection.
 vault.recovery_placeholder: Recovery key, e.g. 7K2M-9QXA-…
+vault.remember: Remember on this computer
+vault.remember_failed: "The password could not be remembered: %{error}"
+vault.remember_note: Kept in the system's credential store; the collection then opens without asking while you are signed in to this computer.
+vault.remembered_stale: The remembered password no longer works, so it was forgotten.
 vault.repeat_password: Repeat the password
 vault.unlock: Unlock
 vault.unlock_note: This collection is encrypted. It stays unlocked until you lock it, quit Apix, or leave it idle for %{count} minutes.

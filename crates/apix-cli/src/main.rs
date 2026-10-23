@@ -136,6 +136,14 @@ fn unlock_around(path: &Path, var: &str) -> Result<()> {
     if vfs::is_unlocked(&root) {
         return Ok(());
     }
+    // The desktop app may have remembered it; the variable, when set, wins.
+    if std::env::var(var).is_err()
+        && let Some(saved) = vfs::keychain::load(&root)
+        && let Ok(vault) = Vault::unlock(&root, &saved)
+    {
+        vfs::unlock(vault);
+        return Ok(());
+    }
     let pw = password(var, &format!("Password for {}: ", root.display()), false)?;
     let vault =
         Vault::unlock(&root, &pw).with_context(|| format!("unlocking {}", root.display()))?;

@@ -420,6 +420,7 @@ sidebar.edit_variables: 変数を編集…
 sidebar.edit_variables_tooltip: 変数を編集 (%{key})
 sidebar.empty: 空
 sidebar.encrypt: 暗号化…
+sidebar.forget_password: 保存したパスワードを削除
 sidebar.import_postman: インポート…
 sidebar.kind_collection: コレクション
 sidebar.kind_project: プロジェクト
@@ -465,6 +466,7 @@ vault.error.trash: "ゴミ箱に移動できませんでした: %{error}"
 vault.error.trash_encrypted: "暗号化されたファイルをゴミ箱に移動できませんでした: %{error}"
 vault.error.trash_plain: "平文のファイルをゴミ箱に移動できませんでした: %{error}"
 vault.error.unlock_first: 先にコレクションのロックを解除してください。
+vault.forgotten: "%{name} の保存したパスワードを削除しました。"
 vault.locked: ロック中
 vault.locked_title: ロック中
 vault.name_placeholder: コレクション名
@@ -480,6 +482,10 @@ vault.recovery.stored: 回復キーを安全な場所に保管しました
 vault.recovery.title: 回復キー
 vault.recovery.warning: パスワードとこのキーの両方がなければ、あなたを含め誰もコレクションを開けません。
 vault.recovery_placeholder: "回復キー（例: 7K2M-9QXA-…）"
+vault.remember: このコンピューターで記憶する
+vault.remember_failed: "パスワードを記憶できませんでした: %{error}"
+vault.remember_note: システムの資格情報ストアに保存されます。このコンピューターにサインインしている間は、パスワードを聞かずにコレクションが開きます。
+vault.remembered_stale: 記憶したパスワードが使えなくなったため、削除しました。
 vault.repeat_password: パスワードを再入力
 vault.unlock: ロック解除
 vault.unlock_note: このコレクションは暗号化されています。ロックする、Apix を終了する、または %{count} 分間操作しないまで、ロック解除された状態が続きます。

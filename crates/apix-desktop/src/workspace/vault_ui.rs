@@ -9,7 +9,7 @@ use std::rc::Rc;
 use std::time::{Duration, Instant};
 
 use apix_core::store::{self, CollectionMeta};
-use apix_core::vfs::{self, KdfCost, RecoveryKey, Vault};
+use apix_core::vfs::{self, KdfCost, RecoveryKey, Vault, VaultError, keychain};
 use gpui_kit::assets::IconName;
 use gpui_kit::component::button::{Button, ButtonVariants as _};
 use gpui_kit::component::checkbox::Checkbox;
@@ -51,7 +51,8 @@ struct Dialog {
 
 /// The finished background job of a password dialog.
 enum Outcome {
-    Unlocked(Vault),
+    /// With a note when the password could not be remembered.
+    Unlocked(Vault, Option<String>),
     Created(Vault, RecoveryKey),
     Done,
 }
@@ -66,6 +67,8 @@ struct Secret {
     name: String,
     password: String,
     recovery: bool,
+    /// Remember the password in the OS credential store.
+    remember: bool,
 }
 
 pub(super) struct PasswordForm {
@@ -75,6 +78,7 @@ pub(super) struct PasswordForm {
     password: Entity<InputState>,
     confirm: Option<Entity<InputState>>,
     recovery: bool,
+    remember: bool,
     note: SharedString,
     error: Option<String>,
     busy: bool,
@@ -133,6 +137,7 @@ impl PasswordForm {
             password,
             confirm,
             recovery: false,
+            remember: false,
             note,
             error: None,
             busy: false,
@@ -168,6 +173,7 @@ impl PasswordForm {
             name: name.trim().to_owned(),
             password,
             recovery: self.recovery,
+            remember: self.remember && !self.recovery,
         })
     }
 
@@ -214,6 +220,28 @@ impl Render for PasswordForm {
             .children(self.name.as_ref().map(Input::new))
             .child(password)
             .children(self.confirm.as_ref().map(|c| Input::new(c).mask_toggle()))
+            .when(self.ask == Ask::Unlock && !self.recovery, |col| {
+                col.child(
+                    v_flex()
+                        .gap_1()
+                        .child(
+                            Checkbox::new("vault-remember")
+                                .dir_row()
+                                .label(tr!("vault.remember"))
+                                .checked(self.remember)
+                                .on_click(cx.listener(|this, value: &bool, _, cx| {
+                                    this.remember = *value;
+                                    cx.notify();
+                                })),
+                        )
+                        .child(
+                            div()
+                                .text_xs()
+                                .text_color(p.text_muted)
+                                .child(bidi::para(tr!("vault.remember_note"))),
+                        ),
+                )
+            })
             .when(self.ask == Ask::Unlock, |col| {
                 col.child(
                     h_flex().dir_row().child(
@@ -358,11 +386,49 @@ impl Workspace {
         });
     }
 
-    /// Asks for the password of the encrypted collection at `root`, then runs `then`.
+    /// Unlocks the encrypted collection at `root`, then runs `then`: with
+    /// the password remembered in the OS credential store when there is one
+    /// that still works, else by asking for it.
     pub(super) fn prompt_unlock(
         &mut self,
         root: PathBuf,
         then: Then,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let target = root.clone();
+        // The store and Argon2 are both slow: off the UI thread.
+        let attempt = cx.background_spawn(async move {
+            let password = keychain::load(&target)?;
+            Some(Vault::unlock(&target, &password))
+        });
+        cx.spawn_in(window, async move |this, cx| {
+            let result = attempt.await;
+            this.update_in(cx, |ws, window, cx| match result {
+                Some(Ok(vault)) => {
+                    vfs::unlock(vault);
+                    then(ws, window, cx);
+                }
+                // Changed elsewhere since it was remembered: forget it and ask.
+                Some(Err(VaultError::WrongPassword)) => {
+                    let _ = keychain::forget(&root);
+                    ws.ask_unlock(root, then, true, window, cx);
+                }
+                Some(Err(e)) => ws.notify_error(describe(&e), window, cx),
+                None => ws.ask_unlock(root, then, false, window, cx),
+            })
+            .ok();
+        })
+        .detach();
+    }
+
+    /// The password dialog of `prompt_unlock`. `stale`: a remembered
+    /// password no longer worked.
+    fn ask_unlock(
+        &mut self,
+        root: PathBuf,
+        then: Then,
+        stale: bool,
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
@@ -375,31 +441,62 @@ impl Workspace {
                     Vault::unlock_with_recovery(&root, &secret.password)
                 } else {
                     Vault::unlock(&root, &secret.password)
-                };
-                vault.map(Outcome::Unlocked).map_err(|e| describe(&e))
+                }
+                .map_err(|e| describe(&e))?;
+                let note = secret
+                    .remember
+                    .then(|| keychain::save(&root, &secret.password).err())
+                    .flatten();
+                Ok(Outcome::Unlocked(vault, note))
             }) as Job)
         });
         let done: OnDone = Rc::new(move |ws, outcome, window, cx| {
-            if let Outcome::Unlocked(vault) = outcome {
+            if let Outcome::Unlocked(vault, note) = outcome {
                 vfs::unlock(vault);
+                if let Some(error) = note {
+                    window.push_notification(
+                        Notification::warning(tr!("vault.remember_failed", error = error)),
+                        cx,
+                    );
+                }
                 then(ws, window, cx);
             }
         });
+        let mut note: String = match self.settings.auto_lock_minutes {
+            0 => tr!("vault.unlock_note_no_auto_lock").into(),
+            minutes => tr!("vault.unlock_note", count = minutes).into(),
+        };
+        if stale {
+            note = format!("{} {note}", tr!("vault.remembered_stale"));
+        }
         self.password_dialog(
             Dialog {
                 title: tr!("vault.unlock_title", name = name),
                 ok: tr!("vault.unlock"),
                 ask: Ask::Unlock,
-                note: match self.settings.auto_lock_minutes {
-                    0 => tr!("vault.unlock_note_no_auto_lock"),
-                    minutes => tr!("vault.unlock_note", count = minutes),
-                },
+                note: note.into(),
             },
             make_job,
             done,
             window,
             cx,
         );
+    }
+
+    /// Forgets the password remembered for the collection at `root`.
+    pub(super) fn forget_saved_password(
+        &mut self,
+        root: PathBuf,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        match keychain::forget(&root) {
+            Ok(()) => window.push_notification(
+                Notification::success(tr!("vault.forgotten", name = folder_name(&root))),
+                cx,
+            ),
+            Err(e) => self.notify_error(e, window, cx),
+        }
     }
 
     /// File › New encrypted collection: a name and a password, then where to put it.
@@ -516,6 +613,8 @@ impl Workspace {
                 .on_ok(move |_, window, cx| {
                     view.update(cx, |ws, cx| match decrypt_in_place(&root) {
                         Ok(()) => {
+                            // Nothing left to unlock.
+                            let _ = keychain::forget(&root);
                             ws.reload(window, cx);
                             window.push_notification(
                                 Notification::success(tr!("vault.decrypted")),
@@ -544,6 +643,10 @@ impl Workspace {
                 vfs::with_vault(&root, |vault, _| vault.change_password(&secret.password))
                     .ok_or_else(|| tr!("vault.error.locked").to_string())?
                     .map_err(|e| describe(&e))?;
+                // A remembered password follows the change.
+                if keychain::load(&root).is_some() {
+                    let _ = keychain::save(&root, &secret.password);
+                }
                 Ok(Outcome::Done)
             }) as Job)
         });

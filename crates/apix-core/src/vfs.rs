@@ -8,7 +8,7 @@ use std::io;
 use std::path::{Component, Path, PathBuf};
 use std::sync::Mutex;
 
-pub use apix_vault::{KdfCost, RecoveryKey, Vault, VaultError, is_vault as is_encrypted};
+pub use apix_vault::{KdfCost, RecoveryKey, Vault, VaultError, is_vault as is_encrypted, keychain};
 
 /// Unlocked vaults, by absolute root. Locking drops the vault, which wipes its key.
 static VAULTS: Mutex<Vec<(PathBuf, Vault)>> = Mutex::new(Vec::new());

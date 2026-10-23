@@ -83,7 +83,8 @@ Measurements of the other tools on the same machine are planned.
   environments.
 - **Variables:** project, collection and environment layers, secrets kept out of
   git, dynamic values such as `{{$guid}}`, coloured chips in the URL bar.
-- **Encrypted collections** with a recovery key and auto-lock.
+- **Encrypted collections** with a recovery key, auto-lock and, if you choose,
+  the password remembered in the OS keychain.
 - **Import** from Postman (collections, environments, a whole "Export data"
   zip), Insomnia v4, OpenAPI 3 / Swagger 2 (JSON or YAML) and HAR, with a
   report; formats are recognised by content. **Export to Postman** for

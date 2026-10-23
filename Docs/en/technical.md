@@ -63,7 +63,7 @@ release build of the desktop app takes a few minutes.
 | HTTP | `reqwest` 0.12 with rustls, `tokio`, `hyper-util`, `tower` layers for timing |
 | Network details | `x509-parser` (certificates), `netdev` (interfaces, gateway, DNS servers) |
 | Signing | `sha2`, `sha1`, `hmac`, `md-5`, `base64`, `rand_core` (AWS SigV4, OAuth 1.0, Digest, PKCE) |
-| Encryption | `chacha20poly1305` (XChaCha20-Poly1305), `argon2`, `zeroize` |
+| Encryption | `chacha20poly1305` (XChaCha20-Poly1305), `argon2`, `zeroize`, `keyring` (OS credential store) |
 | Files | `serde`, `toml`, `serde_json`, `notify` (file watching), `trash` |
 | Languages | `rust-i18n` (shared with gpui-kit), `sys-locale` |
 
@@ -74,6 +74,7 @@ release build of the desktop app takes a few minutes.
 | `<config>/Apix/settings.toml` | language, theme, auto-lock time |
 | `<config>/Apix/state.toml` | recently opened collections, the chosen environment per collection |
 | `<config>/Apix/cookies.json` | the cookie jar (session cookies are not persisted) |
+| OS credential store, service `Apix` | remembered passwords of encrypted collections, one `vault:<folder>` entry each, only when asked for |
 | `<config>/Apix/history/` | sent requests (`{{variables}}` unresolved) and their responses: `index.jsonl`, one `<id>.json` and `<id>.body` per entry; the last 300, bodies cut at 256 KB |
 
 `<config>` is `%APPDATA%` on Windows, `~/Library/Application Support` on macOS
@@ -156,6 +157,6 @@ crate is fixed.
 | apix-http | request building, every body type, a local server for OAuth 2.0, Digest, AWS and OAuth 1.0, the network trace |
 | apix-codegen | shell quoting for bash, cmd and PowerShell; curl paste; round trips; every language's URL, headers, bodies, string escaping and settings |
 | apix-import | Postman v2.0/v2.1 fixtures |
-| apix-vault | encryption format, tampering, password change, recovery key |
+| apix-vault | encryption format, tampering, password change, recovery key, keychain entries (against the real credential store under a test service name; skipped where none exists) |
 | apix-desktop | translations complete, language helpers, file paths, highlighting query |
 | docs-check | documentation structure and stamps |

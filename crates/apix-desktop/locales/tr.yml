@@ -420,6 +420,7 @@ sidebar.edit_variables: Değişkenleri düzenle…
 sidebar.edit_variables_tooltip: Değişkenleri düzenle (%{key})
 sidebar.empty: Boş
 sidebar.encrypt: Şifrele…
+sidebar.forget_password: Kayıtlı parolayı unut
 sidebar.import_postman: İçe aktar…
 sidebar.kind_collection: KOLEKSİYON
 sidebar.kind_project: PROJE
@@ -465,6 +466,7 @@ vault.error.trash: "Çöp kutusuna taşınamadı: %{error}"
 vault.error.trash_encrypted: "Şifreli dosyalar çöp kutusuna taşınamadı: %{error}"
 vault.error.trash_plain: "Düz dosyalar çöp kutusuna taşınamadı: %{error}"
 vault.error.unlock_first: Önce koleksiyonun kilidini açın.
+vault.forgotten: "%{name} için kayıtlı parola unutuldu."
 vault.locked: Kilitli
 vault.locked_title: Kilitli
 vault.name_placeholder: Koleksiyon adı
@@ -480,6 +482,10 @@ vault.recovery.stored: Kurtarma anahtarını güvenli bir yerde sakladım
 vault.recovery.title: Kurtarma anahtarınız
 vault.recovery.warning: Parola ve bu anahtar olmadan siz dahil hiç kimse koleksiyonu açamaz.
 vault.recovery_placeholder: Kurtarma anahtarı, ör. 7K2M-9QXA-…
+vault.remember: Bu bilgisayarda hatırla
+vault.remember_failed: "Parola hatırlanamadı: %{error}"
+vault.remember_note: Sistemin kimlik bilgisi deposunda saklanır; bu bilgisayarda oturumunuz açıkken koleksiyon parola sormadan açılır.
+vault.remembered_stale: Hatırlanan parola artık geçmiyor, bu yüzden unutuldu.
 vault.repeat_password: Parolayı tekrar girin
 vault.unlock: Kilidi aç
 vault.unlock_note: Bu koleksiyon şifreli. Siz kilitleyene, Apix'ten çıkana veya %{count} dakika boşta kalana kadar kilidi açık kalır.

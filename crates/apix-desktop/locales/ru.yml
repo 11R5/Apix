@@ -420,6 +420,7 @@ sidebar.edit_variables: Изменить переменные…
 sidebar.edit_variables_tooltip: Изменить переменные (%{key})
 sidebar.empty: Пусто
 sidebar.encrypt: Зашифровать…
+sidebar.forget_password: Забыть сохранённый пароль
 sidebar.import_postman: Импорт…
 sidebar.kind_collection: КОЛЛЕКЦИЯ
 sidebar.kind_project: ПРОЕКТ
@@ -465,6 +466,7 @@ vault.error.trash: "Не удалось переместить в корзину
 vault.error.trash_encrypted: "Не удалось переместить зашифрованные файлы в корзину: %{error}"
 vault.error.trash_plain: "Не удалось переместить открытые файлы в корзину: %{error}"
 vault.error.unlock_first: Сначала разблокируйте коллекцию.
+vault.forgotten: Сохранённый пароль для %{name} забыт.
 vault.locked: Заблокирована
 vault.locked_title: Заблокировано
 vault.name_placeholder: Имя коллекции
@@ -480,6 +482,10 @@ vault.recovery.stored: Ключ восстановления сохранён в
 vault.recovery.title: Ваш ключ восстановления
 vault.recovery.warning: Без пароля и без этого ключа никто, включая вас, не сможет открыть коллекцию.
 vault.recovery_placeholder: Ключ восстановления, напр. 7K2M-9QXA-…
+vault.remember: Запомнить на этом компьютере
+vault.remember_failed: "Не удалось запомнить пароль: %{error}"
+vault.remember_note: Хранится в системном хранилище учётных данных; пока вы вошли в систему на этом компьютере, коллекция открывается без запроса пароля.
+vault.remembered_stale: Сохранённый пароль больше не подходит, поэтому он забыт.
 vault.repeat_password: Повторите пароль
 vault.unlock: Разблокировать
 vault.unlock_note: Эта коллекция зашифрована. Она остаётся разблокированной, пока вы её не заблокируете, не закроете Apix или не оставите без действия на %{count} мин.
