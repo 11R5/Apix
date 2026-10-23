@@ -263,8 +263,30 @@ from Postman run as they are: `pm.environment`, `pm.collectionVariables`,
 `pm.globals` (the project's variables), `pm.variables`, `pm.request`,
 `pm.response`, `pm.test`, `pm.expect` with Chai-style assertions,
 `pm.info`, `console.log`, and the older `tests["…"] = …` and
-`postman.setEnvironmentVariable(…)`. `pm.sendRequest` and `require(…)` come
-later.
+`postman.setEnvironmentVariable(…)`.
+
+`pm.sendRequest` sends another request from a script, for example to get a
+token first; both `pm.sendRequest(req, (err, res) => …)` and
+`const res = await pm.sendRequest(req)` work. `require(…)` offers the parts of
+`crypto-js` (MD5, SHA-1, SHA-2 and their HMACs, Base64/Hex/UTF-8 encoders),
+`uuid`, `lodash` (also `_`), `moment`, `ajv`, `tv4` and `chai` that API
+scripts use; they are built in, so nothing is downloaded. A function a
+library does not have fails with a clear message.
+
+The third part of the Scripts tab, **Checks**, tests the response without
+code: each row compares a target with a value. Targets are `status`, `time`
+(ms), `size` (bytes), `body`, a path in a JSON body such as
+`body.users[0].id`, or `header.Content-Type`; comparisons are `==`, `!=`,
+`>`, `>=`, `<`, `<=`, `contains`, `not contains`, `exists`, `not exists`,
+`matches` (a regular expression such as `/^ok/i`) and `is` (a JSON type).
+Values may use `{{variables}}`. Checks are saved in the request file as
+`[[assert]]` and show up as tests, in the app and in `apix run`.
+
+To keep a value from a response, use the **{x}** button next to the status:
+give the value (same targets as in Checks) and a variable name, and it is
+saved in the active environment (or, with none, the collection's variables).
+Tick **Update it on every send** to also add the matching
+`pm.environment.set(…)` line to the Tests script.
 
 Scripts are files next to what they belong to: `<request>.prerequest.js` and
 `<request>.test.js` next to the request, `_folder.prerequest.js` /

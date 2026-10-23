@@ -88,7 +88,9 @@ Measurements of the other tools on the same machine are planned.
   headers and form fields.
 - **Scripts and tests:** pre-request and test scripts in JavaScript (QuickJS,
   built in) with a Postman-compatible `pm.*` API, so imported Postman scripts
-  run; `pm.test` / `pm.expect` results and `console` output in the app and in
+  run: `pm.sendRequest`, `require('crypto-js' | 'lodash' | 'moment' | …)`,
+  `pm.test` / `pm.expect`, `console`. Checks without code (`status == 200`,
+  `body.users[0].id exists`), saving a response value as a variable, and
   `apix run`, which fails the build when a test fails.
 - **Encrypted collections** with a recovery key, auto-lock and, if you choose,
   the password remembered in the OS keychain.

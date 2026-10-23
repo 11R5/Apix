@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:64d73115f56514b0 -->
+<!-- translated from en/user-guide.md sha256:5217dc9d20cebb5c -->
 
 # Apix kullanım kılavuzu
 
@@ -275,8 +275,31 @@ yüzden Postman'dan gelen scriptler olduğu gibi çalışır: `pm.environment`,
 `pm.collectionVariables`, `pm.globals` (projenin değişkenleri),
 `pm.variables`, `pm.request`, `pm.response`, `pm.test`, Chai tarzı
 denetimlerle `pm.expect`, `pm.info`, `console.log` ve eski
-`tests["…"] = …` ile `postman.setEnvironmentVariable(…)`. `pm.sendRequest` ve
-`require(…)` daha sonra gelecek.
+`tests["…"] = …` ile `postman.setEnvironmentVariable(…)`.
+
+`pm.sendRequest` bir scriptten başka bir istek gönderir, örneğin önce token
+almak için; hem `pm.sendRequest(req, (err, res) => …)` hem
+`const res = await pm.sendRequest(req)` çalışır. `require(…)`, API
+scriptlerinin kullandığı kısımlarıyla `crypto-js` (MD5, SHA-1, SHA-2 ve
+bunların HMAC'leri, Base64/Hex/UTF-8 kodlayıcıları), `uuid`, `lodash` (`_`
+olarak da), `moment`, `ajv`, `tv4` ve `chai` sunar; bunlar yerleşiktir, hiçbir
+şey indirilmez. Bir kütüphanede olmayan bir fonksiyon açık bir mesajla hata
+verir.
+
+Scriptler sekmesinin üçüncü bölümü **Doğrulamalar**, yanıtı kod yazmadan
+denetler: her satır bir hedefi bir değerle karşılaştırır. Hedefler `status`,
+`time` (ms), `size` (bayt), `body`, `body.users[0].id` gibi bir JSON yolu ya da
+`header.Content-Type`; karşılaştırmalar `==`, `!=`, `>`, `>=`, `<`, `<=`,
+`contains`, `not contains`, `exists`, `not exists`, `matches` (`/^ok/i` gibi
+bir düzenli ifade) ve `is` (bir JSON türü). Değerlerde `{{değişkenler}}`
+kullanılabilir. Doğrulamalar istek dosyasına `[[assert]]` olarak kaydedilir
+ve uygulamada da `apix run`'da da test olarak görünür.
+
+Bir yanıttan değer saklamak için durum satırının yanındaki **{x}** düğmesini
+kullanın: değeri (Doğrulamalar'daki hedeflerle aynı) ve bir değişken adını
+verin; değer seçili ortama (ortam yoksa koleksiyon değişkenlerine) kaydedilir.
+**Her gönderimde güncelle** işaretlenirse uygun `pm.environment.set(…)`
+satırı da Testler scriptine eklenir.
 
 Scriptler ait oldukları şeyin yanında dosya olarak durur: istek için yanında
 `<istek>.prerequest.js` ve `<istek>.test.js`, klasör için içinde

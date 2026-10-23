@@ -1,4 +1,4 @@
-<!-- translated from en/technical.md sha256:1d629fd80f9cfde9 -->
+<!-- translated from en/technical.md sha256:c8d3ab80b6d1b62b -->
 
 # Teknik notlar
 
@@ -66,7 +66,7 @@ Masaüstü uygulamasının tam bir release derlemesi birkaç dakika sürer.
 | Ağ ayrıntıları | `x509-parser` (sertifikalar), `netdev` (ağ arayüzleri, ağ geçidi, DNS sunucuları) |
 | İmzalama | `sha2`, `sha1`, `hmac`, `md-5`, `base64`, `rand_core` (AWS SigV4, OAuth 1.0, Digest, PKCE) |
 | Şifreleme | `chacha20poly1305` (XChaCha20-Poly1305), `argon2`, `zeroize`, `keyring` (işletim sistemi kimlik bilgisi deposu) |
-| Scriptler | `rquickjs` (QuickJS, sistemin C derleyicisiyle derlenir) |
+| Scriptler | `rquickjs` (QuickJS, sistemin C derleyicisiyle derlenir); `require` kütüphaneleri Apix'in kendi JavaScript kodu, özetler `sha1`, `sha2`, `md-5`, `hmac` ile |
 | Dosyalar | `serde`, `toml`, `serde_json`, `notify` (dosya izleme), `trash` |
 | Diller | `rust-i18n` (gpui-kit ile ortak), `sys-locale` |
 
@@ -161,7 +161,7 @@ patch ile devreye alır. Upstream crate düzeltildiğinde kaldırılabilir.
 | apix-http | istek oluşturma, her gövde türü, OAuth 2.0, Digest, AWS ve OAuth 1.0 için yerel bir sunucu, ağ izi |
 | apix-codegen | bash, cmd ve PowerShell için kabuk tırnaklama; curl yapıştırma; gidiş-dönüş testleri; her dilde URL, başlıklar, gövdeler, dize kaçışları ve ayarlar |
 | apix-import | Postman v2.0/v2.1 fixture'ları |
-| apix-script | istek öncesi scriptlerden değişken ve istek değişiklikleri, `pm.test` / `pm.expect` sonuçları ve mesajları, eski `tests[...]` API'si, dosyayı adlandıran hatalar, sonsuz scriptlerin durdurulması, `setNextRequest`, `atob`/`btoa` |
+| apix-script | istek öncesi scriptlerden değişken ve istek değişiklikleri, `pm.test` / `pm.expect` sonuçları ve mesajları, eski `tests[...]` API'si, dosyayı adlandıran hatalar, sonsuz scriptlerin durdurulması, `setNextRequest`, `atob`/`btoa`, `pm.sendRequest` (geri çağırma ve `await`, bekleme sayılmaz), bilinen özet değerlerine karşı hazır kütüphaneler, kodsuz doğrulamalar, yanıt hedefleri için değer ve ifade üretimi |
 | apix-vault | şifreleme formatı, kurcalama (tampering), parola değişikliği, kurtarma anahtarı, anahtarlık kayıtları (gerçek kimlik bilgisi deposunda, test servis adıyla; depo yoksa atlanır) |
 | apix-desktop | çevirilerin eksiksizliği, dil yardımcıları, dosya yolları, vurgulama sorgusu |
 | docs-check | belge yapısı ve damgalar |
