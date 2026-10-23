@@ -136,7 +136,7 @@ chips.scope.collection: コレクション「%{name}」
 chips.scope.environment: 環境「%{name}」
 chips.scope.environment_of: 「%{collection}」の環境「%{name}」
 chips.scope.project: プロジェクト「%{name}」
-chips.secret_scope: "%{scope} · シークレット (.local.toml)"
+chips.secret_scope: "%{scope} · シークレット、このコンピューターのみ"
 chips.set_for_run: この実行のみ設定
 collection.choose_folder: フォルダーを選択…
 collection.create: 作成
@@ -193,6 +193,7 @@ env.error.name_clash: 2 つの環境が同じ名前 %{name} になります。
 env.error.needs_name: 環境には名前が必要です。
 env.hint.dynamic: 名前をクリックするとコピーされます。使用するたびに新しい値になります。同じ名前の変数を定義した場合はそちらが優先されます。
 env.hint.environment: シークレットはこのコンピューター上の %{name}.local.toml に保存され、git では無視されます。
+env.hint.environment_keychain: シークレットはこのコンピューターのシステムキーチェーンに保存され、git には一切含まれません。
 env.hint.shared: 共有変数はすべての環境に適用されます。環境ごとの値が優先されます。
 env.none: 環境なし
 env.placeholder.name: 名前
@@ -200,6 +201,9 @@ env.placeholder.new_environment: 新しい環境…
 env.placeholder.value: 値
 env.secret: シークレット
 env.secret_tooltip: このコンピューターの .local.toml ファイルにのみ保存されます
+env.secret_tooltip_keychain: このコンピューターのシステムキーチェーンにのみ保存
+env.secrets_moved_file: "シークレットを .local.toml ファイルに移動しました（環境数: %{count}）。"
+env.secrets_moved_keychain: "シークレットをシステムキーチェーンに移動しました（環境数: %{count}）。"
 env.section.built_in: 組み込み
 env.section.collection_only: "%{name} のみ"
 env.section.environments: 環境
@@ -404,6 +408,10 @@ settings.history: 履歴
 settings.history_description: 送信したリクエストをレスポンスと一緒にこのコンピューターに保存します（Ctrl+H）。
 settings.language: 言語
 settings.language_description: メニュー、ボタン、メッセージの言語です。すぐに切り替わります。
+settings.secrets: 環境のシークレット
+settings.secrets_description: 環境のシークレット値をこのコンピューターのどこに保存するか。どちらも git には含まれません。キーチェーンではディスク上に平文で残りません。
+settings.secrets_file: .local.toml ファイル
+settings.secrets_keychain: システムキーチェーン
 settings.theme: テーマ
 settings.theme_cyber: サイバーグラス
 settings.theme_description: ウィンドウの配色です。

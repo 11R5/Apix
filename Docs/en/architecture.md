@@ -180,8 +180,15 @@ Open questions:
   `environments/<name>.local.toml` is layered over `<name>.toml`. Writing one adds
   `*.local.toml` to the `.gitignore` next to `environments/` if it is missing. A
   secret may keep a placeholder in the shared file, so teammates see the name.
-  Encrypted collection passwords can already be remembered in the OS keychain
-  through the `keyring` crate; the same store for environment secrets comes next.
+  Optionally (Settings › Environment secrets) the secrets go to the OS keychain
+  instead: `<name>.local.toml` then holds only `keychain = "<id>"` and the
+  values live in the entry `env:<id>` of the service `Apix`
+  (`apix_vault::keychain::save_text`, split over several entries for Windows'
+  2560-byte limit). `apix_core::secrets::use_keychain` decides where new
+  secrets are written; reading follows the file, so the CLI needs no setting.
+  The id travels with the file, so renaming the environment or moving the
+  folder keeps the link. Inside an encrypted collection secrets stay in the
+  vault.
 - **Dynamic variables.** `{{$name}}` is filled by `apix_core::dynamic` when no
   variable of that name is defined, with a new value for every occurrence
   (`$guid`, `$timestamp`, `$isoTimestamp`, `$randomEmail`, …). No extra crates:

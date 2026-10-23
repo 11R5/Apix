@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:d442c68f30a54c10 -->
+<!-- translated from en/user-guide.md sha256:aac585a802722cfa -->
 
 # Apix kullanım kılavuzu
 
@@ -198,6 +198,15 @@ açın. Token ve parolalar için **Gizli** kutusunu işaretleyin: gizli değerle
 `environments/<name>.local.toml` dosyasında saklanır; Apix bu dosyayı
 `.gitignore`'a ekler, böylece asla commit'lenmezler.
 
+Diskte de durmasınlar isterseniz **Ayarlar › Ortam gizli değerleri › Sistem
+anahtarlığı** seçeneğini seçin. Değerler sistemin kimlik bilgisi deposuna gider
+(Windows'ta Credential Manager, macOS'te Anahtar Zinciri, Linux'ta Secret
+Service); `<name>.local.toml` yalnızca o kaydın kimliğini tutar, böylece ortamı
+yeniden adlandırmak ya da klasörü taşımak sorun çıkarmaz. `apix` komut satırı da
+onları aynı yoldan okur. Ayar değişince açık koleksiyon veya projenin gizli
+değerleri hemen taşınır; diğerleri bir sonraki kaydedişte taşınır. Şifreli bir
+koleksiyonun gizli değerleri her zaman kendi içinde kalır.
+
 ![Değişkenler iletişim kutusu](images/variables.png)
 
 **Dinamik değişkenler** her kullanımda yeni bir değer alır: `{{$guid}}`,
@@ -386,6 +395,8 @@ bulunabilir.
 - **Tema:** Obsidyen veya Siber cam; Apix'in bir sonraki açılışında uygulanır.
 - **Şifreli koleksiyonları kilitle:** 5, 15 veya 30 dakika sonra, 1 saat sonra
   ya da hiçbir zaman.
+- **Ortam gizli değerleri:** `.local.toml` dosyasında ya da sistem
+  anahtarlığında (bkz. [Değişkenler ve ortamlar](#değişkenler-ve-ortamlar)).
 - **Geçmiş:** açık veya kapalı (bkz. [Geçmiş](#geçmiş)).
 
 ![Ayarlar](images/settings.png)

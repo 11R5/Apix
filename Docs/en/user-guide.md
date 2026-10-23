@@ -188,6 +188,15 @@ Open **Environment › Variables and environments…** (Ctrl+E) to edit them. Ti
 `environments/<name>.local.toml`, which Apix adds to `.gitignore`, so they are
 never committed.
 
+To keep them off the disk too, choose **Settings › Environment secrets ›
+System keychain**. The values then go to the system's credential store
+(Credential Manager on Windows, the Keychain on macOS, the Secret Service on
+Linux) and `<name>.local.toml` only keeps the id of that entry, so renaming the
+environment or moving the folder keeps working. The `apix` command line reads
+them the same way. Changing the setting moves the secrets of the open collection
+or project at once; others move the next time you save them. Secrets of an
+encrypted collection always stay inside it.
+
 ![The Variables dialog](images/variables.png)
 
 **Dynamic variables** get a fresh value on every use: `{{$guid}}`,
@@ -366,6 +375,8 @@ in every language.
   key–value tables stay left to right.
 - **Theme:** Obsidian or Cyber glass; applies the next time Apix starts.
 - **Lock encrypted collections:** after 5, 15 or 30 minutes, 1 hour, or never.
+- **Environment secrets:** in a `.local.toml` file or in the system keychain
+  (see [Variables and environments](#variables-and-environments)).
 - **History:** on or off (see [History](#history)).
 
 ![Settings](images/settings.png)

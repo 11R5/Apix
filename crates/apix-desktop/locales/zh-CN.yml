@@ -136,7 +136,7 @@ chips.scope.collection: 集合“%{name}”
 chips.scope.environment: 环境“%{name}”
 chips.scope.environment_of: “%{collection}”的环境“%{name}”
 chips.scope.project: 项目“%{name}”
-chips.secret_scope: "%{scope} · 机密（.local.toml）"
+chips.secret_scope: "%{scope} · 机密，仅在这台电脑上"
 chips.set_for_run: 为本次运行设置
 collection.choose_folder: 选择文件夹…
 collection.create: 创建
@@ -193,6 +193,7 @@ env.error.name_clash: 将有两个环境都命名为 %{name}。
 env.error.needs_name: 环境需要名称。
 env.hint.dynamic: 点击名称即可复制。每次使用都会生成新值；若自定义了同名变量，则以自定义变量为准。
 env.hint.environment: 机密仅保存在本机的 %{name}.local.toml 中，git 会忽略该文件。
+env.hint.environment_keychain: 机密值保存在这台电脑的系统钥匙串中，git 永远看不到它们。
 env.hint.shared: 共享变量适用于所有环境；环境中的值优先。
 env.none: 无环境
 env.placeholder.name: 名称
@@ -200,6 +201,9 @@ env.placeholder.new_environment: 新建环境…
 env.placeholder.value: 值
 env.secret: 机密
 env.secret_tooltip: 仅保存在本机的 .local.toml 文件中
+env.secret_tooltip_keychain: 仅保存在这台电脑的系统钥匙串中
+env.secrets_moved_file: "机密值已移到 .local.toml 文件（环境数：%{count}）。"
+env.secrets_moved_keychain: "机密值已移到系统钥匙串（环境数：%{count}）。"
 env.section.built_in: 内置
 env.section.collection_only: "仅 %{name}"
 env.section.environments: 环境
@@ -404,6 +408,10 @@ settings.history: 历史
 settings.history_description: 在这台电脑上保存每个已发送的请求及其响应（Ctrl+H）。
 settings.language: 语言
 settings.language_description: 菜单、按钮和消息的语言。立即生效。
+settings.secrets: 环境机密值
+settings.secrets_description: 环境的机密值在这台电脑上的存放位置。两者都不会进入 git；钥匙串还能避免它们以明文留在磁盘上。
+settings.secrets_file: .local.toml 文件
+settings.secrets_keychain: 系统钥匙串
 settings.theme: 主题
 settings.theme_cyber: 赛博玻璃
 settings.theme_description: 窗口的配色。

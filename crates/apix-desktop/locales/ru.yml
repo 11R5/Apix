@@ -136,7 +136,7 @@ chips.scope.collection: Коллекция «%{name}»
 chips.scope.environment: Окружение «%{name}»
 chips.scope.environment_of: Окружение «%{name}» из «%{collection}»
 chips.scope.project: Проект «%{name}»
-chips.secret_scope: "%{scope} · секрет (.local.toml)"
+chips.secret_scope: "%{scope} · секрет, только на этом компьютере"
 chips.set_for_run: Задать для этого запуска
 collection.choose_folder: Выбрать папку…
 collection.create: Создать
@@ -193,6 +193,7 @@ env.error.name_clash: Два окружения получат имя %{name}.
 env.error.needs_name: Укажите имя окружения.
 env.hint.dynamic: Нажмите на имя, чтобы скопировать его. При каждом использовании подставляется новое значение; ваша переменная с тем же именем имеет приоритет.
 env.hint.environment: Секреты хранятся только на этом компьютере в %{name}.local.toml, который игнорируется git.
+env.hint.environment_keychain: Секретные значения остаются на этом компьютере, в системном хранилище ключей; git их никогда не видит.
 env.hint.shared: Общие переменные действуют во всех окружениях; значение из окружения имеет приоритет.
 env.none: Без окружения
 env.placeholder.name: имя
@@ -200,6 +201,9 @@ env.placeholder.new_environment: Новое окружение…
 env.placeholder.value: значение
 env.secret: Секрет
 env.secret_tooltip: Сохраняется только на этом компьютере, в файле .local.toml
+env.secret_tooltip_keychain: Хранится только на этом компьютере, в системном хранилище ключей
+env.secrets_moved_file: "Секретные значения перенесены в файлы .local.toml (окружений: %{count})."
+env.secrets_moved_keychain: "Секретные значения перенесены в системное хранилище ключей (окружений: %{count})."
 env.section.built_in: Встроенные
 env.section.collection_only: "Только %{name}"
 env.section.environments: Окружения
@@ -404,6 +408,10 @@ settings.history: История
 settings.history_description: Сохранять каждый отправленный запрос с ответом на этом компьютере (Ctrl+H).
 settings.language: Язык
 settings.language_description: Язык меню, кнопок и сообщений. Меняется сразу.
+settings.secrets: Секреты окружений
+settings.secrets_description: Где на этом компьютере хранятся секретные значения окружений. Оба варианта не попадают в git; хранилище ключей к тому же не держит их на диске открытым текстом.
+settings.secrets_file: Файл .local.toml
+settings.secrets_keychain: Системное хранилище ключей
 settings.theme: Тема
 settings.theme_cyber: Кибер-стекло
 settings.theme_description: Цвета окна.

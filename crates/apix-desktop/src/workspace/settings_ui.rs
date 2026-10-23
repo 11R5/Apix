@@ -30,6 +30,14 @@ fn history_choices() -> Vec<SharedString> {
     vec![tr!("reqset.on"), tr!("reqset.off")]
 }
 
+/// Where environment secrets go, in picker order: file, keychain.
+fn secrets_choices() -> Vec<SharedString> {
+    vec![
+        tr!("settings.secrets_file"),
+        tr!("settings.secrets_keychain"),
+    ]
+}
+
 fn theme_label(variant: Variant) -> SharedString {
     match variant {
         Variant::Obsidian => tr!("settings.theme_obsidian"),
@@ -44,6 +52,7 @@ pub(super) struct SettingsView {
     theme: Entity<Picker>,
     auto_lock: Entity<Picker>,
     history: Entity<Picker>,
+    secrets: Entity<Picker>,
     /// The theme the app started with; a change shows "after restart".
     started_theme: Variant,
     _subscriptions: Vec<Subscription>,
@@ -93,7 +102,32 @@ impl SettingsView {
             )
         });
 
+        let secrets_ix = if settings.secrets_in_keychain { 1 } else { 0 };
+        let secrets = cx.new(|cx| {
+            SelectState::new(
+                secrets_choices(),
+                Some(IndexPath::new(secrets_ix)),
+                window,
+                cx,
+            )
+        });
+
         let subscriptions = vec![
+            cx.subscribe_in(
+                &secrets,
+                window,
+                |this, state, _: &SelectEvent<Vec<SharedString>>, window, cx| {
+                    let Some(ix) = state.read(cx).selected_index(cx) else {
+                        return;
+                    };
+                    let keychain = ix.row == 1;
+                    this.change(|s| s.secrets_in_keychain = keychain, cx);
+                    apix_core::secrets::use_keychain(keychain);
+                    this.workspace
+                        .update(cx, |ws, cx| ws.move_environment_secrets(window, cx))
+                        .ok();
+                },
+            ),
             cx.subscribe_in(
                 &history,
                 window,
@@ -149,6 +183,7 @@ impl SettingsView {
             theme,
             auto_lock,
             history,
+            secrets,
             started_theme,
             _subscriptions: subscriptions,
         }
@@ -177,6 +212,9 @@ impl SettingsView {
             .update(cx, |state, cx| state.set_items(locks, window, cx));
         self.history.update(cx, |state, cx| {
             state.set_items(history_choices(), window, cx)
+        });
+        self.secrets.update(cx, |state, cx| {
+            state.set_items(secrets_choices(), window, cx)
         });
         cx.notify();
     }
@@ -245,6 +283,12 @@ impl Render for SettingsView {
                 tr!("settings.auto_lock"),
                 tr!("settings.auto_lock_description"),
                 Select::new(&self.auto_lock).small(),
+            ))
+            .child(div().h_px().bg(p.hairline))
+            .child(self.row(
+                tr!("settings.secrets"),
+                tr!("settings.secrets_description"),
+                Select::new(&self.secrets).small(),
             ))
             .child(div().h_px().bg(p.hairline))
             .child(self.row(

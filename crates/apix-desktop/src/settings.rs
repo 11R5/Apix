@@ -16,6 +16,8 @@ pub struct Settings {
     pub auto_lock_minutes: u32,
     /// Keep sent requests and their responses in the history.
     pub history: bool,
+    /// Write environment secrets to the system keychain instead of `.local.toml` files.
+    pub secrets_in_keychain: bool,
 }
 
 impl Default for Settings {
@@ -25,6 +27,7 @@ impl Default for Settings {
             theme: "obsidian".into(),
             auto_lock_minutes: 15,
             history: true,
+            secrets_in_keychain: false,
         }
     }
 }

@@ -21,7 +21,8 @@
 - **Your files, your git.** A collection is a folder of small TOML files. Commit,
   diff and review them like code. No account, no cloud, nothing to sync.
 - **Secrets stay out of git.** Secret values live in a gitignored
-  `.local.toml`, OAuth 2.0 tokens only in memory, and a whole collection can be
+  `.local.toml` or, if you choose, the OS keychain; OAuth 2.0 tokens only in
+  memory; and a whole collection can be
   **encrypted** with a password (XChaCha20-Poly1305, Argon2id), file names
   included, so it can be shared in a repository.
 - **One engine everywhere.** The desktop app and the `apix` CLI send requests in
