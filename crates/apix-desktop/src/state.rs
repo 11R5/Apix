@@ -1,5 +1,5 @@
 //! Per-user app state that is not part of any collection: recently opened
-//! collections and the environment chosen for each. Stored as TOML in the OS
+//! collections, and the environment and open tabs of each. Stored as TOML in the OS
 //! config folder (`%APPDATA%\Apix`, `~/Library/Application Support/Apix`,
 //! `~/.config/Apix`). Losing it is harmless, so errors are ignored.
 
@@ -18,6 +18,18 @@ pub struct AppState {
     /// Chosen environment per collection root.
     #[serde(default)]
     pub environments: BTreeMap<String, String>,
+    /// Open tabs per project or collection root, to bring back next time.
+    #[serde(default)]
+    pub tabs: BTreeMap<String, OpenTabs>,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct OpenTabs {
+    /// Request files, in tab order.
+    pub paths: Vec<PathBuf>,
+    /// The tab in front.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub front: Option<PathBuf>,
 }
 
 impl AppState {
@@ -65,6 +77,19 @@ impl AppState {
             Some(name) => self.environments.insert(key(root), name.to_owned()),
             None => self.environments.remove(&key(root)),
         };
+        self.save();
+    }
+
+    pub fn tabs_for(&self, root: &Path) -> Option<&OpenTabs> {
+        self.tabs.get(&key(root))
+    }
+
+    pub fn set_tabs(&mut self, root: &Path, tabs: OpenTabs) {
+        if tabs.paths.is_empty() {
+            self.tabs.remove(&key(root));
+        } else {
+            self.tabs.insert(key(root), tabs);
+        }
         self.save();
     }
 }

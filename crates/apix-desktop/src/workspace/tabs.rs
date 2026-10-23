@@ -15,6 +15,7 @@ use gpui_kit::*;
 use super::{Finished, ResponseState, Workspace};
 use crate::bidi::{self, Bidi as _};
 use crate::large_view::Document;
+use crate::state::OpenTabs;
 use crate::theme;
 
 /// One open request.
@@ -43,6 +44,55 @@ impl Tab {
 }
 
 impl Workspace {
+    /// Writes the open tabs to the app state when they changed. Tabs of
+    /// encrypted collections are left out: their file names are secret too.
+    pub(super) fn remember_tabs(&mut self) {
+        let Some(root) = self.workspace_root() else {
+            return;
+        };
+        // A request of an encrypted collection is open only while it is unlocked.
+        let plain = |p: &&PathBuf| !apix_core::vfs::is_virtual(p);
+        let open = OpenTabs {
+            paths: self
+                .tabs
+                .iter()
+                .map(|t| &t.path)
+                .filter(plain)
+                .cloned()
+                .collect(),
+            front: self.selected.as_ref().filter(plain).cloned(),
+        };
+        let current = (root, open);
+        if self.remembered_tabs.as_ref() != Some(&current) {
+            self.app_state.set_tabs(&current.0, current.1.clone());
+            self.remembered_tabs = Some(current);
+        }
+    }
+
+    /// Reopens the tabs remembered for `root`. Returns the one put in front,
+    /// or `None` when there was nothing left to reopen.
+    pub(super) fn restore_tabs(
+        &mut self,
+        root: &Path,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> Option<PathBuf> {
+        let saved = self.app_state.tabs_for(root)?.clone();
+        let paths: Vec<PathBuf> = saved
+            .paths
+            .into_iter()
+            .filter(|p| self.requests.contains_key(p))
+            .collect();
+        let front = saved
+            .front
+            .filter(|f| paths.contains(f))
+            .or_else(|| paths.last().cloned())?;
+        for path in paths {
+            self.open_tab(path, window, cx);
+        }
+        Some(front)
+    }
+
     fn tab_index(&self, path: &Path) -> Option<usize> {
         self.tabs.iter().position(|t| t.path == path)
     }

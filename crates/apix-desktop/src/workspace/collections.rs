@@ -99,11 +99,12 @@ impl Workspace {
             .and_then(|c| self.collections.iter().position(|x| x.root == c))
             .unwrap_or(0);
         self.collection = self.collections.get(start).cloned();
-        let first = self
-            .collection
-            .as_ref()
-            .and_then(|c| self.trees.iter().find(|(root, _)| *root == c.root))
-            .and_then(|(_, tree)| first_request(tree));
+        let first = self.restore_tabs(&root, window, cx).or_else(|| {
+            self.collection
+                .as_ref()
+                .and_then(|c| self.trees.iter().find(|(root, _)| *root == c.root))
+                .and_then(|(_, tree)| first_request(tree))
+        });
         match first {
             Some(path) => self.open_path(path, window, cx),
             None => {

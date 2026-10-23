@@ -366,6 +366,8 @@ pub struct Workspace {
     _auto_lock: Option<Task<()>>,
     /// The in-flight request. Dropping it cancels the request.
     task: Option<Task<()>>,
+    /// The open tabs as last written to the app state.
+    remembered_tabs: Option<(PathBuf, crate::state::OpenTabs)>,
     _subscriptions: Vec<Subscription>,
 }
 
@@ -396,6 +398,7 @@ impl Workspace {
         let settings_editor =
             cx.new(|cx| settings_editor::SettingsEditor::new(palette, window, cx));
         let subscriptions = vec![
+            cx.observe_self(|this, _| this.remember_tabs()),
             // Typing in the Auth tab changes the unsaved marker.
             cx.observe(&auth_editor, |_, _, cx| cx.notify()),
             cx.observe(&settings_editor, |_, _, cx| cx.notify()),
@@ -481,6 +484,7 @@ impl Workspace {
             last_input: std::cell::Cell::new(std::time::Instant::now()),
             bench_sent: None,
             _auto_lock: None,
+            remembered_tabs: None,
             _subscriptions: subscriptions,
         };
         this._auto_lock = Some(Self::auto_lock_task(window, cx));
