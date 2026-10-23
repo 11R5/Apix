@@ -166,6 +166,7 @@ impl Workspace {
                             scopes: &scopes,
                             vars: &state,
                             info,
+                            sender: Some(net::script_sender()),
                         },
                     )
                 })
@@ -227,6 +228,7 @@ impl Workspace {
                                     scopes: &scopes,
                                     vars: &pre.vars,
                                     info,
+                                    sender: Some(net::script_sender()),
                                 },
                             );
                             let mut finished = Finished::prepare(response);

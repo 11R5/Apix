@@ -51,6 +51,31 @@ pub fn send(request: Request) -> impl Future<Output = Result<Response, String>> 
     AbortOnDrop(handle)
 }
 
+/// Sends a request and waits for it, for `pm.sendRequest` in scripts. Call
+/// it from a background thread, never from the UI thread.
+pub fn send_blocking(request: &Request) -> Result<Response, String> {
+    let net = net();
+    let client = net.client.clone();
+    let request = request.clone();
+    net.runtime
+        .block_on(async move { client.send(&request).await.map_err(|e| error_chain(&e)) })
+}
+
+/// What scripts use for `pm.sendRequest`: the app's client and cookies.
+pub fn script_sender() -> apix_script::Sender {
+    apix_script::Sender::new(|request| {
+        send_blocking(request).map(|response| {
+            apix_script::ResponseView::new(
+                response.status,
+                response.reason.unwrap_or(""),
+                &response.headers,
+                &response.body,
+                response.timing.total,
+            )
+        })
+    })
+}
+
 /// Gets a new OAuth 2.0 token for an already-resolved configuration (and
 /// keeps it for the requests that follow).
 pub fn fetch_token(

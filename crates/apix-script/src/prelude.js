@@ -653,7 +653,8 @@
 
   // --------------------------------------------------------------- response
 
-  function responseObject() {
+  // pm.response, and what pm.sendRequest hands back.
+  function responseObject(res) {
     if (!res) return undefined;
     const headers = propertyList(res.headers, true);
     let parsed;
@@ -772,6 +773,91 @@
     return response;
   }
 
+  // ------------------------------------------------------------ sendRequest
+
+  // A Postman request description (a URL, or { url, method, header, body })
+  // as the request rows Rust reads.
+  function requestSpec(spec) {
+    if (typeof spec === "string" || (spec && typeof spec.toString === "function" && spec.url === undefined)) {
+      spec = { url: String(spec) };
+    }
+    const headers = [];
+    const given = spec.header !== undefined ? spec.header : spec.headers;
+    if (Array.isArray(given)) {
+      for (const h of given) {
+        if (typeof h === "string") {
+          const colon = h.indexOf(":");
+          headers.push({ key: h.slice(0, colon).trim(), value: h.slice(colon + 1).trim(), disabled: false });
+        } else headers.push({ key: String(h.key), value: text(h.value), disabled: !!h.disabled });
+      }
+    } else if (given && typeof given === "object") {
+      for (const key of Object.keys(given)) headers.push({ key: key, value: text(given[key]), disabled: false });
+    }
+    const body = spec.body || {};
+    let mode = body.mode || "none";
+    let raw = "";
+    let urlencoded = [];
+    const rows = (list) => (list || []).map((r) => ({ key: String(r.key), value: text(r.value), disabled: !!r.disabled }));
+    if (mode === "raw") raw = text(body.raw);
+    else if (mode === "urlencoded") urlencoded = rows(body.urlencoded);
+    else if (mode === "formdata") {
+      mode = "urlencoded";
+      urlencoded = rows(body.formdata);
+    } else if (mode === "graphql") {
+      mode = "raw";
+      const gql = body.graphql || {};
+      raw = JSON.stringify({ query: gql.query || "", variables: typeof gql.variables === "string" ? JSON.parse(gql.variables || "null") : gql.variables || null });
+      if (!headers.some((h) => h.key.toLowerCase() === "content-type")) headers.push({ key: "Content-Type", value: "application/json", disabled: false });
+    } else mode = "none";
+    const split = splitUrl(String(spec.url));
+    return { method: String(spec.method || "GET").toUpperCase(), url: split.base, query: split.query, headers: headers, body: { mode: mode, raw: raw, urlencoded: urlencoded } };
+  }
+
+  // Waits for the response (scripts run one at a time anyway), then calls
+  // `callback(error, response)` and also resolves the returned promise, so
+  // both the callback style and `await pm.sendRequest(…)` work.
+  function sendRequest(spec, callback) {
+    let reply;
+    try {
+      reply = JSON.parse(global.__apix_send(JSON.stringify(requestSpec(spec))));
+    } catch (e) {
+      reply = { error: e && e.message ? e.message : String(e) };
+    }
+    const error = reply.error ? new Error(reply.error) : null;
+    const response = error ? null : responseObject(reply.response);
+    if (typeof callback === "function") {
+      callback(error, response);
+      return Promise.resolve(response);
+    }
+    return error ? Promise.reject(error) : Promise.resolve(response);
+  }
+
+  // ------------------------------------------------------------ script runs
+
+  let scriptError = null;
+  function describeError(e) {
+    if (e && e.message !== undefined) {
+      const frame = String(e.stack || "")
+        .split("\n")
+        .map((l) => l.trim())
+        .find((l) => l.indexOf(".js:") >= 0);
+      return frame ? e.message + " (" + frame + ")" : String(e.message);
+    }
+    return String(e);
+  }
+  // Each script is an async function; a throw (also after an `await`)
+  // becomes the script's error.
+  global.__apix_run = function (fn) {
+    fn().then(null, (e) => {
+      if (scriptError === null) scriptError = describeError(e);
+    });
+  };
+  global.__apix_error = function () {
+    const e = scriptError;
+    scriptError = null;
+    return e;
+  };
+
   // ---------------------------------------------------------------- console
 
   function log(level) {
@@ -844,7 +930,7 @@
       toObject: () => Object.assign({}, data),
     },
     request: requestObject(req),
-    response: responseObject(),
+    response: responseObject(res),
     test: runTest,
     expect: expect,
     execution: {
@@ -856,9 +942,7 @@
       },
       location: [input.info.request_name],
     },
-    sendRequest() {
-      throw new Error("pm.sendRequest is not supported yet");
-    },
+    sendRequest: sendRequest,
     visualizer: {
       set() {
         logs.push({ level: "info", text: "pm.visualizer is not supported; the template was ignored" });
