@@ -341,6 +341,9 @@ palette.open_recent: "Open recent: %{name}"
 palette.placeholder: Search requests and commands…
 palette.save_request: Save request
 palette.send_request: Send request
+prod.confirm_detail: "The environment “%{environment}” looks like production. Send %{method} %{url} anyway?"
+prod.confirm_send: "Send %{method}"
+prod.confirm_title: "%{method} in production?"
 reqset.client_cert: Client certificate
 reqset.client_key: Certificate key
 reqset.dialog.collection_title: Request settings for “%{name}”
@@ -406,6 +409,8 @@ settings.auto_lock_description: After this much idle time, encrypted collections
 settings.auto_lock_hour: After 1 hour
 settings.auto_lock_minutes: After %{count} minutes
 settings.auto_lock_never: Never
+settings.confirm_prod: Confirm in production
+settings.confirm_prod_description: Ask before sending DELETE, PUT or PATCH while an environment whose name contains “prod” is active.
 settings.history: History
 settings.history_description: Keep every sent request with its response on this computer (Ctrl+H).
 settings.language: Language

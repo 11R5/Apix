@@ -339,6 +339,9 @@ palette.open_recent: "Son açılanı aç: %{name}"
 palette.placeholder: İstek ve komut ara…
 palette.save_request: İsteği kaydet
 palette.send_request: İsteği gönder
+prod.confirm_detail: "“%{environment}” ortamı üretim ortamına benziyor. %{method} %{url} yine de gönderilsin mi?"
+prod.confirm_send: "%{method} gönder"
+prod.confirm_title: "Üretimde %{method}?"
 reqset.client_cert: İstemci sertifikası
 reqset.client_key: Sertifika anahtarı
 reqset.dialog.collection_title: "“%{name}” istek ayarları"
@@ -404,6 +407,8 @@ settings.auto_lock_description: Bu kadar süre boşta kalındığında şifreli 
 settings.auto_lock_hour: 1 saat sonra
 settings.auto_lock_minutes: "%{count} dakika sonra"
 settings.auto_lock_never: Hiçbir zaman
+settings.confirm_prod: Üretimde onay iste
+settings.confirm_prod_description: Adında “prod” geçen bir ortam seçiliyken DELETE, PUT veya PATCH göndermeden önce sor.
 settings.history: Geçmiş
 settings.history_description: Gönderilen her isteği yanıtıyla birlikte bu bilgisayarda sakla (Ctrl+H).
 settings.language: Dil

@@ -339,6 +339,9 @@ palette.open_recent: "最近打开：%{name}"
 palette.placeholder: 搜索请求和命令…
 palette.save_request: 保存请求
 palette.send_request: 发送请求
+prod.confirm_detail: "环境“%{environment}”看起来是生产环境。仍要发送 %{method} %{url} 吗？"
+prod.confirm_send: "发送 %{method}"
+prod.confirm_title: "在生产环境中 %{method}？"
 reqset.client_cert: 客户端证书
 reqset.client_key: 证书密钥
 reqset.dialog.collection_title: “%{name}”的请求设置
@@ -404,6 +407,8 @@ settings.auto_lock_description: 空闲达到此时长后，加密集合将被锁
 settings.auto_lock_hour: 1 小时后
 settings.auto_lock_minutes: "%{count} 分钟后"
 settings.auto_lock_never: 从不
+settings.confirm_prod: 生产环境确认
+settings.confirm_prod_description: 当名称包含“prod”的环境处于活动状态时，发送 DELETE、PUT 或 PATCH 之前先确认。
 settings.history: 历史
 settings.history_description: 在这台电脑上保存每个已发送的请求及其响应（Ctrl+H）。
 settings.language: 语言

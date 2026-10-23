@@ -339,6 +339,9 @@ palette.open_recent: "فتح الأخيرة: %{name}"
 palette.placeholder: البحث في الطلبات والأوامر…
 palette.save_request: حفظ الطلب
 palette.send_request: إرسال الطلب
+prod.confirm_detail: "تبدو البيئة «%{environment}» بيئة إنتاج. هل تريد إرسال %{method} %{url} على أي حال؟"
+prod.confirm_send: "إرسال %{method}"
+prod.confirm_title: "%{method} في بيئة الإنتاج؟"
 reqset.client_cert: شهادة العميل
 reqset.client_key: مفتاح الشهادة
 reqset.dialog.collection_title: إعدادات طلبات «%{name}»
@@ -404,6 +407,8 @@ settings.auto_lock_description: بعد هذه المدة من الخمول، ت�
 settings.auto_lock_hour: بعد ساعة واحدة
 settings.auto_lock_minutes: بعد %{count} دقيقة
 settings.auto_lock_never: أبدًا
+settings.confirm_prod: التأكيد في بيئة الإنتاج
+settings.confirm_prod_description: السؤال قبل إرسال DELETE أو PUT أو PATCH عندما تكون بيئة يحتوي اسمها على «prod» نشطة.
 settings.history: السجل
 settings.history_description: احفظ كل طلب مُرسل مع استجابته على هذا الحاسوب (Ctrl+H).
 settings.language: اللغة

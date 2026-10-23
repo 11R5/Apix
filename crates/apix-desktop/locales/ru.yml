@@ -339,6 +339,9 @@ palette.open_recent: "Открыть недавнее: %{name}"
 palette.placeholder: Поиск запросов и команд…
 palette.save_request: Сохранить запрос
 palette.send_request: Отправить запрос
+prod.confirm_detail: "Окружение «%{environment}» похоже на продакшен. Всё равно отправить %{method} %{url}?"
+prod.confirm_send: "Отправить %{method}"
+prod.confirm_title: "%{method} в продакшене?"
 reqset.client_cert: Клиентский сертификат
 reqset.client_key: Ключ сертификата
 reqset.dialog.collection_title: Настройки запросов «%{name}»
@@ -404,6 +407,8 @@ settings.auto_lock_description: После такого времени безд�
 settings.auto_lock_hour: Через 1 час
 settings.auto_lock_minutes: Через %{count} мин
 settings.auto_lock_never: Никогда
+settings.confirm_prod: Подтверждение в продакшене
+settings.confirm_prod_description: Спрашивать перед отправкой DELETE, PUT или PATCH, когда выбрано окружение, в названии которого есть «prod».
 settings.history: История
 settings.history_description: Сохранять каждый отправленный запрос с ответом на этом компьютере (Ctrl+H).
 settings.language: Язык

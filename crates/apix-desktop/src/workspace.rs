@@ -27,6 +27,7 @@ use apix_core::{Auth, Collection, KeyValue, Method, Request, Variables};
 use apix_http::{BodyKind, ImageKind, Response, group_digits, human_duration, human_size};
 use gpui_kit::component::button::{Button, ButtonVariants};
 use gpui_kit::component::checkbox::Checkbox;
+use gpui_kit::component::dialog::AlertDialog;
 use gpui_kit::component::input::{Editor, EditorState, Input, InputEvent, InputState};
 use gpui_kit::component::menu::DropdownMenu as _;
 use gpui_kit::component::select::{Select, SelectEvent, SelectState};
@@ -630,7 +631,47 @@ impl Workspace {
         request
     }
 
+    /// Sends the request, after asking first when it would change something
+    /// in a production environment (DELETE, PUT, PATCH).
     pub(super) fn send(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let method = self.build_request(cx).method;
+        if self.settings.confirm_prod
+            && self.is_prod()
+            && matches!(method, Method::Delete | Method::Put | Method::Patch)
+        {
+            self.confirm_prod_send(method, window, cx);
+        } else {
+            self.send_now(window, cx);
+        }
+    }
+
+    fn confirm_prod_send(&mut self, method: Method, window: &mut Window, cx: &mut Context<Self>) {
+        let view = cx.entity().downgrade();
+        let environment = self.environment.clone().unwrap_or_default();
+        let url = self.build_request(cx).resolve(&self.vars).request.url;
+        window.open_alert_dialog(cx, move |alert: AlertDialog, _, _| {
+            let view = view.clone();
+            alert
+                .on_close(collections::refocus(view.clone()))
+                .confirm()
+                .cancel_text(tr!("dialog.cancel"))
+                .text_start()
+                .title(tr!("prod.confirm_title", method = method.as_str()))
+                .description(bidi::para(tr!(
+                    "prod.confirm_detail",
+                    method = method.as_str(),
+                    url = url,
+                    environment = environment
+                )))
+                .ok_text(tr!("prod.confirm_send", method = method.as_str()))
+                .on_ok(move |_, window, cx| {
+                    view.update(cx, |this, cx| this.send_now(window, cx)).ok();
+                    true
+                })
+        });
+    }
+
+    fn send_now(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         let draft = self.build_request(cx);
         let record = self.pending_record(&draft);
         let request = self.with_inherited_auth(draft, self.selected.as_deref());

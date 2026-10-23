@@ -339,6 +339,9 @@ palette.open_recent: "Zuletzt geöffnet: %{name}"
 palette.placeholder: Anfragen und Befehle durchsuchen…
 palette.save_request: Anfrage speichern
 palette.send_request: Anfrage senden
+prod.confirm_detail: "Die Umgebung „%{environment}“ sieht nach Produktion aus. %{method} %{url} trotzdem senden?"
+prod.confirm_send: "%{method} senden"
+prod.confirm_title: "%{method} in Produktion?"
 reqset.client_cert: Client-Zertifikat
 reqset.client_key: Zertifikatsschlüssel
 reqset.dialog.collection_title: Anfrage-Einstellungen für „%{name}“
@@ -404,6 +407,8 @@ settings.auto_lock_description: Nach dieser Leerlaufzeit werden verschlüsselte 
 settings.auto_lock_hour: Nach 1 Stunde
 settings.auto_lock_minutes: Nach %{count} Minuten
 settings.auto_lock_never: Nie
+settings.confirm_prod: In Produktion nachfragen
+settings.confirm_prod_description: Vor dem Senden von DELETE, PUT oder PATCH nachfragen, wenn eine Umgebung mit „prod“ im Namen aktiv ist.
 settings.history: Verlauf
 settings.history_description: Jede gesendete Anfrage mit ihrer Antwort auf diesem Computer behalten (Strg+H).
 settings.language: Sprache

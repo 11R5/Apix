@@ -339,6 +339,9 @@ palette.open_recent: "Ouvrir récent : %{name}"
 palette.placeholder: Rechercher des requêtes et des commandes…
 palette.save_request: Enregistrer la requête
 palette.send_request: Envoyer la requête
+prod.confirm_detail: "L’environnement « %{environment} » ressemble à la production. Envoyer %{method} %{url} quand même ?"
+prod.confirm_send: "Envoyer %{method}"
+prod.confirm_title: "%{method} en production ?"
 reqset.client_cert: Certificat client
 reqset.client_key: Clé du certificat
 reqset.dialog.collection_title: Réglages de requête de « %{name} »
@@ -404,6 +407,8 @@ settings.auto_lock_description: Après ce délai d'inactivité, les collections 
 settings.auto_lock_hour: Après 1 heure
 settings.auto_lock_minutes: Après %{count} minutes
 settings.auto_lock_never: Jamais
+settings.confirm_prod: Confirmer en production
+settings.confirm_prod_description: Demander avant d’envoyer DELETE, PUT ou PATCH quand un environnement dont le nom contient « prod » est actif.
 settings.history: Historique
 settings.history_description: Conserver chaque requête envoyée avec sa réponse sur cet ordinateur (Ctrl+H).
 settings.language: Langue

@@ -18,6 +18,8 @@ pub struct Settings {
     pub history: bool,
     /// Write environment secrets to the system keychain instead of `.local.toml` files.
     pub secrets_in_keychain: bool,
+    /// Ask before sending DELETE, PUT or PATCH while a prod environment is active.
+    pub confirm_prod: bool,
 }
 
 impl Default for Settings {
@@ -28,6 +30,7 @@ impl Default for Settings {
             auto_lock_minutes: 15,
             history: true,
             secrets_in_keychain: false,
+            confirm_prod: true,
         }
     }
 }

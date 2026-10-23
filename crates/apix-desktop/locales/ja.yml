@@ -339,6 +339,9 @@ palette.open_recent: "最近使ったものを開く: %{name}"
 palette.placeholder: リクエストとコマンドを検索…
 palette.save_request: リクエストを保存
 palette.send_request: リクエストを送信
+prod.confirm_detail: "環境「%{environment}」は本番環境のようです。それでも %{method} %{url} を送信しますか？"
+prod.confirm_send: "%{method} を送信"
+prod.confirm_title: "本番環境で %{method} しますか？"
 reqset.client_cert: クライアント証明書
 reqset.client_key: 証明書の鍵
 reqset.dialog.collection_title: 「%{name}」のリクエスト設定
@@ -404,6 +407,8 @@ settings.auto_lock_description: この時間操作がないと、暗号化され
 settings.auto_lock_hour: 1 時間後
 settings.auto_lock_minutes: "%{count} 分後"
 settings.auto_lock_never: しない
+settings.confirm_prod: 本番環境で確認する
+settings.confirm_prod_description: 名前に「prod」を含む環境が選択されているとき、DELETE・PUT・PATCH を送信する前に確認します。
 settings.history: 履歴
 settings.history_description: 送信したリクエストをレスポンスと一緒にこのコンピューターに保存します（Ctrl+H）。
 settings.language: 言語
