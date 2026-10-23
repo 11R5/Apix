@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:dd7e437d4e2c7303 -->
+<!-- translated from en/architecture.md sha256:5a3f287f141f11b5 -->
 
 # Apix mimarisi
 
@@ -189,9 +189,16 @@ Açık sorular:
   `environments/<name>.local.toml`, `<name>.toml` üzerine katmanlanır. Böyle bir
   dosya yazıldığında, eksikse `environments/` yanındaki `.gitignore` dosyasına
   `*.local.toml` eklenir. Bir gizli değer paylaşılan dosyada bir yer tutucuyla
-  kalabilir; böylece ekip arkadaşları adını görür. Şifreli koleksiyon parolaları
-  zaten `keyring` crate'i üzerinden işletim sistemi anahtar zincirinde
-  hatırlanabiliyor; ortam gizli değerleri için aynı depo sırada.
+  kalabilir; böylece ekip arkadaşları adını görür. İstenirse (Ayarlar › Ortam
+  gizli değerleri) gizli değerler işletim sistemi anahtarlığına gider:
+  `<name>.local.toml` yalnızca `keychain = "<kimlik>"` satırını tutar, değerler
+  `Apix` servisindeki `env:<kimlik>` kaydında durur
+  (`apix_vault::keychain::save_text`; Windows'un 2560 baytlık sınırı için
+  birden çok kayda bölünür). Yeni gizli değerlerin nereye yazılacağına
+  `apix_core::secrets::use_keychain` karar verir; okuma dosyayı izler, bu yüzden
+  CLI'nin bir ayara ihtiyacı yoktur. Kimlik dosyayla birlikte taşındığından
+  ortamı yeniden adlandırmak ya da klasörü taşımak bağlantıyı bozmaz. Şifreli
+  koleksiyonlarda gizli değerler kasada kalır.
 - **Dinamik değişkenler.** `{{$name}}`, bu adla tanımlı bir değişken yoksa
   `apix_core::dynamic` tarafından doldurulur; her geçişte yeni bir değer üretilir
   (`$guid`, `$timestamp`, `$isoTimestamp`, `$randomEmail`, …). Ek crate yok:

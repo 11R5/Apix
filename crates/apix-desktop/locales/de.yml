@@ -136,7 +136,7 @@ chips.scope.collection: Sammlung „%{name}“
 chips.scope.environment: Umgebung „%{name}“
 chips.scope.environment_of: Umgebung „%{name}“ von „%{collection}“
 chips.scope.project: Projekt „%{name}“
-chips.secret_scope: "%{scope} · geheim (.local.toml)"
+chips.secret_scope: "%{scope} · geheim, nur auf diesem Computer"
 chips.set_for_run: Für diese Sitzung festlegen
 collection.choose_folder: Ordner auswählen…
 collection.create: Erstellen
@@ -193,6 +193,7 @@ env.error.name_clash: Zwei Umgebungen hießen dann %{name}.
 env.error.needs_name: Die Umgebung braucht einen Namen.
 env.hint.dynamic: Klicken Sie auf einen Namen, um ihn zu kopieren. Jede Verwendung liefert einen neuen Wert; eine selbst definierte Variable mit gleichem Namen hat Vorrang.
 env.hint.environment: Geheime Werte bleiben auf diesem Computer in %{name}.local.toml, die von git ignoriert wird.
+env.hint.environment_keychain: Geheime Werte bleiben auf diesem Computer im Schlüsselbund des Systems; git sieht sie nie.
 env.hint.shared: Gemeinsame Variablen gelten in jeder Umgebung; der Wert einer Umgebung hat Vorrang.
 env.none: Keine Umgebung
 env.placeholder.name: Name
@@ -200,6 +201,9 @@ env.placeholder.new_environment: Neue Umgebung…
 env.placeholder.value: Wert
 env.secret: Geheim
 env.secret_tooltip: Nur auf diesem Computer gespeichert, in der .local.toml-Datei
+env.secret_tooltip_keychain: Nur auf diesem Computer gespeichert, im Schlüsselbund des Systems
+env.secrets_moved_file: "Geheime Werte in .local.toml-Dateien verschoben (Umgebungen: %{count})."
+env.secrets_moved_keychain: "Geheime Werte in den Schlüsselbund des Systems verschoben (Umgebungen: %{count})."
 env.section.built_in: Integriert
 env.section.collection_only: "Nur %{name}"
 env.section.environments: Umgebungen
@@ -404,6 +408,10 @@ settings.history: Verlauf
 settings.history_description: Jede gesendete Anfrage mit ihrer Antwort auf diesem Computer behalten (Strg+H).
 settings.language: Sprache
 settings.language_description: Die Sprache von Menüs, Schaltflächen und Meldungen. Wird sofort übernommen.
+settings.secrets: Geheime Umgebungswerte
+settings.secrets_description: Wo geheime Umgebungswerte auf diesem Computer liegen. Beides bleibt außerhalb von git; der Schlüsselbund speichert sie zudem nicht als Klartext auf der Festplatte.
+settings.secrets_file: .local.toml-Datei
+settings.secrets_keychain: Schlüsselbund des Systems
 settings.theme: Design
 settings.theme_cyber: Cyber Glass
 settings.theme_description: Die Farben des Fensters.

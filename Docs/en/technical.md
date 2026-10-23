@@ -71,10 +71,10 @@ release build of the desktop app takes a few minutes.
 
 | File | Contents |
 |---|---|
-| `<config>/Apix/settings.toml` | language, theme, auto-lock time |
+| `<config>/Apix/settings.toml` | language, theme, auto-lock time, history on or off, where environment secrets go |
 | `<config>/Apix/state.toml` | recently opened collections, the chosen environment per collection |
 | `<config>/Apix/cookies.json` | the cookie jar (session cookies are not persisted) |
-| OS credential store, service `Apix` | remembered passwords of encrypted collections, one `vault:<folder>` entry each, only when asked for |
+| OS credential store, service `Apix` | only when asked for: remembered passwords of encrypted collections (`vault:<folder>`) and environment secrets (`env:<id>`, plus `env:<id>#1`, … for long values) |
 | `<config>/Apix/history/` | sent requests (`{{variables}}` unresolved) and their responses: `index.jsonl`, one `<id>.json` and `<id>.body` per entry; the last 300, bodies cut at 256 KB |
 
 `<config>` is `%APPDATA%` on Windows, `~/Library/Application Support` on macOS
@@ -153,7 +153,7 @@ crate is fixed.
 
 | Crate | What is covered |
 |---|---|
-| apix-core | model and file format round trips, variables, signing against the AWS test suite, RFC 7616 (Digest), RFC 7636 (PKCE) and the OAuth 1.0 example |
+| apix-core | model and file format round trips, variables, environment secrets in the keychain (skipped without a credential store), signing against the AWS test suite, RFC 7616 (Digest), RFC 7636 (PKCE) and the OAuth 1.0 example |
 | apix-http | request building, every body type, a local server for OAuth 2.0, Digest, AWS and OAuth 1.0, the network trace |
 | apix-codegen | shell quoting for bash, cmd and PowerShell; curl paste; round trips; every language's URL, headers, bodies, string escaping and settings |
 | apix-import | Postman v2.0/v2.1 fixtures |

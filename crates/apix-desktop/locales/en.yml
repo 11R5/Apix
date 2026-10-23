@@ -138,7 +138,7 @@ chips.scope.collection: Collection “%{name}”
 chips.scope.environment: Environment “%{name}”
 chips.scope.environment_of: Environment “%{name}” of “%{collection}”
 chips.scope.project: Project “%{name}”
-chips.secret_scope: "%{scope} · secret (.local.toml)"
+chips.secret_scope: "%{scope} · secret, only on this computer"
 chips.set_for_run: Set for this run
 collection.choose_folder: Choose folder…
 collection.create: Create
@@ -195,6 +195,7 @@ env.error.name_clash: Two environments would be named %{name}.
 env.error.needs_name: The environment needs a name.
 env.hint.dynamic: Click a name to copy it. Every use gets a new value; a variable you define with the same name wins.
 env.hint.environment: Secrets stay on this computer in %{name}.local.toml, which git ignores.
+env.hint.environment_keychain: Secrets stay on this computer, in the system keychain; git never sees them.
 env.hint.shared: Shared variables apply in every environment; an environment's value wins.
 env.none: No environment
 env.placeholder.name: name
@@ -202,6 +203,9 @@ env.placeholder.new_environment: New environment…
 env.placeholder.value: value
 env.secret: Secret
 env.secret_tooltip: Saved only on this computer, in the .local.toml file
+env.secret_tooltip_keychain: Saved only on this computer, in the system keychain
+env.secrets_moved_file: "Secrets moved to .local.toml files (environments: %{count})."
+env.secrets_moved_keychain: "Secrets moved to the system keychain (environments: %{count})."
 env.section.built_in: Built in
 env.section.collection_only: "%{name} only"
 env.section.environments: Environments
@@ -406,6 +410,10 @@ settings.history: History
 settings.history_description: Keep every sent request with its response on this computer (Ctrl+H).
 settings.language: Language
 settings.language_description: The language of menus, buttons and messages. Changes at once.
+settings.secrets: Environment secrets
+settings.secrets_description: Where secret environment values are kept on this computer. Both stay out of git; the keychain also keeps them off disk in plain text.
+settings.secrets_file: .local.toml file
+settings.secrets_keychain: System keychain
 settings.theme: Theme
 settings.theme_cyber: Cyber glass
 settings.theme_description: The colours of the window.

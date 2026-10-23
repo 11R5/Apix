@@ -49,6 +49,7 @@ fn main() {
             let embedded_fonts = fonts::register(cx);
             let settings = settings::Settings::load();
             i18n::set(settings.language_code());
+            apix_core::secrets::use_keychain(settings.secrets_in_keychain);
             let palette = Palette::new(Variant::chosen(&settings));
             theme::apply(&palette, embedded_fonts, cx);
             workspace::bind_keys(cx);

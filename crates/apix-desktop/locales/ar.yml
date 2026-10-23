@@ -136,7 +136,7 @@ chips.scope.collection: المجموعة «%{name}»
 chips.scope.environment: البيئة «%{name}»
 chips.scope.environment_of: البيئة «%{name}» في «%{collection}»
 chips.scope.project: المشروع «%{name}»
-chips.secret_scope: "%{scope} · سري (.local.toml)"
+chips.secret_scope: "%{scope} · سري، على هذا الحاسوب فقط"
 chips.set_for_run: تعيين لهذا التشغيل
 collection.choose_folder: اختيار مجلد…
 collection.create: إنشاء
@@ -193,6 +193,7 @@ env.error.name_clash: ستحمل بيئتان الاسم %{name}.
 env.error.needs_name: تحتاج البيئة إلى اسم.
 env.hint.dynamic: انقر على اسم لنسخه. كل استخدام يعطي قيمة جديدة، والمتغير الذي تعرّفه بالاسم نفسه له الأولوية.
 env.hint.environment: تبقى الأسرار على هذا الكمبيوتر في %{name}.local.toml، الذي يتجاهله git.
+env.hint.environment_keychain: تبقى القيم السرية على هذا الحاسوب في سلسلة مفاتيح النظام، ولا يراها git أبدًا.
 env.hint.shared: تنطبق المتغيرات المشتركة على كل بيئة، وقيمة البيئة لها الأولوية.
 env.none: بلا بيئة
 env.placeholder.name: الاسم
@@ -200,6 +201,9 @@ env.placeholder.new_environment: بيئة جديدة…
 env.placeholder.value: القيمة
 env.secret: سري
 env.secret_tooltip: يُحفظ على هذا الكمبيوتر فقط، في ملف .local.toml
+env.secret_tooltip_keychain: محفوظ على هذا الحاسوب فقط، في سلسلة مفاتيح النظام
+env.secrets_moved_file: "نُقلت القيم السرية إلى ملفات .local.toml (عدد البيئات: %{count})."
+env.secrets_moved_keychain: "نُقلت القيم السرية إلى سلسلة مفاتيح النظام (عدد البيئات: %{count})."
 env.section.built_in: مدمجة
 env.section.collection_only: "%{name} فقط"
 env.section.environments: البيئات
@@ -404,6 +408,10 @@ settings.history: السجل
 settings.history_description: احفظ كل طلب مُرسل مع استجابته على هذا الحاسوب (Ctrl+H).
 settings.language: اللغة
 settings.language_description: لغة القوائم والأزرار والرسائل. يُطبَّق التغيير فورًا.
+settings.secrets: القيم السرية للبيئات
+settings.secrets_description: مكان حفظ القيم السرية للبيئات على هذا الحاسوب. كلاهما يبقى خارج git، وسلسلة المفاتيح لا تتركها على القرص نصًا واضحًا.
+settings.secrets_file: ملف .local.toml
+settings.secrets_keychain: سلسلة مفاتيح النظام
 settings.theme: السمة
 settings.theme_cyber: زجاج سيبراني
 settings.theme_description: ألوان النافذة.

@@ -136,7 +136,7 @@ chips.scope.collection: “%{name}” koleksiyonu
 chips.scope.environment: “%{name}” ortamı
 chips.scope.environment_of: “%{collection}” içindeki “%{name}” ortamı
 chips.scope.project: “%{name}” projesi
-chips.secret_scope: "%{scope} · gizli (.local.toml)"
+chips.secret_scope: "%{scope} · gizli, yalnızca bu bilgisayarda"
 chips.set_for_run: Bu çalıştırma için ayarla
 collection.choose_folder: Klasör seç…
 collection.create: Oluştur
@@ -193,6 +193,7 @@ env.error.name_clash: İki ortam %{name} adını alacak.
 env.error.needs_name: Ortamın bir adı olmalı.
 env.hint.dynamic: Kopyalamak için bir ada tıklayın. Her kullanımda yeni bir değer üretilir; aynı adla tanımladığınız bir değişken önceliklidir.
 env.hint.environment: Gizli değerler bu bilgisayarda, git'in yok saydığı %{name}.local.toml dosyasında kalır.
+env.hint.environment_keychain: Gizli değerler bu bilgisayarda, sistem anahtarlığında kalır; git onları hiç görmez.
 env.hint.shared: Paylaşılan değişkenler her ortamda geçerlidir; ortamdaki değer önceliklidir.
 env.none: Ortam yok
 env.placeholder.name: ad
@@ -200,6 +201,9 @@ env.placeholder.new_environment: Yeni ortam…
 env.placeholder.value: değer
 env.secret: Gizli
 env.secret_tooltip: Yalnızca bu bilgisayarda, .local.toml dosyasına kaydedilir
+env.secret_tooltip_keychain: Yalnızca bu bilgisayarda, sistem anahtarlığında saklanır
+env.secrets_moved_file: "Gizli değerler .local.toml dosyalarına taşındı (ortam sayısı: %{count})."
+env.secrets_moved_keychain: "Gizli değerler sistem anahtarlığına taşındı (ortam sayısı: %{count})."
 env.section.built_in: Yerleşik
 env.section.collection_only: "Yalnızca %{name}"
 env.section.environments: Ortamlar
@@ -404,6 +408,10 @@ settings.history: Geçmiş
 settings.history_description: Gönderilen her isteği yanıtıyla birlikte bu bilgisayarda sakla (Ctrl+H).
 settings.language: Dil
 settings.language_description: Menülerin, düğmelerin ve iletilerin dili. Hemen değişir.
+settings.secrets: Ortam gizli değerleri
+settings.secrets_description: Gizli ortam değerlerinin bu bilgisayarda nerede tutulacağı. İkisi de git'e girmez; anahtarlık ayrıca onları diskte düz metin olarak bırakmaz.
+settings.secrets_file: .local.toml dosyası
+settings.secrets_keychain: Sistem anahtarlığı
 settings.theme: Tema
 settings.theme_cyber: Siber cam
 settings.theme_description: Pencerenin renkleri.

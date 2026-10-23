@@ -136,7 +136,7 @@ chips.scope.collection: Collection « %{name} »
 chips.scope.environment: Environnement « %{name} »
 chips.scope.environment_of: Environnement « %{name} » de « %{collection} »
 chips.scope.project: Projet « %{name} »
-chips.secret_scope: "%{scope} · secrète (.local.toml)"
+chips.secret_scope: "%{scope} · secrète, uniquement sur cet ordinateur"
 chips.set_for_run: Définir pour cette exécution
 collection.choose_folder: Choisir un dossier…
 collection.create: Créer
@@ -193,6 +193,7 @@ env.error.name_clash: Deux environnements porteraient le nom %{name}.
 env.error.needs_name: L'environnement doit avoir un nom.
 env.hint.dynamic: Cliquez sur un nom pour le copier. Chaque utilisation donne une nouvelle valeur ; une variable que vous définissez avec le même nom l'emporte.
 env.hint.environment: Les secrets restent sur cet ordinateur dans %{name}.local.toml, ignoré par git.
+env.hint.environment_keychain: Les valeurs secrètes restent sur cet ordinateur, dans le trousseau du système ; git ne les voit jamais.
 env.hint.shared: Les variables partagées s'appliquent dans tous les environnements ; la valeur d'un environnement l'emporte.
 env.none: Aucun environnement
 env.placeholder.name: nom
@@ -200,6 +201,9 @@ env.placeholder.new_environment: Nouvel environnement…
 env.placeholder.value: valeur
 env.secret: Secret
 env.secret_tooltip: Enregistré uniquement sur cet ordinateur, dans le fichier .local.toml
+env.secret_tooltip_keychain: Enregistré uniquement sur cet ordinateur, dans le trousseau du système
+env.secrets_moved_file: "Valeurs secrètes déplacées vers des fichiers .local.toml (environnements : %{count})."
+env.secrets_moved_keychain: "Valeurs secrètes déplacées vers le trousseau du système (environnements : %{count})."
 env.section.built_in: Intégrées
 env.section.collection_only: "%{name} uniquement"
 env.section.environments: Environnements
@@ -404,6 +408,10 @@ settings.history: Historique
 settings.history_description: Conserver chaque requête envoyée avec sa réponse sur cet ordinateur (Ctrl+H).
 settings.language: Langue
 settings.language_description: La langue des menus, boutons et messages. S'applique immédiatement.
+settings.secrets: Valeurs secrètes des environnements
+settings.secrets_description: Où les valeurs secrètes des environnements sont conservées sur cet ordinateur. Les deux restent hors de git ; le trousseau évite en plus de les garder en clair sur le disque.
+settings.secrets_file: Fichier .local.toml
+settings.secrets_keychain: Trousseau du système
 settings.theme: Thème
 settings.theme_cyber: Cyber glass
 settings.theme_description: Les couleurs de la fenêtre.

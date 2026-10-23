@@ -1,4 +1,4 @@
-<!-- translated from en/technical.md sha256:c51811d1a6028c64 -->
+<!-- translated from en/technical.md sha256:1533e793eade70e8 -->
 
 # Teknik notlar
 
@@ -72,10 +72,10 @@ Masaüstü uygulamasının tam bir release derlemesi birkaç dakika sürer.
 
 | Dosya | İçerik |
 |---|---|
-| `<config>/Apix/settings.toml` | dil, tema, otomatik kilit süresi |
+| `<config>/Apix/settings.toml` | dil, tema, otomatik kilit süresi, geçmişin açık ya da kapalı olması, ortam gizli değerlerinin nereye yazılacağı |
 | `<config>/Apix/state.toml` | son açılan koleksiyonlar, koleksiyon başına seçilen ortam |
 | `<config>/Apix/cookies.json` | çerez kavanozu (oturum çerezleri kalıcı değildir) |
-| İşletim sistemi kimlik bilgisi deposu, `Apix` servisi | şifreli koleksiyonların hatırlanan parolaları, her biri için bir `vault:<klasör>` kaydı, yalnızca istenirse |
+| İşletim sistemi kimlik bilgisi deposu, `Apix` servisi | yalnızca istenirse: şifreli koleksiyonların hatırlanan parolaları (`vault:<klasör>`) ve ortam gizli değerleri (`env:<kimlik>`, uzun değerler için ayrıca `env:<kimlik>#1`, …) |
 | `<config>/Apix/history/` | gönderilen istekler (`{{değişkenler}}` çözülmeden) ve yanıtları: `index.jsonl`, her kayıt için bir `<id>.json` ve `<id>.body`; son 300 kayıt, gövdeler 256 KB'ta kesilir |
 
 `<config>`, Windows'ta `%APPDATA%`, macOS'te `~/Library/Application Support`,
@@ -155,7 +155,7 @@ patch ile devreye alır. Upstream crate düzeltildiğinde kaldırılabilir.
 
 | Crate | Kapsananlar |
 |---|---|
-| apix-core | model ve dosya formatı için gidiş-dönüş (round trip) testleri, değişkenler, AWS test paketine, RFC 7616'ya (Digest), RFC 7636'ya (PKCE) ve OAuth 1.0 örneğine karşı imzalama |
+| apix-core | model ve dosya formatı için gidiş-dönüş (round trip) testleri, değişkenler, anahtarlıktaki ortam gizli değerleri (kimlik bilgisi deposu yoksa atlanır), AWS test paketine, RFC 7616'ya (Digest), RFC 7636'ya (PKCE) ve OAuth 1.0 örneğine karşı imzalama |
 | apix-http | istek oluşturma, her gövde türü, OAuth 2.0, Digest, AWS ve OAuth 1.0 için yerel bir sunucu, ağ izi |
 | apix-codegen | bash, cmd ve PowerShell için kabuk tırnaklama; curl yapıştırma; gidiş-dönüş testleri; her dilde URL, başlıklar, gövdeler, dize kaçışları ve ayarlar |
 | apix-import | Postman v2.0/v2.1 fixture'ları |

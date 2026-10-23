@@ -38,7 +38,7 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [x] Environment switcher in the sidebar, remembered per collection, with `*.local.toml` secrets; red line for prod
 - [x] Variables dialog (Ctrl+E): edit shared variables and environments, add, rename and delete environments, secrets kept in `*.local.toml` (added to `.gitignore` automatically)
 - [x] Dynamic variables: `{{$guid}}`, `{{$timestamp}}`, `{{$isoTimestamp}}`, `{{$randomEmail}}` and 24 more, a fresh value for every use
-- [ ] Secrets in the OS keychain
+- [x] Secrets in the OS keychain (done in M4): Settings › Environment secrets; `.local.toml` then keeps only the id of a keychain entry, read by the app and the CLI alike
 - [x] Projects (`apix-project.toml`): New project / New collection / Open from the sidebar menu, recent items, project-wide environments layered under collection ones, grouping as Project → Environment → Collections, pin collections to environments
 - [ ] Projects: colours, drag a collection into a project, prod confirmation dialog
 - [x] Copy as bash `curl`, cmd `curl.exe` or PowerShell `Invoke-RestMethod` (URL bar menu, sidebar, `apix shell`); pasting a `curl` command fills the request

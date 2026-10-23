@@ -136,7 +136,7 @@ chips.scope.collection: Colección “%{name}”
 chips.scope.environment: Entorno “%{name}”
 chips.scope.environment_of: Entorno “%{name}” de “%{collection}”
 chips.scope.project: Proyecto “%{name}”
-chips.secret_scope: "%{scope} · secreto (.local.toml)"
+chips.secret_scope: "%{scope} · secreto, solo en este equipo"
 chips.set_for_run: Definir para esta ejecución
 collection.choose_folder: Elegir carpeta…
 collection.create: Crear
@@ -193,6 +193,7 @@ env.error.name_clash: Dos entornos se llamarían %{name}.
 env.error.needs_name: El entorno necesita un nombre.
 env.hint.dynamic: Haz clic en un nombre para copiarlo. Cada uso obtiene un valor nuevo; una variable que definas con el mismo nombre tiene prioridad.
 env.hint.environment: Los secretos se quedan en este equipo en %{name}.local.toml, que git ignora.
+env.hint.environment_keychain: Los valores secretos se quedan en este equipo, en el llavero del sistema; git nunca los ve.
 env.hint.shared: Las variables compartidas se aplican en todos los entornos; el valor de un entorno tiene prioridad.
 env.none: Sin entorno
 env.placeholder.name: nombre
@@ -200,6 +201,9 @@ env.placeholder.new_environment: Nuevo entorno…
 env.placeholder.value: valor
 env.secret: Secreto
 env.secret_tooltip: Se guarda solo en este equipo, en el archivo .local.toml
+env.secret_tooltip_keychain: Guardado solo en este equipo, en el llavero del sistema
+env.secrets_moved_file: "Valores secretos movidos a archivos .local.toml (entornos: %{count})."
+env.secrets_moved_keychain: "Valores secretos movidos al llavero del sistema (entornos: %{count})."
 env.section.built_in: Integradas
 env.section.collection_only: "Solo %{name}"
 env.section.environments: Entornos
@@ -404,6 +408,10 @@ settings.history: Historial
 settings.history_description: Guardar cada petición enviada con su respuesta en este equipo (Ctrl+H).
 settings.language: Idioma
 settings.language_description: El idioma de los menús, botones y mensajes. Cambia al instante.
+settings.secrets: Valores secretos de los entornos
+settings.secrets_description: Dónde se guardan en este equipo los valores secretos de los entornos. Ambos quedan fuera de git; el llavero además no los deja en texto plano en el disco.
+settings.secrets_file: Archivo .local.toml
+settings.secrets_keychain: Llavero del sistema
 settings.theme: Tema
 settings.theme_cyber: Cyber glass
 settings.theme_description: Los colores de la ventana.

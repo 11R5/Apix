@@ -1,6 +1,7 @@
 //! The variables dialog: edit shared variables (`[vars]` of the project and
 //! its collections) and environments without leaving Apix. Secrets go to
-//! `<name>.local.toml`, which git ignores. Nothing is written until Save,
+//! `<name>.local.toml`, which git ignores, or to the system keychain when
+//! Settings say so. Nothing is written until Save,
 //! so Cancel (or Esc) throws every change away, renames and deletes included.
 
 use std::collections::BTreeSet;
@@ -12,6 +13,7 @@ use apix_core::{Collection, Project};
 use gpui_kit::component::button::{Button, ButtonVariants as _};
 use gpui_kit::component::checkbox::Checkbox;
 use gpui_kit::component::input::{Input, InputEvent, InputState};
+use gpui_kit::component::notification::Notification;
 use gpui_kit::component::{ActiveTheme as _, IconName, Sizable, WindowExt as _, h_flex, v_flex};
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
@@ -530,7 +532,11 @@ impl EnvEditor {
                         Checkbox::new(("env-secret", ix))
                             .label(tr!("env.secret"))
                             .checked(row.secret)
-                            .tooltip(tr!("env.secret_tooltip"))
+                            .tooltip(if apix_core::secrets::keychain_enabled() {
+                                tr!("env.secret_tooltip_keychain")
+                            } else {
+                                tr!("env.secret_tooltip")
+                            })
                             .on_click(cx.listener(move |this, checked: &bool, window, cx| {
                                 let page = &mut this.pages[this.current];
                                 if let Some(row) = page.rows.as_mut().and_then(|r| r.get_mut(ix)) {
@@ -659,6 +665,11 @@ impl EnvEditor {
 
     fn hint(&self, page: &Page) -> SharedString {
         match &page.target {
+            Target::Environment { root, .. }
+                if apix_core::secrets::keychain_enabled() && !apix_core::vfs::is_virtual(root) =>
+            {
+                tr!("env.hint.environment_keychain")
+            }
             Target::Environment { name, .. } => tr!("env.hint.environment", name = name),
             Target::Dynamic => tr!("env.hint.dynamic"),
             _ => tr!("env.hint.shared"),
@@ -713,6 +724,38 @@ impl Render for EnvEditor {
 }
 
 impl Workspace {
+    /// After Settings › Environment secrets changed: moves the secrets of every
+    /// open environment to the chosen place. Others move when next saved.
+    pub(super) fn move_environment_secrets(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let roots = self
+            .project
+            .iter()
+            .map(|p| p.root.clone())
+            .chain(self.collections.iter().map(|c| c.root.clone()));
+        let mut moved = 0;
+        let mut errors = Vec::new();
+        for root in roots {
+            for name in store::environment_names_at(&root) {
+                match store::move_secrets(&root, &name) {
+                    Ok(true) => moved += 1,
+                    Ok(false) => {}
+                    Err(e) => errors.push(describe(&e)),
+                }
+            }
+        }
+        if moved > 0 {
+            let message = if apix_core::secrets::keychain_enabled() {
+                tr!("env.secrets_moved_keychain", count = moved)
+            } else {
+                tr!("env.secrets_moved_file", count = moved)
+            };
+            window.push_notification(Notification::success(message), cx);
+        }
+        if !errors.is_empty() {
+            self.notify_error(errors.join("\n"), window, cx);
+        }
+    }
+
     /// Opens the variables dialog on the active environment (or the shared variables).
     pub(super) fn open_env_editor(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         let Some(root) = self.workspace_root() else {
@@ -891,6 +934,7 @@ fn write_page(page: &Page, cx: &App) -> Result<Option<(String, String)>, String>
         Target::Environment { root, name } => {
             if page.deleted {
                 if !page.is_new {
+                    store::forget_keychain_secrets(root, name).map_err(err)?;
                     super::vault_ui::discard(&store::environment_files(root, name))?;
                 }
                 return Ok(None);

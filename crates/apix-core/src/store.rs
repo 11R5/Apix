@@ -48,6 +48,8 @@ pub enum StoreError {
     Serialize(#[from] toml::ser::Error),
     #[error("no environment named `{0}`")]
     UnknownEnvironment(String),
+    #[error("{path}: system keychain: {message}")]
+    Keychain { path: PathBuf, message: String },
 }
 
 pub(crate) fn read_toml<T: for<'de> Deserialize<'de>>(path: &Path) -> Result<T, StoreError> {
@@ -212,20 +214,18 @@ pub struct EnvironmentParts {
 }
 
 impl EnvironmentParts {
-    /// Reads `environments/<name>.toml` and `<name>.local.toml`; missing files are empty.
+    /// Reads `environments/<name>.toml` and the secrets (from `<name>.local.toml`
+    /// or the system keychain); missing files are empty.
     pub fn read(root: &Path, name: &str) -> Result<Self, StoreError> {
-        let dir = root.join(ENVIRONMENTS_DIR);
-        let part = |file: String| -> Result<VarMap, StoreError> {
-            let path = dir.join(file);
-            if vfs::is_file(&path) {
-                Ok(read_toml::<Environment>(&path)?.vars)
-            } else {
-                Ok(VarMap::new())
-            }
+        let path = root.join(ENVIRONMENTS_DIR).join(format!("{name}.toml"));
+        let vars = if vfs::is_file(&path) {
+            read_toml::<Environment>(&path)?.vars
+        } else {
+            VarMap::new()
         };
         Ok(Self {
-            vars: part(format!("{name}.toml"))?,
-            secrets: part(format!("{name}{LOCAL_SUFFIX}.toml"))?,
+            vars,
+            secrets: read_secrets(root, name)?,
         })
     }
 
@@ -272,24 +272,145 @@ impl EnvironmentParts {
         out
     }
 
-    /// Writes both files. The secrets file is removed when there are no secrets.
+    /// Writes both files. The secrets go where [`crate::secrets::keychain_enabled`]
+    /// says, and the secrets file is removed when there are no secrets.
     pub fn write(&self, root: &Path, name: &str) -> Result<(), StoreError> {
         save_environment(root, name, &self.vars, false)?;
-        if self.secrets.is_empty() {
-            let local = local_environment_path(root, name);
-            if vfs::is_file(&local) {
-                vfs::remove_file(&local).map_err(io_error(&local))?;
-            }
-        } else {
-            save_environment(root, name, &self.secrets, true)?;
-        }
-        Ok(())
+        write_secrets(root, name, &self.secrets)
     }
 }
 
 fn local_environment_path(root: &Path, name: &str) -> PathBuf {
     root.join(ENVIRONMENTS_DIR)
         .join(format!("{name}{LOCAL_SUFFIX}.toml"))
+}
+
+/// `<name>.local.toml`: the secrets themselves, or, when they are kept in
+/// the system keychain, only the id of their keychain entry.
+#[derive(Default, Serialize, Deserialize)]
+struct LocalFile {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    keychain: Option<String>,
+    #[serde(default, skip_serializing_if = "VarMap::is_empty")]
+    vars: VarMap,
+}
+
+const KEYCHAIN_NOTE: &str = "# The secrets of this environment are kept in the system keychain.\n";
+
+fn keychain_account(id: &str) -> String {
+    format!("env:{id}")
+}
+
+fn read_local_file(path: &Path) -> Result<Option<LocalFile>, StoreError> {
+    if vfs::is_file(path) {
+        read_toml(path).map(Some)
+    } else {
+        Ok(None)
+    }
+}
+
+/// The secrets of an environment, from its `.local.toml` file or the keychain.
+/// A keychain entry that is gone reads as no secrets.
+fn read_secrets(root: &Path, name: &str) -> Result<VarMap, StoreError> {
+    let path = local_environment_path(root, name);
+    let Some(local) = read_local_file(&path)? else {
+        return Ok(VarMap::new());
+    };
+    let Some(id) = local.keychain else {
+        return Ok(local.vars);
+    };
+    let keychain_error = |message: String| StoreError::Keychain {
+        path: path.clone(),
+        message,
+    };
+    match vfs::keychain::load_text(&keychain_account(&id)).map_err(keychain_error)? {
+        Some(text) => toml::from_str::<Environment>(&text)
+            .map(|env| env.vars)
+            .map_err(|e| keychain_error(e.to_string())),
+        None => Ok(VarMap::new()),
+    }
+}
+
+/// Writes the secrets of an environment to the keychain or to its
+/// `.local.toml` file, and cleans up the other place.
+fn write_secrets(root: &Path, name: &str, secrets: &VarMap) -> Result<(), StoreError> {
+    write_secrets_to(root, name, secrets, crate::secrets::keychain_enabled())
+}
+
+fn write_secrets_to(
+    root: &Path,
+    name: &str,
+    secrets: &VarMap,
+    keychain: bool,
+) -> Result<(), StoreError> {
+    let path = local_environment_path(root, name);
+    let old_id = read_local_file(&path)
+        .ok()
+        .flatten()
+        .and_then(|l| l.keychain);
+    let keychain_error = |message: String| StoreError::Keychain {
+        path: path.clone(),
+        message,
+    };
+    if secrets.is_empty() {
+        if vfs::is_file(&path) {
+            vfs::remove_file(&path).map_err(io_error(&path))?;
+        }
+    } else if keychain && !vfs::is_virtual(root) {
+        let id = old_id.clone().unwrap_or_else(crate::secrets::new_id);
+        let text = toml::to_string_pretty(&EnvironmentFile { vars: secrets })?;
+        vfs::keychain::save_text(&keychain_account(&id), &text).map_err(keychain_error)?;
+        let marker = LocalFile {
+            keychain: Some(id),
+            vars: VarMap::new(),
+        };
+        vfs::create_dir_all(&root.join(ENVIRONMENTS_DIR)).map_err(io_error(&path))?;
+        let text = format!("{KEYCHAIN_NOTE}{}", toml::to_string_pretty(&marker)?);
+        vfs::write(&path, text).map_err(io_error(&path))?;
+        ensure_local_ignored(root)?;
+        return Ok(());
+    } else {
+        save_environment(root, name, secrets, true)?;
+    }
+    if let Some(id) = old_id {
+        vfs::keychain::forget_text(&keychain_account(&id)).map_err(keychain_error)?;
+    }
+    Ok(())
+}
+
+/// Removes an environment's secrets from the keychain, if they are kept
+/// there. Call it before deleting the environment's files.
+pub fn forget_keychain_secrets(root: &Path, name: &str) -> Result<(), StoreError> {
+    let path = local_environment_path(root, name);
+    if let Some(id) = read_local_file(&path)?.and_then(|l| l.keychain) {
+        vfs::keychain::forget_text(&keychain_account(&id)).map_err(|message| {
+            StoreError::Keychain {
+                path: path.clone(),
+                message,
+            }
+        })?;
+    }
+    Ok(())
+}
+
+/// Moves an environment's secrets to where [`crate::secrets::keychain_enabled`]
+/// says they belong now. Returns whether anything moved.
+pub fn move_secrets(root: &Path, name: &str) -> Result<bool, StoreError> {
+    let secrets = read_secrets(root, name)?;
+    let wanted = crate::secrets::keychain_enabled() && !vfs::is_virtual(root);
+    if secrets.is_empty() || secrets_in_keychain(root, name) == wanted {
+        return Ok(false);
+    }
+    write_secrets(root, name, &secrets)?;
+    Ok(true)
+}
+
+/// Whether the secrets of an environment are kept in the system keychain.
+pub fn secrets_in_keychain(root: &Path, name: &str) -> bool {
+    read_local_file(&local_environment_path(root, name))
+        .ok()
+        .flatten()
+        .is_some_and(|l| l.keychain.is_some())
 }
 
 /// The files of an environment that exist, shared file first.
@@ -420,20 +541,12 @@ pub fn environment_names_at(root: &Path) -> Vec<String> {
 /// `<root>/environments/<name>.toml` with its `.local.toml` secrets on top,
 /// or `None` when neither file exists.
 pub fn environment_vars_at(root: &Path, name: &str) -> Result<Option<VarMap>, StoreError> {
-    let dir = root.join(ENVIRONMENTS_DIR);
-    let base = dir.join(format!("{name}.toml"));
-    let local = dir.join(format!("{name}{LOCAL_SUFFIX}.toml"));
-    if !vfs::is_file(&base) && !vfs::is_file(&local) {
+    if environment_files(root, name).is_empty() {
         return Ok(None);
     }
-    let mut vars = VarMap::new();
-    for path in [base, local] {
-        if vfs::is_file(&path) {
-            let env: Environment = read_toml(&path)?;
-            vars.extend(env.vars);
-        }
-    }
-    Ok(Some(vars))
+    let mut parts = EnvironmentParts::read(root, name)?;
+    parts.vars.append(&mut parts.secrets);
+    Ok(Some(parts.vars))
 }
 
 fn collect_requests(dir: &Path, out: &mut Vec<PathBuf>) {
@@ -979,6 +1092,66 @@ mod tests {
         assert_eq!(environment_names_at(&root), ["dev", "stage"]);
         assert_eq!(environment_files(&root, "stage").len(), 2);
         assert!(rename_environment(&root, "stage", "dev").is_err());
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    /// Talks to the real credential store and cleans up after itself.
+    /// Skipped where no store is available.
+    #[test]
+    fn keeps_secrets_in_the_keychain_and_moves_them_back() {
+        let root = temp_collection("keychain");
+        let secrets = VarMap::from([("token".into(), "s3cr3t".into())]);
+        let parts = EnvironmentParts {
+            vars: VarMap::from([("host".into(), "localhost".into())]),
+            secrets: secrets.clone(),
+        };
+        save_environment(&root, "dev", &parts.vars, false).unwrap();
+        if write_secrets_to(&root, "dev", &secrets, true).is_err() {
+            eprintln!("no credential store here; skipped");
+            fs::remove_dir_all(root).unwrap();
+            return;
+        }
+        let local = root.join("environments/dev.local.toml");
+        let marker = fs::read_to_string(&local).unwrap();
+        assert!(marker.contains("keychain = ") && !marker.contains("s3cr3t"));
+        assert!(secrets_in_keychain(&root, "dev"));
+        assert_eq!(EnvironmentParts::read(&root, "dev").unwrap(), parts);
+        assert_eq!(
+            environment_vars_at(&root, "dev").unwrap().unwrap()["token"],
+            "s3cr3t"
+        );
+
+        // Renaming keeps the entry: the id travels with the file.
+        rename_environment(&root, "dev", "Stage").unwrap();
+        assert_eq!(
+            EnvironmentParts::read(&root, "stage").unwrap().secrets,
+            secrets
+        );
+
+        // Back to the file: the keychain entry goes away.
+        let id: LocalFile = toml::from_str(
+            &fs::read_to_string(root.join("environments/stage.local.toml")).unwrap(),
+        )
+        .unwrap();
+        let account = keychain_account(&id.keychain.unwrap());
+        write_secrets_to(&root, "stage", &secrets, false).unwrap();
+        assert!(!secrets_in_keychain(&root, "stage"));
+        assert!(
+            fs::read_to_string(root.join("environments/stage.local.toml"))
+                .unwrap()
+                .contains("s3cr3t")
+        );
+        assert_eq!(vfs::keychain::load_text(&account).unwrap(), None);
+
+        // And forgetting before a delete.
+        write_secrets_to(&root, "stage", &secrets, true).unwrap();
+        forget_keychain_secrets(&root, "stage").unwrap();
+        assert!(
+            EnvironmentParts::read(&root, "stage")
+                .unwrap()
+                .secrets
+                .is_empty()
+        );
         fs::remove_dir_all(root).unwrap();
     }
 
