@@ -425,6 +425,9 @@ response.tab.raw: Ham
 response.tab.tests: Testler
 response.tab.tests_count: "Testler %{passed}/%{total}"
 scripts.around: "%{hint} Bundan önce %{count} klasör ya da koleksiyon scripti çalışır."
+scripts.asserts: Doğrulamalar
+scripts.asserts_count: "Doğrulamalar %{count}"
+scripts.asserts_hint: "Kod yazmadan doğrulama, testlerden sonra çalışır: status, time (ms), size, body, body.users[0].id ya da header.Content-Type bir değerle karşılaştırılır ({{değişkenler}} kullanılabilir)."
 scripts.error: "Script hatası: %{error}"
 scripts.pre: İstek öncesi
 scripts.pre_error: "İstek öncesi script hata verdi, istek gönderilmedi: %{error}"

@@ -815,6 +815,106 @@
     return response;
   }
 
+  // ------------------------------------------------- checks without code
+
+  // `users[0].id` or `data["a b"].x` inside a parsed body.
+  function walk(value, path) {
+    const keys = [];
+    path.replace(/\[(\d+)\]|\["([^"]*)"\]|\['([^']*)'\]|([^.[\]]+)/g, (m, index, dq, sq, name) => {
+      keys.push(index !== undefined ? Number(index) : dq !== undefined ? dq : sq !== undefined ? sq : name);
+      return m;
+    });
+    let cur = value;
+    for (const key of keys) {
+      if (cur === null || cur === undefined) return undefined;
+      cur = cur[key];
+    }
+    return cur;
+  }
+
+  function assertionTarget(target) {
+    if (!res) throw new Error("there is no response");
+    if (target === "status") return res.code;
+    if (target === "time") return res.responseTime;
+    if (target === "size") return res.responseSize;
+    if (target === "body") return res.body;
+    const header = /^headers?\.(.+)$/i.exec(target);
+    if (header) return propertyList(res.headers, true).get(header[1]);
+    const inBody = /^body(?:\.|(?=\[))(.+)$/.exec(target);
+    if (inBody) {
+      let parsed;
+      try {
+        parsed = JSON.parse(res.body);
+      } catch (e) {
+        throw new Error("the body is not JSON");
+      }
+      return walk(parsed, inBody[1]);
+    }
+    throw new Error("unknown target " + show(target) + "; use status, time, size, body, body.<path> or header.<name>");
+  }
+
+  global.__apix_assert = function (label, target, op, value) {
+    runTest(label, () => {
+      const actual = assertionTarget(target);
+      const filled = replaceIn(value);
+      let wanted = filled;
+      try {
+        wanted = JSON.parse(filled);
+      } catch (e) {}
+      const same = deepEqual(actual, wanted) || (actual !== null && typeof actual !== "object" && String(actual) === String(wanted));
+      const number = (v) => (typeof v === "number" ? v : v === "" || v === null ? NaN : Number(v));
+      const compare = (test) => {
+        const a = number(actual);
+        const b = number(wanted);
+        if (a !== a || b !== b) throw AssertionError("expected " + show(actual) + " and " + show(wanted) + " to be numbers");
+        return test(a, b);
+      };
+      const has = () => {
+        if (typeof actual === "string") return actual.indexOf(String(wanted)) >= 0;
+        if (Array.isArray(actual)) return actual.some((x) => deepEqual(x, wanted) || String(x) === String(wanted));
+        if (actual && typeof actual === "object") return own(actual, String(wanted));
+        return false;
+      };
+      const pattern = () => {
+        const m = /^\/(.*)\/([a-z]*)$/.exec(filled);
+        return m ? new RegExp(m[1], m[2]) : new RegExp(filled);
+      };
+      const checks = {
+        "==": () => same,
+        "!=": () => !same,
+        ">": () => compare((a, b) => a > b),
+        ">=": () => compare((a, b) => a >= b),
+        "<": () => compare((a, b) => a < b),
+        "<=": () => compare((a, b) => a <= b),
+        contains: has,
+        "not contains": () => !has(),
+        exists: () => actual !== undefined,
+        "not exists": () => actual === undefined,
+        matches: () => pattern().test(String(actual)),
+        is: () => typeName(actual) === String(wanted).toLowerCase() || (String(wanted).toLowerCase() === "integer" && Number.isInteger(actual)),
+      };
+      if (!checks[op]) throw new Error("unknown check " + show(op));
+      if (!checks[op]()) {
+        const words = {
+          "==": "equal",
+          "!=": "not equal",
+          ">": "be above",
+          ">=": "be at least",
+          "<": "be below",
+          "<=": "be at most",
+          contains: "contain",
+          "not contains": "not contain",
+          exists: "exist",
+          "not exists": "not exist",
+          matches: "match",
+          is: "be",
+        };
+        const tail = op === "exists" || op === "not exists" ? "" : " " + (op === "matches" ? filled : show(wanted));
+        throw AssertionError("expected " + show(actual) + " to " + words[op] + tail);
+      }
+    });
+  };
+
   // ------------------------------------------------------------ sendRequest
 
   // A Postman request description (a URL, or { url, method, header, body })

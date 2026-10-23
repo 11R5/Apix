@@ -737,8 +737,10 @@ async fn exchange(
         &response.body,
         response.timing.total,
     );
+    let mut tests = chain(path, root, Event::Test);
+    tests.extend(apix_script::assertions_script(&done.pre.request.asserts));
     done.tests = run_scripts(
-        &chain(path, root, Event::Test),
+        &tests,
         &apix_script::Input {
             event: Event::Test,
             request: &done.pre.request,

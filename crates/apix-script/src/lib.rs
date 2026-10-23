@@ -285,6 +285,26 @@ fn from_js(mut request: Request, js: JsRequest) -> Request {
     request
 }
 
+/// The request's `[[assert]]` checks as one more test script, run after
+/// the others; each check is a `pm.test` named like `status == 200`.
+pub fn assertions_script(asserts: &[apix_core::Assertion]) -> Option<ScriptFile> {
+    let lines: Vec<String> = asserts
+        .iter()
+        .filter(|a| a.enabled && !a.target.trim().is_empty())
+        .map(|a| {
+            let args = (a.label(), a.target.trim(), a.op.as_str(), &a.value);
+            format!(
+                "__apix_assert(...{});",
+                serde_json::to_string(&args).unwrap_or_default()
+            )
+        })
+        .collect();
+    (!lines.is_empty()).then(|| ScriptFile {
+        path: "assertions".into(),
+        source: lines.join("\n"),
+    })
+}
+
 // ------------------------------------------------------------- natives
 
 fn from_hex(text: &str) -> Vec<u8> {
@@ -902,5 +922,75 @@ mod tests {
         assert_eq!(get("tv4"), "false:the value should have at least 3 items");
         assert_eq!(get("legacy"), "true");
         assert_eq!(get("missing"), "require('fs'): not built into ");
+    }
+
+    #[test]
+    fn assertions_run_as_tests() {
+        use apix_core::{AssertOp, Assertion};
+        let mut off = Assertion::new("status", AssertOp::Eq, "500");
+        off.enabled = false;
+        let asserts = [
+            Assertion::new("status", AssertOp::Eq, "200"),
+            Assertion::new("time", AssertOp::Lt, "300"),
+            Assertion::new("body.users[0].name", AssertOp::Eq, "Ada"),
+            Assertion::new("body.users", AssertOp::Is, "array"),
+            Assertion::new("body.total", AssertOp::Ge, "{{min}}"),
+            Assertion::new("header.content-type", AssertOp::Contains, "json"),
+            Assertion::new("body.missing", AssertOp::NotExists, ""),
+            Assertion::new("body.users[0].name", AssertOp::Matches, "/^a/i"),
+            Assertion::new("status", AssertOp::Eq, "201"),
+            Assertion::new("nonsense", AssertOp::Eq, "1"),
+            off,
+        ];
+        let script = assertions_script(&asserts).unwrap();
+        let mut scopes = scopes();
+        scopes.environment.insert("min".into(), "1".into());
+        let vars = ScriptVars::default();
+        let request = Request::new(Method::Get, "x");
+        let response = json_response();
+        let out = run(
+            &[script],
+            &Input {
+                event: Event::Test,
+                request: &request,
+                response: Some(&response),
+                scopes: &scopes,
+                vars: &vars,
+                info: Info::default(),
+                sender: None,
+            },
+        );
+        assert_eq!(out.error, None);
+        let results: Vec<(&str, bool)> = out
+            .tests
+            .iter()
+            .map(|t| (t.name.as_str(), t.passed))
+            .collect();
+        assert_eq!(
+            results,
+            [
+                ("status == 200", true),
+                ("time < 300", true),
+                ("body.users[0].name == Ada", true),
+                ("body.users is array", true),
+                ("body.total >= {{min}}", true),
+                ("header.content-type contains json", true),
+                ("body.missing not exists", true),
+                ("body.users[0].name matches /^a/i", true),
+                ("status == 201", false),
+                ("nonsense == 1", false),
+            ]
+        );
+        assert_eq!(
+            out.tests[8].error.as_deref(),
+            Some("expected 200 to equal 201")
+        );
+        assert!(
+            out.tests[9]
+                .error
+                .as_deref()
+                .unwrap()
+                .starts_with("unknown target")
+        );
     }
 }

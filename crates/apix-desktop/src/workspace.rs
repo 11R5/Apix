@@ -638,6 +638,9 @@ impl Workspace {
         self.settings_editor
             .update(cx, |editor, cx| editor.set_settings(&settings, window, cx));
         self.refresh_inherited_settings(cx);
+        let asserts = request.asserts.clone();
+        self.script_editor
+            .update(cx, |editor, cx| editor.set_asserts(&asserts, window, cx));
         cx.notify();
     }
 
@@ -678,6 +681,7 @@ impl Workspace {
             .collect();
         request.body = self.body_editor.read(cx).body(cx);
         request.settings = self.settings_editor.read(cx).settings(cx);
+        request.asserts = self.script_editor.read(cx).asserts(cx);
         request
     }
 
@@ -1121,7 +1125,8 @@ impl Workspace {
             tr!("request.tab.settings_set")
         };
 
-        let scripts_label = if self.script_editor.read(cx).scripts(cx).is_empty() {
+        let editor = self.script_editor.read(cx);
+        let scripts_label = if editor.scripts(cx).is_empty() && editor.asserts(cx).is_empty() {
             tr!("request.tab.scripts")
         } else {
             tr!("request.tab.scripts_set")

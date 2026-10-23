@@ -425,6 +425,9 @@ response.tab.raw: خام
 response.tab.tests: الاختبارات
 response.tab.tests_count: "الاختبارات %{passed}/%{total}"
 scripts.around: "%{hint} يعمل قبله %{count} من سكربتات المجلدات أو المجموعة."
+scripts.asserts: الفحوص
+scripts.asserts_count: "الفحوص %{count}"
+scripts.asserts_hint: "فحوص بلا كود تعمل بعد الاختبارات: تُقارن status و time (مللي ثانية) و size و body و body.users[0].id أو header.Content-Type بقيمة (يُسمح بـ {{المتغيرات}})."
 scripts.error: "خطأ في السكربت: %{error}"
 scripts.pre: قبل الطلب
 scripts.pre_error: "فشل سكربت ما قبل الطلب، فلم يُرسل الطلب: %{error}"

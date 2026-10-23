@@ -425,6 +425,9 @@ response.tab.raw: 原始
 response.tab.tests: 测试
 response.tab.tests_count: "测试 %{passed}/%{total}"
 scripts.around: "%{hint} 在它之前会运行 %{count} 个文件夹或集合脚本。"
+scripts.asserts: 检查
+scripts.asserts_count: "检查 %{count}"
+scripts.asserts_hint: "无需代码的检查，在测试之后运行：将 status、time（毫秒）、size、body、body.users[0].id 或 header.Content-Type 与一个值比较（可用 {{变量}}）。"
 scripts.error: "脚本错误：%{error}"
 scripts.pre: 请求前
 scripts.pre_error: "请求前脚本出错，请求未发送：%{error}"

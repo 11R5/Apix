@@ -425,6 +425,9 @@ response.tab.raw: 生データ
 response.tab.tests: テスト
 response.tab.tests_count: "テスト %{passed}/%{total}"
 scripts.around: "%{hint} この前にフォルダーまたはコレクションのスクリプトが %{count} 個実行されます。"
+scripts.asserts: チェック
+scripts.asserts_count: "チェック %{count}"
+scripts.asserts_hint: "コード不要のチェック。テストの後に実行されます: status、time (ms)、size、body、body.users[0].id、header.Content-Type を値と比較します（{{変数}} 可）。"
 scripts.error: "スクリプトエラー: %{error}"
 scripts.pre: リクエスト前
 scripts.pre_error: "リクエスト前スクリプトが失敗したため、リクエストは送信されませんでした: %{error}"

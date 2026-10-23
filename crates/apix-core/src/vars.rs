@@ -234,6 +234,8 @@ impl Request {
                 client_key: self.settings.client_key.as_deref().map(&mut s),
                 ..self.settings.clone()
             },
+            // Filled in when they run, with what scripts set by then.
+            asserts: self.asserts.clone(),
         };
         Resolved { request, missing }
     }

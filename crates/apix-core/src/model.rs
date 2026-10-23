@@ -543,6 +543,117 @@ pub struct Request {
     pub auth: Auth,
     #[serde(default, skip_serializing_if = "RequestSettings::is_inherit")]
     pub settings: RequestSettings,
+    /// Checks on the response written without code, run after the test scripts.
+    #[serde(default, rename = "assert", skip_serializing_if = "Vec::is_empty")]
+    pub asserts: Vec<Assertion>,
+}
+
+/// A check on the response without code, like `status == 200` or
+/// `body.users[0].id exists`. Stored as `[[assert]]` in the request file.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Assertion {
+    /// `status`, `time` (ms), `size` (bytes), `body`, `body.<path>` (JSON,
+    /// like `body.users[0].id`) or `header.<name>`.
+    pub target: String,
+    pub op: AssertOp,
+    /// Compared as JSON when it parses as JSON (`200`, `true`, `"x"`), else
+    /// as text; `{{variables}}` are filled in.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub value: String,
+    #[serde(default = "default_true", skip_serializing_if = "is_true")]
+    pub enabled: bool,
+}
+
+/// How an [`Assertion`] compares.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+pub enum AssertOp {
+    #[default]
+    #[serde(rename = "==")]
+    Eq,
+    #[serde(rename = "!=")]
+    Ne,
+    #[serde(rename = ">")]
+    Gt,
+    #[serde(rename = ">=")]
+    Ge,
+    #[serde(rename = "<")]
+    Lt,
+    #[serde(rename = "<=")]
+    Le,
+    #[serde(rename = "contains")]
+    Contains,
+    #[serde(rename = "not contains")]
+    NotContains,
+    #[serde(rename = "exists")]
+    Exists,
+    #[serde(rename = "not exists")]
+    NotExists,
+    /// A regular expression.
+    #[serde(rename = "matches")]
+    Matches,
+    /// A JSON type: string, number, boolean, array, object or null.
+    #[serde(rename = "is")]
+    Is,
+}
+
+impl AssertOp {
+    pub const ALL: [AssertOp; 12] = [
+        AssertOp::Eq,
+        AssertOp::Ne,
+        AssertOp::Gt,
+        AssertOp::Ge,
+        AssertOp::Lt,
+        AssertOp::Le,
+        AssertOp::Contains,
+        AssertOp::NotContains,
+        AssertOp::Exists,
+        AssertOp::NotExists,
+        AssertOp::Matches,
+        AssertOp::Is,
+    ];
+
+    /// As written in files and shown in the app.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            AssertOp::Eq => "==",
+            AssertOp::Ne => "!=",
+            AssertOp::Gt => ">",
+            AssertOp::Ge => ">=",
+            AssertOp::Lt => "<",
+            AssertOp::Le => "<=",
+            AssertOp::Contains => "contains",
+            AssertOp::NotContains => "not contains",
+            AssertOp::Exists => "exists",
+            AssertOp::NotExists => "not exists",
+            AssertOp::Matches => "matches",
+            AssertOp::Is => "is",
+        }
+    }
+
+    /// `exists` and `not exists` take no value.
+    pub fn takes_value(self) -> bool {
+        !matches!(self, AssertOp::Exists | AssertOp::NotExists)
+    }
+}
+
+impl Assertion {
+    pub fn new(target: impl Into<String>, op: AssertOp, value: impl Into<String>) -> Self {
+        Self {
+            target: target.into(),
+            op,
+            value: value.into(),
+            enabled: true,
+        }
+    }
+
+    /// `status == 200`, the test's name.
+    pub fn label(&self) -> String {
+        if self.op.takes_value() {
+            format!("{} {} {}", self.target, self.op.as_str(), self.value)
+        } else {
+            format!("{} {}", self.target, self.op.as_str())
+        }
+    }
 }
 
 impl Request {

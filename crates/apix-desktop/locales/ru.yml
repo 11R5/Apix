@@ -425,6 +425,9 @@ response.tab.raw: Исходный
 response.tab.tests: Тесты
 response.tab.tests_count: "Тесты %{passed}/%{total}"
 scripts.around: "%{hint} Перед ним выполняются скрипты папок и коллекции: %{count}."
+scripts.asserts: Проверки
+scripts.asserts_count: "Проверки %{count}"
+scripts.asserts_hint: "Проверки без кода, после тестов: status, time (мс), size, body, body.users[0].id или header.Content-Type сравниваются со значением ({{переменные}} допустимы)."
 scripts.error: "Ошибка скрипта: %{error}"
 scripts.pre: До запроса
 scripts.pre_error: "Скрипт перед запросом завершился с ошибкой, запрос не отправлен: %{error}"

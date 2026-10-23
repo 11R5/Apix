@@ -425,6 +425,9 @@ response.tab.raw: Roh
 response.tab.tests: Tests
 response.tab.tests_count: "Tests %{passed}/%{total}"
 scripts.around: "%{hint} Davor laufen %{count} Ordner- oder Sammlungsskripte."
+scripts.asserts: Prüfungen
+scripts.asserts_count: "Prüfungen %{count}"
+scripts.asserts_hint: "Prüfungen ohne Code, nach den Tests: status, time (ms), size, body, body.users[0].id oder header.Content-Type, verglichen mit einem Wert ({{Variablen}} erlaubt)."
 scripts.error: "Skriptfehler: %{error}"
 scripts.pre: Vor der Anfrage
 scripts.pre_error: "Das Skript vor der Anfrage ist fehlgeschlagen, die Anfrage wurde nicht gesendet: %{error}"
