@@ -226,6 +226,16 @@ env.undo_delete: التراجع عن الحذف
 export.done: "كُتب %{count} ملفًا في %{path}."
 export.done_title: صُدّر إلى Postman
 export.prompt: احفظ ملفات Postman في…
+extract.error: "تعذرت قراءة القيمة: %{error}"
+extract.into_collection: لا توجد بيئة نشطة، لذا تُحفظ في متغيرات المجموعة.
+extract.into_env: "تُحفظ في البيئة «%{env}»."
+extract.keep: تحديثها مع كل إرسال (يضيف سطرًا إلى سكربت الاختبارات)
+extract.name: اسم المتغير
+extract.ok: حفظ
+extract.path: "القيمة (كما في الفحوص: body.data.token و header.X-Token و status)"
+extract.saved_collection: "حُفظ %{name} = %{value} في متغيرات المجموعة."
+extract.saved_env: "حُفظ %{name} = %{value} في «%{env}»."
+extract.title: حفظ قيمة كمتغير
 history.ago_days: منذ %{count} يوم
 history.ago_hours: منذ %{count} ساعة
 history.ago_minutes: منذ %{count} دقيقة

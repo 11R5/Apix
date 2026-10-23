@@ -226,6 +226,16 @@ env.undo_delete: Silmeyi geri al
 export.done: "%{count} dosya %{path} klasörüne yazıldı."
 export.done_title: Postman'a aktarıldı
 export.prompt: Postman dosyalarının kaydedileceği klasör…
+extract.error: "Değer okunamadı: %{error}"
+extract.into_collection: Seçili ortam yok; koleksiyonun değişkenlerine yazılır.
+extract.into_env: "“%{env}” ortamına yazılır."
+extract.keep: Her gönderimde güncelle (Testler scriptine bir satır ekler)
+extract.name: Değişken adı
+extract.ok: Kaydet
+extract.path: "Değer (Doğrulamalar'daki gibi: body.data.token, header.X-Token, status)"
+extract.saved_collection: "%{name} = %{value}, koleksiyon değişkenlerine kaydedildi."
+extract.saved_env: "%{name} = %{value}, “%{env}” ortamına kaydedildi."
+extract.title: Bir değeri değişken olarak kaydet
 history.ago_days: "%{count} gün önce"
 history.ago_hours: "%{count} sa önce"
 history.ago_minutes: "%{count} dk önce"

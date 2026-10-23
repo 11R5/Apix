@@ -226,6 +226,16 @@ env.undo_delete: Annuler la suppression
 export.done: "%{count} fichiers écrits dans %{path}."
 export.done_title: Exporté vers Postman
 export.prompt: Enregistrer les fichiers Postman dans…
+extract.error: "Impossible de lire la valeur : %{error}"
+extract.into_collection: "Aucun environnement actif : elle va dans les variables de la collection."
+extract.into_env: "Elle va dans l’environnement « %{env} »."
+extract.keep: La mettre à jour à chaque envoi (ajoute une ligne au script de tests)
+extract.name: Nom de la variable
+extract.ok: Enregistrer
+extract.path: "Valeur (comme dans Vérifications : body.data.token, header.X-Token, status)"
+extract.saved_collection: "%{name} = %{value} enregistrée dans les variables de la collection."
+extract.saved_env: "%{name} = %{value} enregistrée dans « %{env} »."
+extract.title: Enregistrer une valeur comme variable
 history.ago_days: il y a %{count} j
 history.ago_hours: il y a %{count} h
 history.ago_minutes: il y a %{count} min

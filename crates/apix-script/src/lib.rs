@@ -305,6 +305,131 @@ pub fn assertions_script(asserts: &[apix_core::Assertion]) -> Option<ScriptFile>
     })
 }
 
+// ------------------------------------------------------ response values
+
+/// One step of a path like `users[0]["a b"].id`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum Step {
+    Name(String),
+    Index(usize),
+}
+
+fn steps(path: &str) -> Vec<Step> {
+    let mut out = Vec::new();
+    let mut rest = path;
+    while !rest.is_empty() {
+        if let Some(after) = rest.strip_prefix('.') {
+            rest = after;
+        } else if let Some(after) = rest.strip_prefix('[') {
+            let end = after.find(']').unwrap_or(after.len());
+            let inner = &after[..end];
+            let quoted = inner
+                .strip_prefix('"')
+                .and_then(|s| s.strip_suffix('"'))
+                .or_else(|| inner.strip_prefix('\'').and_then(|s| s.strip_suffix('\'')));
+            out.push(match (quoted, inner.parse::<usize>()) {
+                (Some(name), _) => Step::Name(name.to_owned()),
+                (None, Ok(index)) => Step::Index(index),
+                (None, Err(_)) => Step::Name(inner.to_owned()),
+            });
+            rest = after.get(end + 1..).unwrap_or("");
+        } else {
+            let end = rest.find(['.', '[']).unwrap_or(rest.len());
+            out.push(Step::Name(rest[..end].to_owned()));
+            rest = &rest[end..];
+        }
+    }
+    out
+}
+
+/// The part of a `body...` target after `body`, or `None` for other targets.
+fn body_path(target: &str) -> Option<&str> {
+    target
+        .strip_prefix("body.")
+        .or_else(|| target.strip_prefix("body").filter(|r| r.starts_with('[')))
+}
+
+fn header_name(target: &str) -> Option<&str> {
+    target
+        .strip_prefix("header.")
+        .or_else(|| target.strip_prefix("headers."))
+}
+
+/// What a target (the same as in checks: `status`, `time`, `size`, `body`,
+/// `body.<path>`, `header.<name>`) holds in `response`, as text.
+pub fn value_at(response: &ResponseView, target: &str) -> Result<String, String> {
+    let target = target.trim();
+    match target {
+        "status" => return Ok(response.code.to_string()),
+        "time" => return Ok(response.time_ms.to_string()),
+        "size" => return Ok(response.size.to_string()),
+        "body" => return Ok(response.body.clone()),
+        _ => {}
+    }
+    if let Some(name) = header_name(target) {
+        return response
+            .headers
+            .iter()
+            .find(|(k, _)| k.eq_ignore_ascii_case(name))
+            .map(|(_, v)| v.clone())
+            .ok_or_else(|| format!("the response has no {name} header"));
+    }
+    let Some(path) = body_path(target) else {
+        return Err(format!(
+            "unknown target {target}; use status, time, size, body, body.<path> or header.<name>"
+        ));
+    };
+    let json: serde_json::Value =
+        serde_json::from_str(&response.body).map_err(|_| "the body is not JSON".to_owned())?;
+    let mut at = &json;
+    for step in steps(path) {
+        let next = match &step {
+            Step::Name(name) => at.get(name),
+            Step::Index(index) => at.get(*index),
+        };
+        at = next.ok_or_else(|| format!("{target} is not in the body"))?;
+    }
+    Ok(match at {
+        serde_json::Value::String(text) => text.clone(),
+        other => other.to_string(),
+    })
+}
+
+/// The JavaScript expression for a target in a test script, like
+/// `pm.response.json().data.token`.
+pub fn expression_for(target: &str) -> Option<String> {
+    let target = target.trim();
+    let quote = |s: &str| serde_json::to_string(s).unwrap_or_default();
+    match target {
+        "status" => return Some("pm.response.code".into()),
+        "time" => return Some("pm.response.responseTime".into()),
+        "size" => return Some("pm.response.responseSize".into()),
+        "body" => return Some("pm.response.text()".into()),
+        _ => {}
+    }
+    if let Some(name) = header_name(target) {
+        return Some(format!("pm.response.headers.get({})", quote(name)));
+    }
+    let mut out = String::from("pm.response.json()");
+    for step in steps(body_path(target)?) {
+        match step {
+            Step::Index(index) => out.push_str(&format!("[{index}]")),
+            Step::Name(name)
+                if !name.is_empty()
+                    && name
+                        .chars()
+                        .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '$')
+                    && !name.starts_with(|c: char| c.is_ascii_digit()) =>
+            {
+                out.push('.');
+                out.push_str(&name);
+            }
+            Step::Name(name) => out.push_str(&format!("[{}]", quote(&name))),
+        }
+    }
+    Some(out)
+}
+
 // ------------------------------------------------------------- natives
 
 fn from_hex(text: &str) -> Vec<u8> {
@@ -992,5 +1117,31 @@ mod tests {
                 .unwrap()
                 .starts_with("unknown target")
         );
+    }
+
+    #[test]
+    fn reads_values_and_writes_expressions_for_targets() {
+        let response = json_response();
+        assert_eq!(value_at(&response, "status").unwrap(), "200");
+        assert_eq!(value_at(&response, "body.users[0].name").unwrap(), "Ada");
+        assert_eq!(
+            value_at(&response, "body.users[0]").unwrap(),
+            r#"{"id":1,"name":"Ada"}"#
+        );
+        assert_eq!(value_at(&response, "body.total").unwrap(), "1");
+        assert_eq!(
+            value_at(&response, "header.content-type").unwrap(),
+            "application/json"
+        );
+        assert!(value_at(&response, "body.nope").is_err());
+        assert_eq!(
+            expression_for("body.users[0][\"full name\"].id").unwrap(),
+            r#"pm.response.json().users[0]["full name"].id"#
+        );
+        assert_eq!(
+            expression_for("header.X-Token").unwrap(),
+            r#"pm.response.headers.get("X-Token")"#
+        );
+        assert_eq!(expression_for("nonsense"), None);
     }
 }

@@ -290,6 +290,20 @@ impl ScriptEditor {
         cx.notify();
     }
 
+    /// Adds a line at the end of the Tests script and shows it.
+    pub(super) fn append_test(&mut self, line: &str, window: &mut Window, cx: &mut Context<Self>) {
+        let current = self.test.read(cx).value().to_string();
+        let text = if current.trim().is_empty() {
+            format!("{line}\n")
+        } else {
+            format!("{}\n{line}\n", current.trim_end())
+        };
+        self.test
+            .update(cx, |state, cx| state.set_value(text, window, cx));
+        self.view = View::Script(Event::Test);
+        cx.notify();
+    }
+
     pub(super) fn scripts(&self, cx: &App) -> Scripts {
         Scripts {
             pre: self.pre.read(cx).value().to_string(),

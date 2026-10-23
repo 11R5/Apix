@@ -226,6 +226,16 @@ env.undo_delete: Löschen rückgängig machen
 export.done: "%{count} Dateien nach %{path} geschrieben."
 export.done_title: Nach Postman exportiert
 export.prompt: Postman-Dateien speichern in…
+extract.error: "Der Wert konnte nicht gelesen werden: %{error}"
+extract.into_collection: Keine Umgebung aktiv, daher kommt er in die Variablen der Sammlung.
+extract.into_env: "Er kommt in die Umgebung „%{env}“."
+extract.keep: Bei jedem Senden aktualisieren (fügt dem Testskript eine Zeile hinzu)
+extract.name: Variablenname
+extract.ok: Speichern
+extract.path: "Wert (wie bei den Prüfungen: body.data.token, header.X-Token, status)"
+extract.saved_collection: "%{name} = %{value} in den Variablen der Sammlung gespeichert."
+extract.saved_env: "%{name} = %{value} in „%{env}“ gespeichert."
+extract.title: Einen Wert als Variable speichern
 history.ago_days: vor %{count} T.
 history.ago_hours: vor %{count} Std.
 history.ago_minutes: vor %{count} Min.

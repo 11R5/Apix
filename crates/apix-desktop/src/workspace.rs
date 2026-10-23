@@ -6,6 +6,7 @@ mod collections;
 mod cookies_ui;
 mod drag;
 mod env_editor;
+mod extract_ui;
 mod history_ui;
 mod menu_bar;
 mod network;
@@ -1393,6 +1394,16 @@ impl Workspace {
                             .child(response.version.clone())
                             .children(viewer_note)
                             .child(div().flex_1())
+                            .child(
+                                Button::new("extract-value")
+                                    .ghost()
+                                    .xsmall()
+                                    .label("{x}")
+                                    .tooltip(tr!("extract.title"))
+                                    .on_click(cx.listener(|this, _: &ClickEvent, window, cx| {
+                                        this.prompt_extract(window, cx)
+                                    })),
+                            )
                             .child(
                                 Button::new("save-body")
                                     .ghost()

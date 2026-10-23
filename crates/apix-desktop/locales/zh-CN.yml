@@ -226,6 +226,16 @@ env.undo_delete: 撤销删除
 export.done: "已将 %{count} 个文件写入 %{path}。"
 export.done_title: 已导出到 Postman
 export.prompt: 将 Postman 文件保存到…
+extract.error: "无法读取该值：%{error}"
+extract.into_collection: 没有选择环境，因此保存到集合的变量中。
+extract.into_env: "保存到环境“%{env}”。"
+extract.keep: 每次发送时更新（在测试脚本中添加一行）
+extract.name: 变量名
+extract.ok: 保存
+extract.path: 值（与检查相同：body.data.token、header.X-Token、status）
+extract.saved_collection: "%{name} = %{value} 已保存到集合的变量中。"
+extract.saved_env: "%{name} = %{value} 已保存到“%{env}”。"
+extract.title: 将值保存为变量
 history.ago_days: "%{count} 天前"
 history.ago_hours: "%{count} 小时前"
 history.ago_minutes: "%{count} 分钟前"

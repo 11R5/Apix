@@ -228,6 +228,16 @@ env.undo_delete: Undo delete
 export.done: "%{count} files written to %{path}."
 export.done_title: Exported to Postman
 export.prompt: Save the Postman files in…
+extract.error: "Could not read the value: %{error}"
+extract.into_collection: No environment is active, so it goes into the collection’s variables.
+extract.into_env: "It goes into the environment “%{env}”."
+extract.keep: Update it on every send (adds a line to the Tests script)
+extract.name: Variable name
+extract.ok: Save
+extract.path: "Value (same as in Checks: body.data.token, header.X-Token, status)"
+extract.saved_collection: "%{name} = %{value} saved in the collection’s variables."
+extract.saved_env: "%{name} = %{value} saved in “%{env}”."
+extract.title: Save a value as a variable
 history.ago_days: "%{count} d ago"
 history.ago_hours: "%{count} h ago"
 history.ago_minutes: "%{count} min ago"

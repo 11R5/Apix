@@ -226,6 +226,16 @@ env.undo_delete: Отменить удаление
 export.done: "Записано файлов: %{count} в %{path}."
 export.done_title: Экспортировано в Postman
 export.prompt: Сохранить файлы Postman в…
+extract.error: "Не удалось прочитать значение: %{error}"
+extract.into_collection: Окружение не выбрано, поэтому оно попадёт в переменные коллекции.
+extract.into_env: "Оно попадёт в окружение «%{env}»."
+extract.keep: Обновлять при каждой отправке (добавляет строку в скрипт тестов)
+extract.name: Имя переменной
+extract.ok: Сохранить
+extract.path: "Значение (как в проверках: body.data.token, header.X-Token, status)"
+extract.saved_collection: "%{name} = %{value} сохранено в переменных коллекции."
+extract.saved_env: "%{name} = %{value} сохранено в «%{env}»."
+extract.title: Сохранить значение как переменную
 history.ago_days: "%{count} дн. назад"
 history.ago_hours: "%{count} ч назад"
 history.ago_minutes: "%{count} мин назад"
