@@ -84,6 +84,14 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [ ] Test results tab and console
 - [ ] Runner UI, data-driven runs (CSV/JSON), JUnit / HTML reports
 
+## After M5 — Themes
+- [ ] Switch themes without restarting
+- [ ] Choose the accent colour
+- [ ] Light theme and "follow the system"
+- [ ] Custom themes from files (`<config>/Apix/themes/*.toml`)
+- [ ] Maybe: glass effect on/off, preset themes (Dracula, Nord, Solarized…), font size and density
+- To discuss after M5: growing the CLI with git and CI/CD integration
+
 ## M6 — Protocols
 - [ ] WebSocket, SSE, GraphQL introspection, gRPC, Socket.IO, MQTT, SOAP
 
@@ -91,7 +99,7 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [ ] Route (traceroute) and network map, with an offline IP-geolocation database
 - [ ] TLS details in the network inspector with our own connector: TLS version, cipher, ALPN, full chain, separate TCP and TLS times, compressed size
 - [ ] Local mock server, docs generation, monitors, visualizer, capture proxy
-- [ ] Git integration, light theme, auto-update
+- [ ] Git integration, auto-update (the light theme moved to the theme work after M5)
 
 ## M8 — Beyond Postman
 - [ ] Load testing (`apix bench`), response diff, time-travel history

@@ -550,6 +550,15 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 - Test sonuçları sekmesi, konsol
 - Runner arayüzü, veri odaklı testler, JUnit/HTML raporlar
 
+### M5 sonrası — Tema paketi (23 Ekim'de kararlaştırıldı)
+1. Temayı yeniden başlatmadan değiştirme (görünümler paleti kopyalamak yerine ortak bir yerden okur); diğerlerinin temeli.
+2. Vurgu rengi seçimi (camgöbeği yerine mor, yeşil, turuncu …).
+3. Açık tema ve "sistemi izle" (Windows/macOS koyu-açık moduna göre); kod renklendirmesi de uyarlanır. M7'deki "açık tema" maddesi buraya alındı.
+4. Dosyadan özel tema (`<config>/Apix/themes/*.toml`), ekipçe paylaşılabilir.
+- Olası ekler: cam efektini (saydamlık/bulanıklık) açıp kapatma, hazır temalar (Dracula, Nord, Solarized …), yazı boyutu ve satır yoğunluğu.
+
+**Not (konuşulacak):** CLI'ın git ve CI/CD entegrasyonuyla büyütülmesi (GitHub Actions adımı, raporlar, pipeline'lar). M5 bitince yeniden ele alınacak.
+
 ### M6 — Protokoller
 - WebSocket, SSE, GraphQL introspection, gRPC, Socket.IO, MQTT, SOAP
 
@@ -557,7 +566,7 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 - **Rota ve ağ haritası (§B2)** (not 9): traceroute, çevrimdışı IP konum veritabanı ile dünya haritası
 - **TLS ayrıntıları (§B2, not 12):** kendi bağlayıcımızla (hyper-util + rustls) TLS sürümü, şifre takımı, ALPN, tam sertifika zinciri, TCP ve TLS ayrı süreler, sıkıştırılmış boyut
 - Mock sunucu, dokümantasyon üretme, monitörler, visualizer, yakalama proxy'si
-- Git entegrasyonu, açık tema, otomatik güncelleme (ayarlar ekranı ve diller M4'e taşındı)
+- Git entegrasyonu, otomatik güncelleme (ayarlar ekranı ve diller M4'e, açık tema M5 sonrası tema paketine taşındı)
 
 ### M8 — Apix'e özel
 - Yük testi, yanıt karşılaştırma, zaman yolculuğu, MCP, AI, WASM eklentileri, Flows
