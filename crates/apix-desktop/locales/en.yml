@@ -379,11 +379,18 @@ request.tab.params_count: Params %{count}
 request.tab.settings: Settings
 request.tab.settings_set: Settings ●
 request.url_placeholder: "https://api.example.com/users   or   {{base_url}}/users"
+response.binary_hint: The bytes are in the Hex tab; Raw shows them as text. Save the body to open it in another program.
+response.binary_title: Binary content
 response.cancelled: Request cancelled.
 response.empty: Send a request to see the response
 response.failed: Request failed
+response.image_title: Image
+response.image_too_big: Image (too large to preview)
 response.lines: "%{count} lines"
+response.preparing_hex: Preparing the hex view…
 response.preparing_raw: Preparing the raw view…
+response.save: Save body to a file…
+response.saved: Saved %{size} to %{path}.
 response.send_hint: "%{key} send"
 response.sending: Sending…  Esc to cancel
 response.tab.network: Network

@@ -377,11 +377,18 @@ request.tab.params_count: Paramètres %{count}
 request.tab.settings: Réglages
 request.tab.settings_set: Réglages ●
 request.url_placeholder: "https://api.example.com/users   ou   {{base_url}}/users"
+response.binary_hint: Les octets sont dans l’onglet Hex ; Brut les affiche comme du texte. Enregistrez le corps pour l’ouvrir dans un autre programme.
+response.binary_title: Contenu binaire
 response.cancelled: Requête annulée.
 response.empty: Envoyez une requête pour voir la réponse
 response.failed: Échec de la requête
+response.image_title: Image
+response.image_too_big: Image (trop grande pour l’aperçu)
 response.lines: "%{count} lignes"
+response.preparing_hex: Préparation de la vue hexadécimale…
 response.preparing_raw: Préparation de la vue brute…
+response.save: Enregistrer le corps dans un fichier…
+response.saved: "%{size} enregistrés dans %{path}."
 response.send_hint: "%{key} envoyer"
 response.sending: Envoi…  Esc pour annuler
 response.tab.network: Réseau

@@ -91,6 +91,8 @@ impl Workspace {
         self.tabs[ix].parked = Some(parked);
         self.large_view = None;
         self.raw_task = None;
+        self.hex_doc = None;
+        self.hex_task = None;
         self.hovered_var = None;
     }
 

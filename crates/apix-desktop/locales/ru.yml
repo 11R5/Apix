@@ -377,11 +377,18 @@ request.tab.params_count: Параметры %{count}
 request.tab.settings: Настройки
 request.tab.settings_set: Настройки ●
 request.url_placeholder: "https://api.example.com/users   или   {{base_url}}/users"
+response.binary_hint: Байты на вкладке Hex; «Исходный» показывает их как текст. Сохраните тело, чтобы открыть его в другой программе.
+response.binary_title: Двоичные данные
 response.cancelled: Запрос отменён.
 response.empty: Отправьте запрос, чтобы увидеть ответ
 response.failed: Ошибка запроса
+response.image_title: Изображение
+response.image_too_big: Изображение (слишком большое для предпросмотра)
 response.lines: "Строк: %{count}"
+response.preparing_hex: Подготовка шестнадцатеричного вида…
 response.preparing_raw: Подготовка исходного вида…
+response.save: Сохранить тело в файл…
+response.saved: "%{size} сохранено в %{path}."
 response.send_hint: "%{key} отправить"
 response.sending: Отправка…  Esc для отмены
 response.tab.network: Сеть

@@ -81,7 +81,7 @@ The Body tab offers:
 | Type | What is sent |
 |---|---|
 | None | No body. |
-| JSON, Text, XML | The text as written, with syntax highlighting. |
+| JSON, Text, XML, HTML | The text as written, with syntax highlighting (`application/json`, `text/plain`, `application/xml`, `text/html` unless a header says otherwise). |
 | Form | `application/x-www-form-urlencoded` key–value rows. |
 | Multipart | `multipart/form-data`. Each field is **Text** or **File**; the folder button picks one or more files. |
 | Binary | The bytes of one file, as `application/octet-stream` unless a header says otherwise. Apix shows the file size, or "File not found". |
@@ -196,10 +196,21 @@ more; the **Dynamic variables** page of the Variables dialog lists them all with
 ## The response
 
 The response pane shows the status, the time to the first byte and in total,
-and the size. **Pretty** formats JSON (fold blocks with the arrows), **Raw**
-shows the body as received, **Headers** lists the response headers. Very large
+and the size. **Pretty** formats JSON (fold blocks with the arrows) and
+indents and colours XML and HTML; **Raw** shows the body as received,
+**Headers** lists the response headers and **Hex** shows the bytes. Very large
 bodies (tens of megabytes) open in a fast viewer that only draws the visible
 lines.
+
+Apix tells the body's kind from its `Content-Type`, or from the bytes when the
+type says nothing useful. Images (PNG, JPEG, GIF, WebP, BMP, SVG) are shown
+in **Pretty**; other binary content (a PDF, a zip…) gets a short summary
+instead of unreadable text. HTML that leaves out optional closing tags is shown
+as it came rather than reformatted.
+
+The **↓** button at the end of the status line saves the body, byte for byte,
+to a file. The suggested name comes from the server's `Content-Disposition`
+or from the URL, with an extension that fits the content.
 
 ## The Network tab
 

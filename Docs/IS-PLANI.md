@@ -14,10 +14,10 @@
 | M1 Arayüzden istek | ✅ 100 MB JSON ~0.33 s'de açılıyor |
 | M2 Koleksiyonlar, Postman içe aktarma | ✅ (sekmeler ve sürükle-bırak M3'te tamamlandı) |
 | M3 Simge, projeler, ortamlar, kopyalama, auth | ✅ 9/9 · bitti: simge, ortam seçici ve editörü, dinamik değişkenler, projeler, kabuk komutu olarak kopyalama, metotla yeni istek, değişken çipleri, Auth sekmesi ve miras, komut paleti, sekmeler, sürükle-bırak ile taşıma · küçük kalanlar M3 bölümünün sonunda |
-| M4 Günlük kullanım | 🔜 · bitti: menü çubuğu, şifreli koleksiyonlar (motor, uygulama, CLI), ağ denetçisi (Network sekmesi), multipart/binary/GraphQL gövdeleri, auth tipleri (Digest, OAuth 1.0, OAuth 2.0, AWS SigV4), ayarlar ekranı ve 9 dilli arayüz, Arapça için sağdan sola düzen, dokümantasyon yapısı (İngilizce, Türkçe), README karşılaştırması ve performans ölçümü, istek ayarları (zaman aşımı, yönlendirmeler, TLS doğrulama, proxy, istemci sertifikaları; klasör/koleksiyon/proje kalıtımıyla) ve çerez yöneticisi, 10 dilde kod üretimi, geçmiş, Postman otomatik tanıma, toplu içe aktarma ve Postman'a dışa aktarma · sıradaki: HAR, Insomnia ve OpenAPI içe aktarma |
+| M4 Günlük kullanım | 🔜 · bitti: menü çubuğu, şifreli koleksiyonlar (motor, uygulama, CLI), ağ denetçisi (Network sekmesi), multipart/binary/GraphQL gövdeleri, auth tipleri (Digest, OAuth 1.0, OAuth 2.0, AWS SigV4), ayarlar ekranı ve 9 dilli arayüz, Arapça için sağdan sola düzen, dokümantasyon yapısı (İngilizce, Türkçe), README karşılaştırması ve performans ölçümü, istek ayarları (zaman aşımı, yönlendirmeler, TLS doğrulama, proxy, istemci sertifikaları; klasör/koleksiyon/proje kalıtımıyla) ve çerez yöneticisi, 10 dilde kod üretimi, geçmiş, Postman otomatik tanıma, toplu içe aktarma ve Postman'a dışa aktarma, içerik tipleri (HTML gövde, XML/HTML renklendirme ve biçimlendirme, resim önizleme, Hex, yanıtı kaydetme) · sıradaki: HAR, Insomnia ve OpenAPI içe aktarma; ardından gRPC (not 17) |
 | M5–M9 | ⬜ |
 
-Release ikili dosyası 33.6 MB (üst sınır 100 MB). Testler: core 49, vault 7, desktop 12, codegen 21, import 18, http 18 (hepsi geçiyor, clippy uyarısız).
+Release ikili dosyası 33.6 MB (üst sınır 100 MB). Testler: core 53, vault 7, desktop 12, codegen 21, import 18, http 19 (hepsi geçiyor, clippy uyarısız).
 
 ### Kullanıcı notları (17 Ekim 2026) ve plana nasıl işlendikleri
 | # | Not | Nereye işlendi |
@@ -42,6 +42,13 @@ Release ikili dosyası 33.6 MB (üst sınır 100 MB). Testler: core 49, vault 7,
 | 14 | Dokümantasyon ayrı olsun; kullanım kılavuzu, mimari, teknik altyapı ve iş akışları bu dillerde ayrı belgeler olsun; sonradan yeni dil eklenebilsin | §N (yeni), M4 (yapı + İngilizce ve Türkçe), M9 (tüm diller) |
 | 15 | Her dil için görsellerle desteklenmiş kullanım kılavuzu | §N, M9 (ekran görüntüleri her dil için otomatik alınır) |
 | 16 | GitHub sayfasında benzer uygulamalardan farklar, avantajlar ve performans | §N, M4 (README karşılaştırması ve tekrarlanabilir ölçümler) |
+
+### Kullanıcı notları (23 Ekim 2026) ve plana nasıl işlendikleri
+| # | Not | Nereye işlendi |
+|---|---|---|
+| 17 | XML, HTML, binary ve gRPC desteği olmalı | Kontrol edildi (23 Ekim): XML gövde vardı ama renklendirilmiyordu, HTML gövde tipi yoktu, XML/HTML yanıtlar biçimlendirilmiyordu, ikili yanıtlar bozuk metin olarak görünüyordu, gRPC yoktu. §A4 ve §B: HTML gövde tipi, XML/HTML renklendirme ve biçimlendirme, resim önizleme, Hex sekmesi, gövdeyi dosyaya kaydetme M4'te ✅. gRPC §H'de (L), M4'teki içe aktarıcılardan sonra ele alınacak. |
+| 18 | Her geliştirmeden sonra açıklamalar ve ilerleme md dosyalarına (bu plan, ROADMAP, README, kullanım kılavuzları) işlensin | Çalışma kuralı: her özellik, birleştirilmeden önce bu dosyalara yazılır. |
+| 19 | GitHub geçmişinde yalnızca kullanıcının hesabı görünsün (kkmamedaga ve "claude" ortak yazar satırı kaldırılsın) | Yapıldı (23 Ekim): geçmiş yeniden yazıldı; commit'ler yalnızca AhmetVDemir adına, ortak yazar satırı eklenmez. |
 
 ---
 
@@ -180,7 +187,7 @@ Apix, Postman'in yaptığı her şeyi yapan bir API istemcisi olacak. Postman'de
 |---|---|---|
 | none | | ✅ |
 | raw / JSON | Renklendirme, biçimlendirme (Ctrl+Shift+F), anlık doğrulama, yorum satırı desteği (gönderirken silinir) | ✅ renkli editör · ⬜ biçimlendirme, doğrulama, yorumlar |
-| raw / Text, XML, HTML, JavaScript | Her biri kendi renklendirmesiyle | ✅ Text, XML · ⬜ diğerleri |
+| raw / Text, XML, HTML, JavaScript | Her biri kendi renklendirmesiyle | ✅ Text, XML, HTML (XML ve HTML, HTML grameriyle renklendirilir; HTML gövde tipi 23 Ekim'de eklendi, `text/html` gönderir; motor, CLI, "Copy as", curl yapıştırma, Postman içe/dışa aktarma) · ⬜ JavaScript |
 | x-www-form-urlencoded | Anahtar–değer tablosu | ✅ |
 | multipart/form-data | Metin ve dosya alanları (alan başına Text/File), çoklu dosya seçimi, alan başına içerik tipi. Koleksiyon içindeki dosyalar isteğe göre göreli yolla kaydedilir. | ✅ · ⬜ içerik tipini arayüzde düzenleme |
 | binary | Dosya seçip ham olarak gönderme; boyut ve "dosya yok" uyarısı | ✅ |
@@ -209,10 +216,12 @@ Apix, Postman'in yaptığı her şeyi yapan bir API istemcisi olacak. Postman'de
 | Özellik | Açıklama | Durum |
 |---|---|---|
 | Durum satırı | Durum kodu (renkli), süre, TTFB, boyut, HTTP sürümü | ✅ |
-| **Pretty** | JSON, XML ve HTML biçimlendirilmiş ve renkli gösterilir. JSON'da düğümler katlanabilir. | ✅ JSON · ⬜ XML, HTML |
+| **Pretty** | JSON, XML ve HTML biçimlendirilmiş ve renkli gösterilir. JSON'da düğümler katlanabilir. | ✅ JSON, XML, HTML (`apix_core::text::pretty_xml` / `pretty_html`: girinti, yalnız metin içeren öğe tek satır, yorum/CDATA/DOCTYPE korunur, HTML'de boş öğeler ve script/style; dengesiz etiketlerde ham gösterilir) |
 | **Raw** | Ham metin | ✅ |
-| **Preview** | HTML'i basit hâliyle, resim, PDF ve ses dosyalarını kendi görünümüyle gösterir. | ⬜ M |
-| **Hex** | İkili yanıtlar için onaltılık görünüm | ⬜ S |
+| **Preview** | HTML'i basit hâliyle, resim, PDF ve ses dosyalarını kendi görünümüyle gösterir. | ✅ resim (PNG, JPEG, GIF, WebP, BMP, SVG; 32 MB'a kadar), ikili içerik için tür/boyut özeti · ⬜ HTML'i sayfa olarak gösterme, PDF, ses |
+| **Hex** | İkili yanıtlar için onaltılık görünüm | ✅ her yanıt için Hex sekmesi (satır başına 8 bayt, ilk 4 MB, sanal görüntüleyici) |
+| **Gövdeyi dosyaya kaydet** | Yanıt gövdesini bayt bayt bir dosyaya yazar; ad `Content-Disposition`'dan ya da URL'den, uzantı içerik türünden | ✅ (durum satırındaki ↓ düğmesi) |
+| **Yanıt türünü tanıma** | Önce `Content-Type`, sonra baytlara bakarak (PNG/JPEG/GIF/WebP/BMP imzaları, UTF-8 ve NUL denetimi, `<?xml`, `<!doctype html>`) | ✅ `apix_http::Response::body_kind` |
 | **Headers** | Tablo, kopyala ve ara | ✅ tablo · ⬜ kopyala, ara |
 | **Cookies** | Yanıtla gelen çerezler | ⬜ |
 | **Timing** | DNS, TCP, TLS, TTFB ve indirme sürelerini şelale grafiği olarak gösterir. Mockup'taki "Latency Visualizer" budur. | ✅ DNS, bağlantı (TCP+TLS), bekleme, indirme şelalesi (Network sekmesi) · ⬜ TCP ve TLS ayrı |
@@ -358,7 +367,7 @@ Bir koleksiyon (veya proje) parola ile şifrelenir. Parolayı bilmeyen hiçbir a
 | **GraphQL** | Şema introspection, otomatik tamamlama, değişkenler, şema gezgini | ⬜ L |
 | **WebSocket** | Bağlan ve bağlantıyı kes, mesaj gönder, mesajları zaman damgasıyla listele, kayıtlı mesaj şablonları | ⬜ M |
 | **Server-Sent Events** | Canlı olay akışı | ⬜ S |
-| **gRPC** | Unary ve streaming çağrılar, `.proto` dosyası veya sunucu yansıması (reflection), metadata | ⬜ L |
+| **gRPC** | Unary ve streaming çağrılar, `.proto` dosyası veya sunucu yansıması (reflection), metadata | ⬜ L · kullanıcı isteği (not 17): M4 içe aktarıcılarından sonra öne alınabilir |
 | **Socket.IO** | | ⬜ M |
 | **MQTT** | Abone ol ve yayınla | ⬜ M |
 | **SOAP** | WSDL'den şablon üretme, XML zarf | ⬜ M |
@@ -530,6 +539,7 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 - **İstek ayarları ve çerez yöneticisi (§A6)** (M) ✅: `.apix` dosyasında `[settings]` (zaman aşımı, yönlendirmeler ve üst sınır, TLS doğrulama, proxy, PEM istemci sertifikası + anahtar, çerez gönderimi); alan alan klasör → koleksiyon → proje kalıtımı; Ayarlar sekmesi (geçerli değerler satırıyla) ve klasör/koleksiyon/proje ayar diyalogları; motor her gönderimde ayarları uygular; tek çerez kavanozu `cookies.json` içinde kalıcı ve İstek › Çerezler… diyaloğundan yönetilir; CLI bayrakları (`--timeout`, `--insecure`, `--proxy`), "Copy as" curl/PowerShell bayrakları, curl yapıştırma ve Postman `protocolProfileBehavior` içe aktarma. Yerel sunucuya karşı testlerle doğrulandı.
 - **Kod üretici ve geçmiş** (M) ✅: `apix_codegen::to_code` ile 10 dil (fetch, axios, Python requests, Go, Rust reqwest, C#, Java, PHP, Swift, Kotlin) ve kabukları da kapsayan ortak `Format`; "Copy as" menüleri, kenar çubuğunda "Kod olarak kopyala", komut paleti, `apix code`. Geçmiş: `apix_core::history` (ayar klasöründe `history/`), Ctrl+H penceresi; kayıt kendi sekmesine kaydedilmemiş değişiklik olarak ve yanıtıyla geri gelir.
 - **Postman tamamlama (§D)** (M) ✅: otomatik tanıma, toplu dışa aktarımı (klasör/zip) projeye çevirme, globals → proje değişkenleri, Postman v2.1'e dışa aktarma (`apix_import::postman_dump`, `postman_export`).
+- **İçerik tipleri (§A4, §B, not 17)** (M) ✅: HTML gövde tipi; XML ve HTML renklendirme (gövde ve yanıt); XML ve HTML yanıtları girintileme; yanıt türünü tanıma; resim önizleme; Hex sekmesi; yanıt gövdesini dosyaya kaydetme.
 - Insomnia, OpenAPI ve HAR içe aktarma
 
 ### M5 — Scriptler, testler, runner

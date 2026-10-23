@@ -64,8 +64,8 @@ Measurements of the other tools on the same machine are planned.
 ## What works today
 
 - **Requests:** GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS with params and
-  headers; JSON, text, XML, URL-encoded form, multipart with files, binary file
-  and GraphQL bodies.
+  headers; JSON, text, XML, HTML, URL-encoded form, multipart with files,
+  binary file and GraphQL bodies.
 - **Auth:** Bearer, Basic, API key, Digest, OAuth 1.0, OAuth 2.0 (client
   credentials, password, authorization code with PKCE in the browser) and AWS
   Signature V4. Folders, collections and projects can set auth once; requests
@@ -75,8 +75,9 @@ Measurements of the other tools on the same machine are planned.
   collections and projects like auth.
 - **Cookies:** one persistent jar filled from `Set-Cookie` answers, with a
   manager to list, delete and clear.
-- **Responses:** status, timing, size, highlighted and foldable JSON, raw and
-  headers views, and the Network tab.
+- **Responses:** status, timing, size, highlighted and foldable JSON,
+  indented and coloured XML and HTML, image preview, a Hex view for binary
+  bodies, save the body to a file, raw and headers views, and the Network tab.
 - **Collections and projects:** a sidebar built from the files on disk, tabs that
   keep their edits and responses, drag to move, projects that share
   environments.

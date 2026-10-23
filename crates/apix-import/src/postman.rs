@@ -620,6 +620,8 @@ impl Converter<'_> {
                     .unwrap_or_default();
                 if language == "json" || content_type.contains("json") {
                     Body::Json(text)
+                } else if language == "html" || content_type.contains("html") {
+                    Body::Html(text)
                 } else if language == "xml" || content_type.contains("xml") {
                     Body::Xml(text)
                 } else {

@@ -377,11 +377,18 @@ request.tab.params_count: المعاملات %{count}
 request.tab.settings: الإعدادات
 request.tab.settings_set: الإعدادات ●
 request.url_placeholder: "https://api.example.com/users   أو   {{base_url}}/users"
+response.binary_hint: البايتات في تبويب Hex؛ ويعرضها تبويب الخام كنص. احفظ الجسم لفتحه في برنامج آخر.
+response.binary_title: محتوى ثنائي
 response.cancelled: أُلغي الطلب.
 response.empty: أرسل طلبًا لرؤية الاستجابة
 response.failed: فشل الطلب
+response.image_title: صورة
+response.image_too_big: صورة (أكبر من أن تُعاين)
 response.lines: "الأسطر: %{count}"
+response.preparing_hex: جارٍ تحضير عرض Hex…
 response.preparing_raw: جارٍ تجهيز العرض الخام…
+response.save: حفظ الجسم في ملف…
+response.saved: حُفظ %{size} في %{path}.
 response.send_hint: "%{key} للإرسال"
 response.sending: جارٍ الإرسال…  Esc للإلغاء
 response.tab.network: الشبكة

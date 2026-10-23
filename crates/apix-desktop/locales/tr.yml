@@ -377,11 +377,18 @@ request.tab.params_count: Parametreler %{count}
 request.tab.settings: Ayarlar
 request.tab.settings_set: Ayarlar ●
 request.url_placeholder: "https://api.example.com/users   veya   {{base_url}}/users"
+response.binary_hint: Baytlar Hex sekmesinde; Ham sekmesi onları metin olarak gösterir. Başka bir programda açmak için gövdeyi kaydedin.
+response.binary_title: İkili içerik
 response.cancelled: İstek iptal edildi.
 response.empty: Yanıtı görmek için bir istek gönderin
 response.failed: İstek başarısız oldu
+response.image_title: Resim
+response.image_too_big: Resim (önizleme için çok büyük)
 response.lines: "%{count} satır"
+response.preparing_hex: Hex görünümü hazırlanıyor…
 response.preparing_raw: Ham görünüm hazırlanıyor…
+response.save: Gövdeyi dosyaya kaydet…
+response.saved: "%{size} %{path} dosyasına kaydedildi."
 response.send_hint: "%{key} gönder"
 response.sending: Gönderiliyor…  İptal için Esc
 response.tab.network: Ağ

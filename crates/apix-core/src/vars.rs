@@ -140,6 +140,7 @@ impl Request {
                 Body::Json(text) => Body::Json(s(text)),
                 Body::Text(text) => Body::Text(s(text)),
                 Body::Xml(text) => Body::Xml(s(text)),
+                Body::Html(text) => Body::Html(s(text)),
                 Body::Form(rows) => Body::Form(pairs(rows, &mut s)),
                 Body::Multipart(parts) => Body::Multipart(
                     parts

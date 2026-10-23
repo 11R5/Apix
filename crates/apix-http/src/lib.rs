@@ -98,6 +98,50 @@ impl Response {
             .map(|(_, value)| value.as_str())
     }
 
+    /// What the body is, for picking a viewer: by `Content-Type` first, then
+    /// by looking at the bytes when the type says nothing useful.
+    pub fn body_kind(&self) -> BodyKind {
+        let ct = self
+            .header("content-type")
+            .map(|v| {
+                v.split(';')
+                    .next()
+                    .unwrap_or("")
+                    .trim()
+                    .to_ascii_lowercase()
+            })
+            .unwrap_or_default();
+        if ct.contains("json") {
+            return BodyKind::Json;
+        }
+        if let Some(image) = ct.strip_prefix("image/") {
+            return match image {
+                "png" => BodyKind::Image(ImageKind::Png),
+                "jpeg" | "jpg" | "pjpeg" => BodyKind::Image(ImageKind::Jpeg),
+                "gif" => BodyKind::Image(ImageKind::Gif),
+                "webp" => BodyKind::Image(ImageKind::Webp),
+                "bmp" | "x-bmp" => BodyKind::Image(ImageKind::Bmp),
+                "svg+xml" => BodyKind::Image(ImageKind::Svg),
+                _ => sniff(&self.body).unwrap_or(BodyKind::Binary),
+            };
+        }
+        if ct.contains("html") {
+            return BodyKind::Html;
+        }
+        if ct.ends_with("xml") || ct.contains("+xml") {
+            return BodyKind::Xml;
+        }
+        let textual = ct.starts_with("text/")
+            || ct.contains("javascript")
+            || ct.contains("x-www-form-urlencoded")
+            || ct.contains("yaml")
+            || ct.contains("graphql");
+        if textual {
+            return BodyKind::Text;
+        }
+        sniff(&self.body).unwrap_or(BodyKind::Text)
+    }
+
     pub fn is_json(&self) -> bool {
         self.header("content-type")
             .is_some_and(|ct| ct.contains("json"))
@@ -120,6 +164,73 @@ impl Response {
 
     pub fn raw_body(&self) -> String {
         String::from_utf8_lossy(&self.body).into_owned()
+    }
+}
+
+/// What a response body holds, for choosing how to show it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BodyKind {
+    Json,
+    Xml,
+    Html,
+    Text,
+    Image(ImageKind),
+    /// Anything else that is not text: shown as hex, or saved to a file.
+    Binary,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ImageKind {
+    Png,
+    Jpeg,
+    Gif,
+    Webp,
+    Bmp,
+    Svg,
+}
+
+/// The kind of `body` from its first bytes; `None` for an empty body.
+fn sniff(body: &[u8]) -> Option<BodyKind> {
+    if body.is_empty() {
+        return None;
+    }
+    let image = |kind| Some(BodyKind::Image(kind));
+    if body.starts_with(b"\x89PNG\r\n\x1a\n") {
+        return image(ImageKind::Png);
+    }
+    if body.starts_with(&[0xff, 0xd8, 0xff]) {
+        return image(ImageKind::Jpeg);
+    }
+    if body.starts_with(b"GIF87a") || body.starts_with(b"GIF89a") {
+        return image(ImageKind::Gif);
+    }
+    if body.len() > 12 && &body[..4] == b"RIFF" && &body[8..12] == b"WEBP" {
+        return image(ImageKind::Webp);
+    }
+    if body.starts_with(b"BM") && body.len() > 26 {
+        return image(ImageKind::Bmp);
+    }
+    let head = &body[..body.len().min(8192)];
+    // Cut at a character boundary so a multi-byte letter does not look broken.
+    let valid = match std::str::from_utf8(head) {
+        Ok(_) => true,
+        Err(e) => e.error_len().is_none() && e.valid_up_to() + 4 > head.len(),
+    };
+    if !valid || head.contains(&0) {
+        return Some(BodyKind::Binary);
+    }
+    let start = String::from_utf8_lossy(&head[..head.len().min(256)])
+        .trim_start_matches('\u{feff}')
+        .trim_start()
+        .to_ascii_lowercase();
+    if start.starts_with("<!doctype html") || start.starts_with("<html") {
+        Some(BodyKind::Html)
+    } else if start.starts_with("<svg") {
+        image(ImageKind::Svg)
+    } else if start.starts_with("<?xml") {
+        Some(BodyKind::Xml)
+    } else {
+        Some(BodyKind::Text)
     }
 }
 
@@ -577,7 +688,9 @@ fn build(client: &reqwest::Client, req: &Request) -> Result<reqwest::RequestBuil
     }
     builder = match &req.body {
         Body::None => builder,
-        Body::Json(text) | Body::Text(text) | Body::Xml(text) => builder.body(text.clone()),
+        Body::Json(text) | Body::Text(text) | Body::Xml(text) | Body::Html(text) => {
+            builder.body(text.clone())
+        }
         Body::Form(rows) => {
             let fields: Vec<(&str, &str)> = rows
                 .iter()
@@ -730,6 +843,61 @@ mod tests {
             Some(&br#"{"query":"{ me }","variables":{"a":1}}"#[..])
         );
         std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn tells_body_kinds_apart() {
+        let kind = |ct: Option<&str>, body: &[u8]| {
+            let headers = ct
+                .map(|c| vec![("Content-Type".to_owned(), c.to_owned())])
+                .unwrap_or_default();
+            let timing = Timing {
+                ttfb: Duration::ZERO,
+                total: Duration::ZERO,
+            };
+            Response::from_parts(200, "HTTP/1.1".into(), headers, body.to_vec(), timing).body_kind()
+        };
+        assert_eq!(
+            kind(Some("application/json; charset=utf-8"), b"{}"),
+            BodyKind::Json
+        );
+        assert_eq!(
+            kind(Some("application/problem+json"), b"{}"),
+            BodyKind::Json
+        );
+        assert_eq!(kind(Some("text/xml"), b"<a/>"), BodyKind::Xml);
+        assert_eq!(kind(Some("application/atom+xml"), b"<a/>"), BodyKind::Xml);
+        assert_eq!(
+            kind(Some("text/html; charset=utf-8"), b"<p>"),
+            BodyKind::Html
+        );
+        assert_eq!(
+            kind(Some("image/png"), b"\x89PNG"),
+            BodyKind::Image(ImageKind::Png)
+        );
+        assert_eq!(
+            kind(Some("image/svg+xml"), b"<svg/>"),
+            BodyKind::Image(ImageKind::Svg)
+        );
+        assert_eq!(kind(Some("text/plain"), b"hi"), BodyKind::Text);
+        assert_eq!(
+            kind(Some("application/pdf"), b"%PDF-1.7\n\x00\x01"),
+            BodyKind::Binary
+        );
+        // No useful type: the bytes decide.
+        assert_eq!(
+            kind(Some("application/octet-stream"), b"\x89PNG\r\n\x1a\nrest"),
+            BodyKind::Image(ImageKind::Png)
+        );
+        assert_eq!(
+            kind(None, &[0xff, 0xd8, 0xff, 0xe0]),
+            BodyKind::Image(ImageKind::Jpeg)
+        );
+        assert_eq!(kind(None, b"<!DOCTYPE html><html>"), BodyKind::Html);
+        assert_eq!(kind(None, b"<?xml version=\"1.0\"?><a/>"), BodyKind::Xml);
+        assert_eq!(kind(None, "plain café".as_bytes()), BodyKind::Text);
+        assert_eq!(kind(None, &[1, 2, 0, 4]), BodyKind::Binary);
+        assert_eq!(kind(None, b""), BodyKind::Text);
     }
 
     #[test]

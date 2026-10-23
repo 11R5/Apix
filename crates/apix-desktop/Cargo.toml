@@ -18,7 +18,8 @@ apix-import.workspace = true
 # The OS config folder for recent collections and chosen environments.
 dirs = "6"
 # `tree-sitter` turns on syntax highlighting in the code editor (JSON is included).
-gpui-kit = { workspace = true, features = ["tree-sitter"] }
+# HTML colours both HTML and XML bodies and responses.
+gpui-kit = { workspace = true, features = ["tree-sitter", "tree-sitter-html"] }
 # Interface texts in locales/<code>.yml; the same version gpui-kit uses, so both share one locale.
 rust-i18n = "4"
 # Same version gpui-component already builds, so it is not compiled twice.

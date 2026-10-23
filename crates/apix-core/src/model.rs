@@ -140,6 +140,7 @@ pub enum Body {
     Json(String),
     Text(String),
     Xml(String),
+    Html(String),
     /// `application/x-www-form-urlencoded`
     Form(Vec<KeyValue>),
     /// `multipart/form-data`, with text and file fields.
@@ -165,6 +166,7 @@ impl Body {
             Body::Json(_) => Some("application/json"),
             Body::Text(_) => Some("text/plain; charset=utf-8"),
             Body::Xml(_) => Some("application/xml"),
+            Body::Html(_) => Some("text/html; charset=utf-8"),
             Body::Form(_) => Some("application/x-www-form-urlencoded"),
             // The HTTP engine adds the boundary itself.
             Body::Multipart(_) => None,

@@ -377,11 +377,18 @@ request.tab.params_count: パラメーター %{count}
 request.tab.settings: 設定
 request.tab.settings_set: 設定 ●
 request.url_placeholder: "https://api.example.com/users   または   {{base_url}}/users"
+response.binary_hint: バイトは Hex タブにあります。Raw ではテキストとして表示されます。別のプログラムで開くには本文を保存してください。
+response.binary_title: バイナリデータ
 response.cancelled: リクエストをキャンセルしました。
 response.empty: リクエストを送信するとレスポンスが表示されます
 response.failed: リクエストに失敗しました
+response.image_title: 画像
+response.image_too_big: 画像（プレビューするには大きすぎます）
 response.lines: "%{count} 行"
+response.preparing_hex: Hex 表示を準備しています…
 response.preparing_raw: 生データ表示を準備中…
+response.save: 本文をファイルに保存…
+response.saved: "%{size} を %{path} に保存しました。"
 response.send_hint: "%{key} で送信"
 response.sending: 送信中…  Esc でキャンセル
 response.tab.network: ネットワーク

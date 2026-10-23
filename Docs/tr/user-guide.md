@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:b91d94787dc5feaf -->
+<!-- translated from en/user-guide.md sha256:42d8c17efcb44374 -->
 
 # Apix kullanım kılavuzu
 
@@ -88,7 +88,7 @@ Gövde sekmesi şunları sunar:
 | Tür | Gönderilen |
 |---|---|
 | Yok | Gövde yok. |
-| JSON, Metin, XML | Metin, yazıldığı gibi; söz dizimi vurgulamasıyla. |
+| JSON, Metin, XML, HTML | Metin, yazıldığı gibi; söz dizimi vurgulamasıyla (bir başlık aksini belirtmedikçe `application/json`, `text/plain`, `application/xml`, `text/html`). |
 | Form | `application/x-www-form-urlencoded` anahtar–değer satırları. |
 | Multipart | `multipart/form-data`. Her alan **Metin** veya **Dosya** olur; klasör düğmesi bir veya birden fazla dosya seçer. |
 | İkili | Tek bir dosyanın baytları; bir başlık aksini belirtmedikçe `application/octet-stream` olarak. Apix dosya boyutunu ya da “Dosya bulunamadı” uyarısını gösterir. |
@@ -208,9 +208,20 @@ hepsini örnek bir değerle listeler.
 
 Yanıt bölmesi durumu, ilk bayta kadar geçen süreyi ve toplam süreyi, ayrıca
 boyutu gösterir. **Biçimli** JSON'u biçimlendirir (blokları oklarla katlayın),
-**Ham** gövdeyi alındığı gibi gösterir, **Başlıklar** yanıt başlıklarını
-listeler. Çok büyük gövdeler (onlarca megabayt) yalnızca görünen satırları çizen
-hızlı bir görüntüleyicide açılır.
+XML ve HTML'i girintiler ve renklendirir; **Ham** gövdeyi alındığı gibi
+gösterir, **Başlıklar** yanıt başlıklarını listeler, **Hex** baytları gösterir.
+Çok büyük gövdeler (onlarca megabayt) yalnızca görünen satırları çizen hızlı
+bir görüntüleyicide açılır.
+
+Apix gövdenin türünü `Content-Type`'tan, tür bir şey söylemiyorsa baytların
+kendisinden anlar. Resimler (PNG, JPEG, GIF, WebP, BMP, SVG) **Biçimli**
+sekmesinde gösterilir; diğer ikili içerik (PDF, zip…) okunamaz metin yerine
+kısa bir özetle görünür. İsteğe bağlı kapanış etiketlerini atlayan HTML
+yeniden biçimlendirilmez, geldiği gibi gösterilir.
+
+Durum satırının sonundaki **↓** düğmesi gövdeyi bayt bayt bir dosyaya kaydeder.
+Önerilen ad sunucunun `Content-Disposition` başlığından ya da URL'den gelir;
+uzantı içeriğe göre seçilir.
 
 ## Ağ sekmesi
 

@@ -350,6 +350,7 @@ fn finish(mut p: Parsed) -> CurlImport {
         let text = p.data.join("&");
         request.body = match content_type.as_deref() {
             Some(ct) if ct.contains("json") => Body::Json(text),
+            Some(ct) if ct.contains("html") => Body::Html(text),
             Some(ct) if ct.contains("xml") => Body::Xml(text),
             Some(_) => Body::Text(text),
             // curl's default is a form; JSON-looking data was almost certainly meant as JSON.

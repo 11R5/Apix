@@ -377,11 +377,18 @@ request.tab.params_count: Parameter %{count}
 request.tab.settings: Einstellungen
 request.tab.settings_set: Einstellungen ●
 request.url_placeholder: "https://api.example.com/users   oder   {{base_url}}/users"
+response.binary_hint: Die Bytes stehen im Reiter Hex; Roh zeigt sie als Text. Speichern Sie den Inhalt, um ihn in einem anderen Programm zu öffnen.
+response.binary_title: Binärer Inhalt
 response.cancelled: Anfrage abgebrochen.
 response.empty: Senden Sie eine Anfrage, um die Antwort zu sehen
 response.failed: Anfrage fehlgeschlagen
+response.image_title: Bild
+response.image_too_big: Bild (zu groß für die Vorschau)
 response.lines: "%{count} Zeilen"
+response.preparing_hex: Hex-Ansicht wird vorbereitet…
 response.preparing_raw: Rohansicht wird vorbereitet…
+response.save: Inhalt in Datei speichern…
+response.saved: "%{size} in %{path} gespeichert."
 response.send_hint: "%{key} Senden"
 response.sending: Wird gesendet…  Esc zum Abbrechen
 response.tab.network: Netzwerk

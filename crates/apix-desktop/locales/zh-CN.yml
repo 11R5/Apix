@@ -377,11 +377,18 @@ request.tab.params_count: 参数 %{count}
 request.tab.settings: 设置
 request.tab.settings_set: 设置 ●
 request.url_placeholder: "https://api.example.com/users   或   {{base_url}}/users"
+response.binary_hint: 字节显示在 Hex 标签页；原始标签页以文本显示。保存正文即可在其他程序中打开。
+response.binary_title: 二进制内容
 response.cancelled: 请求已取消。
 response.empty: 发送请求以查看响应
 response.failed: 请求失败
+response.image_title: 图片
+response.image_too_big: 图片（太大，无法预览）
 response.lines: "%{count} 行"
+response.preparing_hex: 正在准备十六进制视图…
 response.preparing_raw: 正在准备原始视图…
+response.save: 将正文保存到文件…
+response.saved: "已将 %{size} 保存到 %{path}。"
 response.send_hint: "%{key} 发送"
 response.sending: 正在发送…  按 Esc 取消
 response.tab.network: 网络
