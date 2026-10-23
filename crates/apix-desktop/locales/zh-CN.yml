@@ -226,6 +226,16 @@ env.undo_delete: 撤销删除
 export.done: "已将 %{count} 个文件写入 %{path}。"
 export.done_title: 已导出到 Postman
 export.prompt: 将 Postman 文件保存到…
+extract.error: "无法读取该值：%{error}"
+extract.into_collection: 没有选择环境，因此保存到集合的变量中。
+extract.into_env: "保存到环境“%{env}”。"
+extract.keep: 每次发送时更新（在测试脚本中添加一行）
+extract.name: 变量名
+extract.ok: 保存
+extract.path: 值（与检查相同：body.data.token、header.X-Token、status）
+extract.saved_collection: "%{name} = %{value} 已保存到集合的变量中。"
+extract.saved_env: "%{name} = %{value} 已保存到“%{env}”。"
+extract.title: 将值保存为变量
 history.ago_days: "%{count} 天前"
 history.ago_hours: "%{count} 小时前"
 history.ago_minutes: "%{count} 分钟前"
@@ -425,6 +435,9 @@ response.tab.raw: 原始
 response.tab.tests: 测试
 response.tab.tests_count: "测试 %{passed}/%{total}"
 scripts.around: "%{hint} 在它之前会运行 %{count} 个文件夹或集合脚本。"
+scripts.asserts: 检查
+scripts.asserts_count: "检查 %{count}"
+scripts.asserts_hint: "无需代码的检查，在测试之后运行：将 status、time（毫秒）、size、body、body.users[0].id 或 header.Content-Type 与一个值比较（可用 {{变量}}）。"
 scripts.error: "脚本错误：%{error}"
 scripts.pre: 请求前
 scripts.pre_error: "请求前脚本出错，请求未发送：%{error}"

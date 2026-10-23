@@ -226,6 +226,16 @@ env.undo_delete: Deshacer eliminación
 export.done: "%{count} archivos escritos en %{path}."
 export.done_title: Exportado a Postman
 export.prompt: Guardar los archivos de Postman en…
+extract.error: "No se pudo leer el valor: %{error}"
+extract.into_collection: No hay entorno activo, así que va a las variables de la colección.
+extract.into_env: "Va al entorno «%{env}»."
+extract.keep: Actualizarla en cada envío (añade una línea al script de pruebas)
+extract.name: Nombre de la variable
+extract.ok: Guardar
+extract.path: "Valor (como en Comprobaciones: body.data.token, header.X-Token, status)"
+extract.saved_collection: "%{name} = %{value} guardada en las variables de la colección."
+extract.saved_env: "%{name} = %{value} guardada en «%{env}»."
+extract.title: Guardar un valor como variable
 history.ago_days: hace %{count} d
 history.ago_hours: hace %{count} h
 history.ago_minutes: hace %{count} min
@@ -425,6 +435,9 @@ response.tab.raw: Sin formato
 response.tab.tests: Pruebas
 response.tab.tests_count: "Pruebas %{passed}/%{total}"
 scripts.around: "%{hint} Antes de este se ejecutan %{count} scripts de carpeta o colección."
+scripts.asserts: Comprobaciones
+scripts.asserts_count: "Comprobaciones %{count}"
+scripts.asserts_hint: "Comprobaciones sin código, tras las pruebas: status, time (ms), size, body, body.users[0].id o header.Content-Type, comparados con un valor (se admiten {{variables}})."
 scripts.error: "Error de script: %{error}"
 scripts.pre: Antes de la petición
 scripts.pre_error: "El script previo falló y la petición no se envió: %{error}"

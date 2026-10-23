@@ -697,7 +697,8 @@ async fn exchange(
         info.request_name = request.name.clone();
     }
     let root = scope.collection.as_ref().map(|c| c.root.as_path());
-    let pre = apix_script::run(
+    let sender = script_sender();
+    let pre = run_scripts(
         &chain(path, root, Event::PreRequest),
         &apix_script::Input {
             event: Event::PreRequest,
@@ -706,6 +707,7 @@ async fn exchange(
             scopes,
             vars: state,
             info: info.clone(),
+            sender: Some(sender.clone()),
         },
     );
     *state = pre.vars.clone();
@@ -735,8 +737,10 @@ async fn exchange(
         &response.body,
         response.timing.total,
     );
-    done.tests = apix_script::run(
-        &chain(path, root, Event::Test),
+    let mut tests = chain(path, root, Event::Test);
+    tests.extend(apix_script::assertions_script(&done.pre.request.asserts));
+    done.tests = run_scripts(
+        &tests,
         &apix_script::Input {
             event: Event::Test,
             request: &done.pre.request,
@@ -744,11 +748,52 @@ async fn exchange(
             scopes,
             vars: state,
             info,
+            sender: Some(sender),
         },
     );
     *state = done.tests.vars.clone();
     done.response = Some(response);
     Ok(done)
+}
+
+/// Runs scripts on their own thread: `pm.sendRequest` blocks on its own
+/// tokio runtime, which cannot start inside the CLI's async code.
+fn run_scripts(
+    scripts: &[apix_core::scripts::ScriptFile],
+    input: &apix_script::Input,
+) -> apix_script::Output {
+    std::thread::scope(|scope| {
+        scope
+            .spawn(|| apix_script::run(scripts, input))
+            .join()
+            .unwrap_or_else(|_| apix_script::Output {
+                request: input.request.clone(),
+                vars: input.vars.clone(),
+                error: Some("the script engine stopped unexpectedly".into()),
+                ..Default::default()
+            })
+    })
+}
+
+/// `pm.sendRequest` from the command line: a fresh client per request.
+fn script_sender() -> apix_script::Sender {
+    apix_script::Sender::new(|request| {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .map_err(|e| e.to_string())?;
+        let client = HttpClient::new().map_err(|e| e.to_string())?;
+        let response = runtime
+            .block_on(client.send(request))
+            .map_err(|e| format!("{e:#}"))?;
+        Ok(apix_script::ResponseView::new(
+            response.status,
+            response.reason.unwrap_or(""),
+            &response.headers,
+            &response.body,
+            response.timing.total,
+        ))
+    })
 }
 
 /// Console lines, script errors and test results, indented under a request.

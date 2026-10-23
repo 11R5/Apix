@@ -83,7 +83,7 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [x] Pre-request and test scripts next to requests, folders and the collection (`<name>.prerequest.js`, `_folder.test.js`, `_collection.prerequest.js`, …), run collection → folders → request; what scripts set lasts for the app session or the run, never written to disk
 - [x] Scripts tab in the app; Tests and Console tabs on the response
 - [x] `apix send` / `apix run` run scripts, print test results and console lines, follow `setNextRequest`, and fail when a test fails
-- [ ] `pm.sendRequest`, built-in libraries (`require('crypto-js')`, lodash, moment, uuid, ajv), no-code assertions, save a response value as a variable
+- [x] `pm.sendRequest` (callback and `await`), built-in libraries (`require` of crypto-js, uuid, lodash, moment, ajv, tv4, chai: the parts API scripts use, written for Apix), checks without code (`[[assert]]`, a Checks table in the Scripts tab), save a response value as a variable
 - [ ] Runner UI, data-driven runs (CSV/JSON), JUnit / HTML reports
 
 ## After M5 — Themes

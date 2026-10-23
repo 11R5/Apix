@@ -114,10 +114,11 @@ impl Workspace {
             }
             chain
         };
-        (
-            chain(Event::PreRequest, &own.pre),
-            chain(Event::Test, &own.test),
-        )
+        let mut tests = chain(Event::Test, &own.test);
+        tests.extend(apix_script::assertions_script(
+            &self.build_request(cx).asserts,
+        ));
+        (chain(Event::PreRequest, &own.pre), tests)
     }
 
     /// Sends `request` (unresolved, with inherited auth and settings) with
@@ -166,6 +167,7 @@ impl Workspace {
                             scopes: &scopes,
                             vars: &state,
                             info,
+                            sender: Some(net::script_sender()),
                         },
                     )
                 })
@@ -227,6 +229,7 @@ impl Workspace {
                                     scopes: &scopes,
                                     vars: &pre.vars,
                                     info,
+                                    sender: Some(net::script_sender()),
                                 },
                             );
                             let mut finished = Finished::prepare(response);

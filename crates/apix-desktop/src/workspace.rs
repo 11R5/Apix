@@ -6,6 +6,7 @@ mod collections;
 mod cookies_ui;
 mod drag;
 mod env_editor;
+mod extract_ui;
 mod history_ui;
 mod menu_bar;
 mod network;
@@ -638,6 +639,9 @@ impl Workspace {
         self.settings_editor
             .update(cx, |editor, cx| editor.set_settings(&settings, window, cx));
         self.refresh_inherited_settings(cx);
+        let asserts = request.asserts.clone();
+        self.script_editor
+            .update(cx, |editor, cx| editor.set_asserts(&asserts, window, cx));
         cx.notify();
     }
 
@@ -678,6 +682,7 @@ impl Workspace {
             .collect();
         request.body = self.body_editor.read(cx).body(cx);
         request.settings = self.settings_editor.read(cx).settings(cx);
+        request.asserts = self.script_editor.read(cx).asserts(cx);
         request
     }
 
@@ -1121,7 +1126,8 @@ impl Workspace {
             tr!("request.tab.settings_set")
         };
 
-        let scripts_label = if self.script_editor.read(cx).scripts(cx).is_empty() {
+        let editor = self.script_editor.read(cx);
+        let scripts_label = if editor.scripts(cx).is_empty() && editor.asserts(cx).is_empty() {
             tr!("request.tab.scripts")
         } else {
             tr!("request.tab.scripts_set")
@@ -1388,6 +1394,16 @@ impl Workspace {
                             .child(response.version.clone())
                             .children(viewer_note)
                             .child(div().flex_1())
+                            .child(
+                                Button::new("extract-value")
+                                    .ghost()
+                                    .xsmall()
+                                    .label("{x}")
+                                    .tooltip(tr!("extract.title"))
+                                    .on_click(cx.listener(|this, _: &ClickEvent, window, cx| {
+                                        this.prompt_extract(window, cx)
+                                    })),
+                            )
                             .child(
                                 Button::new("save-body")
                                     .ghost()

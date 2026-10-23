@@ -163,7 +163,18 @@ json = '''
 
 [auth.bearer]
 token = "{{token}}"
+
+[[assert]]               # a check without code, run after the test scripts
+target = "status"
+op = "=="
+value = "201"
 ```
+
+**Checks.** `[[assert]]` rows compare a target (`status`, `time`, `size`,
+`body`, `body.<path>`, `header.<name>`) with a value using `==`, `!=`, `>`,
+`>=`, `<`, `<=`, `contains`, `not contains`, `exists`, `not exists`, `matches`
+or `is` (a JSON type). `apix_script::assertions_script` turns them into one
+more test script, so they report like `pm.test` everywhere.
 
 **Bodies.** `[body]` holds one of `json`, `text`, `xml`, `form` (URL-encoded rows),
 `multipart` (rows with `file = true` for file fields and an optional
@@ -286,6 +297,16 @@ and `__apix_output()` returns the changed request and variables, test results,
 console lines, `setNextRequest` and `skipRequest` as JSON. Keeping the API in
 JavaScript keeps the Rust side to a few calls and makes Postman behaviour easy
 to match.
+
+`pm.sendRequest` calls a native `__apix_send` with the request as JSON; the
+caller of `apix_script::run` passes a `Sender` that sends it and blocks until
+the response is in (the CLI on a fresh runtime on the script thread, the app
+on its network runtime). Scripts are wrapped in async functions, so the
+callback style and `await` both work, and the time spent waiting is not
+counted against the limit. `require` comes from `libs.js`: subsets of
+crypto-js (digests and HMACs done in Rust through `__apix_hash` /
+`__apix_hmac`), uuid, lodash, moment, ajv, tv4 and chai, written for Apix
+rather than downloaded.
 
 A send with scripts: pre-request scripts, then `ScriptVars::apply` and
 resolving, the HTTP request, then test scripts with a `ResponseView`. The CLI

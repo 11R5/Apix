@@ -364,9 +364,14 @@ name = "apix-script"
 version = "0.1.0"
 dependencies = [
  "apix-core",
+ "hmac",
+ "md-5",
+ "rand_core 0.6.4",
  "rquickjs",
  "serde",
  "serde_json",
+ "sha1",
+ "sha2 0.10.9",
 ]
 
 [[package]]

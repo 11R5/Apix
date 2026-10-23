@@ -226,6 +226,16 @@ env.undo_delete: Löschen rückgängig machen
 export.done: "%{count} Dateien nach %{path} geschrieben."
 export.done_title: Nach Postman exportiert
 export.prompt: Postman-Dateien speichern in…
+extract.error: "Der Wert konnte nicht gelesen werden: %{error}"
+extract.into_collection: Keine Umgebung aktiv, daher kommt er in die Variablen der Sammlung.
+extract.into_env: "Er kommt in die Umgebung „%{env}“."
+extract.keep: Bei jedem Senden aktualisieren (fügt dem Testskript eine Zeile hinzu)
+extract.name: Variablenname
+extract.ok: Speichern
+extract.path: "Wert (wie bei den Prüfungen: body.data.token, header.X-Token, status)"
+extract.saved_collection: "%{name} = %{value} in den Variablen der Sammlung gespeichert."
+extract.saved_env: "%{name} = %{value} in „%{env}“ gespeichert."
+extract.title: Einen Wert als Variable speichern
 history.ago_days: vor %{count} T.
 history.ago_hours: vor %{count} Std.
 history.ago_minutes: vor %{count} Min.
@@ -425,6 +435,9 @@ response.tab.raw: Roh
 response.tab.tests: Tests
 response.tab.tests_count: "Tests %{passed}/%{total}"
 scripts.around: "%{hint} Davor laufen %{count} Ordner- oder Sammlungsskripte."
+scripts.asserts: Prüfungen
+scripts.asserts_count: "Prüfungen %{count}"
+scripts.asserts_hint: "Prüfungen ohne Code, nach den Tests: status, time (ms), size, body, body.users[0].id oder header.Content-Type, verglichen mit einem Wert ({{Variablen}} erlaubt)."
 scripts.error: "Skriptfehler: %{error}"
 scripts.pre: Vor der Anfrage
 scripts.pre_error: "Das Skript vor der Anfrage ist fehlgeschlagen, die Anfrage wurde nicht gesendet: %{error}"

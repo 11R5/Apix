@@ -226,6 +226,16 @@ env.undo_delete: Отменить удаление
 export.done: "Записано файлов: %{count} в %{path}."
 export.done_title: Экспортировано в Postman
 export.prompt: Сохранить файлы Postman в…
+extract.error: "Не удалось прочитать значение: %{error}"
+extract.into_collection: Окружение не выбрано, поэтому оно попадёт в переменные коллекции.
+extract.into_env: "Оно попадёт в окружение «%{env}»."
+extract.keep: Обновлять при каждой отправке (добавляет строку в скрипт тестов)
+extract.name: Имя переменной
+extract.ok: Сохранить
+extract.path: "Значение (как в проверках: body.data.token, header.X-Token, status)"
+extract.saved_collection: "%{name} = %{value} сохранено в переменных коллекции."
+extract.saved_env: "%{name} = %{value} сохранено в «%{env}»."
+extract.title: Сохранить значение как переменную
 history.ago_days: "%{count} дн. назад"
 history.ago_hours: "%{count} ч назад"
 history.ago_minutes: "%{count} мин назад"
@@ -425,6 +435,9 @@ response.tab.raw: Исходный
 response.tab.tests: Тесты
 response.tab.tests_count: "Тесты %{passed}/%{total}"
 scripts.around: "%{hint} Перед ним выполняются скрипты папок и коллекции: %{count}."
+scripts.asserts: Проверки
+scripts.asserts_count: "Проверки %{count}"
+scripts.asserts_hint: "Проверки без кода, после тестов: status, time (мс), size, body, body.users[0].id или header.Content-Type сравниваются со значением ({{переменные}} допустимы)."
 scripts.error: "Ошибка скрипта: %{error}"
 scripts.pre: До запроса
 scripts.pre_error: "Скрипт перед запросом завершился с ошибкой, запрос не отправлен: %{error}"

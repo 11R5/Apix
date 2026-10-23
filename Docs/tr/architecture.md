@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:b09ada03e09160cb -->
+<!-- translated from en/architecture.md sha256:0de40661ea92cdda -->
 
 # Apix mimarisi
 
@@ -171,7 +171,19 @@ json = '''
 
 [auth.bearer]
 token = "{{token}}"
+
+[[assert]]               # kod yazmadan doğrulama, test scriptlerinden sonra çalışır
+target = "status"
+op = "=="
+value = "201"
 ```
+
+**Doğrulamalar.** `[[assert]]` satırları bir hedefi (`status`, `time`, `size`,
+`body`, `body.<yol>`, `header.<ad>`) bir değerle `==`, `!=`, `>`, `>=`, `<`,
+`<=`, `contains`, `not contains`, `exists`, `not exists`, `matches` ya da `is`
+(bir JSON türü) ile karşılaştırır. `apix_script::assertions_script` bunları
+bir test scripti daha olarak üretir, böylece her yerde `pm.test` gibi
+raporlanırlar.
 
 **Gövdeler.** `[body]` şunlardan birini içerir: `json`, `text`, `xml`, `form`
 (URL-encoded satırlar), `multipart` (dosya alanları için `file = true` içeren
@@ -302,6 +314,16 @@ testler için yanıt, `project::scope_values` ile kapsam değerleri, önceki
 konsol satırlarını, `setNextRequest` ve `skipRequest` bilgisini JSON olarak
 döndürür. API'nin JavaScript'te durması Rust tarafını birkaç çağrıya indirir ve
 Postman davranışını yakalamayı kolaylaştırır.
+
+`pm.sendRequest`, isteği JSON olarak yerel `__apix_send` fonksiyonuna verir;
+`apix_script::run`'ı çağıran taraf isteği gönderen ve yanıt gelene kadar
+bekleyen bir `Sender` sağlar (CLI script thread'inde yeni bir çalışma
+zamanıyla, uygulama kendi ağ çalışma zamanıyla). Scriptler async fonksiyonlara
+sarılır, böylece hem geri çağırma stili hem `await` çalışır ve beklenen süre
+sınıra sayılmaz. `require` `libs.js` dosyasından gelir: crypto-js (özetler ve
+HMAC'ler `__apix_hash` / `__apix_hmac` üzerinden Rust'ta hesaplanır), uuid,
+lodash, moment, ajv, tv4 ve chai'nin Apix için yazılmış alt kümeleri;
+indirilmezler.
 
 Scriptli bir gönderim: istek öncesi scriptler, sonra `ScriptVars::apply` ve
 çözümleme, HTTP isteği, ardından `ResponseView` ile test scriptleri. CLI bunu

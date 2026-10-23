@@ -585,11 +585,31 @@
     },
   });
 
-  // A small JSON Schema check (type, required, properties, items, enum,
-  // minimum/maximum, minLength/maxLength, pattern) for `jsonSchema`.
+  // A JSON Schema check covering what API tests use: type, required,
+  // properties, additionalProperties, items, enum, const, minimum/maximum,
+  // exclusive bounds, minLength/maxLength, pattern, minItems/maxItems,
+  // uniqueItems, format (email, uri, date-time, date, uuid), allOf / anyOf /
+  // oneOf / not. No $ref. Also behind ajv and tv4 in `require`.
+  const formats = {
+    email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+    uri: /^[a-z][a-z0-9+.-]*:[^\s]*$/i,
+    "date-time": /^\d{4}-\d{2}-\d{2}[Tt ]\d{2}:\d{2}:\d{2}(\.\d+)?([Zz]|[+-]\d{2}:?\d{2})$/,
+    date: /^\d{4}-\d{2}-\d{2}$/,
+    uuid: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+  };
   function validate(value, schema, at, problems) {
     if (!schema || typeof schema !== "object") return;
     const where = at || "the value";
+    const passes = (sub) => {
+      const found = [];
+      validate(value, sub, at, found);
+      return found.length === 0;
+    };
+    if (schema.allOf) for (const sub of schema.allOf) validate(value, sub, at, problems);
+    if (schema.anyOf && !schema.anyOf.some(passes)) problems.push(where + " should match one of the anyOf schemas");
+    if (schema.oneOf && schema.oneOf.filter(passes).length !== 1) problems.push(where + " should match exactly one of the oneOf schemas");
+    if (schema.not && passes(schema.not)) problems.push(where + " should not match the schema in not");
+    if (schema.const !== undefined && !deepEqual(value, schema.const)) problems.push(where + " should be " + JSON.stringify(schema.const));
     if (schema.type) {
       const types = [].concat(schema.type);
       const actual = typeName(value) === "number" && Number.isInteger(value) ? ["number", "integer"] : [typeName(value)];
@@ -602,20 +622,42 @@
     if (typeof value === "number") {
       if (schema.minimum !== undefined && value < schema.minimum) problems.push(where + " should be at least " + schema.minimum);
       if (schema.maximum !== undefined && value > schema.maximum) problems.push(where + " should be at most " + schema.maximum);
+      if (typeof schema.exclusiveMinimum === "number" && value <= schema.exclusiveMinimum) problems.push(where + " should be above " + schema.exclusiveMinimum);
+      if (typeof schema.exclusiveMaximum === "number" && value >= schema.exclusiveMaximum) problems.push(where + " should be below " + schema.exclusiveMaximum);
     }
     if (typeof value === "string") {
       if (schema.minLength !== undefined && value.length < schema.minLength) problems.push(where + " should have at least " + schema.minLength + " characters");
       if (schema.maxLength !== undefined && value.length > schema.maxLength) problems.push(where + " should have at most " + schema.maxLength + " characters");
       if (schema.pattern && !new RegExp(schema.pattern).test(value)) problems.push(where + " should match " + schema.pattern);
+      if (schema.format && formats[schema.format] && !formats[schema.format].test(value)) problems.push(where + " should be a valid " + schema.format);
     }
     if (value && typeof value === "object" && !Array.isArray(value)) {
       for (const name of schema.required || []) if (!own(value, name)) problems.push((at ? at + "." : "") + name + " is required");
-      for (const name of Object.keys(schema.properties || {})) {
-        if (own(value, name)) validate(value[name], schema.properties[name], (at ? at + "." : "") + name, problems);
+      const known = schema.properties || {};
+      for (const name of Object.keys(known)) {
+        if (own(value, name)) validate(value[name], known[name], (at ? at + "." : "") + name, problems);
+      }
+      if (schema.additionalProperties !== undefined && schema.additionalProperties !== true) {
+        for (const name of Object.keys(value)) {
+          if (own(known, name)) continue;
+          if (schema.additionalProperties === false) problems.push((at ? at + "." : "") + name + " is not allowed");
+          else validate(value[name], schema.additionalProperties, (at ? at + "." : "") + name, problems);
+        }
       }
     }
-    if (Array.isArray(value) && schema.items) value.forEach((item, i) => validate(item, schema.items, (at || "") + "[" + i + "]", problems));
+    if (Array.isArray(value)) {
+      if (schema.items) value.forEach((item, i) => validate(item, schema.items, (at || "") + "[" + i + "]", problems));
+      if (schema.minItems !== undefined && value.length < schema.minItems) problems.push(where + " should have at least " + schema.minItems + " items");
+      if (schema.maxItems !== undefined && value.length > schema.maxItems) problems.push(where + " should have at most " + schema.maxItems + " items");
+      if (schema.uniqueItems && value.some((x, i) => value.findIndex((y) => deepEqual(x, y)) !== i)) problems.push(where + " should have unique items");
+    }
   }
+  global.__apix_validate = function (value, schema) {
+    const problems = [];
+    validate(value, schema, "", problems);
+    return problems;
+  };
+  global.__apix_deep_equal = deepEqual;
 
   function expect(subject, message) {
     return new Assertion(subject, message);
@@ -653,7 +695,8 @@
 
   // --------------------------------------------------------------- response
 
-  function responseObject() {
+  // pm.response, and what pm.sendRequest hands back.
+  function responseObject(res) {
     if (!res) return undefined;
     const headers = propertyList(res.headers, true);
     let parsed;
@@ -772,6 +815,191 @@
     return response;
   }
 
+  // ------------------------------------------------- checks without code
+
+  // `users[0].id` or `data["a b"].x` inside a parsed body.
+  function walk(value, path) {
+    const keys = [];
+    path.replace(/\[(\d+)\]|\["([^"]*)"\]|\['([^']*)'\]|([^.[\]]+)/g, (m, index, dq, sq, name) => {
+      keys.push(index !== undefined ? Number(index) : dq !== undefined ? dq : sq !== undefined ? sq : name);
+      return m;
+    });
+    let cur = value;
+    for (const key of keys) {
+      if (cur === null || cur === undefined) return undefined;
+      cur = cur[key];
+    }
+    return cur;
+  }
+
+  function assertionTarget(target) {
+    if (!res) throw new Error("there is no response");
+    if (target === "status") return res.code;
+    if (target === "time") return res.responseTime;
+    if (target === "size") return res.responseSize;
+    if (target === "body") return res.body;
+    const header = /^headers?\.(.+)$/i.exec(target);
+    if (header) return propertyList(res.headers, true).get(header[1]);
+    const inBody = /^body(?:\.|(?=\[))(.+)$/.exec(target);
+    if (inBody) {
+      let parsed;
+      try {
+        parsed = JSON.parse(res.body);
+      } catch (e) {
+        throw new Error("the body is not JSON");
+      }
+      return walk(parsed, inBody[1]);
+    }
+    throw new Error("unknown target " + show(target) + "; use status, time, size, body, body.<path> or header.<name>");
+  }
+
+  global.__apix_assert = function (label, target, op, value) {
+    runTest(label, () => {
+      const actual = assertionTarget(target);
+      const filled = replaceIn(value);
+      let wanted = filled;
+      try {
+        wanted = JSON.parse(filled);
+      } catch (e) {}
+      const same = deepEqual(actual, wanted) || (actual !== null && typeof actual !== "object" && String(actual) === String(wanted));
+      const number = (v) => (typeof v === "number" ? v : v === "" || v === null ? NaN : Number(v));
+      const compare = (test) => {
+        const a = number(actual);
+        const b = number(wanted);
+        if (a !== a || b !== b) throw AssertionError("expected " + show(actual) + " and " + show(wanted) + " to be numbers");
+        return test(a, b);
+      };
+      const has = () => {
+        if (typeof actual === "string") return actual.indexOf(String(wanted)) >= 0;
+        if (Array.isArray(actual)) return actual.some((x) => deepEqual(x, wanted) || String(x) === String(wanted));
+        if (actual && typeof actual === "object") return own(actual, String(wanted));
+        return false;
+      };
+      const pattern = () => {
+        const m = /^\/(.*)\/([a-z]*)$/.exec(filled);
+        return m ? new RegExp(m[1], m[2]) : new RegExp(filled);
+      };
+      const checks = {
+        "==": () => same,
+        "!=": () => !same,
+        ">": () => compare((a, b) => a > b),
+        ">=": () => compare((a, b) => a >= b),
+        "<": () => compare((a, b) => a < b),
+        "<=": () => compare((a, b) => a <= b),
+        contains: has,
+        "not contains": () => !has(),
+        exists: () => actual !== undefined,
+        "not exists": () => actual === undefined,
+        matches: () => pattern().test(String(actual)),
+        is: () => typeName(actual) === String(wanted).toLowerCase() || (String(wanted).toLowerCase() === "integer" && Number.isInteger(actual)),
+      };
+      if (!checks[op]) throw new Error("unknown check " + show(op));
+      if (!checks[op]()) {
+        const words = {
+          "==": "equal",
+          "!=": "not equal",
+          ">": "be above",
+          ">=": "be at least",
+          "<": "be below",
+          "<=": "be at most",
+          contains: "contain",
+          "not contains": "not contain",
+          exists: "exist",
+          "not exists": "not exist",
+          matches: "match",
+          is: "be",
+        };
+        const tail = op === "exists" || op === "not exists" ? "" : " " + (op === "matches" ? filled : show(wanted));
+        throw AssertionError("expected " + show(actual) + " to " + words[op] + tail);
+      }
+    });
+  };
+
+  // ------------------------------------------------------------ sendRequest
+
+  // A Postman request description (a URL, or { url, method, header, body })
+  // as the request rows Rust reads.
+  function requestSpec(spec) {
+    if (typeof spec === "string" || (spec && typeof spec.toString === "function" && spec.url === undefined)) {
+      spec = { url: String(spec) };
+    }
+    const headers = [];
+    const given = spec.header !== undefined ? spec.header : spec.headers;
+    if (Array.isArray(given)) {
+      for (const h of given) {
+        if (typeof h === "string") {
+          const colon = h.indexOf(":");
+          headers.push({ key: h.slice(0, colon).trim(), value: h.slice(colon + 1).trim(), disabled: false });
+        } else headers.push({ key: String(h.key), value: text(h.value), disabled: !!h.disabled });
+      }
+    } else if (given && typeof given === "object") {
+      for (const key of Object.keys(given)) headers.push({ key: key, value: text(given[key]), disabled: false });
+    }
+    const body = spec.body || {};
+    let mode = body.mode || "none";
+    let raw = "";
+    let urlencoded = [];
+    const rows = (list) => (list || []).map((r) => ({ key: String(r.key), value: text(r.value), disabled: !!r.disabled }));
+    if (mode === "raw") raw = text(body.raw);
+    else if (mode === "urlencoded") urlencoded = rows(body.urlencoded);
+    else if (mode === "formdata") {
+      mode = "urlencoded";
+      urlencoded = rows(body.formdata);
+    } else if (mode === "graphql") {
+      mode = "raw";
+      const gql = body.graphql || {};
+      raw = JSON.stringify({ query: gql.query || "", variables: typeof gql.variables === "string" ? JSON.parse(gql.variables || "null") : gql.variables || null });
+      if (!headers.some((h) => h.key.toLowerCase() === "content-type")) headers.push({ key: "Content-Type", value: "application/json", disabled: false });
+    } else mode = "none";
+    const split = splitUrl(String(spec.url));
+    return { method: String(spec.method || "GET").toUpperCase(), url: split.base, query: split.query, headers: headers, body: { mode: mode, raw: raw, urlencoded: urlencoded } };
+  }
+
+  // Waits for the response (scripts run one at a time anyway), then calls
+  // `callback(error, response)` and also resolves the returned promise, so
+  // both the callback style and `await pm.sendRequest(…)` work.
+  function sendRequest(spec, callback) {
+    let reply;
+    try {
+      reply = JSON.parse(global.__apix_send(JSON.stringify(requestSpec(spec))));
+    } catch (e) {
+      reply = { error: e && e.message ? e.message : String(e) };
+    }
+    const error = reply.error ? new Error(reply.error) : null;
+    const response = error ? null : responseObject(reply.response);
+    if (typeof callback === "function") {
+      callback(error, response);
+      return Promise.resolve(response);
+    }
+    return error ? Promise.reject(error) : Promise.resolve(response);
+  }
+
+  // ------------------------------------------------------------ script runs
+
+  let scriptError = null;
+  function describeError(e) {
+    if (e && e.message !== undefined) {
+      const frame = String(e.stack || "")
+        .split("\n")
+        .map((l) => l.trim())
+        .find((l) => l.indexOf(".js:") >= 0);
+      return frame ? e.message + " (" + frame + ")" : String(e.message);
+    }
+    return String(e);
+  }
+  // Each script is an async function; a throw (also after an `await`)
+  // becomes the script's error.
+  global.__apix_run = function (fn) {
+    fn().then(null, (e) => {
+      if (scriptError === null) scriptError = describeError(e);
+    });
+  };
+  global.__apix_error = function () {
+    const e = scriptError;
+    scriptError = null;
+    return e;
+  };
+
   // ---------------------------------------------------------------- console
 
   function log(level) {
@@ -844,7 +1072,7 @@
       toObject: () => Object.assign({}, data),
     },
     request: requestObject(req),
-    response: responseObject(),
+    response: responseObject(res),
     test: runTest,
     expect: expect,
     execution: {
@@ -856,9 +1084,7 @@
       },
       location: [input.info.request_name],
     },
-    sendRequest() {
-      throw new Error("pm.sendRequest is not supported yet");
-    },
+    sendRequest: sendRequest,
     visualizer: {
       set() {
         logs.push({ level: "info", text: "pm.visualizer is not supported; the template was ignored" });
