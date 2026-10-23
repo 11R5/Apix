@@ -167,6 +167,15 @@ collection.start_here_text: "لا يحتوي %{path} على apix.toml بعد. س
 collection.start_here_title: بدء مجموعة جديدة هنا؟
 collection.unsaved_text: حفظ تغييراتك على «%{name}» أولًا؟
 collection.unsaved_title: تغييرات غير محفوظة
+color.blue: أزرق
+color.green: أخضر
+color.none: بلا لون
+color.orange: برتقالي
+color.pink: وردي
+color.purple: بنفسجي
+color.red: أحمر
+color.teal: أزرق مخضر
+color.yellow: أصفر
 cookies.clear_all: حذف الكل
 cookies.empty: لا توجد ملفات تعريف ارتباط بعد. تصل ردود Set-Cookie إلى هنا تلقائيًا.
 cookies.expired: منتهية
@@ -430,6 +439,7 @@ settings.theme_restart: يُطبَّق عند تشغيل Apix في المرة ا
 settings.title: الإعدادات
 sidebar.auth: المصادقة…
 sidebar.change_password: تغيير كلمة المرور…
+sidebar.color: اللون
 sidebar.copy_as_code: نسخ كشيفرة برمجية
 sidebar.copy_as_shell: نسخ كـ %{shell}
 sidebar.drop_hint: أو أفلت تصديرًا (Postman وInsomnia وOpenAPI وHAR) أو مجلدًا على النافذة.

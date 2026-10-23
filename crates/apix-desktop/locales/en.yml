@@ -169,6 +169,15 @@ collection.start_here_text: "%{path} has no apix.toml yet. Apix will create one;
 collection.start_here_title: Start a new collection here?
 collection.unsaved_text: Save your changes to “%{name}” first?
 collection.unsaved_title: Unsaved changes
+color.blue: Blue
+color.green: Green
+color.none: None
+color.orange: Orange
+color.pink: Pink
+color.purple: Purple
+color.red: Red
+color.teal: Teal
+color.yellow: Yellow
 cookies.clear_all: Remove all
 cookies.empty: No cookies yet. Set-Cookie answers land here automatically.
 cookies.expired: expired
@@ -432,6 +441,7 @@ settings.theme_restart: Applies the next time Apix starts.
 settings.title: Settings
 sidebar.auth: Auth…
 sidebar.change_password: Change password…
+sidebar.color: Colour
 sidebar.copy_as_code: Copy as code
 sidebar.copy_as_shell: Copy as %{shell}
 sidebar.drop_hint: Or drop an export (Postman, Insomnia, OpenAPI, HAR) or a folder onto the window.

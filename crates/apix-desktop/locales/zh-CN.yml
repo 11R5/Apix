@@ -167,6 +167,15 @@ collection.start_here_text: "%{path} 中还没有 apix.toml。Apix 将创建一�
 collection.start_here_title: 在此新建集合？
 collection.unsaved_text: 是否先保存对“%{name}”的更改？
 collection.unsaved_title: 未保存的更改
+color.blue: 蓝色
+color.green: 绿色
+color.none: 无
+color.orange: 橙色
+color.pink: 粉色
+color.purple: 紫色
+color.red: 红色
+color.teal: 青色
+color.yellow: 黄色
 cookies.clear_all: 全部删除
 cookies.empty: 还没有 Cookie。Set-Cookie 响应会自动出现在这里。
 cookies.expired: 已过期
@@ -430,6 +439,7 @@ settings.theme_restart: 下次启动 Apix 时生效。
 settings.title: 设置
 sidebar.auth: 认证…
 sidebar.change_password: 更改密码…
+sidebar.color: 颜色
 sidebar.copy_as_code: 复制为代码
 sidebar.copy_as_shell: 复制为 %{shell}
 sidebar.drop_hint: 或将导出（Postman、Insomnia、OpenAPI、HAR）或文件夹拖到窗口中。

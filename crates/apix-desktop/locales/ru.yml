@@ -167,6 +167,15 @@ collection.start_here_text: "В %{path} ещё нет apix.toml. Apix созда
 collection.start_here_title: Создать здесь новую коллекцию?
 collection.unsaved_text: Сначала сохранить изменения в «%{name}»?
 collection.unsaved_title: Несохранённые изменения
+color.blue: Синий
+color.green: Зелёный
+color.none: Нет
+color.orange: Оранжевый
+color.pink: Розовый
+color.purple: Фиолетовый
+color.red: Красный
+color.teal: Бирюзовый
+color.yellow: Жёлтый
 cookies.clear_all: Удалить все
 cookies.empty: Пока нет cookie. Ответы Set-Cookie попадают сюда автоматически.
 cookies.expired: истёк
@@ -430,6 +439,7 @@ settings.theme_restart: Применится при следующем запу�
 settings.title: Настройки
 sidebar.auth: Авторизация…
 sidebar.change_password: Сменить пароль…
+sidebar.color: Цвет
 sidebar.copy_as_code: Копировать как код
 sidebar.copy_as_shell: Копировать как %{shell}
 sidebar.drop_hint: Или перетащите в окно экспорт (Postman, Insomnia, OpenAPI, HAR) или папку.

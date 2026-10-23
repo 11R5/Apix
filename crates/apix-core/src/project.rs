@@ -2,7 +2,7 @@
 //!
 //! ```text
 //! shop/
-//! ├── apix-project.toml   name, collection order, sidebar grouping, pins
+//! ├── apix-project.toml   name, collection order and colours, sidebar grouping, pins
 //! ├── environments/       test.toml, prod.toml (+ *.local.toml secrets)
 //! ├── users/              a collection (apix.toml + .apix files)
 //! └── payments/           a collection
@@ -55,6 +55,10 @@ pub struct ProjectMeta {
     /// A collection without an entry is shown in every environment.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub pins: BTreeMap<String, Vec<String>>,
+    /// A colour name per collection folder (`red`, `blue`, …), to tell
+    /// collections apart in the sidebar and in tabs.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub colors: BTreeMap<String, String>,
     /// Auth for every request in the project that does not set its own.
     #[serde(default, skip_serializing_if = "Auth::is_inherit")]
     pub auth: Auth,
@@ -212,6 +216,23 @@ impl Project {
         if !everywhere {
             self.meta.pins.insert(key, envs);
         }
+    }
+
+    /// The colour name given to a collection, if any.
+    pub fn color_of(&self, collection_root: &Path) -> Option<&str> {
+        self.meta
+            .colors
+            .get(&self.key(collection_root))
+            .map(String::as_str)
+    }
+
+    /// Gives a collection a colour name, or takes it away.
+    pub fn set_color(&mut self, collection_root: &Path, color: Option<&str>) {
+        let key = self.key(collection_root);
+        match color {
+            Some(color) => self.meta.colors.insert(key, color.to_owned()),
+            None => self.meta.colors.remove(&key),
+        };
     }
 }
 
@@ -489,6 +510,11 @@ mod tests {
         project.save().unwrap();
         let mut project = Project::open(&root).unwrap();
         assert_eq!(names(&project), ["Users", "Orders"]);
+        project.set_color(&users, Some("blue"));
+        assert_eq!(project.color_of(&users), Some("blue"));
+        assert_eq!(project.meta.colors["users"], "blue");
+        project.set_color(&users, None);
+        assert!(project.meta.colors.is_empty());
         // Dragging Users after Orders.
         project.place_collection(&users, &orders, true).unwrap();
         let project = Project::open(&root).unwrap();

@@ -393,6 +393,7 @@ impl Workspace {
                 name
             };
             let dirty = self.tab_dirty(tab, cx);
+            let color = self.collection_color(&tab.path);
             let (open, close, middle) = (tab.path.clone(), tab.path.clone(), tab.path.clone());
             h_flex()
                 .id(("tab", ix))
@@ -422,6 +423,17 @@ impl Workspace {
                         this.close_tab(middle.clone(), window, cx)
                     }),
                 )
+                // The colour of the request's collection, in a project.
+                .when_some(color, |t, color| {
+                    t.child(
+                        div()
+                            .w(px(6.))
+                            .h(px(6.))
+                            .flex_none()
+                            .rounded_full()
+                            .bg(color),
+                    )
+                })
                 .child(
                     div()
                         .text_xs()

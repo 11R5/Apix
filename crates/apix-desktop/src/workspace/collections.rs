@@ -1434,6 +1434,14 @@ impl Workspace {
                 .collect();
             (all, shown)
         });
+        let color_name = self
+            .project
+            .as_ref()
+            .map(|project| project.color_of(&collection.root).map(str::to_owned));
+        let color = color_name
+            .clone()
+            .flatten()
+            .and_then(|name| theme::collection_color(&name));
         let header = row_base(&collection.root, depth);
         // Inside a project, collections can be dragged to reorder them.
         let header = if self.project.is_some() {
@@ -1467,6 +1475,16 @@ impl Workspace {
                     })
                     .xsmall(),
                 )
+                .when_some(color, |row, color| {
+                    row.child(
+                        div()
+                            .w(px(8.))
+                            .h(px(8.))
+                            .flex_none()
+                            .rounded_full()
+                            .bg(color),
+                    )
+                })
                 .child(
                     div()
                         .flex_1()
@@ -1488,6 +1506,7 @@ impl Workspace {
                         view.clone(),
                         menu_root.clone(),
                         pins.clone(),
+                        color_name.clone(),
                         window,
                         cx,
                     )
@@ -1982,6 +2001,7 @@ fn collection_menu(
     view: WeakEntity<Workspace>,
     root: PathBuf,
     pins: Option<(Vec<String>, Vec<bool>)>,
+    color: Option<Option<String>>,
     window: &mut Window,
     cx: &mut Context<PopupMenu>,
 ) -> PopupMenu {
@@ -2049,10 +2069,46 @@ fn collection_menu(
             ));
         }
     }
+    if let Some(current) = color {
+        let (view, root) = (view.clone(), root.clone());
+        menu = menu
+            .separator()
+            .submenu(tr!("sidebar.color"), window, cx, move |menu, _, _| {
+                let pick = |label: SharedString, name: Option<&'static str>| {
+                    let (view, root) = (view.clone(), root.clone());
+                    PopupMenuItem::new(label)
+                        .checked(current.as_deref() == name)
+                        .on_click(move |_, window, cx| {
+                            view.update(cx, |this, cx| {
+                                this.set_collection_color(&root, name, window, cx)
+                            })
+                            .ok();
+                        })
+                };
+                let mut menu = menu.item(pick(tr!("color.none"), None));
+                for name in theme::COLLECTION_COLORS {
+                    menu = menu.item(pick(color_label(name), Some(name)));
+                }
+                menu
+            });
+    }
     menu.separator().item(item(
         tr!("sidebar.move_to_trash"),
         |this, root, window, cx| this.confirm_delete(root, true, window, cx),
     ))
+}
+
+fn color_label(name: &str) -> SharedString {
+    match name {
+        "red" => tr!("color.red"),
+        "orange" => tr!("color.orange"),
+        "yellow" => tr!("color.yellow"),
+        "green" => tr!("color.green"),
+        "teal" => tr!("color.teal"),
+        "blue" => tr!("color.blue"),
+        "purple" => tr!("color.purple"),
+        _ => tr!("color.pink"),
+    }
 }
 
 impl Workspace {
@@ -2308,6 +2364,30 @@ impl Workspace {
             self.notify_error(describe(&e), window, cx);
         }
         cx.notify();
+    }
+
+    fn set_collection_color(
+        &mut self,
+        root: &Path,
+        color: Option<&str>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let Some(project) = &mut self.project else {
+            return;
+        };
+        project.set_color(root, color);
+        if let Err(e) = project.save() {
+            self.notify_error(describe(&e), window, cx);
+        }
+        cx.notify();
+    }
+
+    /// The colour of the project collection that holds `path`, if it has one.
+    pub(super) fn collection_color(&self, path: &Path) -> Option<Hsla> {
+        let project = self.project.as_ref()?;
+        let collection = self.collection_for(path)?;
+        theme::collection_color(project.color_of(&collection.root)?)
     }
 }
 

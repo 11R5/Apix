@@ -167,6 +167,15 @@ collection.start_here_text: "%{path} içinde henüz apix.toml yok. Apix bir tane
 collection.start_here_title: Burada yeni bir koleksiyon başlatılsın mı?
 collection.unsaved_text: Önce “%{name}” üzerindeki değişiklikler kaydedilsin mi?
 collection.unsaved_title: Kaydedilmemiş değişiklikler
+color.blue: Mavi
+color.green: Yeşil
+color.none: Yok
+color.orange: Turuncu
+color.pink: Pembe
+color.purple: Mor
+color.red: Kırmızı
+color.teal: Turkuaz
+color.yellow: Sarı
 cookies.clear_all: Tümünü sil
 cookies.empty: Henüz çerez yok. Set-Cookie yanıtları buraya kendiliğinden eklenir.
 cookies.expired: süresi doldu
@@ -430,6 +439,7 @@ settings.theme_restart: Apix'in bir sonraki açılışında uygulanır.
 settings.title: Ayarlar
 sidebar.auth: Yetkilendirme…
 sidebar.change_password: Parolayı değiştir…
+sidebar.color: Renk
 sidebar.copy_as_code: Kod olarak kopyala
 sidebar.copy_as_shell: "%{shell} olarak kopyala"
 sidebar.drop_hint: Ya da bir dışa aktarımı (Postman, Insomnia, OpenAPI, HAR) veya bir klasörü pencereye bırakın.

@@ -167,6 +167,15 @@ collection.start_here_text: "%{path} にはまだ apix.toml がありません�
 collection.start_here_title: ここで新しいコレクションを始めますか？
 collection.unsaved_text: 先に「%{name}」への変更を保存しますか？
 collection.unsaved_title: 未保存の変更
+color.blue: 青
+color.green: 緑
+color.none: なし
+color.orange: オレンジ
+color.pink: ピンク
+color.purple: 紫
+color.red: 赤
+color.teal: ティール
+color.yellow: 黄
 cookies.clear_all: すべて削除
 cookies.empty: まだCookieはありません。Set-Cookie応答は自動的にここに入ります。
 cookies.expired: 期限切れ
@@ -430,6 +439,7 @@ settings.theme_restart: 次回 Apix の起動時に適用されます。
 settings.title: 設定
 sidebar.auth: 認証…
 sidebar.change_password: パスワードを変更…
+sidebar.color: 色
 sidebar.copy_as_code: コードとしてコピー
 sidebar.copy_as_shell: "%{shell} としてコピー"
 sidebar.drop_hint: または、エクスポート（Postman、Insomnia、OpenAPI、HAR）やフォルダーをウィンドウにドロップします。

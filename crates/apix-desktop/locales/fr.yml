@@ -167,6 +167,15 @@ collection.start_here_text: "%{path} ne contient pas encore de fichier apix.toml
 collection.start_here_title: Démarrer une nouvelle collection ici ?
 collection.unsaved_text: Enregistrer d'abord vos modifications de « %{name} » ?
 collection.unsaved_title: Modifications non enregistrées
+color.blue: Bleu
+color.green: Vert
+color.none: Aucune
+color.orange: Orange
+color.pink: Rose
+color.purple: Violet
+color.red: Rouge
+color.teal: Turquoise
+color.yellow: Jaune
 cookies.clear_all: Tout supprimer
 cookies.empty: Pas encore de cookies. Les réponses Set-Cookie arrivent ici automatiquement.
 cookies.expired: expiré
@@ -430,6 +439,7 @@ settings.theme_restart: S'applique au prochain démarrage d'Apix.
 settings.title: Paramètres
 sidebar.auth: Authentification…
 sidebar.change_password: Changer le mot de passe…
+sidebar.color: Couleur
 sidebar.copy_as_code: Copier en code
 sidebar.copy_as_shell: Copier en %{shell}
 sidebar.drop_hint: Ou déposez un export (Postman, Insomnia, OpenAPI, HAR) ou un dossier sur la fenêtre.
