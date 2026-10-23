@@ -95,16 +95,20 @@ impl Workspace {
         self.reload(window, cx);
 
         // Inside a project, start in the collection that was opened, if any.
-        let start = collection
-            .and_then(|c| self.collections.iter().position(|x| x.root == c))
-            .unwrap_or(0);
-        self.collection = self.collections.get(start).cloned();
-        let first = self.restore_tabs(&root, window, cx).or_else(|| {
-            self.collection
-                .as_ref()
-                .and_then(|c| self.trees.iter().find(|(root, _)| *root == c.root))
-                .and_then(|(_, tree)| first_request(tree))
-        });
+        let chosen = collection.and_then(|c| self.collections.iter().position(|x| x.root == c));
+        self.collection = self.collections.get(chosen.unwrap_or(0)).cloned();
+        let first_of_collection = self
+            .collection
+            .as_ref()
+            .and_then(|c| self.trees.iter().find(|(root, _)| *root == c.root))
+            .and_then(|(_, tree)| first_request(tree));
+        let restored = self.restore_tabs(&root, window, cx);
+        // A collection opened by name inside a project comes to the front.
+        let first = if self.project.is_some() && chosen.is_some() {
+            first_of_collection.or(restored)
+        } else {
+            restored.or(first_of_collection)
+        };
         match first {
             Some(path) => self.open_path(path, window, cx),
             None => {
@@ -877,7 +881,14 @@ impl Workspace {
         let Some(path) = paths.into_iter().next() else {
             return;
         };
-        if path.is_dir() {
+        let outside_project = self
+            .project
+            .as_ref()
+            .is_some_and(|p| !path.starts_with(&p.root) && !p.root.starts_with(&path));
+        let is_collection = path.join(store::COLLECTION_FILE).is_file() || vfs::is_encrypted(&path);
+        if path.is_dir() && outside_project && is_collection {
+            self.offer_move_into_project(path, window, cx);
+        } else if path.is_dir() {
             self.open_or_create(path, window, cx);
         } else {
             self.import_file(path, window, cx);
@@ -2083,6 +2094,101 @@ impl Workspace {
                 .detach();
             },
         );
+    }
+
+    /// File › Move into a project…: picks a project folder and moves the open
+    /// collection there, then opens the project on it.
+    pub(super) fn prompt_move_into_project(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let Some(collection) = self.collections.first().map(|c| c.root.clone()) else {
+            return;
+        };
+        if self.project.is_some() {
+            return;
+        }
+        let picked = cx.prompt_for_paths(PathPromptOptions {
+            files: false,
+            directories: true,
+            multiple: false,
+            prompt: Some(tr!("project.move_in")),
+        });
+        cx.spawn_in(window, async move |this, cx| {
+            if let Ok(Ok(Some(paths))) = picked.await
+                && let Some(picked) = paths.into_iter().next()
+            {
+                this.update_in(cx, |this, window, cx| {
+                    let Some(project_root) = Project::find_root(&picked) else {
+                        this.notify_error(
+                            tr!("project.not_a_project", path = picked.display()),
+                            window,
+                            cx,
+                        );
+                        return;
+                    };
+                    let collection = collection.clone();
+                    this.guard_all_tabs(
+                        window,
+                        cx,
+                        Rc::new(move |this, window, cx| {
+                            match project::move_collection_into(&project_root, &collection) {
+                                Ok(moved) => this.open_collection_dir(&moved, window, cx),
+                                Err(e) => this.notify_error(describe(&e), window, cx),
+                            }
+                        }),
+                    );
+                })
+                .ok();
+            }
+        })
+        .detach();
+    }
+
+    /// A collection folder dropped onto an open project: offers to move it in.
+    fn offer_move_into_project(
+        &mut self,
+        collection: PathBuf,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let Some(project) = self.project.as_ref() else {
+            return;
+        };
+        let (project_root, project_name) = (project.root.clone(), project.meta.name.clone());
+        let name = Collection::open(&collection)
+            .map(|c| c.meta.name)
+            .unwrap_or_else(|_| {
+                collection
+                    .file_name()
+                    .map(|n| n.to_string_lossy().into_owned())
+                    .unwrap_or_default()
+            });
+        let view = cx.entity().downgrade();
+        window.open_alert_dialog(cx, move |alert: AlertDialog, _, _| {
+            let (view, project_root, collection) =
+                (view.clone(), project_root.clone(), collection.clone());
+            alert
+                .on_close(refocus(view.clone()))
+                .confirm()
+                .cancel_text(tr!("dialog.cancel"))
+                .text_start()
+                .title(tr!("project.move_in_title"))
+                .description(bidi::para(tr!(
+                    "project.move_in_detail",
+                    collection = name,
+                    project = project_name,
+                    path = collection.display()
+                )))
+                .ok_text(tr!("project.move_in"))
+                .on_ok(move |_, window, cx| {
+                    view.update(cx, |this, cx| {
+                        match project::move_collection_into(&project_root, &collection) {
+                            Ok(_) => this.reload(window, cx),
+                            Err(e) => this.notify_error(describe(&e), window, cx),
+                        }
+                    })
+                    .ok();
+                    true
+                })
+        });
     }
 
     /// In a project, adds a collection to it; otherwise asks where to create one.

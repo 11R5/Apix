@@ -252,6 +252,61 @@ pub fn create_collection(parent: &Path, name: &str) -> Result<PathBuf, StoreErro
     Ok(root)
 }
 
+/// Moves the collection folder at `collection` into the project at `project`
+/// (keeping its folder name unless that is taken there). Returns where it went.
+/// Works across drives by copying and then removing the original.
+pub fn move_collection_into(project: &Path, collection: &Path) -> Result<PathBuf, StoreError> {
+    let refuse = |why: &str| StoreError::Io {
+        path: collection.to_owned(),
+        source: std::io::Error::new(std::io::ErrorKind::InvalidInput, why.to_owned()),
+    };
+    if !vfs::is_file(&project.join(PROJECT_FILE)) {
+        return Err(refuse("not a project folder"));
+    }
+    if !collection.join(COLLECTION_FILE).is_file() && !vfs::is_encrypted(collection) {
+        return Err(refuse("not a collection folder"));
+    }
+    if collection.parent() == Some(project) {
+        return Ok(collection.to_owned());
+    }
+    if project.starts_with(collection) || collection.starts_with(project) {
+        return Err(refuse(
+            "the collection is already inside the project, or holds it",
+        ));
+    }
+    let name = collection
+        .file_name()
+        .map(|n| n.to_string_lossy().into_owned())
+        .unwrap_or_else(|| "collection".into());
+    let target = unique_path(project, &name, "");
+    if std::fs::rename(collection, &target).is_err() {
+        // Another drive: copy, and remove the original only once the copy is whole.
+        if let Err(e) = copy_tree(collection, &target) {
+            let _ = std::fs::remove_dir_all(&target);
+            return Err(StoreError::Io {
+                path: collection.to_owned(),
+                source: e,
+            });
+        }
+        std::fs::remove_dir_all(collection).map_err(io_error(collection))?;
+    }
+    Ok(target)
+}
+
+fn copy_tree(from: &Path, to: &Path) -> std::io::Result<()> {
+    std::fs::create_dir_all(to)?;
+    for entry in std::fs::read_dir(from)? {
+        let entry = entry?;
+        let target = to.join(entry.file_name());
+        if entry.file_type()?.is_dir() {
+            copy_tree(&entry.path(), &target)?;
+        } else {
+            std::fs::copy(entry.path(), &target)?;
+        }
+    }
+    Ok(())
+}
+
 /// What a request in `dir` gets when its auth is [`Auth::Inherit`]: the auth
 /// of the nearest folder between `dir` and the collection root that sets one
 /// (in its `folder.toml`), else the collection's, else the project's. Returns
@@ -448,6 +503,22 @@ mod tests {
             Some(root.as_path())
         );
         assert!(orders.join(COLLECTION_FILE).is_file());
+
+        // A collection from elsewhere moves in; a second one with the same
+        // folder name gets its own.
+        let outside = temp("outside");
+        let stray = create_collection(&outside, "Users").unwrap();
+        fs::write(stray.join("ping.apix"), "url = \"x\"\n").unwrap();
+        let moved = move_collection_into(&root, &stray).unwrap();
+        assert_eq!(moved, root.join("users-2"));
+        assert!(moved.join("ping.apix").is_file() && !stray.exists());
+        assert_eq!(Project::open(&root).unwrap().collections().0.len(), 3);
+        assert!(move_collection_into(&root, &users).is_ok(), "already there");
+        assert!(
+            move_collection_into(&outside, &users).is_err(),
+            "not a project"
+        );
+        fs::remove_dir_all(outside).unwrap();
         fs::remove_dir_all(parent).unwrap();
     }
 

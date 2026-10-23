@@ -110,11 +110,17 @@ impl MenuState {
             ));
         }
         if let Some(root) = self.plain_collection.clone() {
-            menu = menu.separator().item(
-                self.item(tr!("menu.encrypt_collection"), move |ws, window, cx| {
-                    ws.prompt_encrypt(root.clone(), window, cx)
-                }),
-            );
+            menu = menu
+                .separator()
+                .item(self.item(
+                    tr!("menu.move_into_project"),
+                    Workspace::prompt_move_into_project,
+                ))
+                .item(
+                    self.item(tr!("menu.encrypt_collection"), move |ws, window, cx| {
+                        ws.prompt_encrypt(root.clone(), window, cx)
+                    }),
+                );
         }
         if self.unlocked {
             menu = menu
