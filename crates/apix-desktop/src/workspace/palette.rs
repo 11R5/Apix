@@ -7,7 +7,7 @@ use std::cell::Cell;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
-use apix_codegen::Shell;
+use apix_codegen::Format;
 use apix_core::{GroupBy, Method};
 use gpui_kit::component::command::{Command, CommandGroup, CommandItem, CommandState};
 use gpui_kit::component::{ActiveTheme as _, IndexPath, WindowExt as _, h_flex};
@@ -407,6 +407,7 @@ impl Workspace {
             name!("menu.import_postman"),
             run(Workspace::prompt_import),
         ));
+        out.push(Entry::command(name!("menu.history"), run(Workspace::open_history)).keys("H"));
         if !open {
             out.extend(self.palette_recent());
             return out;
@@ -434,10 +435,10 @@ impl Workspace {
                 )
             });
         }
-        for shell in Shell::ALL {
+        for format in Format::all() {
             out.push(Entry::command(
-                name!("palette.copy_as", format = shell.label()),
-                Rc::new(move |ws, window, cx| ws.copy_current_as(shell, window, cx)),
+                name!("palette.copy_as", format = format.label()),
+                Rc::new(move |ws, window, cx| ws.copy_current_as(format, window, cx)),
             ));
         }
         let owner = match (&self.project, self.collections.first()) {

@@ -25,6 +25,11 @@ fn auto_lock_label(minutes: u32) -> SharedString {
     }
 }
 
+/// "On" / "Off", in picker order.
+fn history_choices() -> Vec<SharedString> {
+    vec![tr!("reqset.on"), tr!("reqset.off")]
+}
+
 fn theme_label(variant: Variant) -> SharedString {
     match variant {
         Variant::Obsidian => tr!("settings.theme_obsidian"),
@@ -38,6 +43,7 @@ pub(super) struct SettingsView {
     language: Entity<Picker>,
     theme: Entity<Picker>,
     auto_lock: Entity<Picker>,
+    history: Entity<Picker>,
     /// The theme the app started with; a change shows "after restart".
     started_theme: Variant,
     _subscriptions: Vec<Subscription>,
@@ -77,8 +83,26 @@ impl SettingsView {
                 cx,
             )
         });
+        let history_ix = if settings.history { 0 } else { 1 };
+        let history = cx.new(|cx| {
+            SelectState::new(
+                history_choices(),
+                Some(IndexPath::new(history_ix)),
+                window,
+                cx,
+            )
+        });
 
         let subscriptions = vec![
+            cx.subscribe_in(
+                &history,
+                window,
+                |this, state, _: &SelectEvent<Vec<SharedString>>, _, cx| {
+                    if let Some(ix) = state.read(cx).selected_index(cx) {
+                        this.change(|s| s.history = ix.row == 0, cx);
+                    }
+                },
+            ),
             cx.subscribe_in(
                 &language,
                 window,
@@ -124,6 +148,7 @@ impl SettingsView {
             language,
             theme,
             auto_lock,
+            history,
             started_theme,
             _subscriptions: subscriptions,
         }
@@ -150,6 +175,9 @@ impl SettingsView {
         let locks = AUTO_LOCK_MINUTES.map(auto_lock_label).to_vec();
         self.auto_lock
             .update(cx, |state, cx| state.set_items(locks, window, cx));
+        self.history.update(cx, |state, cx| {
+            state.set_items(history_choices(), window, cx)
+        });
         cx.notify();
     }
 
@@ -217,6 +245,12 @@ impl Render for SettingsView {
                 tr!("settings.auto_lock"),
                 tr!("settings.auto_lock_description"),
                 Select::new(&self.auto_lock).small(),
+            ))
+            .child(div().h_px().bg(p.hairline))
+            .child(self.row(
+                tr!("settings.history"),
+                tr!("settings.history_description"),
+                Select::new(&self.history).small(),
             ))
     }
 }

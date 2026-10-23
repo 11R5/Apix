@@ -178,7 +178,12 @@ impl SettingsEditor {
                 state.set_selected_index(Some(IndexPath::new(ix)), window, cx)
             });
         };
-        pick(&self.follow, tri_index(settings.follow_redirects), window, cx);
+        pick(
+            &self.follow,
+            tri_index(settings.follow_redirects),
+            window,
+            cx,
+        );
         pick(&self.tls, tri_index(settings.tls_verify), window, cx);
         pick(&self.cookies, tri_index(settings.send_cookies), window, cx);
         let (proxy_ix, proxy_text) = match settings.proxy.as_deref() {

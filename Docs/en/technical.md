@@ -11,7 +11,7 @@ crates/
 ├── apix-core       request model, variables, on-disk format, projects, signing (sign.rs)
 ├── apix-http       the HTTP engine (reqwest), network trace, OAuth 2.0 tokens
 ├── apix-import     Postman collection and environment import
-├── apix-codegen    "Copy as" (curl, curl.exe, PowerShell) and curl paste
+├── apix-codegen    "Copy as" (curl, curl.exe, PowerShell, code in 10 languages) and curl paste
 ├── apix-vault      encrypted collections
 ├── apix-cli        the `apix` command
 └── apix-desktop    the desktop app (GPUI); interface texts in locales/
@@ -74,6 +74,7 @@ release build of the desktop app takes a few minutes.
 | `<config>/Apix/settings.toml` | language, theme, auto-lock time |
 | `<config>/Apix/state.toml` | recently opened collections, the chosen environment per collection |
 | `<config>/Apix/cookies.json` | the cookie jar (session cookies are not persisted) |
+| `<config>/Apix/history/` | sent requests (`{{variables}}` unresolved) and their responses: `index.jsonl`, one `<id>.json` and `<id>.body` per entry; the last 300, bodies cut at 256 KB |
 
 `<config>` is `%APPDATA%` on Windows, `~/Library/Application Support` on macOS
 and `~/.config` on Linux. OAuth 2.0 tokens and passwords of encrypted
@@ -153,7 +154,7 @@ crate is fixed.
 |---|---|
 | apix-core | model and file format round trips, variables, signing against the AWS test suite, RFC 7616 (Digest), RFC 7636 (PKCE) and the OAuth 1.0 example |
 | apix-http | request building, every body type, a local server for OAuth 2.0, Digest, AWS and OAuth 1.0, the network trace |
-| apix-codegen | shell quoting for bash, cmd and PowerShell; curl paste; round trips |
+| apix-codegen | shell quoting for bash, cmd and PowerShell; curl paste; round trips; every language's URL, headers, bodies, string escaping and settings |
 | apix-import | Postman v2.0/v2.1 fixtures |
 | apix-vault | encryption format, tampering, password change, recovery key |
 | apix-desktop | translations complete, language helpers, file paths, highlighting query |

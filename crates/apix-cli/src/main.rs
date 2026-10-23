@@ -55,12 +55,14 @@ enum Command {
         #[command(flatten)]
         vars: VarArgs,
     },
-    /// Print a request as a shell command (curl for bash, curl.exe for cmd, or PowerShell)
+    /// Print a request as a shell command (curl, curl.exe, PowerShell) or as
+    /// code (fetch, axios, Python, Go, Rust, C#, Java, PHP, Swift, Kotlin)
+    #[command(visible_alias = "code")]
     Shell {
         file: PathBuf,
-        /// Which shell to write for
-        #[arg(long = "as", value_enum, default_value_t = ShellArg::Bash)]
-        shell: ShellArg,
+        /// What to write
+        #[arg(long = "as", value_enum, default_value_t = FormatArg::Bash)]
+        format: FormatArg,
         /// Keep {{variables}} instead of filling them in
         #[arg(long)]
         raw: bool,
@@ -130,18 +132,39 @@ fn unlock_around(path: &Path, var: &str) -> Result<()> {
 }
 
 #[derive(Clone, Copy, clap::ValueEnum)]
-enum ShellArg {
+enum FormatArg {
     Bash,
     Cmd,
     Powershell,
+    Fetch,
+    Axios,
+    Python,
+    Go,
+    Rust,
+    Csharp,
+    Java,
+    Php,
+    Swift,
+    Kotlin,
 }
 
-impl From<ShellArg> for apix_codegen::Shell {
-    fn from(arg: ShellArg) -> Self {
+impl From<FormatArg> for apix_codegen::Format {
+    fn from(arg: FormatArg) -> Self {
+        use apix_codegen::{Format, Lang, Shell};
         match arg {
-            ShellArg::Bash => apix_codegen::Shell::Bash,
-            ShellArg::Cmd => apix_codegen::Shell::Cmd,
-            ShellArg::Powershell => apix_codegen::Shell::PowerShell,
+            FormatArg::Bash => Format::Shell(Shell::Bash),
+            FormatArg::Cmd => Format::Shell(Shell::Cmd),
+            FormatArg::Powershell => Format::Shell(Shell::PowerShell),
+            FormatArg::Fetch => Format::Code(Lang::Fetch),
+            FormatArg::Axios => Format::Code(Lang::Axios),
+            FormatArg::Python => Format::Code(Lang::Python),
+            FormatArg::Go => Format::Code(Lang::Go),
+            FormatArg::Rust => Format::Code(Lang::Rust),
+            FormatArg::Csharp => Format::Code(Lang::CSharp),
+            FormatArg::Java => Format::Code(Lang::Java),
+            FormatArg::Php => Format::Code(Lang::Php),
+            FormatArg::Swift => Format::Code(Lang::Swift),
+            FormatArg::Kotlin => Format::Code(Lang::Kotlin),
         }
     }
 }
@@ -321,7 +344,7 @@ async fn run(cli: Cli) -> Result<bool> {
         Command::Decrypt { dir, out, recovery } => decrypt(&style, &dir, &out, recovery, &var),
         Command::Shell {
             file,
-            shell,
+            format,
             raw,
             vars,
         } => {
@@ -338,7 +361,8 @@ async fn run(cli: Cli) -> Result<bool> {
                 }
                 resolved.request
             };
-            println!("{}", apix_codegen::to_shell(&request, shell.into()));
+            let format: apix_codegen::Format = format.into();
+            println!("{}", format.render(&request));
             Ok(true)
         }
     }

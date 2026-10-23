@@ -208,6 +208,21 @@ env.title.collection: "Variables de %{name}"
 env.title.environment: Entorno
 env.title.project: Variables del proyecto
 env.undo_delete: Deshacer eliminación
+history.ago_days: hace %{count} d
+history.ago_hours: hace %{count} h
+history.ago_minutes: hace %{count} min
+history.ago_now: ahora mismo
+history.clear: Borrar historial
+history.empty: Aún no se ha enviado ninguna petición. Cada petición enviada aparece aquí con su respuesta.
+history.failed: fallida
+history.missing: Esta entrada del historial ya no se puede leer.
+history.note: Se guarda solo en este equipo, con las {{variables}} sin resolver; las últimas %{count} peticiones, cuerpos de respuesta de hasta 256 KB. Las peticiones de colecciones cifradas no se guardan.
+history.off: El historial está desactivado. Actívalo en Ajustes (Ctrl+,).
+history.placeholder: Buscar por nombre, URL, método o estado…
+history.restored: Del historial, enviada %{when}.
+history.send_again: Pulsa %{key} para enviarla de nuevo.
+history.title: Historial
+history.truncated: El cuerpo de la respuesta se recortó a 256 KB.
 import.collection_done: Colección de Postman importada
 import.environment_done: Entorno importado
 import.environment_needs_open: Abre primero la colección o el proyecto al que pertenece este entorno y luego impórtalo.
@@ -230,6 +245,7 @@ menu.group_by: Agrupar la barra lateral por
 menu.group_collection: Colección
 menu.group_environment: Entorno
 menu.help: Ayuda
+menu.history: Historial…
 menu.import_postman: Importar desde Postman…
 menu.lock_collections: Bloquear colecciones cifradas
 menu.method: Método
@@ -365,6 +381,8 @@ settings.auto_lock_description: Tras este tiempo de inactividad, las colecciones
 settings.auto_lock_hour: Tras 1 hora
 settings.auto_lock_minutes: Tras %{count} minutos
 settings.auto_lock_never: Nunca
+settings.history: Historial
+settings.history_description: Guardar cada petición enviada con su respuesta en este equipo (Ctrl+H).
 settings.language: Idioma
 settings.language_description: El idioma de los menús, botones y mensajes. Cambia al instante.
 settings.theme: Tema
@@ -375,6 +393,7 @@ settings.theme_restart: Se aplica la próxima vez que se inicie Apix.
 settings.title: Configuración
 sidebar.auth: Autenticación…
 sidebar.change_password: Cambiar contraseña…
+sidebar.copy_as_code: Copiar como código
 sidebar.copy_as_shell: Copiar como %{shell}
 sidebar.drop_hint: O suelta una exportación de Postman o una carpeta en la ventana.
 sidebar.duplicate: Duplicar

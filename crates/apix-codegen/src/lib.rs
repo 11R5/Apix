@@ -6,12 +6,47 @@
 //!   would send.
 //! - [`from_curl`] reads a pasted `curl` command (bash or cmd style, as
 //!   browsers' "Copy as cURL" produce them) back into a request.
+//! - [`to_code`] writes a request as a program in another language (fetch,
+//!   axios, Python, Go, Rust, C#, Java, PHP, Swift, Kotlin).
 
+mod code;
 mod curl_import;
 mod shell;
 
+pub use code::{Lang, to_code};
 pub use curl_import::{CurlImport, from_curl, looks_like_curl};
 pub use shell::{Shell, to_shell};
+
+/// Everything "Copy as" can write: a shell command or a program.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Format {
+    Shell(Shell),
+    Code(Lang),
+}
+
+impl Format {
+    /// Shells first, then languages, in menu order.
+    pub fn all() -> impl Iterator<Item = Format> {
+        Shell::ALL
+            .into_iter()
+            .map(Format::Shell)
+            .chain(Lang::ALL.into_iter().map(Format::Code))
+    }
+
+    pub fn label(self) -> &'static str {
+        match self {
+            Format::Shell(shell) => shell.label(),
+            Format::Code(lang) => lang.label(),
+        }
+    }
+
+    pub fn render(self, request: &Request) -> String {
+        match self {
+            Format::Shell(shell) => to_shell(request, shell),
+            Format::Code(lang) => to_code(request, lang),
+        }
+    }
+}
 
 use apix_core::{ApiKeyLocation, Auth, Body, FormPart, KeyValue, OAuth1, Request, sign};
 

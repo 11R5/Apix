@@ -208,6 +208,21 @@ env.title.collection: "%{name} 变量"
 env.title.environment: 环境
 env.title.project: 项目变量
 env.undo_delete: 撤销删除
+history.ago_days: "%{count} 天前"
+history.ago_hours: "%{count} 小时前"
+history.ago_minutes: "%{count} 分钟前"
+history.ago_now: 刚刚
+history.clear: 清除历史
+history.empty: 还没有发送过请求。发送的每个请求都会连同响应显示在这里。
+history.failed: 失败
+history.missing: 无法再读取此历史记录。
+history.note: 仅保存在这台电脑上，{{变量}}不展开；保留最近 %{count} 个请求，响应正文最多 256 KB。加密集合中的请求不会保存。
+history.off: 历史已关闭。可在设置（Ctrl+,）中开启。
+history.placeholder: 按名称、URL、方法或状态搜索…
+history.restored: 来自历史，%{when}发送。
+history.send_again: 按 %{key} 重新发送。
+history.title: 历史
+history.truncated: 响应正文已截断为 256 KB。
 import.collection_done: 已导入 Postman 集合
 import.environment_done: 已导入环境
 import.environment_needs_open: 请先打开此环境所属的集合或项目，然后再导入。
@@ -230,6 +245,7 @@ menu.group_by: 侧边栏分组方式
 menu.group_collection: 集合
 menu.group_environment: 环境
 menu.help: 帮助
+menu.history: 历史…
 menu.import_postman: 从 Postman 导入…
 menu.lock_collections: 锁定加密集合
 menu.method: 方法
@@ -365,6 +381,8 @@ settings.auto_lock_description: 空闲达到此时长后，加密集合将被锁
 settings.auto_lock_hour: 1 小时后
 settings.auto_lock_minutes: "%{count} 分钟后"
 settings.auto_lock_never: 从不
+settings.history: 历史
+settings.history_description: 在这台电脑上保存每个已发送的请求及其响应（Ctrl+H）。
 settings.language: 语言
 settings.language_description: 菜单、按钮和消息的语言。立即生效。
 settings.theme: 主题
@@ -375,6 +393,7 @@ settings.theme_restart: 下次启动 Apix 时生效。
 settings.title: 设置
 sidebar.auth: 认证…
 sidebar.change_password: 更改密码…
+sidebar.copy_as_code: 复制为代码
 sidebar.copy_as_shell: 复制为 %{shell}
 sidebar.drop_hint: 也可以将 Postman 导出文件或文件夹拖放到窗口中。
 sidebar.duplicate: 创建副本

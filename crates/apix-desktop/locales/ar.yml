@@ -208,6 +208,21 @@ env.title.collection: "متغيرات %{name}"
 env.title.environment: البيئة
 env.title.project: متغيرات المشروع
 env.undo_delete: التراجع عن الحذف
+history.ago_days: منذ %{count} يوم
+history.ago_hours: منذ %{count} ساعة
+history.ago_minutes: منذ %{count} دقيقة
+history.ago_now: الآن
+history.clear: مسح السجل
+history.empty: لم تُرسل أي طلبات بعد. يظهر هنا كل طلب ترسله مع استجابته.
+history.failed: فشل
+history.missing: لم يعد من الممكن قراءة عنصر السجل هذا.
+history.note: يُحفظ على هذا الحاسوب فقط، مع بقاء {{المتغيرات}} دون استبدال؛ آخر %{count} طلبًا، وأجسام الاستجابات حتى 256 كيلوبايت. لا تُحفظ طلبات المجموعات المشفّرة.
+history.off: السجل متوقف. فعّله من الإعدادات (Ctrl+,).
+history.placeholder: ابحث بالاسم أو العنوان أو الطريقة أو الحالة…
+history.restored: من السجل، أُرسل %{when}.
+history.send_again: اضغط %{key} لإرساله مرة أخرى.
+history.title: السجل
+history.truncated: اختُصر جسم الاستجابة إلى 256 كيلوبايت.
 import.collection_done: تم استيراد مجموعة Postman
 import.environment_done: تم استيراد البيئة
 import.environment_needs_open: افتح أولًا المجموعة أو المشروع الذي تنتمي إليه هذه البيئة، ثم استوردها.
@@ -230,6 +245,7 @@ menu.group_by: تجميع الشريط الجانبي حسب
 menu.group_collection: المجموعة
 menu.group_environment: البيئة
 menu.help: تعليمات
+menu.history: السجل…
 menu.import_postman: استيراد من Postman…
 menu.lock_collections: قفل المجموعات المشفّرة
 menu.method: الطريقة
@@ -365,6 +381,8 @@ settings.auto_lock_description: بعد هذه المدة من الخمول، ت�
 settings.auto_lock_hour: بعد ساعة واحدة
 settings.auto_lock_minutes: بعد %{count} دقيقة
 settings.auto_lock_never: أبدًا
+settings.history: السجل
+settings.history_description: احفظ كل طلب مُرسل مع استجابته على هذا الحاسوب (Ctrl+H).
 settings.language: اللغة
 settings.language_description: لغة القوائم والأزرار والرسائل. يُطبَّق التغيير فورًا.
 settings.theme: السمة
@@ -375,6 +393,7 @@ settings.theme_restart: يُطبَّق عند تشغيل Apix في المرة ا
 settings.title: الإعدادات
 sidebar.auth: المصادقة…
 sidebar.change_password: تغيير كلمة المرور…
+sidebar.copy_as_code: نسخ كشيفرة برمجية
 sidebar.copy_as_shell: نسخ كـ %{shell}
 sidebar.drop_hint: أو أفلت ملف تصدير من Postman أو مجلدًا على النافذة.
 sidebar.duplicate: تكرار

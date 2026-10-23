@@ -208,6 +208,21 @@ env.title.collection: "Variablen von %{name}"
 env.title.environment: Umgebung
 env.title.project: Projektvariablen
 env.undo_delete: Löschen rückgängig machen
+history.ago_days: vor %{count} T.
+history.ago_hours: vor %{count} Std.
+history.ago_minutes: vor %{count} Min.
+history.ago_now: gerade eben
+history.clear: Verlauf löschen
+history.empty: Noch keine Anfragen gesendet. Jede gesendete Anfrage erscheint hier mit ihrer Antwort.
+history.failed: fehlgeschlagen
+history.missing: Dieser Verlaufseintrag kann nicht mehr gelesen werden.
+history.note: Nur auf diesem Computer, mit unaufgelösten {{Variablen}}; die letzten %{count} Anfragen, Antwortinhalte bis 256 KB. Anfragen aus verschlüsselten Sammlungen werden nicht gespeichert.
+history.off: Der Verlauf ist aus. Einschalten in den Einstellungen (Strg+,).
+history.placeholder: Nach Name, URL, Methode oder Status suchen…
+history.restored: Aus dem Verlauf, gesendet %{when}.
+history.send_again: Mit %{key} erneut senden.
+history.title: Verlauf
+history.truncated: Der Antwortinhalt wurde auf 256 KB gekürzt.
 import.collection_done: Postman-Sammlung importiert
 import.environment_done: Umgebung importiert
 import.environment_needs_open: Öffnen Sie zuerst die Sammlung oder das Projekt, zu dem diese Umgebung gehört, und importieren Sie sie dann.
@@ -230,6 +245,7 @@ menu.group_by: Seitenleiste gruppieren nach
 menu.group_collection: Sammlung
 menu.group_environment: Umgebung
 menu.help: Hilfe
+menu.history: Verlauf…
 menu.import_postman: Aus Postman importieren…
 menu.lock_collections: Verschlüsselte Sammlungen sperren
 menu.method: Methode
@@ -365,6 +381,8 @@ settings.auto_lock_description: Nach dieser Leerlaufzeit werden verschlüsselte 
 settings.auto_lock_hour: Nach 1 Stunde
 settings.auto_lock_minutes: Nach %{count} Minuten
 settings.auto_lock_never: Nie
+settings.history: Verlauf
+settings.history_description: Jede gesendete Anfrage mit ihrer Antwort auf diesem Computer behalten (Strg+H).
 settings.language: Sprache
 settings.language_description: Die Sprache von Menüs, Schaltflächen und Meldungen. Wird sofort übernommen.
 settings.theme: Design
@@ -375,6 +393,7 @@ settings.theme_restart: Wird beim nächsten Start von Apix übernommen.
 settings.title: Einstellungen
 sidebar.auth: Authentifizierung…
 sidebar.change_password: Passwort ändern…
+sidebar.copy_as_code: Als Code kopieren
 sidebar.copy_as_shell: Als %{shell} kopieren
 sidebar.drop_hint: Oder ziehen Sie einen Postman-Export oder einen Ordner auf das Fenster.
 sidebar.duplicate: Duplizieren

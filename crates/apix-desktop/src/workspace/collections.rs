@@ -1551,8 +1551,8 @@ impl Workspace {
             .when(dirty, |row| {
                 row.child(div().flex_none().text_color(p.warn).child("\u{25cf}"))
             })
-            .context_menu(move |menu: PopupMenu, _, _| {
-                request_menu(menu, view.clone(), menu_path.clone())
+            .context_menu(move |menu: PopupMenu, window, cx| {
+                request_menu(menu, view.clone(), menu_path.clone(), window, cx)
             })
     }
 }
@@ -1591,7 +1591,13 @@ fn row_base(path: &Path, depth: usize) -> Stateful<Div> {
         .hover(|s| s.bg(hsla(0., 0., 1., 0.05)))
 }
 
-fn request_menu(menu: PopupMenu, view: WeakEntity<Workspace>, path: PathBuf) -> PopupMenu {
+fn request_menu(
+    menu: PopupMenu,
+    view: WeakEntity<Workspace>,
+    path: PathBuf,
+    window: &mut Window,
+    cx: &mut Context<PopupMenu>,
+) -> PopupMenu {
     let item =
         |label: SharedString,
          f: fn(&mut Workspace, PathBuf, &mut Window, &mut Context<Workspace>)| {
@@ -1609,21 +1615,38 @@ fn request_menu(menu: PopupMenu, view: WeakEntity<Workspace>, path: PathBuf) -> 
             this.duplicate(path, window, cx)
         }))
         .separator();
+    let (copy_view, copy_path) = (view.clone(), path.clone());
+    let copy = move |format: apix_codegen::Format, label: SharedString| {
+        let (view, path) = (copy_view.clone(), copy_path.clone());
+        PopupMenuItem::new(label).on_click(move |_, window, cx| {
+            view.update(cx, |this, cx| {
+                this.copy_saved_as(path.clone(), format, window, cx)
+            })
+            .ok();
+        })
+    };
     let menu = apix_codegen::Shell::ALL
         .into_iter()
-        .fold(menu, |menu, shell| {
-            let (view, path) = (view.clone(), path.clone());
-            menu.item(
-                PopupMenuItem::new(tr!("sidebar.copy_as_shell", shell = shell.label())).on_click(
-                    move |_, window, cx| {
-                        view.update(cx, |this, cx| {
-                            this.copy_saved_as(path.clone(), shell, window, cx)
-                        })
-                        .ok();
-                    },
-                ),
-            )
+        .map(apix_codegen::Format::Shell)
+        .fold(menu, |menu, format| {
+            menu.item(copy(
+                format,
+                tr!("sidebar.copy_as_shell", shell = format.label()),
+            ))
         });
+    let menu = menu.submenu(
+        tr!("sidebar.copy_as_code"),
+        window,
+        cx,
+        move |menu, _, _| {
+            apix_codegen::Lang::ALL
+                .into_iter()
+                .map(apix_codegen::Format::Code)
+                .fold(menu, |menu, format| {
+                    menu.item(copy(format, format.label().into()))
+                })
+        },
+    );
     menu.separator().item(item(
         tr!("sidebar.move_to_trash"),
         |this, path, window, cx| this.confirm_delete(path, false, window, cx),

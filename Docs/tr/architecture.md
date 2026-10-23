@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:f1f78b33f9c6a9a0 -->
+<!-- translated from en/architecture.md sha256:16382526e50144f9 -->
 
 # Apix mimarisi
 
@@ -33,7 +33,7 @@ crates/
 ├── apix-http     HTTP motoru: reqwest + rustls, zamanlamalar, yanıt yakalama, ağ izi
 │                 (DNS, bağlantı kurulumu, yönlendirmeler, sertifika, yerel ağ arayüzü)
 ├── apix-import   Postman v2.0/v2.1 koleksiyonları ve ortamları → Apix koleksiyonları
-├── apix-codegen  istekler ↔ kabuk komutları: curl (bash), curl.exe (cmd), PowerShell; yapıştırılan curl'ü ayrıştırır
+├── apix-codegen  istekler ↔ kabuk komutları: curl (bash), curl.exe (cmd), PowerShell; yapıştırılan curl'ü ayrıştırır; 10 dilde kod
 ├── apix-vault    şifreli koleksiyonlar: dosya başına XChaCha20-Poly1305, Argon2id, kurtarma anahtarı
 ├── apix-cli      `apix` binary'si: terminalden ve CI'dan send / run / import / shell
 └── apix-desktop  GPUI masaüstü uygulaması (tek crate'ten Windows, macOS ve Linux)

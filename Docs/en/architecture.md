@@ -31,7 +31,7 @@ crates/
 ├── apix-http     HTTP engine: reqwest + rustls, timings, response capture, network trace
 │                 (DNS, connection setup, redirects, certificate, local interface)
 ├── apix-import   Postman v2.0/v2.1 collections and environments → Apix collections
-├── apix-codegen  requests ↔ shell commands: curl (bash), curl.exe (cmd), PowerShell; parses pasted curl
+├── apix-codegen  requests ↔ shell commands: curl (bash), curl.exe (cmd), PowerShell; parses pasted curl; code in 10 languages
 ├── apix-vault    encrypted collections: per-file XChaCha20-Poly1305, Argon2id, recovery key
 ├── apix-cli      `apix` binary: send / run / import / shell from terminal & CI
 └── apix-desktop  GPUI desktop app (Windows, macOS and Linux from one crate)

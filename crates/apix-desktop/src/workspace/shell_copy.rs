@@ -1,8 +1,9 @@
-//! Copy a request as a shell command, and turn a pasted curl command into one.
+//! Copy a request as a shell command or code, and turn a pasted curl command
+//! into a request.
 
 use std::path::PathBuf;
 
-use apix_codegen::{Shell, from_curl, looks_like_curl, to_shell};
+use apix_codegen::{Format, Lang, Shell, from_curl, looks_like_curl};
 use apix_core::{Auth, Request};
 use gpui_kit::component::WindowExt as _;
 use gpui_kit::component::menu::{PopupMenu, PopupMenuItem};
@@ -21,7 +22,7 @@ impl Workspace {
     fn copy_as(
         &mut self,
         request: Request,
-        shell: Shell,
+        format: Format,
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
@@ -34,17 +35,14 @@ impl Workspace {
                 token: token.access_token,
             };
         }
-        cx.write_to_clipboard(ClipboardItem::new_string(to_shell(
-            &resolved.request,
-            shell,
-        )));
+        cx.write_to_clipboard(ClipboardItem::new_string(format.render(&resolved.request)));
         let message = if resolved.missing.is_empty() {
-            tr!("copy.copied", shell = shell.label())
+            tr!("copy.copied", shell = format.label())
         } else {
             let names: Vec<_> = resolved.missing.into_iter().collect();
             tr!(
                 "copy.copied_missing",
-                shell = shell.label(),
+                shell = format.label(),
                 names = names.join(", ")
             )
         };
@@ -54,29 +52,29 @@ impl Workspace {
     /// The open request as edited, unsaved changes included.
     pub(super) fn copy_current_as(
         &mut self,
-        shell: Shell,
+        format: Format,
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
         let request = self.with_inherited_auth(self.build_request(cx), self.selected.as_deref());
         let request = self.with_inherited_settings(request, self.selected.as_deref());
-        self.copy_as(request, shell, window, cx);
+        self.copy_as(request, format, window, cx);
     }
 
     /// A request from the sidebar; the open one is copied with its edits.
     pub(super) fn copy_saved_as(
         &mut self,
         path: PathBuf,
-        shell: Shell,
+        format: Format,
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
         if self.selected.as_ref() == Some(&path) {
-            self.copy_current_as(shell, window, cx);
+            self.copy_current_as(format, window, cx);
         } else if let Some(request) = self.requests.get(&path).cloned() {
             let request = self.with_inherited_auth(request, Some(&path));
             let request = self.with_inherited_settings(request, Some(&path));
-            self.copy_as(request, shell, window, cx);
+            self.copy_as(request, format, window, cx);
         }
     }
 
@@ -119,21 +117,28 @@ impl Workspace {
     }
 }
 
-/// "Copy as" items for a popup menu; `copy` runs with the chosen shell.
+/// "Copy as" items for a popup menu: the shells, then the languages.
+/// `copy` runs with the chosen format.
 pub(super) fn copy_items(
     menu: PopupMenu,
     view: WeakEntity<Workspace>,
-    copy: fn(&mut Workspace, Shell, &mut Window, &mut Context<Workspace>),
+    copy: fn(&mut Workspace, Format, &mut Window, &mut Context<Workspace>),
 ) -> PopupMenu {
-    Shell::ALL.into_iter().fold(menu, |menu, shell| {
+    let item = |menu: PopupMenu, format: Format| {
         let view = view.clone();
         menu.item(
-            PopupMenuItem::new(tr!("copy.as_shell", shell = shell.label())).on_click(
+            PopupMenuItem::new(tr!("copy.as_shell", shell = format.label())).on_click(
                 move |_, window, cx| {
-                    view.update(cx, |this, cx| copy(this, shell, window, cx))
+                    view.update(cx, |this, cx| copy(this, format, window, cx))
                         .ok();
                 },
             ),
         )
+    };
+    let menu = Shell::ALL
+        .into_iter()
+        .fold(menu, |menu, shell| item(menu, Format::Shell(shell)));
+    Lang::ALL.into_iter().fold(menu.separator(), |menu, lang| {
+        item(menu, Format::Code(lang))
     })
 }

@@ -1,4 +1,4 @@
-<!-- translated from en/technical.md sha256:7677cf30664e5bbc -->
+<!-- translated from en/technical.md sha256:98566cf1ac9907ff -->
 
 # Teknik notlar
 
@@ -12,7 +12,7 @@ crates/
 ├── apix-core       istek modeli, değişkenler, disk formatı, projeler, imzalama (sign.rs)
 ├── apix-http       HTTP motoru (reqwest), ağ izi, OAuth 2.0 token'ları
 ├── apix-import     Postman koleksiyonu ve ortamı içe aktarma
-├── apix-codegen    "Komut olarak kopyala" (curl, curl.exe, PowerShell) ve curl yapıştırma
+├── apix-codegen    "Komut veya kod olarak kopyala" (curl, curl.exe, PowerShell, 10 dilde kod) ve curl yapıştırma
 ├── apix-vault      şifreli koleksiyonlar
 ├── apix-cli        `apix` komutu
 └── apix-desktop    masaüstü uygulaması (GPUI); arayüz metinleri locales/ içinde
@@ -75,6 +75,7 @@ Masaüstü uygulamasının tam bir release derlemesi birkaç dakika sürer.
 | `<config>/Apix/settings.toml` | dil, tema, otomatik kilit süresi |
 | `<config>/Apix/state.toml` | son açılan koleksiyonlar, koleksiyon başına seçilen ortam |
 | `<config>/Apix/cookies.json` | çerez kavanozu (oturum çerezleri kalıcı değildir) |
+| `<config>/Apix/history/` | gönderilen istekler (`{{değişkenler}}` çözülmeden) ve yanıtları: `index.jsonl`, her kayıt için bir `<id>.json` ve `<id>.body`; son 300 kayıt, gövdeler 256 KB'ta kesilir |
 
 `<config>`, Windows'ta `%APPDATA%`, macOS'te `~/Library/Application Support`,
 Linux'ta `~/.config` klasörüdür. OAuth 2.0 token'ları ve şifreli koleksiyonların
@@ -155,7 +156,7 @@ patch ile devreye alır. Upstream crate düzeltildiğinde kaldırılabilir.
 |---|---|
 | apix-core | model ve dosya formatı için gidiş-dönüş (round trip) testleri, değişkenler, AWS test paketine, RFC 7616'ya (Digest), RFC 7636'ya (PKCE) ve OAuth 1.0 örneğine karşı imzalama |
 | apix-http | istek oluşturma, her gövde türü, OAuth 2.0, Digest, AWS ve OAuth 1.0 için yerel bir sunucu, ağ izi |
-| apix-codegen | bash, cmd ve PowerShell için kabuk tırnaklama; curl yapıştırma; gidiş-dönüş testleri |
+| apix-codegen | bash, cmd ve PowerShell için kabuk tırnaklama; curl yapıştırma; gidiş-dönüş testleri; her dilde URL, başlıklar, gövdeler, dize kaçışları ve ayarlar |
 | apix-import | Postman v2.0/v2.1 fixture'ları |
 | apix-vault | şifreleme formatı, kurcalama (tampering), parola değişikliği, kurtarma anahtarı |
 | apix-desktop | çevirilerin eksiksizliği, dil yardımcıları, dosya yolları, vurgulama sorgusu |

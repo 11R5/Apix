@@ -94,11 +94,7 @@ impl Render for CookiesView {
                         .xsmall()
                         .icon(IconName::Delete)
                         .on_click(cx.listener(move |_, _: &ClickEvent, _, cx| {
-                            net::client().remove_cookie(
-                                &cookie.domain,
-                                &cookie.path,
-                                &cookie.name,
-                            );
+                            net::client().remove_cookie(&cookie.domain, &cookie.path, &cookie.name);
                             cx.notify();
                         })),
                 )
@@ -120,33 +116,30 @@ impl Render for CookiesView {
                 .into_any_element()
         };
 
-        v_flex()
-            .gap_2()
-            .child(body)
-            .child(
-                h_flex()
-                    .dir_row()
-                    .gap_2()
-                    .items_center()
-                    .child(
-                        div()
-                            .flex_1()
-                            .min_w_0()
-                            .text_xs()
-                            .text_color(p.text_muted)
-                            .child(bidi::para(tr!("cookies.note"))),
-                    )
-                    .children((count > 0).then(|| {
-                        Button::new("cookies-clear")
-                            .ghost()
-                            .small()
-                            .label(tr!("cookies.clear_all"))
-                            .on_click(cx.listener(|_, _: &ClickEvent, _, cx| {
-                                net::client().clear_cookies();
-                                cx.notify();
-                            }))
-                    })),
-            )
+        v_flex().gap_2().child(body).child(
+            h_flex()
+                .dir_row()
+                .gap_2()
+                .items_center()
+                .child(
+                    div()
+                        .flex_1()
+                        .min_w_0()
+                        .text_xs()
+                        .text_color(p.text_muted)
+                        .child(bidi::para(tr!("cookies.note"))),
+                )
+                .children((count > 0).then(|| {
+                    Button::new("cookies-clear")
+                        .ghost()
+                        .small()
+                        .label(tr!("cookies.clear_all"))
+                        .on_click(cx.listener(|_, _: &ClickEvent, _, cx| {
+                            net::client().clear_cookies();
+                            cx.notify();
+                        }))
+                })),
+        )
     }
 }
 

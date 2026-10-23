@@ -452,7 +452,10 @@ impl RequestSettings {
         self.max_redirects = self.max_redirects.or(parent.max_redirects);
         self.tls_verify = self.tls_verify.or(parent.tls_verify);
         self.proxy = self.proxy.take().or_else(|| parent.proxy.clone());
-        self.client_cert = self.client_cert.take().or_else(|| parent.client_cert.clone());
+        self.client_cert = self
+            .client_cert
+            .take()
+            .or_else(|| parent.client_cert.clone());
         self.client_key = self.client_key.take().or_else(|| parent.client_key.clone());
         self.send_cookies = self.send_cookies.or(parent.send_cookies);
         self

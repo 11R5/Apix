@@ -84,8 +84,11 @@ Measurements of the other tools on the same machine are planned.
   git, dynamic values such as `{{$guid}}`, coloured chips in the URL bar.
 - **Encrypted collections** with a recovery key and auto-lock.
 - **Postman import** of collections and environments, with a report.
-- **Copy as** `curl`, `curl.exe` or PowerShell; **paste** a `curl` command to fill
-  a request.
+- **Copy as** `curl`, `curl.exe` or PowerShell, or as code in fetch, axios,
+  Python, Go, Rust, C#, Java, PHP, Swift and Kotlin; **paste** a `curl` command
+  to fill a request.
+- **History** of sent requests with their responses (Ctrl+H): search it and
+  send any of them again.
 - **Command palette** (Ctrl+K) and a menu bar that holds every command.
 
 ## Build

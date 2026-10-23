@@ -4,7 +4,7 @@
 
 use std::path::PathBuf;
 
-use apix_codegen::Shell;
+use apix_codegen::{Format, Lang, Shell};
 use apix_core::GroupBy;
 use gpui_kit::component::button::{Button, ButtonVariants as _};
 use gpui_kit::component::menu::{DropdownMenu as _, PopupMenu, PopupMenuItem};
@@ -148,14 +148,20 @@ impl MenuState {
                     .menu("OPTIONS", Box::new(MethodOptions))
             })
             .submenu(tr!("menu.copy_as"), window, cx, move |menu, _, _| {
-                Shell::ALL.into_iter().fold(menu, |menu, shell| {
+                let item = |menu: PopupMenu, format: Format| {
                     let view = view.clone();
                     menu.item(
-                        PopupMenuItem::new(shell.label()).on_click(move |_, window, cx| {
-                            view.update(cx, |this, cx| this.copy_current_as(shell, window, cx))
+                        PopupMenuItem::new(format.label()).on_click(move |_, window, cx| {
+                            view.update(cx, |this, cx| this.copy_current_as(format, window, cx))
                                 .ok();
                         }),
                     )
+                };
+                let menu = Shell::ALL
+                    .into_iter()
+                    .fold(menu, |menu, shell| item(menu, Format::Shell(shell)));
+                Lang::ALL.into_iter().fold(menu.separator(), |menu, lang| {
+                    item(menu, Format::Code(lang))
                 })
             })
             .separator()
@@ -247,6 +253,7 @@ impl MenuState {
     fn view_menu(&self, menu: PopupMenu) -> PopupMenu {
         menu.action_context(self.focus.clone())
             .menu(tr!("menu.command_palette"), Box::new(OpenPalette))
+            .menu(tr!("menu.history"), Box::new(OpenHistory))
             .separator()
             .menu(tr!("menu.next_tab"), Box::new(NextTab))
             .menu(tr!("menu.previous_tab"), Box::new(PrevTab))

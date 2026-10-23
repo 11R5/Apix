@@ -14,6 +14,8 @@ pub struct Settings {
     pub theme: String,
     /// Encrypted collections lock after this many idle minutes; 0 never.
     pub auto_lock_minutes: u32,
+    /// Keep sent requests and their responses in the history.
+    pub history: bool,
 }
 
 impl Default for Settings {
@@ -22,6 +24,7 @@ impl Default for Settings {
             language: String::new(),
             theme: "obsidian".into(),
             auto_lock_minutes: 15,
+            history: true,
         }
     }
 }

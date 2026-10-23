@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:d10fcc437b8be1c7 -->
+<!-- translated from en/user-guide.md sha256:556e8694c78793d2 -->
 
 # Apix kullanım kılavuzu
 
@@ -30,6 +30,7 @@ veya CI'da çalıştırır.
 - [Şifreli koleksiyonlar](#şifreli-koleksiyonlar)
 - [Komut olarak kopyala ve curl yapıştırma](#komut-olarak-kopyala-ve-curl-yapıştırma)
 - [Postman'dan içe aktarma](#postmandan-içe-aktarma)
+- [Geçmiş](#geçmiş)
 - [Komut paleti](#komut-paleti)
 - [Ayarlar ve dil](#ayarlar-ve-dil)
 - [Klavye kısayolları](#klavye-kısayolları)
@@ -260,11 +261,25 @@ yalnızca hangi şifreli blob'un değiştiğini görür.
 
 ## Komut olarak kopyala ve curl yapıştırma
 
-**Gönder** düğmesinin yanındaki kopyala düğmesi (veya **İstek › Farklı
-kopyala**) isteği bash için `curl`, Windows komut istemi için `curl.exe` ya da
-bir PowerShell `Invoke-RestMethod` çağrısı olarak, değişkenler doldurulmuş
-şekilde kopyalar. Her gönderimde imzalanan istekler (OAuth 1.0, PowerShell için
-AWS) kopyaladığınız anda imzalanır.
+**Gönder** düğmesinin yanındaki kopyala düğmesi (veya **İstek › Komut veya kod
+olarak kopyala**) isteği bash için `curl`, Windows komut istemi için `curl.exe`
+ya da bir PowerShell `Invoke-RestMethod` çağrısı olarak, değişkenler
+doldurulmuş şekilde kopyalar. Her gönderimde imzalanan istekler (OAuth 1.0,
+PowerShell ve kod için AWS) kopyaladığınız anda imzalanır.
+
+Aynı menü isteği bir program olarak da kopyalar: JavaScript `fetch`, Node.js
+axios, Python requests, Go `net/http`, Rust reqwest, C# `HttpClient`, Java
+`HttpClient`, PHP cURL, Swift `URLSession` veya Kotlin OkHttp. Her biri Apix'in
+göndereceğini gönderir — URL, başlıklar, yetkilendirme ve her gövde tipi — ve
+dilin ifade edebildiği istek ayarlarını da yazar (zaman aşımı, yönlendirmeler,
+TLS denetimi, proxy, istemci sertifikası). Bir dilde basit bir karşılığı olmayan
+ayar sessizce atlanmaz; kodun başında `Not in this snippet` yorumuyla
+listelenir. Kenar çubuğunda bir isteğe sağ tıklayıp **Kod olarak kopyala**
+menüsünü kullanın.
+
+CLI de aynısını yazar: `apix code istek.apix --as python` (`apix shell` aynı
+komuttur; `--as` şunları alır: `bash`, `cmd`, `powershell`, `fetch`, `axios`,
+`python`, `go`, `rust`, `csharp`, `java`, `php`, `swift`, `kotlin`).
 
 URL alanına bir `curl` komutu yapıştırın (örneğin tarayıcınızın "Copy as cURL"
 seçeneğinden); Apix isteğin tamamını doldurur: metot, URL, sorgu, başlıklar,
@@ -279,6 +294,24 @@ aktarılır; Apix'in henüz devralamadığı her şey bir raporda listelenir.
 Pre-request ve test betikleri isteklerinin yanında `.js` dosyaları olarak
 saklanır, ortamlardaki gizli değerler ise git'in yok saydığı `.local.toml`
 dosyasına gider.
+
+## Geçmiş
+
+Gönderdiğiniz her istek yanıtıyla birlikte saklanır. **Görünüm › Geçmiş…**
+(Ctrl+H) onları en yeniden eskiye metot, ad, URL, durum ve gönderilme
+zamanıyla listeler; bunlardan herhangi birine göre aramak için yazın. Bir kayıt
+seçtiğinizde istek, gönderildiği sekmeye kaydedilmemiş değişiklik olarak, o an
+aldığı yanıtla birlikte geri gelir. Yeniden göndermek için Ctrl+Enter, o hâlini
+saklamak için Ctrl+S'ye basın. İstek dosyası artık yoksa kayıt düzenleyicide
+sekmesiz açılır.
+
+Geçmiş yalnızca bu bilgisayarda kalır (ayarların yanındaki `history`
+klasörü), hiçbir zaman bir koleksiyonun içine yazılmaz. İstekler yazıldığı
+gibi, `{{değişkenler}}` çözülmeden saklanır; böylece ortamlardaki gizli
+değerler geçmişe kopyalanmaz. Son 300 istek, her birinin yanıt gövdesi en çok
+256 KB olarak tutulur. Şifreli koleksiyonlardaki istekler geçmişe hiç
+yazılmaz. Penceredeki **Geçmişi temizle** onu boşaltır; **Dosya › Ayarlar… ›
+Geçmiş** kapatır.
 
 ## Komut paleti
 
@@ -300,6 +333,7 @@ bulunabilir.
 - **Tema:** Obsidyen veya Siber cam; Apix'in bir sonraki açılışında uygulanır.
 - **Şifreli koleksiyonları kilitle:** 5, 15 veya 30 dakika sonra, 1 saat sonra
   ya da hiçbir zaman.
+- **Geçmiş:** açık veya kapalı (bkz. [Geçmiş](#geçmiş)).
 
 ![Ayarlar](images/settings.png)
 
@@ -319,6 +353,7 @@ dosyasına kaydedilir (Windows'ta `%APPDATA%\Apix`, macOS'ta
 | Ctrl+K veya Ctrl+P | Komut paleti |
 | Ctrl+E | Değişkenler ve ortamlar |
 | Ctrl+, | Ayarlar |
+| Ctrl+H | Geçmiş |
 | Alt+1…7 | Metodu değiştir |
 | Ctrl+W | Sekmeyi kapat |
 | Ctrl+Tab / Ctrl+Shift+Tab | Sonraki / önceki sekme |
