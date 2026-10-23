@@ -208,6 +208,21 @@ env.title.collection: "%{name} değişkenleri"
 env.title.environment: Ortam
 env.title.project: Proje değişkenleri
 env.undo_delete: Silmeyi geri al
+history.ago_days: "%{count} gün önce"
+history.ago_hours: "%{count} sa önce"
+history.ago_minutes: "%{count} dk önce"
+history.ago_now: az önce
+history.clear: Geçmişi temizle
+history.empty: Henüz istek gönderilmedi. Gönderdiğiniz her istek yanıtıyla birlikte burada görünür.
+history.failed: başarısız
+history.missing: Bu geçmiş kaydı artık okunamıyor.
+history.note: Yalnızca bu bilgisayarda, {{değişkenler}} çözülmeden tutulur; son %{count} istek, yanıt gövdeleri en çok 256 KB. Şifreli koleksiyonlardaki istekler tutulmaz.
+history.off: Geçmiş kapalı. Ayarlardan (Ctrl+,) açabilirsiniz.
+history.placeholder: Ada, URL'ye, metoda veya duruma göre ara…
+history.restored: Geçmişten, %{when} gönderildi.
+history.send_again: Yeniden göndermek için %{key}.
+history.title: Geçmiş
+history.truncated: Yanıt gövdesi 256 KB'a kısaltıldı.
 import.collection_done: Postman koleksiyonu içe aktarıldı
 import.environment_done: Ortam içe aktarıldı
 import.environment_needs_open: Önce bu ortamın ait olduğu koleksiyonu veya projeyi açın, sonra içe aktarın.
@@ -221,7 +236,7 @@ menu.collection_auth: Koleksiyon yetkilendirmesi…
 menu.collection_settings: Koleksiyon istek ayarları…
 menu.command_palette: Komut paleti…
 menu.cookies: Çerezler…
-menu.copy_as: Komut olarak kopyala
+menu.copy_as: Komut veya kod olarak kopyala
 menu.documentation: Belgeler
 menu.encrypt_collection: Bu koleksiyonu şifrele…
 menu.environment: Ortam
@@ -230,6 +245,7 @@ menu.group_by: Kenar çubuğunu grupla
 menu.group_collection: Koleksiyon
 menu.group_environment: Ortam
 menu.help: Yardım
+menu.history: Geçmiş…
 menu.import_postman: Postman'dan içe aktar…
 menu.lock_collections: Şifreli koleksiyonları kilitle
 menu.method: Metot
@@ -365,6 +381,8 @@ settings.auto_lock_description: Bu kadar süre boşta kalındığında şifreli 
 settings.auto_lock_hour: 1 saat sonra
 settings.auto_lock_minutes: "%{count} dakika sonra"
 settings.auto_lock_never: Hiçbir zaman
+settings.history: Geçmiş
+settings.history_description: Gönderilen her isteği yanıtıyla birlikte bu bilgisayarda sakla (Ctrl+H).
 settings.language: Dil
 settings.language_description: Menülerin, düğmelerin ve iletilerin dili. Hemen değişir.
 settings.theme: Tema
@@ -375,6 +393,7 @@ settings.theme_restart: Apix'in bir sonraki açılışında uygulanır.
 settings.title: Ayarlar
 sidebar.auth: Yetkilendirme…
 sidebar.change_password: Parolayı değiştir…
+sidebar.copy_as_code: Kod olarak kopyala
 sidebar.copy_as_shell: "%{shell} olarak kopyala"
 sidebar.drop_hint: Ya da bir Postman dışa aktarımını veya bir klasörü pencereye bırakın.
 sidebar.duplicate: Çoğalt

@@ -210,6 +210,21 @@ env.title.collection: "%{name} variables"
 env.title.environment: Environment
 env.title.project: Project variables
 env.undo_delete: Undo delete
+history.ago_days: "%{count} d ago"
+history.ago_hours: "%{count} h ago"
+history.ago_minutes: "%{count} min ago"
+history.ago_now: just now
+history.clear: Clear history
+history.empty: No requests sent yet. Every request you send shows up here with its response.
+history.failed: failed
+history.missing: This history entry can no longer be read.
+history.note: Kept on this computer only, with {{variables}} unresolved; the last %{count} requests, response bodies up to 256 KB. Requests in encrypted collections are not kept.
+history.off: History is off. Turn it on in Settings (Ctrl+,).
+history.placeholder: Search by name, URL, method or status…
+history.restored: From history, sent %{when}.
+history.send_again: Press %{key} to send it again.
+history.title: History
+history.truncated: The response body was shortened to 256 KB.
 import.collection_done: Postman collection imported
 import.environment_done: Environment imported
 import.environment_needs_open: Open the collection or project this environment belongs to first, then import it.
@@ -232,6 +247,7 @@ menu.group_by: Group the sidebar by
 menu.group_collection: Collection
 menu.group_environment: Environment
 menu.help: Help
+menu.history: History…
 menu.import_postman: Import from Postman…
 menu.lock_collections: Lock encrypted collections
 menu.method: Method
@@ -367,6 +383,8 @@ settings.auto_lock_description: After this much idle time, encrypted collections
 settings.auto_lock_hour: After 1 hour
 settings.auto_lock_minutes: After %{count} minutes
 settings.auto_lock_never: Never
+settings.history: History
+settings.history_description: Keep every sent request with its response on this computer (Ctrl+H).
 settings.language: Language
 settings.language_description: The language of menus, buttons and messages. Changes at once.
 settings.theme: Theme
@@ -377,6 +395,7 @@ settings.theme_restart: Applies the next time Apix starts.
 settings.title: Settings
 sidebar.auth: Auth…
 sidebar.change_password: Change password…
+sidebar.copy_as_code: Copy as code
 sidebar.copy_as_shell: Copy as %{shell}
 sidebar.drop_hint: Or drop a Postman export or a folder onto the window.
 sidebar.duplicate: Duplicate

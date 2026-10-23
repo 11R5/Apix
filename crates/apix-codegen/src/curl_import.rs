@@ -806,7 +806,9 @@ mod tests {
         let script = crate::to_shell(&r.request, crate::Shell::Bash);
         assert_eq!(from_curl(&script).unwrap().request, r.request);
 
-        let off = from_curl("curl --noproxy '*' https://x.dev").unwrap().request;
+        let off = from_curl("curl --noproxy '*' https://x.dev")
+            .unwrap()
+            .request;
         assert_eq!(off.settings.proxy.as_deref(), Some(""));
     }
 

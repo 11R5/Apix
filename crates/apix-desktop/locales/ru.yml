@@ -208,6 +208,21 @@ env.title.collection: "Переменные %{name}"
 env.title.environment: Окружение
 env.title.project: Переменные проекта
 env.undo_delete: Отменить удаление
+history.ago_days: "%{count} дн. назад"
+history.ago_hours: "%{count} ч назад"
+history.ago_minutes: "%{count} мин назад"
+history.ago_now: только что
+history.clear: Очистить историю
+history.empty: Запросов ещё не было. Каждый отправленный запрос появится здесь вместе с ответом.
+history.failed: ошибка
+history.missing: Эту запись истории больше нельзя прочитать.
+history.note: Хранится только на этом компьютере, {{переменные}} не подставляются; последние %{count} запросов, тела ответов до 256 КБ. Запросы из зашифрованных коллекций не сохраняются.
+history.off: История выключена. Включите её в настройках (Ctrl+,).
+history.placeholder: Поиск по имени, URL, методу или статусу…
+history.restored: Из истории, отправлен %{when}.
+history.send_again: Нажмите %{key}, чтобы отправить снова.
+history.title: История
+history.truncated: Тело ответа сокращено до 256 КБ.
 import.collection_done: Коллекция Postman импортирована
 import.environment_done: Окружение импортировано
 import.environment_needs_open: Сначала откройте коллекцию или проект, к которому относится это окружение, затем импортируйте его.
@@ -230,6 +245,7 @@ menu.group_by: Группировать боковую панель по
 menu.group_collection: Коллекциям
 menu.group_environment: Окружениям
 menu.help: Справка
+menu.history: История…
 menu.import_postman: Импорт из Postman…
 menu.lock_collections: Заблокировать зашифрованные коллекции
 menu.method: Метод
@@ -365,6 +381,8 @@ settings.auto_lock_description: После такого времени безд�
 settings.auto_lock_hour: Через 1 час
 settings.auto_lock_minutes: Через %{count} мин
 settings.auto_lock_never: Никогда
+settings.history: История
+settings.history_description: Сохранять каждый отправленный запрос с ответом на этом компьютере (Ctrl+H).
 settings.language: Язык
 settings.language_description: Язык меню, кнопок и сообщений. Меняется сразу.
 settings.theme: Тема
@@ -375,6 +393,7 @@ settings.theme_restart: Применится при следующем запу�
 settings.title: Настройки
 sidebar.auth: Авторизация…
 sidebar.change_password: Сменить пароль…
+sidebar.copy_as_code: Копировать как код
 sidebar.copy_as_shell: Копировать как %{shell}
 sidebar.drop_hint: Или перетащите в окно экспорт Postman или папку.
 sidebar.duplicate: Дублировать

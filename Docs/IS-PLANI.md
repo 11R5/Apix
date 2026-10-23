@@ -7,17 +7,17 @@
 **İşaretler:** ✅ yapıldı · 🔜 sıradaki · ⬜ planlandı · 💭 sonra karar verilecek
 **Boyut:** S = birkaç saat · M = 1–3 gün · L = 1 hafta ve üstü
 
-### Durum özeti (20 Ekim 2026)
+### Durum özeti (23 Ekim 2026)
 | Aşama | Durum |
 |---|---|
 | M0 Temel | ✅ |
 | M1 Arayüzden istek | ✅ 100 MB JSON ~0.33 s'de açılıyor |
 | M2 Koleksiyonlar, Postman içe aktarma | ✅ (sekmeler ve sürükle-bırak M3'te tamamlandı) |
 | M3 Simge, projeler, ortamlar, kopyalama, auth | ✅ 9/9 · bitti: simge, ortam seçici ve editörü, dinamik değişkenler, projeler, kabuk komutu olarak kopyalama, metotla yeni istek, değişken çipleri, Auth sekmesi ve miras, komut paleti, sekmeler, sürükle-bırak ile taşıma · küçük kalanlar M3 bölümünün sonunda |
-| M4 Günlük kullanım | 🔜 · bitti: menü çubuğu, şifreli koleksiyonlar (motor, uygulama, CLI), ağ denetçisi (Network sekmesi), multipart/binary/GraphQL gövdeleri, auth tipleri (Digest, OAuth 1.0, OAuth 2.0, AWS SigV4), ayarlar ekranı ve 9 dilli arayüz, Arapça için sağdan sola düzen, dokümantasyon yapısı (İngilizce, Türkçe), README karşılaştırması ve performans ölçümü, istek ayarları (zaman aşımı, yönlendirmeler, TLS doğrulama, proxy, istemci sertifikaları; klasör/koleksiyon/proje kalıtımıyla) ve çerez yöneticisi · sıradaki: kod üretimi (diğer diller) ve geçmiş |
+| M4 Günlük kullanım | 🔜 · bitti: menü çubuğu, şifreli koleksiyonlar (motor, uygulama, CLI), ağ denetçisi (Network sekmesi), multipart/binary/GraphQL gövdeleri, auth tipleri (Digest, OAuth 1.0, OAuth 2.0, AWS SigV4), ayarlar ekranı ve 9 dilli arayüz, Arapça için sağdan sola düzen, dokümantasyon yapısı (İngilizce, Türkçe), README karşılaştırması ve performans ölçümü, istek ayarları (zaman aşımı, yönlendirmeler, TLS doğrulama, proxy, istemci sertifikaları; klasör/koleksiyon/proje kalıtımıyla) ve çerez yöneticisi, 10 dilde kod üretimi, geçmiş · sıradaki: Postman otomatik tanıma, Insomnia/OpenAPI/HAR içe aktarma |
 | M5–M9 | ⬜ |
 
-Release ikili dosyası 33.6 MB (üst sınır 100 MB). Testler: core 46, vault 7, desktop 12, codegen 16, import 14, http 18 (hepsi geçiyor, clippy uyarısız).
+Release ikili dosyası 33.6 MB (üst sınır 100 MB). Testler: core 49, vault 7, desktop 12, codegen 21, import 14, http 18 (hepsi geçiyor, clippy uyarısız).
 
 ### Kullanıcı notları (17 Ekim 2026) ve plana nasıl işlendikleri
 | # | Not | Nereye işlendi |
@@ -256,7 +256,7 @@ Her istek için "Network" sekmesi: istek gerçekte nasıl ve nereden geçti?
 | **Dosya izleme** | Dosya diskte değişirse (git pull veya başka bir editör) uygulama anında günceller. | ✅ |
 | **Git durumu** | Kenar çubuğunda değişen dosyalar işaretlenir. Durum çubuğunda branch adı görünür. | ⬜ M |
 | **Sekmeler** | Birden çok istek sekmede açık durur. Kaydedilmemiş değişiklik işareti olur. Ctrl+Tab ile sekmeler arası geçilir. Her sekme kendi taslağını, yanıtını ve sürmekte olan isteğini saklar; Ctrl+W ve orta tık kapatır. | ✅ · ⬜ açık sekmeleri oturumlar arasında hatırlama |
-| **Geçmiş** | Gönderilen her istek yanıtıyla birlikte kaydedilir. Aranabilir ve tekrar gönderilebilir. | ⬜ M |
+| **Geçmiş** | Gönderilen her istek yanıtıyla birlikte kaydedilir. Aranabilir ve tekrar gönderilebilir. | ✅ Ctrl+H penceresi (arama, geri yükleme, temizleme); istek `{{değişkenler}}` çözülmeden saklanır; son 300 kayıt, gövde 256 KB; şifreli koleksiyonlar kaydedilmez; Ayarlar'dan kapatılabilir · ⬜ yanıtları karşılaştırma (§K) |
 
 ### C1. Projeler: Proje → Ortam → Koleksiyonlar (not 6)
 Koleksiyonlar projeler altında toplanır, ortamlar projeye aittir.
@@ -368,7 +368,7 @@ Bir koleksiyon (veya proje) parola ile şifrelenir. Parolayı bilmeyen hiçbir a
 |---|---|
 | **Kabuk komutu olarak kopyala** (not 8): sağ tık ve URL çubuğundaki "Kopyala ▾" menüsü. Değişkenler çözülmüş veya `{{değişken}}` olarak bırakılabilir. Gizli değerler maskelenip maskelenmeyeceği sorulur. Seçenekler: **bash/zsh/sh** için `curl` (tek tırnak kaçışlı) · **Windows cmd** için `curl.exe` (`^` satır devamı) · **PowerShell** için `Invoke-RestMethod` ve `Invoke-WebRequest` ile `curl.exe` sürümü · **fish** · **HTTPie** · **wget** | ✅ bash, cmd, PowerShell (gerçek kabuklarda httpbin ile doğrulandı) · ⬜ fish, HTTPie, wget |
 | **Kabuk komutundan içe aktar:** URL çubuğuna yapıştırılan `curl` (bash veya cmd biçimi) ve PowerShell `Invoke-RestMethod` komutları isteğe dönüşür | ✅ curl (bash ve cmd biçimi, tarayıcıların "Copy as cURL" çıktısı dahil) · ⬜ PowerShell |
-| **Kod üretici:** fetch, axios, Python requests, Go, **Rust reqwest**, C#, Java, PHP, Swift, Kotlin, Node | ⬜ M |
+| **Kod üretici:** fetch, axios, Python requests, Go, **Rust reqwest**, C#, Java, PHP, Swift, Kotlin, Node | ✅ 10 dil (fetch Node'u da kapsar); istek ayarları koda yazılır, yazılamayan ayar `Not in this snippet` yorumuyla belirtilir; fetch, C#, Java ve Rust çıktıları yerel bir yankı sunucusunda motorla birebir karşılaştırıldı; CLI `apix code --as <dil>` |
 | Çerez yöneticisi: alan adına göre listeleme, silme, tümünü boşaltma; kavanoz `cookies.json` içinde kalıcı, istek başına kapatılabilir (İstek › Çerezler…) | ✅ listeleme, silme, kalıcılık · ⬜ elle ekleme/düzenleme |
 | **Yakalama proxy'si:** tarayıcı veya telefon trafiğini kaydedip koleksiyona dönüştürme | ⬜ L |
 | Sertifika yöneticisi | ⬜ S |
@@ -452,7 +452,7 @@ Docs/
 | Collection Runner / Newman | Runner arayüzü + `apix run` | M5 (CLI ✅) |
 | Console | Ağ ve script konsolu | M5 |
 | GraphQL / WebSocket / gRPC / MQTT / SOAP | `apix-proto` | M6 |
-| Code snippets | Kabuk komutu olarak kopyala (bash, cmd, PowerShell) M3 · `apix-codegen` (diller) M4 | M3–M4 |
+| Code snippets | Kabuk komutu olarak kopyala (bash, cmd, PowerShell) M3 · `apix-codegen` (10 dil) M4 ✅ | M3–M4 |
 | Cookies / Certificates / Proxy | Yöneticiler + yakalama proxy'si | M4–M7 |
 | Mock servers | `apix mock` (yerel) | M7 |
 | Documentation | `apix docs` | M7 |
@@ -528,7 +528,7 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 - **Ayarlar ekranı ve arayüz dili (§M, not 13)** (L) ✅: çeviri altyapısı (`rust-i18n`, tüm metinler anahtarlı), 9 dil, Arapça için sağdan sola, CJK ve Arapça yazı tipi yedekleri, ayarlardan anında dil değişimi. M7'den öne alındı: her yeni ekran yeni metin getirdiği için altyapı ne kadar erken gelirse sonradan o kadar az iş çıkar.
 - **Dokümantasyon yapısı ve README (§N, not 14, 16)** (M) ✅: `Docs/<dil>/` yapısı, `languages.toml`, İngilizce ve Türkçe belgeler (kullanım kılavuzu, mimari, teknik altyapı, iş akışları), README'de "neden Apix" karşılaştırması ve Apix'in tekrarlanabilir performans ölçümleri.
 - **İstek ayarları ve çerez yöneticisi (§A6)** (M) ✅: `.apix` dosyasında `[settings]` (zaman aşımı, yönlendirmeler ve üst sınır, TLS doğrulama, proxy, PEM istemci sertifikası + anahtar, çerez gönderimi); alan alan klasör → koleksiyon → proje kalıtımı; Ayarlar sekmesi (geçerli değerler satırıyla) ve klasör/koleksiyon/proje ayar diyalogları; motor her gönderimde ayarları uygular; tek çerez kavanozu `cookies.json` içinde kalıcı ve İstek › Çerezler… diyaloğundan yönetilir; CLI bayrakları (`--timeout`, `--insecure`, `--proxy`), "Copy as" curl/PowerShell bayrakları, curl yapıştırma ve Postman `protocolProfileBehavior` içe aktarma. Yerel sunucuya karşı testlerle doğrulandı.
-- Kod üretici (diller), geçmiş
+- **Kod üretici ve geçmiş** (M) ✅: `apix_codegen::to_code` ile 10 dil (fetch, axios, Python requests, Go, Rust reqwest, C#, Java, PHP, Swift, Kotlin) ve kabukları da kapsayan ortak `Format`; "Copy as" menüleri, kenar çubuğunda "Kod olarak kopyala", komut paleti, `apix code`. Geçmiş: `apix_core::history` (ayar klasöründe `history/`), Ctrl+H penceresi; kayıt kendi sekmesine kaydedilmemiş değişiklik olarak ve yanıtıyla geri gelir.
 - Postman otomatik tanıma ve toplu dışa aktarma, Insomnia, OpenAPI ve HAR içe aktarma, Postman'e dışa aktarma
 
 ### M5 — Scriptler, testler, runner

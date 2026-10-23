@@ -208,6 +208,21 @@ env.title.collection: "Variables de %{name}"
 env.title.environment: Environnement
 env.title.project: Variables du projet
 env.undo_delete: Annuler la suppression
+history.ago_days: il y a %{count} j
+history.ago_hours: il y a %{count} h
+history.ago_minutes: il y a %{count} min
+history.ago_now: à l’instant
+history.clear: Effacer l’historique
+history.empty: Aucune requête envoyée pour l’instant. Chaque requête envoyée apparaît ici avec sa réponse.
+history.failed: échec
+history.missing: Cette entrée de l’historique ne peut plus être lue.
+history.note: Conservé sur cet ordinateur uniquement, avec les {{variables}} non résolues ; les %{count} dernières requêtes, corps de réponse jusqu’à 256 Ko. Les requêtes des collections chiffrées ne sont pas conservées.
+history.off: L’historique est désactivé. Activez-le dans les Réglages (Ctrl+,).
+history.placeholder: Rechercher par nom, URL, méthode ou statut…
+history.restored: Depuis l’historique, envoyée %{when}.
+history.send_again: Appuyez sur %{key} pour la renvoyer.
+history.title: Historique
+history.truncated: Le corps de la réponse a été réduit à 256 Ko.
 import.collection_done: Collection Postman importée
 import.environment_done: Environnement importé
 import.environment_needs_open: Ouvrez d'abord la collection ou le projet auquel appartient cet environnement, puis importez-le.
@@ -230,6 +245,7 @@ menu.group_by: Grouper la barre latérale par
 menu.group_collection: Collection
 menu.group_environment: Environnement
 menu.help: Aide
+menu.history: Historique…
 menu.import_postman: Importer depuis Postman…
 menu.lock_collections: Verrouiller les collections chiffrées
 menu.method: Méthode
@@ -365,6 +381,8 @@ settings.auto_lock_description: Après ce délai d'inactivité, les collections 
 settings.auto_lock_hour: Après 1 heure
 settings.auto_lock_minutes: Après %{count} minutes
 settings.auto_lock_never: Jamais
+settings.history: Historique
+settings.history_description: Conserver chaque requête envoyée avec sa réponse sur cet ordinateur (Ctrl+H).
 settings.language: Langue
 settings.language_description: La langue des menus, boutons et messages. S'applique immédiatement.
 settings.theme: Thème
@@ -375,6 +393,7 @@ settings.theme_restart: S'applique au prochain démarrage d'Apix.
 settings.title: Paramètres
 sidebar.auth: Authentification…
 sidebar.change_password: Changer le mot de passe…
+sidebar.copy_as_code: Copier en code
 sidebar.copy_as_shell: Copier en %{shell}
 sidebar.drop_hint: Ou déposez un export Postman ou un dossier sur la fenêtre.
 sidebar.duplicate: Dupliquer

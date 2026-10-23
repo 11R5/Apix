@@ -27,6 +27,7 @@ command line runs the same requests in a terminal or CI.
 - [Encrypted collections](#encrypted-collections)
 - [Copy as and paste curl](#copy-as-and-paste-curl)
 - [Importing from Postman](#importing-from-postman)
+- [History](#history)
 - [Command palette](#command-palette)
 - [Settings and language](#settings-and-language)
 - [Keyboard shortcuts](#keyboard-shortcuts)
@@ -251,7 +252,20 @@ which encrypted blob changed.
 The copy button next to **Send** (or **Request › Copy as**) copies the request
 as `curl` for bash, `curl.exe` for the Windows command prompt, or a PowerShell
 `Invoke-RestMethod` call, with variables filled in. Requests signed per send
-(OAuth 1.0, AWS for PowerShell) are signed at the moment you copy.
+(OAuth 1.0, AWS for PowerShell and code) are signed at the moment you copy.
+
+The same menu copies the request as a program: JavaScript `fetch`, Node.js
+axios, Python requests, Go `net/http`, Rust reqwest, C# `HttpClient`, Java
+`HttpClient`, PHP cURL, Swift `URLSession` or Kotlin OkHttp. Each one sends
+what Apix would send — URL, headers, auth and every body type — and the
+request settings the language can express (timeout, redirects, TLS check,
+proxy, client certificate). A setting a language has no simple switch for is
+listed in a `Not in this snippet` comment at the top instead of being dropped
+silently. In the sidebar, right-click a request and use **Copy as code**.
+
+The CLI writes the same: `apix code request.apix --as python` (`apix shell` is
+the same command; `--as` takes `bash`, `cmd`, `powershell`, `fetch`, `axios`,
+`python`, `go`, `rust`, `csharp`, `java`, `php`, `swift` or `kotlin`).
 
 Paste a `curl` command (for example from your browser's "Copy as cURL") into the
 URL field and Apix fills in the whole request: method, URL, query, headers,
@@ -264,6 +278,22 @@ Collections (v2.0 and v2.1) and environments are supported. Folders, requests,
 bodies, auth and variables are carried over; anything Apix cannot take over yet
 is listed in a report. Pre-request and test scripts are kept as `.js` files next
 to their requests, and environment secrets go to the gitignored `.local.toml`.
+
+## History
+
+Every request you send is kept with its response. **View › History…**
+(Ctrl+H) lists them, newest first, with method, name, URL, status and when it
+was sent; type to search by any of these. Pick an entry and the request comes
+back in the tab it was sent from, as unsaved edits, together with the response
+it got. Press Ctrl+Enter to send it again, Ctrl+S to keep that version. If the
+request file is gone, the entry opens in the editor without a tab.
+
+History stays on this computer (the `history` folder next to the settings),
+never inside a collection. Requests are stored as written, with `{{variables}}`
+unresolved, so environment secrets are not copied into it. The last 300
+requests are kept, response bodies up to 256 KB each. Requests from encrypted
+collections are never written to the history. **Clear history** in the window
+empties it; **File › Settings… › History** turns it off.
 
 ## Command palette
 
@@ -284,6 +314,7 @@ in every language.
   key–value tables stay left to right.
 - **Theme:** Obsidian or Cyber glass; applies the next time Apix starts.
 - **Lock encrypted collections:** after 5, 15 or 30 minutes, 1 hour, or never.
+- **History:** on or off (see [History](#history)).
 
 ![Settings](images/settings.png)
 
@@ -303,6 +334,7 @@ configuration directory (`%APPDATA%\Apix` on Windows,
 | Ctrl+K or Ctrl+P | Command palette |
 | Ctrl+E | Variables and environments |
 | Ctrl+, | Settings |
+| Ctrl+H | History |
 | Alt+1…7 | Switch the method |
 | Ctrl+W | Close the tab |
 | Ctrl+Tab / Ctrl+Shift+Tab | Next / previous tab |

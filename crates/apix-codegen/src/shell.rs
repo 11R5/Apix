@@ -280,12 +280,18 @@ fn powershell(request: &Request) -> String {
     }
     match settings.proxy.as_deref() {
         None => {}
-        Some("") => out.push_str("# The proxy is off for this request; Invoke-RestMethod has no flag for that\n"),
+        Some("") => out.push_str(
+            "# The proxy is off for this request; Invoke-RestMethod has no flag for that\n",
+        ),
         Some(url) => extra.push_str(&format!(" -Proxy {}", ps_quote(url))),
     }
     if let Some(cert) = &settings.client_cert {
         out.push_str("# CreateFromPemFile needs PowerShell 7.1 or later\n");
-        let args = match settings.client_key.as_deref().filter(|k| *k != cert.as_str()) {
+        let args = match settings
+            .client_key
+            .as_deref()
+            .filter(|k| *k != cert.as_str())
+        {
             Some(key) => format!("{}, {}", ps_quote(cert), ps_quote(key)),
             None => ps_quote(cert),
         };

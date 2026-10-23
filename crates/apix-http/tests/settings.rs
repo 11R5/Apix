@@ -92,7 +92,10 @@ async fn cookies_are_kept_listed_and_removable() {
 
     client.remove_cookie(&domain, "/", "sid");
     assert!(client.cookies().is_empty());
-    let response = client.send(&Request::new(Method::Get, format!("{base}/end"))).await.unwrap();
+    let response = client
+        .send(&Request::new(Method::Get, format!("{base}/end")))
+        .await
+        .unwrap();
     assert_eq!(response.header("x-got-cookie"), Some(""));
 }
 

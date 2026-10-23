@@ -69,6 +69,28 @@ pub struct Response {
 }
 
 impl Response {
+    /// A response read back from somewhere else (the history), with no
+    /// network trace.
+    pub fn from_parts(
+        status: u16,
+        version: String,
+        headers: Vec<(String, String)>,
+        body: Vec<u8>,
+        timing: Timing,
+    ) -> Self {
+        Self {
+            status,
+            reason: reqwest::StatusCode::from_u16(status)
+                .ok()
+                .and_then(|s| s.canonical_reason()),
+            version,
+            headers,
+            body: Bytes::from(body),
+            timing,
+            trace: NetTrace::default(),
+        }
+    }
+
     pub fn header(&self, name: &str) -> Option<&str> {
         self.headers
             .iter()

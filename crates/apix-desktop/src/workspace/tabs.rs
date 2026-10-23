@@ -75,7 +75,7 @@ impl Workspace {
     }
 
     /// Moves the front tab's state into its `Tab`.
-    fn park_front(&mut self, cx: &mut Context<Self>) {
+    pub(super) fn park_front(&mut self, cx: &mut Context<Self>) {
         let Some(ix) = self.selected.as_deref().and_then(|p| self.tab_index(p)) else {
             return;
         };

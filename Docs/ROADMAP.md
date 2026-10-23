@@ -70,7 +70,7 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
   - [ ] Translated engine error messages, native-speaker review
 - [x] **Documentation and README**: per-language docs in `Docs/<lang>/` (user guide with screenshots, architecture, technical, workflows) in English and Turkish, `Docs/languages.toml`, `cargo run -p docs-check` for stale translations; README on how Apix differs from Postman, Insomnia, Bruno and Hoppscotch; `scripts/measure.ps1` for reproducible performance numbers
 - [x] **Request settings and cookies**: a `[settings]` table (timeout, redirects, TLS verify, proxy, PEM client certificate, cookies on/off) inherited per field through folder → collection → project like auth; the Settings tab plus shared-settings dialogs; a persistent cookie jar with a manager dialog (Request › Cookies…); CLI flags, Copy-as flags, curl paste and Postman `protocolProfileBehavior` import
-- [ ] Code snippets in other languages, history
+- [x] **Code and history**: Copy as code in 10 languages (fetch, axios, Python requests, Go, Rust reqwest, C#, Java, PHP, Swift, Kotlin; settings a language cannot express are noted in the snippet), `apix code --as <lang>`; a searchable history of sent requests and their responses (Ctrl+H), kept per machine with variables unresolved, never for encrypted collections
 - [ ] Postman auto-detection and full data-dump import; Insomnia, OpenAPI 3 and HAR import; export to Postman
 
 ## M5 — Scripting, testing, runner

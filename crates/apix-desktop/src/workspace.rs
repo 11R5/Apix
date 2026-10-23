@@ -6,6 +6,7 @@ mod collections;
 mod cookies_ui;
 mod drag;
 mod env_editor;
+mod history_ui;
 mod menu_bar;
 mod network;
 mod palette;
@@ -58,6 +59,7 @@ actions!(
         EditVariables,
         OpenPalette,
         OpenSettings,
+        OpenHistory,
         CloseTab,
         NextTab,
         PrevTab,
@@ -86,6 +88,7 @@ pub fn bind_keys(cx: &mut App) {
         KeyBinding::new("secondary-k", OpenPalette, Some(CONTEXT)),
         KeyBinding::new("secondary-p", OpenPalette, Some(CONTEXT)),
         KeyBinding::new("secondary-,", OpenSettings, Some(CONTEXT)),
+        KeyBinding::new("secondary-h", OpenHistory, Some(CONTEXT)),
         KeyBinding::new("secondary-w", CloseTab, Some(CONTEXT)),
         KeyBinding::new("ctrl-tab", NextTab, Some(CONTEXT)),
         KeyBinding::new("ctrl-shift-tab", PrevTab, Some(CONTEXT)),
@@ -308,7 +311,8 @@ impl Workspace {
         let weak = cx.weak_entity();
         let auth_editor =
             cx.new(|cx| auth_editor::AuthEditor::new(palette, "request", weak, window, cx));
-        let settings_editor = cx.new(|cx| settings_editor::SettingsEditor::new(palette, window, cx));
+        let settings_editor =
+            cx.new(|cx| settings_editor::SettingsEditor::new(palette, window, cx));
         let subscriptions = vec![
             // Typing in the Auth tab changes the unsaved marker.
             cx.observe(&auth_editor, |_, _, cx| cx.notify()),
@@ -542,7 +546,9 @@ impl Workspace {
     }
 
     pub(super) fn send(&mut self, window: &mut Window, cx: &mut Context<Self>) {
-        let request = self.with_inherited_auth(self.build_request(cx), self.selected.as_deref());
+        let draft = self.build_request(cx);
+        let record = self.pending_record(&draft);
+        let request = self.with_inherited_auth(draft, self.selected.as_deref());
         let request = self.with_inherited_settings(request, self.selected.as_deref());
         if request.url.is_empty() {
             self.fail(tr!("request.error.no_url"), cx);
@@ -581,9 +587,15 @@ impl Workspace {
         // Replacing an older task drops it, which cancels that request.
         self.task = Some(cx.spawn_in(window, async move |this, cx| {
             let result = pending.await;
-            // Formatting and indexing a big body must not stall the UI thread.
+            // Formatting and indexing a big body must not stall the UI thread,
+            // and neither must writing the history.
             let prepared = cx
-                .background_spawn(async move { result.map(Finished::prepare) })
+                .background_spawn(async move {
+                    if let Some(record) = record {
+                        record.save(&result);
+                    }
+                    result.map(Finished::prepare)
+                })
                 .await;
             this.update_in(cx, |this, window, cx| {
                 this.finish_for(tab, prepared, window, cx)
@@ -1309,6 +1321,9 @@ impl Render for Workspace {
             )
             .on_action(
                 cx.listener(|this, _: &OpenSettings, window, cx| this.open_settings(window, cx)),
+            )
+            .on_action(
+                cx.listener(|this, _: &OpenHistory, window, cx| this.open_history(window, cx)),
             )
             // A click anywhere brings focus back inside the workspace (inputs
             // focus themselves first, so they keep it), so shortcuts keep working.
