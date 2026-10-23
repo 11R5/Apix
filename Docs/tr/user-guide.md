@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:e54194808eab8c11 -->
+<!-- translated from en/user-guide.md sha256:d442c68f30a54c10 -->
 
 # Apix kullanım kılavuzu
 
@@ -270,6 +270,13 @@ yalnızca hangi şifreli blob'un değiştiğini görür.
 - Koleksiyonu açarken parola sorulur. **Dosya › Şifreli koleksiyonları kilitle**
   seçtiğinizde, Apix'ten çıktığınızda veya Ayarlar'da belirlenen süre (varsayılan
   15 dakika) boyunca boşta bıraktığınızda yeniden kilitlenir.
+- Kilit açma penceresinde **Bu bilgisayarda hatırla** işaretlenirse parola
+  sistemin kimlik bilgisi deposunda saklanır (Windows'ta Credential Manager,
+  macOS'te Anahtar Zinciri, Linux'ta Secret Service). Bundan sonra oturumunuz
+  açıkken koleksiyon parola sormadan açılır; `apix` komut satırı da kayıtlı
+  parolayı kullanır. **Dosya › Kayıtlı parolayı unut** (ya da koleksiyona sağ
+  tık) parolayı siler. Parola başka bir yerde değiştirildiyse kayıtlı olan
+  silinir ve Apix yeniden sorar.
 
 ## Komut olarak kopyala ve curl yapıştırma
 

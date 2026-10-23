@@ -420,6 +420,7 @@ sidebar.edit_variables: Modifier les variables…
 sidebar.edit_variables_tooltip: Modifier les variables (%{key})
 sidebar.empty: Vide
 sidebar.encrypt: Chiffrer…
+sidebar.forget_password: Oublier le mot de passe enregistré
 sidebar.import_postman: Importer…
 sidebar.kind_collection: COLLECTION
 sidebar.kind_project: PROJET
@@ -465,6 +466,7 @@ vault.error.trash: "Impossible de placer dans la corbeille : %{error}"
 vault.error.trash_encrypted: "Impossible de placer les fichiers chiffrés dans la corbeille : %{error}"
 vault.error.trash_plain: "Impossible de placer les fichiers en clair dans la corbeille : %{error}"
 vault.error.unlock_first: Déverrouillez d'abord la collection.
+vault.forgotten: Le mot de passe enregistré de %{name} a été oublié.
 vault.locked: Verrouillée
 vault.locked_title: Verrouillée
 vault.name_placeholder: Nom de la collection
@@ -480,6 +482,10 @@ vault.recovery.stored: J'ai conservé la clé de récupération en lieu sûr
 vault.recovery.title: Votre clé de récupération
 vault.recovery.warning: Sans le mot de passe et sans cette clé, personne, pas même vous, ne peut ouvrir la collection.
 vault.recovery_placeholder: Clé de récupération, ex. 7K2M-9QXA-…
+vault.remember: Se souvenir sur cet ordinateur
+vault.remember_failed: "Le mot de passe n’a pas pu être enregistré : %{error}"
+vault.remember_note: Conservé dans le gestionnaire d’identifiants du système ; la collection s’ouvre alors sans demander tant que vous êtes connecté à cet ordinateur.
+vault.remembered_stale: Le mot de passe enregistré ne fonctionne plus ; il a donc été oublié.
 vault.repeat_password: Confirmer le mot de passe
 vault.unlock: Déverrouiller
 vault.unlock_note: Cette collection est chiffrée. Elle reste déverrouillée jusqu'à ce que vous la verrouilliez, quittiez Apix ou la laissiez inactive pendant %{count} minutes.

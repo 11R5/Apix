@@ -258,6 +258,13 @@ which encrypted blob changed.
 - Opening the collection asks for the password. It locks again when you choose
   **File › Lock encrypted collections**, quit Apix, or leave it idle for the
   time set in Settings (15 minutes by default).
+- Tick **Remember on this computer** in the unlock prompt to keep the password
+  in the system's credential store (Credential Manager on Windows, the Keychain
+  on macOS, the Secret Service on Linux). The collection then opens without
+  asking while you are signed in, and the `apix` command line uses the saved
+  password too. **File › Forget saved password** (or right-click the
+  collection) removes it. If the password was changed elsewhere, the saved one
+  is dropped and Apix asks again.
 
 ## Copy as and paste curl
 

@@ -420,6 +420,7 @@ sidebar.edit_variables: Variablen bearbeiten…
 sidebar.edit_variables_tooltip: Variablen bearbeiten (%{key})
 sidebar.empty: Leer
 sidebar.encrypt: Verschlüsseln…
+sidebar.forget_password: Gespeichertes Passwort vergessen
 sidebar.import_postman: Importieren…
 sidebar.kind_collection: SAMMLUNG
 sidebar.kind_project: PROJEKT
@@ -465,6 +466,7 @@ vault.error.trash: "Verschieben in den Papierkorb fehlgeschlagen: %{error}"
 vault.error.trash_encrypted: "Die verschlüsselten Dateien konnten nicht in den Papierkorb verschoben werden: %{error}"
 vault.error.trash_plain: "Die unverschlüsselten Dateien konnten nicht in den Papierkorb verschoben werden: %{error}"
 vault.error.unlock_first: Entsperren Sie zuerst die Sammlung.
+vault.forgotten: Das gespeicherte Passwort von %{name} wurde vergessen.
 vault.locked: Gesperrt
 vault.locked_title: Gesperrt
 vault.name_placeholder: Name der Sammlung
@@ -480,6 +482,10 @@ vault.recovery.stored: Ich habe den Wiederherstellungsschlüssel sicher aufbewah
 vault.recovery.title: Ihr Wiederherstellungsschlüssel
 vault.recovery.warning: Ohne das Passwort und ohne diesen Schlüssel kann niemand, auch Sie nicht, die Sammlung öffnen.
 vault.recovery_placeholder: Wiederherstellungsschlüssel, z. B. 7K2M-9QXA-…
+vault.remember: Auf diesem Computer merken
+vault.remember_failed: "Das Passwort konnte nicht gespeichert werden: %{error}"
+vault.remember_note: Wird im Anmeldeinformationsspeicher des Systems abgelegt; die Sammlung öffnet sich dann ohne Nachfrage, solange Sie an diesem Computer angemeldet sind.
+vault.remembered_stale: Das gespeicherte Passwort funktioniert nicht mehr und wurde daher vergessen.
 vault.repeat_password: Passwort wiederholen
 vault.unlock: Entsperren
 vault.unlock_note: Diese Sammlung ist verschlüsselt. Sie bleibt entsperrt, bis Sie sie sperren, Apix beenden oder sie %{count} Minuten lang nicht benutzt wird.

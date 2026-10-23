@@ -2002,6 +2002,12 @@ fn collection_menu(
             tr!("sidebar.remove_encryption"),
             |this, root, window, cx| this.confirm_decrypt(root, window, cx),
         ))
+        .when(vfs::keychain::load(&root).is_some(), |menu| {
+            menu.item(item(
+                tr!("sidebar.forget_password"),
+                |this, root, window, cx| this.forget_saved_password(root, window, cx),
+            ))
+        })
     } else {
         menu.item(item(tr!("sidebar.encrypt"), |this, root, window, cx| {
             this.prompt_encrypt(root, window, cx)

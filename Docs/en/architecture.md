@@ -180,7 +180,8 @@ Open questions:
   `environments/<name>.local.toml` is layered over `<name>.toml`. Writing one adds
   `*.local.toml` to the `.gitignore` next to `environments/` if it is missing. A
   secret may keep a placeholder in the shared file, so teammates see the name.
-  OS keychain storage through the `keyring` crate comes next.
+  Encrypted collection passwords can already be remembered in the OS keychain
+  through the `keyring` crate; the same store for environment secrets comes next.
 - **Dynamic variables.** `{{$name}}` is filled by `apix_core::dynamic` when no
   variable of that name is defined, with a new value for every occurrence
   (`$guid`, `$timestamp`, `$isoTimestamp`, `$randomEmail`, …). No extra crates:
@@ -240,6 +241,14 @@ my-api/
 - Git still sees which object changed, never what is in it. Security comes from
   the cipher and the password, not from the format being secret; Apix is open
   source.
+- The password can be remembered in the OS credential store
+  (`apix_vault::keychain`, through the `keyring` crate: Credential Manager,
+  macOS Keychain, Secret Service). One entry per vault under the service `Apix`,
+  named `vault:<absolute folder>` (lower case on Windows). It is opt-in from the
+  unlock prompt; the app and the CLI try it before asking, a password that no
+  longer opens the vault is deleted and asked for again, changing the password
+  updates it and decrypting the collection deletes it. When no store is
+  available Apix simply asks, as before.
 
 ## Languages (M4)
 

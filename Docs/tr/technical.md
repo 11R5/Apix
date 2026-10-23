@@ -1,4 +1,4 @@
-<!-- translated from en/technical.md sha256:98566cf1ac9907ff -->
+<!-- translated from en/technical.md sha256:c51811d1a6028c64 -->
 
 # Teknik notlar
 
@@ -64,7 +64,7 @@ Masaüstü uygulamasının tam bir release derlemesi birkaç dakika sürer.
 | HTTP | rustls ile `reqwest` 0.12, `tokio`, `hyper-util`, zamanlama için `tower` katmanları |
 | Ağ ayrıntıları | `x509-parser` (sertifikalar), `netdev` (ağ arayüzleri, ağ geçidi, DNS sunucuları) |
 | İmzalama | `sha2`, `sha1`, `hmac`, `md-5`, `base64`, `rand_core` (AWS SigV4, OAuth 1.0, Digest, PKCE) |
-| Şifreleme | `chacha20poly1305` (XChaCha20-Poly1305), `argon2`, `zeroize` |
+| Şifreleme | `chacha20poly1305` (XChaCha20-Poly1305), `argon2`, `zeroize`, `keyring` (işletim sistemi kimlik bilgisi deposu) |
 | Dosyalar | `serde`, `toml`, `serde_json`, `notify` (dosya izleme), `trash` |
 | Diller | `rust-i18n` (gpui-kit ile ortak), `sys-locale` |
 
@@ -75,6 +75,7 @@ Masaüstü uygulamasının tam bir release derlemesi birkaç dakika sürer.
 | `<config>/Apix/settings.toml` | dil, tema, otomatik kilit süresi |
 | `<config>/Apix/state.toml` | son açılan koleksiyonlar, koleksiyon başına seçilen ortam |
 | `<config>/Apix/cookies.json` | çerez kavanozu (oturum çerezleri kalıcı değildir) |
+| İşletim sistemi kimlik bilgisi deposu, `Apix` servisi | şifreli koleksiyonların hatırlanan parolaları, her biri için bir `vault:<klasör>` kaydı, yalnızca istenirse |
 | `<config>/Apix/history/` | gönderilen istekler (`{{değişkenler}}` çözülmeden) ve yanıtları: `index.jsonl`, her kayıt için bir `<id>.json` ve `<id>.body`; son 300 kayıt, gövdeler 256 KB'ta kesilir |
 
 `<config>`, Windows'ta `%APPDATA%`, macOS'te `~/Library/Application Support`,
@@ -158,6 +159,6 @@ patch ile devreye alır. Upstream crate düzeltildiğinde kaldırılabilir.
 | apix-http | istek oluşturma, her gövde türü, OAuth 2.0, Digest, AWS ve OAuth 1.0 için yerel bir sunucu, ağ izi |
 | apix-codegen | bash, cmd ve PowerShell için kabuk tırnaklama; curl yapıştırma; gidiş-dönüş testleri; her dilde URL, başlıklar, gövdeler, dize kaçışları ve ayarlar |
 | apix-import | Postman v2.0/v2.1 fixture'ları |
-| apix-vault | şifreleme formatı, kurcalama (tampering), parola değişikliği, kurtarma anahtarı |
+| apix-vault | şifreleme formatı, kurcalama (tampering), parola değişikliği, kurtarma anahtarı, anahtarlık kayıtları (gerçek kimlik bilgisi deposunda, test servis adıyla; depo yoksa atlanır) |
 | apix-desktop | çevirilerin eksiksizliği, dil yardımcıları, dosya yolları, vurgulama sorgusu |
 | docs-check | belge yapısı ve damgalar |

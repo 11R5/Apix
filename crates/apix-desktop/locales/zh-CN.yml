@@ -420,6 +420,7 @@ sidebar.edit_variables: 编辑变量…
 sidebar.edit_variables_tooltip: 编辑变量（%{key}）
 sidebar.empty: 空
 sidebar.encrypt: 加密…
+sidebar.forget_password: 忘记已保存的密码
 sidebar.import_postman: 导入…
 sidebar.kind_collection: 集合
 sidebar.kind_project: 项目
@@ -465,6 +466,7 @@ vault.error.trash: "无法移到回收站：%{error}"
 vault.error.trash_encrypted: "无法将加密文件移到回收站：%{error}"
 vault.error.trash_plain: "无法将明文文件移到回收站：%{error}"
 vault.error.unlock_first: 请先解锁该集合。
+vault.forgotten: 已忘记 %{name} 的已保存密码。
 vault.locked: 已锁定
 vault.locked_title: 已锁定
 vault.name_placeholder: 集合名称
@@ -480,6 +482,10 @@ vault.recovery.stored: 我已将恢复密钥妥善保存
 vault.recovery.title: 你的恢复密钥
 vault.recovery.warning: 如果既没有密码也没有此密钥，任何人（包括你自己）都无法打开该集合。
 vault.recovery_placeholder: 恢复密钥，例如 7K2M-9QXA-…
+vault.remember: 在这台电脑上记住
+vault.remember_failed: "无法记住密码：%{error}"
+vault.remember_note: 保存在系统的凭据存储中；只要你在这台电脑上保持登录，打开集合时就不再询问密码。
+vault.remembered_stale: 记住的密码已失效，因此已将其忘记。
 vault.repeat_password: 再次输入密码
 vault.unlock: 解锁
 vault.unlock_note: 此集合已加密。它将保持解锁状态，直到你锁定它、退出 Apix 或空闲 %{count} 分钟。

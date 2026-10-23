@@ -420,6 +420,7 @@ sidebar.edit_variables: Editar variables…
 sidebar.edit_variables_tooltip: Editar variables (%{key})
 sidebar.empty: Vacío
 sidebar.encrypt: Cifrar…
+sidebar.forget_password: Olvidar la contraseña guardada
 sidebar.import_postman: Importar…
 sidebar.kind_collection: COLECCIÓN
 sidebar.kind_project: PROYECTO
@@ -465,6 +466,7 @@ vault.error.trash: "No se pudo mover a la papelera: %{error}"
 vault.error.trash_encrypted: "No se pudieron mover los archivos cifrados a la papelera: %{error}"
 vault.error.trash_plain: "No se pudieron mover los archivos sin cifrar a la papelera: %{error}"
 vault.error.unlock_first: Desbloquea primero la colección.
+vault.forgotten: Se olvidó la contraseña guardada de %{name}.
 vault.locked: Bloqueada
 vault.locked_title: Bloqueada
 vault.name_placeholder: Nombre de la colección
@@ -480,6 +482,10 @@ vault.recovery.stored: He guardado la clave de recuperación en un lugar seguro
 vault.recovery.title: Tu clave de recuperación
 vault.recovery.warning: Sin la contraseña y sin esta clave, nadie, ni siquiera tú, puede abrir la colección.
 vault.recovery_placeholder: Clave de recuperación, p. ej. 7K2M-9QXA-…
+vault.remember: Recordar en este equipo
+vault.remember_failed: "No se pudo recordar la contraseña: %{error}"
+vault.remember_note: Se guarda en el almacén de credenciales del sistema; la colección se abre sin preguntar mientras tengas la sesión iniciada en este equipo.
+vault.remembered_stale: La contraseña recordada ya no funciona, así que se olvidó.
 vault.repeat_password: Repite la contraseña
 vault.unlock: Desbloquear
 vault.unlock_note: Esta colección está cifrada. Permanece desbloqueada hasta que la bloquees, salgas de Apix o la dejes inactiva durante %{count} minutos.

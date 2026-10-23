@@ -120,6 +120,25 @@ impl MenuState {
             menu = menu
                 .separator()
                 .item(self.item(tr!("menu.lock_collections"), Workspace::lock_collections));
+            let remembered: Vec<PathBuf> = apix_core::vfs::unlocked_roots()
+                .into_iter()
+                .filter(|root| apix_core::vfs::keychain::load(root).is_some())
+                .collect();
+            let several = remembered.len() > 1;
+            for root in remembered {
+                let label = if several {
+                    let name = root
+                        .file_name()
+                        .map(|n| n.to_string_lossy().into_owned())
+                        .unwrap_or_default();
+                    format!("{} · {name}", tr!("sidebar.forget_password"))
+                } else {
+                    tr!("sidebar.forget_password").to_string()
+                };
+                menu = menu.item(self.item(label, move |ws, window, cx| {
+                    ws.forget_saved_password(root.clone(), window, cx)
+                }));
+            }
         }
         if self.open {
             menu = menu
