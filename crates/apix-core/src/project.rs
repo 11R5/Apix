@@ -137,6 +137,33 @@ impl Project {
         (collections, errors)
     }
 
+    /// Puts the collection at `item` just before `anchor`, or after it, and
+    /// saves that order.
+    pub fn place_collection(
+        &mut self,
+        item: &Path,
+        anchor: &Path,
+        after: bool,
+    ) -> Result<(), StoreError> {
+        let (item, anchor) = (self.key(item), self.key(anchor));
+        if item == anchor {
+            return Ok(());
+        }
+        let mut keys: Vec<String> = self
+            .collections()
+            .0
+            .iter()
+            .map(|c| self.key(&c.root))
+            .filter(|k| *k != item)
+            .collect();
+        let Some(at) = keys.iter().position(|k| *k == anchor) else {
+            return Ok(());
+        };
+        keys.insert(if after { at + 1 } else { at }, item);
+        self.meta.order = keys;
+        self.save()
+    }
+
     /// How a collection folder is named in `order` and `pins`.
     pub fn key(&self, collection_root: &Path) -> String {
         collection_root
@@ -405,8 +432,13 @@ mod tests {
 
         project.meta.order = vec!["users".into()];
         project.save().unwrap();
-        let project = Project::open(&root).unwrap();
+        let mut project = Project::open(&root).unwrap();
         assert_eq!(names(&project), ["Users", "Orders"]);
+        // Dragging Users after Orders.
+        project.place_collection(&users, &orders, true).unwrap();
+        let project = Project::open(&root).unwrap();
+        assert_eq!(names(&project), ["Orders", "Users"]);
+        assert_eq!(project.meta.order, ["orders", "users"]);
         assert_eq!(
             project.environment_names(&project.collections().0),
             ["prod", "test"]

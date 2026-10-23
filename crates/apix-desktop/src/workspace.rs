@@ -368,6 +368,8 @@ pub struct Workspace {
     task: Option<Task<()>>,
     /// The open tabs as last written to the app state.
     remembered_tabs: Option<(PathBuf, crate::state::OpenTabs)>,
+    /// The sidebar row and zone a drag would drop into.
+    drop_hint: Option<(PathBuf, drag::Zone)>,
     _subscriptions: Vec<Subscription>,
 }
 
@@ -485,6 +487,7 @@ impl Workspace {
             bench_sent: None,
             _auto_lock: None,
             remembered_tabs: None,
+            drop_hint: None,
             _subscriptions: subscriptions,
         };
         this._auto_lock = Some(Self::auto_lock_task(window, cx));

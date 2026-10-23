@@ -29,7 +29,7 @@ use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
 use super::auth_editor::AuthOwner;
-use super::drag::{DraggedNode, draggable};
+use super::drag::{DraggedNode, Kind as DragKind, draggable};
 use super::{Workspace, describe, key_hint};
 use crate::bidi::{self, Bidi as _, DialogBidi as _};
 use crate::theme;
@@ -1423,54 +1423,65 @@ impl Workspace {
                 .collect();
             (all, shown)
         });
+        let header = row_base(&collection.root, depth);
+        // Inside a project, collections can be dragged to reorder them.
+        let header = if self.project.is_some() {
+            draggable(
+                header,
+                DraggedNode::new(
+                    &collection.root,
+                    DragKind::Collection,
+                    collection.meta.name.clone(),
+                    p,
+                ),
+            )
+        } else {
+            header
+        };
         out.push(
-            self.drop_target(
-                row_base(&collection.root, depth),
-                collection.root.clone(),
-                cx,
-            )
-            .font_weight(FontWeight::SEMIBOLD)
-            .text_color(if active { p.text } else { p.text_muted })
-            .on_click(cx.listener(move |this, _: &ClickEvent, _, cx| {
-                if !this.collapsed.remove(&toggle) {
-                    this.collapsed.insert(toggle.clone());
-                }
-                cx.notify();
-            }))
-            .child(
-                Icon::new(if collapsed {
-                    bidi::chevron_collapsed()
-                } else {
-                    IconName::ChevronDown
+            self.drop_zones(header, &collection.root, DragKind::Collection, cx)
+                .font_weight(FontWeight::SEMIBOLD)
+                .text_color(if active { p.text } else { p.text_muted })
+                .on_click(cx.listener(move |this, _: &ClickEvent, _, cx| {
+                    if !this.collapsed.remove(&toggle) {
+                        this.collapsed.insert(toggle.clone());
+                    }
+                    cx.notify();
+                }))
+                .child(
+                    Icon::new(if collapsed {
+                        bidi::chevron_collapsed()
+                    } else {
+                        IconName::ChevronDown
+                    })
+                    .xsmall(),
+                )
+                .child(
+                    div()
+                        .flex_1()
+                        .min_w_0()
+                        .truncate()
+                        .child(collection.meta.name.clone()),
+                )
+                // Unlocked and encrypted: decrypted only in memory.
+                .when(vfs::is_virtual(&collection.root), |row| {
+                    row.child(
+                        Icon::new(gpui_kit::assets::IconName::LockOpen)
+                            .xsmall()
+                            .text_color(p.ok),
+                    )
                 })
-                .xsmall(),
-            )
-            .child(
-                div()
-                    .flex_1()
-                    .min_w_0()
-                    .truncate()
-                    .child(collection.meta.name.clone()),
-            )
-            // Unlocked and encrypted: decrypted only in memory.
-            .when(vfs::is_virtual(&collection.root), |row| {
-                row.child(
-                    Icon::new(gpui_kit::assets::IconName::LockOpen)
-                        .xsmall()
-                        .text_color(p.ok),
-                )
-            })
-            .context_menu(move |menu: PopupMenu, window, cx| {
-                collection_menu(
-                    menu,
-                    view.clone(),
-                    menu_root.clone(),
-                    pins.clone(),
-                    window,
-                    cx,
-                )
-            })
-            .into_any_element(),
+                .context_menu(move |menu: PopupMenu, window, cx| {
+                    collection_menu(
+                        menu,
+                        view.clone(),
+                        menu_root.clone(),
+                        pins.clone(),
+                        window,
+                        cx,
+                    )
+                })
+                .into_any_element(),
         );
         if !collapsed
             && let Some((_, tree)) = self.trees.iter().find(|(root, _)| *root == collection.root)
@@ -1712,9 +1723,9 @@ impl Workspace {
         let menu_path = path.to_path_buf();
         let row = draggable(
             row_base(path, depth),
-            DraggedNode::new(path, true, name.to_owned(), p),
+            DraggedNode::new(path, DragKind::Folder, name.to_owned(), p),
         );
-        self.drop_target(row, path.to_path_buf(), cx)
+        self.drop_zones(row, path, DragKind::Folder, cx)
             .text_color(p.text_muted)
             .on_click(cx.listener(move |this, _: &ClickEvent, _, cx| {
                 if !this.collapsed.remove(&toggle_path) {
@@ -1757,10 +1768,9 @@ impl Workspace {
         let menu_path = path.to_path_buf();
         let row = draggable(
             row_base(path, depth),
-            DraggedNode::new(path, false, request.name.clone(), p),
+            DraggedNode::new(path, DragKind::Request, request.name.clone(), p),
         );
-        let folder = path.parent().unwrap_or(path).to_path_buf();
-        self.drop_target(row, folder, cx)
+        self.drop_zones(row, path, DragKind::Request, cx)
             .when(selected, |row| row.bg(p.accent.opacity(0.14)))
             .on_click(cx.listener(move |this, _: &ClickEvent, window, cx| {
                 this.select(open_path.clone(), window, cx)

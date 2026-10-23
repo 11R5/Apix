@@ -16,7 +16,7 @@ use apix_core::{
 use serde::Deserialize;
 use serde_json::Value;
 
-use crate::{ImportError, Plan, PlannedFile, Report, request_file, slug, unique};
+use crate::{ImportError, Plan, PlannedFile, Report, manual_order, request_file, slug, unique};
 
 /// What a Postman JSON export contains.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -359,7 +359,7 @@ pub fn convert_collection(json: &str) -> Result<Plan, ImportError> {
         files: &mut files,
     };
     ctx.scripts(&pm.event, Path::new(""), "_collection", "");
-    ctx.items(&pm.item, Path::new(""), "");
+    let order = manual_order(ctx.items(&pm.item, Path::new(""), ""));
     // Auth stays where Postman set it; requests without their own inherit it.
     let auth = ctx.auth(pm.auth.as_ref(), "Collection");
     let settings = ctx.profile(pm.ppb.as_ref(), "Collection");
@@ -379,6 +379,7 @@ pub fn convert_collection(json: &str) -> Result<Plan, ImportError> {
         vars,
         auth,
         settings,
+        order,
     };
     Ok(Plan {
         meta,
@@ -394,8 +395,11 @@ struct Converter<'a> {
 
 impl Converter<'_> {
     /// `trail` is the folder path for messages, like `Users / Admin`.
-    fn items(&mut self, items: &[PmItem], dir: &Path, trail: &str) {
+    /// Returns the names written into `dir` in Postman's order, each with
+    /// whether it is a folder.
+    fn items(&mut self, items: &[PmItem], dir: &Path, trail: &str) -> Vec<(String, bool)> {
         let mut used: HashSet<String> = HashSet::new();
+        let mut written = Vec::new();
         for item in items {
             let label = if trail.is_empty() {
                 item.name.clone()
@@ -420,26 +424,34 @@ impl Converter<'_> {
                 self.scripts(&item.event, &sub, "_folder", &label);
                 let auth = self.auth(item.auth.as_ref(), &label);
                 let settings = self.profile(item.ppb.as_ref(), &label);
-                if !auth.is_inherit() || !settings.is_inherit() {
-                    let meta = FolderMeta { auth, settings };
+                let order = manual_order(self.items(children, &sub, &label));
+                if !auth.is_inherit() || !settings.is_inherit() || !order.is_empty() {
+                    let meta = FolderMeta {
+                        auth,
+                        settings,
+                        order,
+                    };
                     self.files.push(PlannedFile::Folder {
                         path: sub.clone(),
                         meta,
                     });
                 }
-                self.items(children, &sub, &label);
+                written.push((name, true));
             } else if let Some(request) = &item.request {
                 let stem = unique(slug(&item.name, "request"), &mut used);
                 let request = self.request(item, request, &label);
+                let file = request_file(&stem);
                 self.files.push(PlannedFile::Request {
-                    path: dir.join(request_file(&stem)),
+                    path: dir.join(&file),
                     request,
                 });
+                written.push((file, false));
                 self.report.requests += 1;
                 self.report.examples_skipped += item.response.len();
                 self.scripts(&item.event, dir, &stem, &label);
             }
         }
+        written
     }
 
     /// Saves `prerequest` / `test` scripts as `<stem>.prerequest.js` / `<stem>.test.js`.
