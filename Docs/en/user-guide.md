@@ -64,6 +64,10 @@ with a folder (`apix-desktop path/to/collection`) opens it directly.
    [Variables](#variables-and-environments)).
 3. Press **Send** or Ctrl+Enter. Esc cancels a request that is still running.
 
+While an environment whose name contains “prod” is active, Apix asks before
+sending DELETE, PUT or PATCH and shows the full URL it would hit. **Settings ›
+Confirm in production** turns that off.
+
 **New request** (Ctrl+N) opens a GET request; the sidebar's **+** menu offers
 every method, and POST, PUT and PATCH start with a JSON body. Save with Ctrl+S.
 A dot on the tab and in the sidebar marks unsaved changes.
@@ -73,7 +77,8 @@ A dot on the tab and in the sidebar marks unsaved changes.
 **Params** are added to the URL's query string, **Headers** are sent as they
 are. Untick a row to keep it in the file without sending it. A row without a
 key is ignored. `Content-Type` is set from the body type unless you add your
-own.
+own. `{{variables}}` in keys and values show as chips, as in the URL bar; hover
+one to see its value.
 
 ## Body
 
@@ -238,13 +243,21 @@ The **Network** tab explains where the time went and what the connection was:
 
 Each tab keeps its unsaved edits, its last response, and even a request that is
 still running. Ctrl+Tab and Ctrl+Shift+Tab move between tabs, Ctrl+W or a
-middle click closes one; Apix asks before closing unsaved changes.
+middle click closes one; Apix asks before closing unsaved changes. The tabs
+that were open come back the next time you open the same collection or
+project (tabs of encrypted collections are not remembered, as their file names
+are secret too).
 
 ## Organising requests
 
 Right-click in the sidebar to create, rename, duplicate or delete requests and
 folders; deleted files go to the system trash. Drag a request or folder onto
-another folder to move it.
+the middle of another folder to move it there. Drop it on the top or bottom
+edge of a row instead to put it before or after that row; a line shows where
+it will land. The order is saved in `apix.toml` (for the collection's top
+level) and `folder.toml` (for a folder) as an `order` list, so it is shared
+through git; items it does not list follow by name. Postman imports keep
+Postman's order, and exports to Postman follow yours.
 
 ## Projects
 
@@ -252,6 +265,14 @@ A **project** groups several collections that belong together and shares
 environments and auth between them. Create one with **File › New project…**.
 In a project, **Environment › Group the sidebar by** can show the sidebar as
 Project › Environment › Collections.
+
+- Drag a collection's header above or below another one to change their order.
+- Right-click a collection › **Colour** gives it a colour; a dot shows it in the
+  sidebar and on the tabs of its requests. Colours are saved in
+  `apix-project.toml`.
+- **File › Move into a project…** (with a single collection open) moves that
+  collection's folder into a project you pick. With a project open, dropping a
+  collection's folder from the file manager onto the window offers the same.
 
 ## Encrypted collections
 
@@ -278,8 +299,10 @@ which encrypted blob changed.
 ## Copy as and paste curl
 
 The copy button next to **Send** (or **Request › Copy as**) copies the request
-as `curl` for bash, `curl.exe` for the Windows command prompt, or a PowerShell
-`Invoke-RestMethod` call, with variables filled in. Requests signed per send
+as `curl` for bash or fish, `curl.exe` for the Windows command prompt, a
+PowerShell `Invoke-RestMethod` call, an HTTPie `http` command (HTTPie 3.0 or
+later) or a GNU `wget` command, with variables filled in. wget cannot send
+multipart forms; the copied command says so. Requests signed per send
 (OAuth 1.0, AWS for PowerShell and code) are signed at the moment you copy.
 
 The same menu copies the request as a program: JavaScript `fetch`, Node.js
@@ -377,6 +400,8 @@ in every language.
 - **Lock encrypted collections:** after 5, 15 or 30 minutes, 1 hour, or never.
 - **Environment secrets:** in a `.local.toml` file or in the system keychain
   (see [Variables and environments](#variables-and-environments)).
+- **Confirm in production:** ask before DELETE, PUT or PATCH while a “prod”
+  environment is active (on by default).
 - **History:** on or off (see [History](#history)).
 
 ![Settings](images/settings.png)

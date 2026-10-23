@@ -1,4 +1,4 @@
-<!-- translated from en/technical.md sha256:1533e793eade70e8 -->
+<!-- translated from en/technical.md sha256:8fceb7b1cad81040 -->
 
 # Teknik notlar
 
@@ -73,7 +73,7 @@ Masaüstü uygulamasının tam bir release derlemesi birkaç dakika sürer.
 | Dosya | İçerik |
 |---|---|
 | `<config>/Apix/settings.toml` | dil, tema, otomatik kilit süresi, geçmişin açık ya da kapalı olması, ortam gizli değerlerinin nereye yazılacağı |
-| `<config>/Apix/state.toml` | son açılan koleksiyonlar, koleksiyon başına seçilen ortam |
+| `<config>/Apix/state.toml` | son açılan koleksiyonlar, koleksiyon ya da proje başına seçilen ortam ve açık sekmeler (şifreli koleksiyonlar hariç) |
 | `<config>/Apix/cookies.json` | çerez kavanozu (oturum çerezleri kalıcı değildir) |
 | İşletim sistemi kimlik bilgisi deposu, `Apix` servisi | yalnızca istenirse: şifreli koleksiyonların hatırlanan parolaları (`vault:<klasör>`) ve ortam gizli değerleri (`env:<kimlik>`, uzun değerler için ayrıca `env:<kimlik>#1`, …) |
 | `<config>/Apix/history/` | gönderilen istekler (`{{değişkenler}}` çözülmeden) ve yanıtları: `index.jsonl`, her kayıt için bir `<id>.json` ve `<id>.body`; son 300 kayıt, gövdeler 256 KB'ta kesilir |

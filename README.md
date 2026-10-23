@@ -80,17 +80,19 @@ Measurements of the other tools on the same machine are planned.
   indented and coloured XML and HTML, image preview, a Hex view for binary
   bodies, save the body to a file, raw and headers views, and the Network tab.
 - **Collections and projects:** a sidebar built from the files on disk, tabs that
-  keep their edits and responses, drag to move, projects that share
-  environments.
+  keep their edits and responses and come back next time, drag to move and to
+  reorder, projects that share environments, a colour per collection, and a
+  confirmation before DELETE, PUT or PATCH in production.
 - **Variables:** project, collection and environment layers, secrets kept out of
-  git, dynamic values such as `{{$guid}}`, coloured chips in the URL bar.
+  git, dynamic values such as `{{$guid}}`, coloured chips in the URL bar, params,
+  headers and form fields.
 - **Encrypted collections** with a recovery key, auto-lock and, if you choose,
   the password remembered in the OS keychain.
 - **Import** from Postman (collections, environments, a whole "Export data"
   zip), Insomnia v4, OpenAPI 3 / Swagger 2 (JSON or YAML) and HAR, with a
   report; formats are recognised by content. **Export to Postman** for
   teammates who stay on it.
-- **Copy as** `curl`, `curl.exe` or PowerShell, or as code in fetch, axios,
+- **Copy as** `curl` (bash or fish), `curl.exe`, PowerShell, HTTPie or wget, or as code in fetch, axios,
   Python, Go, Rust, C#, Java, PHP, Swift and Kotlin; **paste** a `curl` command
   to fill a request.
 - **History** of sent requests with their responses (Ctrl+H): search it and

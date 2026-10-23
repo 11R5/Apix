@@ -72,7 +72,7 @@ release build of the desktop app takes a few minutes.
 | File | Contents |
 |---|---|
 | `<config>/Apix/settings.toml` | language, theme, auto-lock time, history on or off, where environment secrets go |
-| `<config>/Apix/state.toml` | recently opened collections, the chosen environment per collection |
+| `<config>/Apix/state.toml` | recently opened collections, the chosen environment and the open tabs per collection or project (not for encrypted collections) |
 | `<config>/Apix/cookies.json` | the cookie jar (session cookies are not persisted) |
 | OS credential store, service `Apix` | only when asked for: remembered passwords of encrypted collections (`vault:<folder>`) and environment secrets (`env:<id>`, plus `env:<id>#1`, … for long values) |
 | `<config>/Apix/history/` | sent requests (`{{variables}}` unresolved) and their responses: `index.jsonl`, one `<id>.json` and `<id>.body` per entry; the last 300, bodies cut at 256 KB |

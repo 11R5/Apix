@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:aac585a802722cfa -->
+<!-- translated from en/user-guide.md sha256:06a5d869b16f8364 -->
 
 # Apix kullanım kılavuzu
 
@@ -70,6 +70,10 @@ klasörle başlatmak (`apix-desktop path/to/collection`) o klasörü doğrudan a
 3. **Gönder**'e basın veya Ctrl+Enter kullanın. Esc, hâlâ çalışan bir isteği
    iptal eder.
 
+Adında “prod” geçen bir ortam seçiliyken Apix, DELETE, PUT veya PATCH
+göndermeden önce sorar ve gideceği tam URL'yi gösterir. **Ayarlar › Üretimde
+onay iste** bunu kapatır.
+
 **Yeni istek** (Ctrl+N) bir GET isteği açar; kenar çubuğundaki **+** menüsü tüm
 metotları sunar, POST, PUT ve PATCH ise JSON gövdesiyle başlar. Ctrl+S ile
 kaydedin. Sekmedeki ve kenar çubuğundaki nokta kaydedilmemiş değişiklikleri
@@ -80,7 +84,9 @@ gösterir.
 **Parametreler** URL'nin sorgu dizesine eklenir, **Başlıklar** olduğu gibi
 gönderilir. Bir satırı dosyada tutup göndermemek için işaretini kaldırın.
 Anahtarı olmayan satırlar yok sayılır. Kendiniz bir tane eklemediğiniz sürece
-`Content-Type` gövde türünden belirlenir.
+`Content-Type` gövde türünden belirlenir. Anahtar ve değerlerdeki
+`{{değişkenler}}` URL çubuğundaki gibi çip olarak görünür; değerini görmek için
+üzerine gelin.
 
 ## Gövde
 
@@ -250,13 +256,21 @@ uzantı içeriğe göre seçilir.
 Her sekme kaydedilmemiş düzenlemelerini, son yanıtını ve hatta hâlâ çalışan bir
 isteği korur. Ctrl+Tab ve Ctrl+Shift+Tab sekmeler arasında geçiş yapar, Ctrl+W
 veya orta tıklama bir sekmeyi kapatır; Apix kaydedilmemiş değişiklikleri
-kapatmadan önce sorar.
+kapatmadan önce sorar. Açık olan sekmeler aynı koleksiyon ya da proje bir
+sonraki açılışta yeniden gelir (şifreli koleksiyonların sekmeleri hatırlanmaz,
+çünkü dosya adları da gizlidir).
 
 ## Kenar çubuğunda istekleri düzenleme
 
 İstek ve klasör oluşturmak, yeniden adlandırmak, çoğaltmak veya silmek için
 kenar çubuğuna sağ tıklayın; silinen dosyalar sistemin çöp kutusuna gider. Bir
-isteği veya klasörü taşımak için başka bir klasörün üzerine sürükleyin.
+isteği veya klasörü başka bir klasörün ortasına sürükleyince oraya taşınır.
+Bir satırın üst ya da alt kenarına bırakırsanız o satırın önüne ya da arkasına
+yerleşir; nereye gideceğini bir çizgi gösterir. Sıra `apix.toml` (koleksiyonun
+üst düzeyi için) ve `folder.toml` (bir klasör için) içinde `order` listesi
+olarak saklanır, böylece git ile paylaşılır; listede olmayanlar ada göre
+arkadan gelir. Postman içe aktarma Postman'daki sırayı korur, Postman'a dışa
+aktarma da sizin sıranızı izler.
 
 ## Projeler
 
@@ -264,6 +278,15 @@ isteği veya klasörü taşımak için başka bir klasörün üzerine sürükley
 yetkilendirmeyi aralarında paylaştırır. **Dosya › Yeni proje…** ile bir tane
 oluşturun. Bir projede **Ortam › Kenar çubuğunu grupla** kenar çubuğunu
 Proje › Ortam › Koleksiyonlar düzeninde gösterebilir.
+
+- Sıralarını değiştirmek için bir koleksiyon başlığını başka birinin üstüne ya
+  da altına sürükleyin.
+- Bir koleksiyona sağ tıklayıp › **Renk** ile ona renk verin; renk kenar
+  çubuğunda ve isteklerinin sekmelerinde nokta olarak görünür. Renkler
+  `apix-project.toml` içinde saklanır.
+- **Dosya › Bir projeye taşı…** (tek koleksiyon açıkken) o koleksiyonun
+  klasörünü seçtiğiniz projeye taşır. Bir proje açıkken dosya yöneticisinden bir
+  koleksiyon klasörünü pencereye bırakmak da aynısını önerir.
 
 ## Şifreli koleksiyonlar
 
@@ -290,9 +313,11 @@ yalnızca hangi şifreli blob'un değiştiğini görür.
 ## Komut olarak kopyala ve curl yapıştırma
 
 **Gönder** düğmesinin yanındaki kopyala düğmesi (veya **İstek › Komut veya kod
-olarak kopyala**) isteği bash için `curl`, Windows komut istemi için `curl.exe`
-ya da bir PowerShell `Invoke-RestMethod` çağrısı olarak, değişkenler
-doldurulmuş şekilde kopyalar. Her gönderimde imzalanan istekler (OAuth 1.0,
+olarak kopyala**) isteği bash ya da fish için `curl`, Windows komut istemi için
+`curl.exe`, bir PowerShell `Invoke-RestMethod` çağrısı, bir HTTPie `http` komutu
+(HTTPie 3.0 ve sonrası) ya da bir GNU `wget` komutu olarak, değişkenler
+doldurulmuş şekilde kopyalar. wget multipart form gönderemez; kopyalanan komut
+bunu not olarak yazar. Her gönderimde imzalanan istekler (OAuth 1.0,
 PowerShell ve kod için AWS) kopyaladığınız anda imzalanır.
 
 Aynı menü isteği bir program olarak da kopyalar: JavaScript `fetch`, Node.js
@@ -397,6 +422,8 @@ bulunabilir.
   ya da hiçbir zaman.
 - **Ortam gizli değerleri:** `.local.toml` dosyasında ya da sistem
   anahtarlığında (bkz. [Değişkenler ve ortamlar](#değişkenler-ve-ortamlar)).
+- **Üretimde onay iste:** “prod” ortamı seçiliyken DELETE, PUT veya PATCH
+  öncesi sor (varsayılan olarak açık).
 - **Geçmiş:** açık veya kapalı (bkz. [Geçmiş](#geçmiş)).
 
 ![Ayarlar](images/settings.png)

@@ -193,8 +193,14 @@ Open questions:
   variable of that name is defined, with a new value for every occurrence
   (`$guid`, `$timestamp`, `$isoTimestamp`, `$randomEmail`, …). No extra crates:
   a small xorshift generator and a hand-written UTC date formatter.
-- **Ordering in the sidebar.** Folders and files are sorted by name for now. An
-  optional `order` field may be added later.
+- **Ordering in the sidebar.** Without anything saved, folders come first, then
+  requests, each by name. Dragging saves an `order` list of child names in the
+  folder's `folder.toml` (or the collection's `apix.toml`); `store::place` puts
+  one item before or after another, and renames and moves keep the list in step.
+  Names the list does not know follow in the default order, so a new file never
+  disappears. Project collections use `order` in `apix-project.toml`
+  (`Project::place_collection`). The Postman importer writes `order` only when
+  Postman's order differs from the default.
 
 ### Projects
 
@@ -202,11 +208,16 @@ A project groups collections and owns environments shared by all of them:
 
 ```
 shop/
-├── apix-project.toml       name, shared [vars], collection order, group_by, pins
+├── apix-project.toml       name, shared [vars], collection order, group_by, pins, colors
 ├── environments/           test.toml, prod.toml (+ *.local.toml secrets)
 ├── users/                  a collection (apix.toml + .apix files)
 └── payments/               a collection; may be pinned to some environments
 ```
+
+`[colors]` maps a collection folder to a colour name (`red`, `orange`, `yellow`,
+`green`, `teal`, `blue`, `purple`, `pink`); the app draws it as a dot in the
+sidebar and on tabs. `project::move_collection_into` moves a collection folder
+into a project (copy and delete across drives).
 
 Variable layers, later wins: project vars → collection vars → the project's environment
 → the collection's environment of the same name (each with its `.local.toml` secrets).
