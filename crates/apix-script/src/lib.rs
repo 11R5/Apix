@@ -37,6 +37,25 @@ pub struct ResponseView {
     pub size: usize,
 }
 
+impl ResponseView {
+    pub fn new(
+        code: u16,
+        status: &str,
+        headers: &[(String, String)],
+        body: &[u8],
+        time: Duration,
+    ) -> Self {
+        Self {
+            code,
+            status: status.to_owned(),
+            headers: headers.to_vec(),
+            body: String::from_utf8_lossy(body).into_owned(),
+            time_ms: time.as_millis() as u64,
+            size: body.len(),
+        }
+    }
+}
+
 /// Headers as the `{ key, value }` rows the prelude's lists expect.
 fn header_rows<S: serde::Serializer>(
     headers: &[(String, String)],

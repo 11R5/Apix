@@ -271,6 +271,7 @@ dependencies = [
  "apix-core",
  "apix-http",
  "apix-import",
+ "apix-script",
  "clap",
  "rpassword",
  "tokio",
