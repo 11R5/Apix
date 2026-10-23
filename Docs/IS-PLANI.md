@@ -14,10 +14,11 @@
 | M1 Arayüzden istek | ✅ 100 MB JSON ~0.33 s'de açılıyor |
 | M2 Koleksiyonlar, Postman içe aktarma | ✅ (sekmeler ve sürükle-bırak M3'te tamamlandı) |
 | M3 Simge, projeler, ortamlar, kopyalama, auth | ✅ 9/9 · bitti: simge, ortam seçici ve editörü, dinamik değişkenler, projeler, kabuk komutu olarak kopyalama, metotla yeni istek, değişken çipleri, Auth sekmesi ve miras, komut paleti, sekmeler, sürükle-bırak ile taşıma · küçük kalanlar M4'te yapıldı (yalnız ham gövde editöründe değişken çipi kaldı) |
-| M4 Günlük kullanım | 🔜 · bitti: menü çubuğu, şifreli koleksiyonlar (motor, uygulama, CLI), ağ denetçisi (Network sekmesi), multipart/binary/GraphQL gövdeleri, auth tipleri (Digest, OAuth 1.0, OAuth 2.0, AWS SigV4), ayarlar ekranı ve 9 dilli arayüz, Arapça için sağdan sola düzen, dokümantasyon yapısı (İngilizce, Türkçe), README karşılaştırması ve performans ölçümü, istek ayarları (zaman aşımı, yönlendirmeler, TLS doğrulama, proxy, istemci sertifikaları; klasör/koleksiyon/proje kalıtımıyla) ve çerez yöneticisi, 10 dilde kod üretimi, geçmiş, Postman otomatik tanıma, toplu içe aktarma ve Postman'a dışa aktarma, içerik tipleri (HTML gövde, XML/HTML renklendirme ve biçimlendirme, resim önizleme, Hex, yanıtı kaydetme), Insomnia/OpenAPI/HAR içe aktarma, şifreli koleksiyon parolasını ve ortam gizli değerlerini işletim sistemi anahtarlığında saklama, M3'ten kalan küçük işler (elle sıralama, sekmeleri hatırlama, proje renkleri, koleksiyonu projeye taşıma, prod onayı, fish/HTTPie/wget kopyalama, Params/Headers/form gövdesinde değişken çipleri) · sıradaki: M5 (scriptler, testler, runner); gRPC (not 17) sonraki görevlere bırakıldı |
-| M5–M9 | ⬜ |
+| M4 Günlük kullanım | ✅ · bitti: menü çubuğu, şifreli koleksiyonlar (motor, uygulama, CLI), ağ denetçisi (Network sekmesi), multipart/binary/GraphQL gövdeleri, auth tipleri (Digest, OAuth 1.0, OAuth 2.0, AWS SigV4), ayarlar ekranı ve 9 dilli arayüz, Arapça için sağdan sola düzen, dokümantasyon yapısı (İngilizce, Türkçe), README karşılaştırması ve performans ölçümü, istek ayarları (zaman aşımı, yönlendirmeler, TLS doğrulama, proxy, istemci sertifikaları; klasör/koleksiyon/proje kalıtımıyla) ve çerez yöneticisi, 10 dilde kod üretimi, geçmiş, Postman otomatik tanıma, toplu içe aktarma ve Postman'a dışa aktarma, içerik tipleri (HTML gövde, XML/HTML renklendirme ve biçimlendirme, resim önizleme, Hex, yanıtı kaydetme), Insomnia/OpenAPI/HAR içe aktarma, şifreli koleksiyon parolasını ve ortam gizli değerlerini işletim sistemi anahtarlığında saklama, M3'ten kalan küçük işler (elle sıralama, sekmeleri hatırlama, proje renkleri, koleksiyonu projeye taşıma, prod onayı, fish/HTTPie/wget kopyalama, Params/Headers/form gövdesinde değişken çipleri) · gRPC (not 17) sonraki görevlere bırakıldı |
+| M5 Scriptler, testler, runner | 🔜 · bitti: `apix-script` (QuickJS, `pm.*` uyumlu API), istek öncesi ve test scriptleri (koleksiyon → klasör → istek), `pm.test` / `pm.expect` (Chai tarzı), eski `tests[...]` / `postman.*` API'si, konsol, uygulamada Scripts sekmesi ile Tests ve Console sekmeleri, `apix send` / `apix run` script çalıştırma, test sonuçları ve `setNextRequest` · sıradaki: `pm.sendRequest`, hazır kütüphaneler (`require`), kodsuz testler, Runner arayüzü, veri dosyalı koşular, JUnit/HTML raporlar |
+| M6–M9 | ⬜ |
 
-Release ikili dosyası 33.6 MB (üst sınır 100 MB). Testler: core 53, vault 7, desktop 12, codegen 21, import 26, http 19 (hepsi geçiyor, clippy uyarısız).
+Release ikili dosyası 37.2 MB (üst sınır 100 MB; QuickJS ve JavaScript renklendirmesi yaklaşık 3.6 MB ekledi). Testler: core 57, script 5, vault 11, desktop 12, codegen 24, import 26, http 19 (hepsi geçiyor, clippy uyarısız).
 
 ### Kullanıcı notları (17 Ekim 2026) ve plana nasıl işlendikleri
 | # | Not | Nereye işlendi |
@@ -312,7 +313,7 @@ Bir koleksiyon (veya proje) parola ile şifrelenir. Parolayı bilmeyen hiçbir a
 | **Postman Collection v2.1 ve v2.0 içe aktarma** | Klasörler, istekler, header'lar, raw, urlencoded, form-data (dosyalarla), binary ve GraphQL gövdeleri, bearer, basic, API key, Digest, OAuth 1.0, OAuth 2.0 ve AWS auth (klasör ve koleksiyon auth'u olduğu yerde kalır, istekler miras alır), koleksiyon değişkenleri, açıklamalar, path değişkenleri. NTLM, Hawk gibi desteklenmeyen auth tipleri ve örnek yanıtlar raporda listelenir; dosyası seçilmemiş alanlar ve loopback olmayan OAuth yönlendirme adresleri için uyarı verilir. | ✅ |
 | **Postman Environment içe aktarma** | `*.postman_environment.json`. `secret` tipindeki değerler `*.local.toml` dosyasına yazılır, git'e girmez. | ✅ |
 | **Postman Globals içe aktarma** | Tanınıyor, ortam olarak aktarılıyor. Toplu içe aktarmada projenin `[vars]` bölümüne yazılır (gizli globals commit'lenmesin diye alınmaz, raporda belirtilir). | ✅ |
-| **Postman scriptleri** | İsteklerin yanına `.js` olarak kaydediliyor ✅. `pm.*` uyumlu API ile çalıştırılması M5'te (§F). | ⬜ L |
+| **Postman scriptleri** | İsteklerin yanına `.js` olarak kaydediliyor ✅. `pm.*` uyumlu API ile çalıştırılması M5'te (§F). | ✅ çalışıyor (§F); `pm.sendRequest` ve `require` M5'in ikinci parçasında |
 | **İçe aktarma raporu** | Neyin aktarıldığı, neyin desteklenmediği ve hangi istekte olduğu listelenir. Hiçbir şey sessizce kaybolmaz. | ✅ |
 | **Sürükle-bırak ile içe aktarma** | `.json` dosyasını pencereye bırakmak yeterli. | ✅ kod · ⬜ elle test |
 | **Otomatik tanıma** (not 1) | Postman export'u içeren bir klasör açıldığında ya da sürüklendiğinde Apix bunu fark eder ve "Postman koleksiyonu bulundu, içe aktarılsın mı?" diye sorar. Dosya adına değil içeriğe bakarak tanır (v1, v2.0, v2.1, ortam, globals). | ✅ koleksiyon olmayan bir klasör açılınca/bırakılınca 3 seviye derinliğe kadar taranır (arka planda, en çok 400 dosya) |
@@ -340,21 +341,21 @@ Bir koleksiyon (veya proje) parola ile şifrelenir. Parolayı bilmeyen hiçbir a
 ### F. Scriptler ve testler
 | Özellik | Durum |
 |---|---|
-| **JS motoru:** QuickJS (`rquickjs`). Küçüktür (yaklaşık 1 MB), hızlı açılır, her istek kendi izole ortamında çalışır. | ⬜ L |
-| **Pre-request script:** istek gönderilmeden önce çalışır. Değişken atayabilir, header ekleyebilir, imza hesaplayabilir. | ⬜ |
-| **Test script:** `pm.test`, `pm.expect` (Chai tarzı), `pm.response.json()`, `pm.environment.set` ... | ⬜ |
+| **JS motoru:** QuickJS (`rquickjs`). Küçüktür (yaklaşık 1 MB), hızlı açılır, her istek kendi izole ortamında çalışır. | ✅ `apix-script`: her olay (istek öncesi / test) yeni bir QuickJS çalışma zamanında; 10 sn süre ve 256 MB bellek sınırı; `pm.*` API'sinin çoğu `prelude.js` içinde, veri JSON olarak girip çıkar |
+| **Pre-request script:** istek gönderilmeden önce çalışır. Değişken atayabilir, header ekleyebilir, imza hesaplayabilir. | ✅ `pm.request` (yöntem, URL, sorgu, başlıklar, ham ve urlencoded gövde değiştirilebilir), `pm.environment` / `pm.collectionVariables` / `pm.globals` (= proje değişkenleri) / `pm.variables`, `replaceIn`, `pm.info`, `pm.execution.setNextRequest` / `skipRequest`; sıra: koleksiyon (`_collection.prerequest.js`) → klasörler (`_folder.prerequest.js`) → istek; hata isteği durdurur. Script'in atadıkları diske yazılmaz: uygulamada açık kaldıkça, CLI'da koşu boyunca geçerlidir; çiplerde "Bir script atadı" görünür |
+| **Test script:** `pm.test`, `pm.expect` (Chai tarzı), `pm.response.json()`, `pm.environment.set` ... | ✅ `pm.test` (+ `skip`), `pm.expect` (equal, eql, deep, include, property, lengthOf, above/below, a/an, match, oneOf, keys, members, jsonSchema …), `pm.response.to.have.status/header/jsonBody/jsonSchema`, `pm.response.to.be.ok/notFound/…`, eski `tests["…"]`, `responseBody`, `responseCode`, `postman.setEnvironmentVariable`; `console.*`, `atob`/`btoa` |
 | `pm.sendRequest` ile script içinden istek gönderme (örneğin token alma) | ⬜ M |
 | Hazır kütüphaneler: `crypto-js`, `lodash`, `moment`, `uuid`, `ajv` (JSON Schema) | ⬜ M |
 | **Kodsuz testler:** `status == 200`, `body.users.length > 0`, `time < 300ms` gibi tablo hâlinde tanımlanan testler | ⬜ M |
 | Yanıttan değişken çıkarma: "bu alanı `token` değişkenine kaydet" (sağ tık ile) | ⬜ S |
-| Test sonuçları sekmesi (✓ / ✗ ve hata mesajı) | ⬜ |
-| Script konsolu: `console.log` çıktıları ve ağ günlüğü (Postman Console karşılığı) | ⬜ M |
+| Test sonuçları sekmesi (✓ / ✗ ve hata mesajı) | ✅ yanıt panelinde "Testler 3/4" sekmesi; istek tarafında Scripts sekmesi (İstek öncesi / Testler, JavaScript renklendirme, kirli işareti, Ctrl+S ile `<ad>.prerequest.js` / `<ad>.test.js` olarak kaydedilir) |
+| Script konsolu: `console.log` çıktıları ve ağ günlüğü (Postman Console karşılığı) | ✅ `console.*` çıktıları (Konsol sekmesi, CLI'da `│` ile) · ⬜ ağ günlüğü |
 
 ### G. Collection Runner ve CLI (Newman karşılığı)
 | Özellik | Durum |
 |---|---|
 | `apix send <dosya>` | ✅ |
-| `apix run <klasör>`: hata olursa sıfırdan farklı çıkış kodu döner | ✅ |
+| `apix run <klasör>`: hata olursa sıfırdan farklı çıkış kodu döner | ✅ script'leri de çalıştırır: test sonuçları (✓/✗), konsol, `setNextRequest` (sıra değiştirme, `null` ile durdurma); testi olan istek testlere, testi olmayan durum koduna göre geçer/kalır |
 | `--env`, `--var anahtar=değer` | ✅ |
 | Runner arayüzü: sıra seçimi, tekrar sayısı, istekler arası bekleme, durdur ve devam et | ⬜ M |
 | **Veri odaklı test:** CSV veya JSON dosyasındaki her satır için koleksiyonu çalıştırma | ⬜ M |
@@ -546,9 +547,10 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 - **İçe aktarıcılar (§D)** (L) ✅: Insomnia v4, OpenAPI 3 / Swagger 2 (JSON ve YAML), HAR; hepsi içerikten tanınır ve Postman'la aynı yoldan (`apix_import::bundle::Found`) koleksiyon ya da proje olarak yazılır; klasör/zip taraması YAML ve `.har` dosyalarını da okur.
 
 ### M5 — Scriptler, testler, runner
-- `apix-script` (QuickJS) ve `pm.*` uyumluluğu, hazır kütüphaneler, kodsuz testler
-- Test sonuçları sekmesi, konsol
-- Runner arayüzü, veri odaklı testler, JUnit/HTML raporlar
+Üç parçada yapılıyor:
+1. [x] **Script motoru ve testler** (L): `apix-script` (QuickJS) ve `pm.*` uyumluluğu (değişken kapsamları, `pm.request`, `pm.response`, `pm.test`, Chai tarzı `pm.expect`, eski Postman API'si, konsol); `apix_core::scripts` script dosyalarını bulur (koleksiyon → klasör → istek) ve script'lerin atadığı değişkenleri tutar; `apix send` / `apix run` script çalıştırır, test sonuçlarını yazar, `setNextRequest` izler; uygulamada Scripts sekmesi, Tests ve Console sekmeleri. Postman'dan gelen scriptler artık çalışıyor.
+2. [ ] **Script'ten istek ve kütüphaneler** (M): `pm.sendRequest`, `require('crypto-js' | 'lodash' | 'moment' | 'uuid' | 'ajv')`, kodsuz testler, yanıttan değişken çıkarma.
+3. [ ] **Runner** (M): Runner arayüzü (sıra, tekrar, bekleme, durdur/devam), CSV/JSON veri dosyalı koşular, JUnit XML / JSON / HTML raporlar, `--bail`, `--iterations`, `--delay`, GitHub Actions örneği.
 
 ### M5 sonrası — Tema paketi (23 Ekim'de kararlaştırıldı)
 1. Temayı yeniden başlatmadan değiştirme (görünümler paleti kopyalamak yerine ortak bir yerden okur); diğerlerinin temeli.

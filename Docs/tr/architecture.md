@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:7ceaf788ab3328ef -->
+<!-- translated from en/architecture.md sha256:b09ada03e09160cb -->
 
 # Apix mimarisi
 
@@ -35,6 +35,7 @@ crates/
 ├── apix-import   Postman v2.0/v2.1 koleksiyonları ve ortamları → Apix koleksiyonları
 ├── apix-codegen  istekler ↔ kabuk komutları: curl (bash), curl.exe (cmd), PowerShell; yapıştırılan curl'ü ayrıştırır; 10 dilde kod
 ├── apix-vault    şifreli koleksiyonlar: dosya başına XChaCha20-Poly1305, Argon2id, kurtarma anahtarı
+├── apix-script   istek öncesi ve test scriptleri: pm.* uyumlu API ile QuickJS
 ├── apix-cli      `apix` binary'si: terminalden ve CI'dan send / run / import / shell
 └── apix-desktop  GPUI masaüstü uygulaması (tek crate'ten Windows, macOS ve Linux)
 tools/
@@ -282,6 +283,31 @@ my-api/
   onu dener, kasayı artık açmayan bir parola silinip yeniden sorulur, parola
   değişince kayıt güncellenir, şifre kaldırılınca silinir. Depo yoksa Apix
   eskisi gibi parolayı sorar.
+
+## Scriptler (M5)
+
+`apix_core::scripts` bir isteğin scriptlerini bulur (`_collection.<olay>.js`,
+her klasörün `_folder.<olay>.js` dosyası, sonra `<istek>.<olay>.js`; olaylar
+`prerequest` ve `test`) ve scriptlerin kapsam kapsam atadığı ya da sildiği
+değerleri `ScriptVars` içinde tutar. `ScriptVars::apply` bunları isteğin
+`Variables` katmanlarının üstüne koyar, böylece çözümleme eskisi gibi çalışır.
+Scriptlerin atadığı hiçbir şey diske yazılmaz.
+
+`apix-script` bir olayın scriptlerini yeni bir QuickJS çalışma zamanında
+çalıştırır (`rquickjs`; 10 sn ve 256 MB sınırı). `pm` nesnesi JavaScript ile
+yazılmıştır (`prelude.js`): Rust bağlamı JSON olarak verir (çözülmemiş istek,
+testler için yanıt, `project::scope_values` ile kapsam değerleri, önceki
+`ScriptVars`, `pm.info`), scriptler birer fonksiyon içine sarılıp sırayla
+çalışır ve `__apix_output()` değişen isteği ve değişkenleri, test sonuçlarını,
+konsol satırlarını, `setNextRequest` ve `skipRequest` bilgisini JSON olarak
+döndürür. API'nin JavaScript'te durması Rust tarafını birkaç çağrıya indirir ve
+Postman davranışını yakalamayı kolaylaştırır.
+
+Scriptli bir gönderim: istek öncesi scriptler, sonra `ScriptVars::apply` ve
+çözümleme, HTTP isteği, ardından `ResponseView` ile test scriptleri. CLI bunu
+`exchange` içinde yapar (durum `apix run` boyunca taşınır); masaüstü uygulaması
+`script_run.rs` içinde, scriptleri arka plan thread'inde çalıştırarak ve
+isteğin kendi scriptlerini kaydedilmiş olsun olmasın editörden alarak yapar.
 
 ## Diller (M4)
 

@@ -33,6 +33,7 @@ crates/
 ├── apix-import   Postman v2.0/v2.1 collections and environments → Apix collections
 ├── apix-codegen  requests ↔ shell commands: curl (bash), curl.exe (cmd), PowerShell; parses pasted curl; code in 10 languages
 ├── apix-vault    encrypted collections: per-file XChaCha20-Poly1305, Argon2id, recovery key
+├── apix-script   pre-request and test scripts: QuickJS with a pm.*-compatible API
 ├── apix-cli      `apix` binary: send / run / import / shell from terminal & CI
 └── apix-desktop  GPUI desktop app (Windows, macOS and Linux from one crate)
 tools/
@@ -267,6 +268,30 @@ my-api/
   longer opens the vault is deleted and asked for again, changing the password
   updates it and decrypting the collection deletes it. When no store is
   available Apix simply asks, as before.
+
+## Scripts (M5)
+
+`apix_core::scripts` finds the scripts of a request (`_collection.<event>.js`,
+each folder's `_folder.<event>.js`, then `<request>.<event>.js`; events are
+`prerequest` and `test`) and holds `ScriptVars`, what scripts set or unset per
+scope. `ScriptVars::apply` lays them over the request's `Variables`, so
+resolving works as before. Nothing scripts set is written to disk.
+
+`apix-script` runs the scripts of one event in a fresh QuickJS runtime
+(`rquickjs`; 10 s and 256 MB limits). The `pm` object is JavaScript
+(`prelude.js`): Rust passes the context as JSON (the unresolved request, the
+response for tests, the scope values from `project::scope_values`, earlier
+`ScriptVars`, `pm.info`), the scripts run one by one wrapped in a function,
+and `__apix_output()` returns the changed request and variables, test results,
+console lines, `setNextRequest` and `skipRequest` as JSON. Keeping the API in
+JavaScript keeps the Rust side to a few calls and makes Postman behaviour easy
+to match.
+
+A send with scripts: pre-request scripts, then `ScriptVars::apply` and
+resolving, the HTTP request, then test scripts with a `ResponseView`. The CLI
+does this in `exchange` (state carried through `apix run`); the desktop app in
+`script_run.rs`, with the scripts on a background thread and the request's own
+scripts taken from the editor, saved or not.
 
 ## Languages (M4)
 

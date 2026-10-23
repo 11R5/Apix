@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:06a5d869b16f8364 -->
+<!-- translated from en/user-guide.md sha256:64d73115f56514b0 -->
 
 # Apix kullanım kılavuzu
 
@@ -24,6 +24,7 @@ veya CI'da çalıştırır.
 - [Değişkenler ve ortamlar](#değişkenler-ve-ortamlar)
 - [Yanıt](#yanıt)
 - [Ağ sekmesi](#ağ-sekmesi)
+- [Scriptler ve testler](#scriptler-ve-testler)
 - [Sekmeler](#sekmeler)
 - [Kenar çubuğunda istekleri düzenleme](#kenar-çubuğunda-istekleri-düzenleme)
 - [Projeler](#projeler)
@@ -250,6 +251,49 @@ uzantı içeriğe göre seçilir.
 - sunucu sertifikası: veren, geçerlilik ve kalan gün sayısı
 
 ![Ağ sekmesi](images/network.png)
+
+## Scriptler ve testler
+
+**Scriptler** sekmesi istek için iki JavaScript scripti tutar:
+
+- **İstek öncesi**, istek gönderilmeden önce çalışır. İsteği değiştirebilir
+  (`pm.request.headers.upsert(…)`, `pm.request.url.query.add(…)`,
+  `pm.request.body.raw = …`) ve değişken atayabilir
+  (`pm.environment.set("token", …)`).
+- **Testler**, yanıt geldikten sonra çalışır ve onu denetler:
+
+```js
+pm.test("durum 200", () => pm.response.to.have.status(200));
+pm.test("kullanıcılar var", () => {
+  const body = pm.response.json();
+  pm.expect(body.users).to.be.an("array").that.is.not.empty;
+});
+```
+
+API, Postman'ın `pm.*` API'sidir (`apix.*` olarak da kullanılabilir), bu
+yüzden Postman'dan gelen scriptler olduğu gibi çalışır: `pm.environment`,
+`pm.collectionVariables`, `pm.globals` (projenin değişkenleri),
+`pm.variables`, `pm.request`, `pm.response`, `pm.test`, Chai tarzı
+denetimlerle `pm.expect`, `pm.info`, `console.log` ve eski
+`tests["…"] = …` ile `postman.setEnvironmentVariable(…)`. `pm.sendRequest` ve
+`require(…)` daha sonra gelecek.
+
+Scriptler ait oldukları şeyin yanında dosya olarak durur: istek için yanında
+`<istek>.prerequest.js` ve `<istek>.test.js`, klasör için içinde
+`_folder.prerequest.js` / `_folder.test.js`, koleksiyon için kökte
+`_collection.prerequest.js` / `_collection.test.js`. Dıştan içe çalışırlar:
+önce koleksiyon, sonra klasörler, en son istek. Ctrl+S isteğin scriptlerini de
+kaydeder; gönderirken kaydetmeden önce bile editördeki metin kullanılır.
+
+Gönderdikten sonra yanıt panelinde bir **Testler** sekmesi (✓ geçti, ✗ kaldı
+ve nedeni) ve `console.*` çıktılarını gösteren bir **Konsol** sekmesi çıkar.
+İstek öncesi script hata verirse istek gönderilmez ve hata hangi dosyanın
+patladığını söyler. Scriptler 10 saniye sonra durdurulur.
+
+Bir scriptin atadığı değerler hiçbir dosyaya yazılmaz. Apix açık kaldıkça
+geçerlidir (ortam değişince `pm.environment.set` ile atananlar düşer) ve
+değişken kartlarında “Bir script atadı” olarak görünür. `pm.variables.set`
+yalnızca bir gönderim boyunca geçerlidir.
 
 ## Sekmeler
 

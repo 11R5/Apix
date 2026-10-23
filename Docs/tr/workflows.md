@@ -1,4 +1,4 @@
-<!-- translated from en/workflows.md sha256:7bc04465eaba6d1c -->
+<!-- translated from en/workflows.md sha256:682f2d12d4102a41 -->
 
 # İş akışları
 
@@ -120,6 +120,24 @@ olursa sıfırdan farklı bir kodla çıkar; bu yüzden bir CI adımı olarak ç
 ```sh
 apix run my-api --env staging --var token="$API_TOKEN"
 ```
+
+Test scripti olan istekler testlerine, olmayanlar durum koduna göre geçer ya da
+kalır. Çıktı her testi isteğinin altında listeler:
+
+```text
+create.apix                              201 Created  466.7 ms · 42 B
+  │ new id 101
+  ✓ created
+get.apix                                 200 OK  174.7 ms · 292 B
+  ✓ status 200
+  ✗ has the right id expected 1 to equal 2
+
+1 passed, 1 failed (1 failed tests)
+```
+
+Bir scriptin atadıkları (`pm.environment.set`, `pm.variables.set`) koşunun
+sonraki isteklerine taşınır; `pm.execution.setNextRequest("ad")` başka bir
+isteğe atlar (`null` koşuyu durdurur).
 
 Bir GitHub Actions adımı şöyle görünebilir:
 
