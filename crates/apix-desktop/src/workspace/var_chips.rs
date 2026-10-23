@@ -1,4 +1,5 @@
-//! `{{variable}}` chips in the URL bar. Every reference is one atomic token,
+//! `{{variable}}` chips in the URL bar and the key/value fields of Params,
+//! Headers and form bodies. Every reference is one atomic token,
 //! coloured by how it resolves: defined, dynamic (`{{$guid}}`) or missing.
 //! Hovering a chip shows its value and the scope it comes from; secrets stay
 //! masked.
@@ -8,7 +9,7 @@ use std::ops::Range;
 use std::rc::Rc;
 
 use apix_core::dynamic::DYNAMIC_VARIABLES;
-use gpui_kit::component::input::{InlineToken, Input, InputContent};
+use gpui_kit::component::input::{InlineToken, Input, InputContent, InputEvent, InputState};
 use gpui_kit::component::{ActiveTheme as _, Sizable, v_flex};
 use gpui_kit::*;
 
@@ -56,6 +57,67 @@ fn token(name: &str, text: &str) -> InlineToken {
     InlineToken::new(name.to_owned(), text.to_owned()).with_label(name.to_owned())
 }
 
+/// Turns references typed or pasted into `state` into chips. Called on every
+/// change. `last` is the text chipped last time: right after an undo of a
+/// chip the text is exactly that, so it stays text, and undoing a chip works.
+pub(super) fn chip_state(
+    state: &Entity<InputState>,
+    last: &mut Option<String>,
+    window: &mut Window,
+    cx: &mut App,
+) {
+    let current = state.read(cx);
+    let text = current.value().to_string();
+    if last.as_deref() == Some(text.as_str()) {
+        return;
+    }
+    *last = None;
+    let taken: Vec<Range<usize>> = current.tokens().iter().map(|s| s.range()).collect();
+    let fresh: Vec<(Range<usize>, String)> = references(&text)
+        .into_iter()
+        .filter(|(range, _)| {
+            !taken
+                .iter()
+                .any(|t| t.start < range.end && range.start < t.end)
+        })
+        .collect();
+    if fresh.is_empty() {
+        return;
+    }
+    *last = Some(text.clone());
+    state.update(cx, |state, cx| {
+        // From the end, so earlier ranges stay valid.
+        for (range, name) in fresh.into_iter().rev() {
+            let piece = text[range.clone()].to_owned();
+            let _ = state.replace_range_with_token(range, token(&name, &piece), window, cx);
+        }
+    });
+}
+
+/// An input that starts with `text`, references as chips, and keeps turning
+/// new references into chips as they are typed. Keep the subscription.
+pub(super) fn chipped_input(
+    text: &str,
+    placeholder: SharedString,
+    window: &mut Window,
+    cx: &mut App,
+) -> (Entity<InputState>, Subscription) {
+    let content = chip_content(text);
+    let state = cx.new(|cx| {
+        let mut state = InputState::new(window, cx).placeholder(placeholder);
+        state.set_value(content, window, cx);
+        state
+    });
+    let mut last = None;
+    let subscription =
+        window.subscribe(&state, cx, move |state, event: &InputEvent, window, cx| {
+            if matches!(event, InputEvent::Change) {
+                chip_state(&state, &mut last, window, cx);
+            }
+        });
+    (state, subscription)
+}
+
 /// `text` with every reference as a chip, for `InputState::set_value`.
 pub(super) fn chip_content(text: &str) -> InputContent {
     references(text).into_iter().fold(
@@ -92,43 +154,27 @@ impl Workspace {
         }
     }
 
-    /// Turns references typed or pasted into the URL into chips. Called on
-    /// every change; skips the text it just chipped, so undoing a chip works.
+    /// Turns references typed or pasted into the URL into chips.
     pub(super) fn chip_url(&mut self, window: &mut Window, cx: &mut Context<Self>) {
-        let state = self.url.read(cx);
-        let text = state.value().to_string();
-        // Right after an undo of a chip the text is exactly what was chipped:
-        // leave it as text. Any other change forgets that text.
-        if self.last_chipped.as_deref() == Some(text.as_str()) {
-            return;
-        }
-        self.last_chipped = None;
-        let taken: Vec<Range<usize>> = state.tokens().iter().map(|s| s.range()).collect();
-        let fresh: Vec<(Range<usize>, String)> = references(&text)
-            .into_iter()
-            .filter(|(range, _)| {
-                !taken
-                    .iter()
-                    .any(|t| t.start < range.end && range.start < t.end)
-            })
-            .collect();
-        if fresh.is_empty() {
-            return;
-        }
-        self.last_chipped = Some(text.clone());
-        self.url.update(cx, |state, cx| {
-            // From the end, so earlier ranges stay valid.
-            for (range, name) in fresh.into_iter().rev() {
-                let piece = text[range.clone()].to_owned();
-                let _ = state.replace_range_with_token(range, token(&name, &piece), window, cx);
-            }
-        });
+        let url = self.url.clone();
+        chip_state(&url, &mut self.last_chipped, window, cx);
     }
 
     /// The URL field with chips and the hover card hook.
     pub(super) fn url_input(&self, cx: &mut Context<Self>) -> Input {
+        self.chip_input(&self.url, cx.entity().downgrade(), cx)
+    }
+
+    /// `state` as an input whose chips are coloured by how they resolve and
+    /// show the hover card of `view`.
+    pub(super) fn chip_input(
+        &self,
+        state: &Entity<InputState>,
+        view: WeakEntity<Workspace>,
+        cx: &App,
+    ) -> Input {
         let colors: Rc<HashMap<String, Hsla>> = Rc::new(
-            self.url
+            state
                 .read(cx)
                 .tokens()
                 .iter()
@@ -139,8 +185,7 @@ impl Workspace {
                 })
                 .collect(),
         );
-        let view = cx.entity().downgrade();
-        Input::new(&self.url)
+        Input::new(state)
             .small()
             .token(move |chip, _, cx| {
                 let color = colors

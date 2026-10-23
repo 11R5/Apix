@@ -28,7 +28,7 @@ use apix_http::{BodyKind, ImageKind, Response, group_digits, human_duration, hum
 use gpui_kit::component::button::{Button, ButtonVariants};
 use gpui_kit::component::checkbox::Checkbox;
 use gpui_kit::component::dialog::AlertDialog;
-use gpui_kit::component::input::{Editor, EditorState, Input, InputEvent, InputState};
+use gpui_kit::component::input::{Editor, EditorState, InputEvent, InputState};
 use gpui_kit::component::menu::DropdownMenu as _;
 use gpui_kit::component::select::{Select, SelectEvent, SelectState};
 use gpui_kit::component::spinner::Spinner;
@@ -107,29 +107,25 @@ pub fn bind_keys(cx: &mut App) {
 type MethodSelect = SelectState<Vec<&'static str>>;
 type EnvSelect = SelectState<Vec<SharedString>>;
 
-/// One editable row of the Params or Headers table.
+/// One editable row of the Params or Headers table (or a form body).
+/// `{{variables}}` in either field show as chips.
 struct KvRow {
     key: Entity<InputState>,
     value: Entity<InputState>,
     enabled: bool,
+    _chips: [Subscription; 2],
 }
 
 impl KvRow {
     fn new(kv: &KeyValue, window: &mut Window, cx: &mut App) -> Self {
-        let key = kv.key.clone();
-        let value = kv.value.clone();
+        let (key, key_chips) = var_chips::chipped_input(&kv.key, tr!("table.key"), window, cx);
+        let (value, value_chips) =
+            var_chips::chipped_input(&kv.value, tr!("table.value"), window, cx);
         Self {
-            key: cx.new(|cx| {
-                InputState::new(window, cx)
-                    .placeholder(tr!("table.key"))
-                    .default_value(key)
-            }),
-            value: cx.new(|cx| {
-                InputState::new(window, cx)
-                    .placeholder(tr!("table.value"))
-                    .default_value(value)
-            }),
+            key,
+            value,
             enabled: kv.enabled,
+            _chips: [key_chips, value_chips],
         }
     }
 
@@ -1133,6 +1129,7 @@ impl Workspace {
     fn render_table(&self, table: Table, cx: &mut Context<Self>) -> impl IntoElement {
         let p = self.palette;
         let (on_id, del_id, add_id) = table.ids();
+        let view = cx.entity().downgrade();
         let rows = self.rows(table).iter().enumerate().map(|(ix, row)| {
             h_flex()
                 .gap_2()
@@ -1147,13 +1144,17 @@ impl Workspace {
                             cx.notify();
                         })),
                 )
-                .child(div().flex_1().min_w_0().child(Input::new(&row.key).small()))
                 .child(
                     div()
                         .flex_1()
                         .min_w_0()
-                        .child(Input::new(&row.value).small()),
+                        .child(self.chip_input(&row.key, view.clone(), cx)),
                 )
+                .child(div().flex_1().min_w_0().child(self.chip_input(
+                    &row.value,
+                    view.clone(),
+                    cx,
+                )))
                 .child(
                     Button::new((del_id, ix))
                         .ghost()
