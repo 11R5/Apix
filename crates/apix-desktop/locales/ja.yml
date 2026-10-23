@@ -232,13 +232,14 @@ import.environment_needs_open: この環境が属するコレクションまた�
 import.environment_saved: 「%{title}」を %{count} 個の変数とともに environments/%{name}.toml として保存しました。
 import.environment_saved_with_secrets: 「%{title}」を %{count} 個の変数とともに environments/%{name}.toml として保存しました。%{secrets} 個のシークレットは git で無視される %{name}.local.toml に保存しました。
 import.found_ok: インポート
-import.found_text: "%{path} に Postman のエクスポートがあります: コレクション %{collections} 件（リクエスト %{requests} 件）、環境 %{environments} 件。Apix プロジェクトとしてインポートしますか？"
-import.found_title: Postman のエクスポートが見つかりました
+import.found_text: "%{path} に API のエクスポート（Postman、Insomnia、OpenAPI、HAR）があります: コレクション %{collections} 件（リクエスト %{requests} 件）、環境 %{environments} 件。Apix プロジェクトとしてインポートしますか？"
+import.found_title: API のエクスポートが見つかりました
 import.nothing_found: "%{path} に Postman のコレクションや環境は見つかりませんでした。"
-import.project_done: Postman のエクスポートをインポートしました
-import.project_in: プロジェクトの作成先…
+import.project_done: インポートが完了しました
+import.project_in: 作成先…
 import.project_summary: "コレクション %{collections} 件、リクエスト %{requests} 件、環境 %{environments} 件を %{name} に作成しました。"
-import.prompt: Postman のエクスポートをインポート
+import.prompt: Postman、Insomnia、OpenAPI、HAR ファイルをインポート
+import.unknown_format: "%{path} は Apix が読めるエクスポートではありません（Postman、Insomnia v4、OpenAPI/Swagger、HAR）。"
 menu.active_environment: アクティブな環境
 menu.cancel: キャンセル
 menu.close_tab: タブを閉じる
@@ -257,7 +258,7 @@ menu.group_collection: コレクション
 menu.group_environment: 環境
 menu.help: ヘルプ
 menu.history: 履歴…
-menu.import_postman: Postman からインポート…
+menu.import_postman: インポート（Postman、Insomnia、OpenAPI、HAR）…
 menu.lock_collections: 暗号化されたコレクションをロック
 menu.method: メソッド
 menu.new_collection: 新しいコレクション…
@@ -413,13 +414,13 @@ sidebar.auth: 認証…
 sidebar.change_password: パスワードを変更…
 sidebar.copy_as_code: コードとしてコピー
 sidebar.copy_as_shell: "%{shell} としてコピー"
-sidebar.drop_hint: または、Postman のエクスポートやフォルダーをウィンドウにドロップします。
+sidebar.drop_hint: または、エクスポート（Postman、Insomnia、OpenAPI、HAR）やフォルダーをウィンドウにドロップします。
 sidebar.duplicate: 複製
 sidebar.edit_variables: 変数を編集…
 sidebar.edit_variables_tooltip: 変数を編集 (%{key})
 sidebar.empty: 空
 sidebar.encrypt: 暗号化…
-sidebar.import_postman: Postman からインポート
+sidebar.import_postman: インポート…
 sidebar.kind_collection: コレクション
 sidebar.kind_project: プロジェクト
 sidebar.lock: ロック

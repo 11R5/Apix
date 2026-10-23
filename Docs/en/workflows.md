@@ -85,7 +85,7 @@ APIX_PASSWORD='…' apix run my-api --env staging
 ## Move from Postman
 
 1. In Postman, export the collection (Collection v2.1) and each environment.
-2. In Apix, **File › Import from Postman…** or drop the files onto the window.
+2. In Apix, **File › Import…** or drop the files onto the window.
    Or in a terminal:
 
    ```sh

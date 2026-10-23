@@ -1,17 +1,12 @@
-//! Many Postman files at once: a folder that holds exports, or the zip from
-//! Postman's "Export data" (`collection/*.json`, `environment/*.json`,
-//! `archive.json`). Files are recognised by their content, not their names,
-//! and become one Apix project: a collection per Postman collection, shared
-//! environments, and globals as project variables.
+//! Many exports at once: a folder that holds them, or the zip from Postman's
+//! "Export data" (`collection/*.json`, `environment/*.json`, `archive.json`).
+//! Files are recognised by their content, not their names — Postman,
+//! Insomnia, OpenAPI/Swagger and HAR alike — and become one Apix project.
 
 use std::io::Read as _;
 use std::path::{Path, PathBuf};
 
-use apix_core::store;
-use apix_core::{Project, project};
-
-use crate::postman::{self, EnvironmentPlan, Kind};
-use crate::{ImportError, Plan, io_err};
+use crate::{ImportError, io_err};
 
 /// Folders this deep below the one given are searched.
 const MAX_DEPTH: usize = 3;
@@ -20,56 +15,10 @@ const MAX_FILES: usize = 400;
 /// Bigger files are not Postman exports anyone wants to import blind.
 const MAX_FILE_BYTES: u64 = 64 * 1024 * 1024;
 
-/// What a folder or zip holds.
-#[derive(Debug, Default)]
-pub struct Found {
-    /// `(where it came from, the converted collection)`.
-    pub collections: Vec<(String, Plan)>,
-    pub environments: Vec<EnvironmentPlan>,
-    pub globals: Vec<EnvironmentPlan>,
-    /// Postman files that could not be converted: `(file, why)`.
-    pub errors: Vec<(String, String)>,
-}
+pub use crate::bundle::{Found, Written, write_project};
 
-impl Found {
-    pub fn is_empty(&self) -> bool {
-        self.collections.is_empty() && self.environments.is_empty() && self.globals.is_empty()
-    }
-
-    pub fn request_count(&self) -> usize {
-        self.collections
-            .iter()
-            .map(|(_, p)| p.request_count())
-            .sum()
-    }
-
-    fn add(&mut self, source: String, json: &str) {
-        // Anything that is not a Postman export (archive.json, package.json…)
-        // is simply not ours.
-        let kind = match postman::detect(json) {
-            Ok(kind) => kind,
-            Err(ImportError::Unsupported(message)) if message.contains("v1") => {
-                self.errors.push((source, message));
-                return;
-            }
-            Err(_) => return,
-        };
-        let result = match kind {
-            Kind::Collection => postman::convert_collection(json)
-                .map(|plan| self.collections.push((source.clone(), plan))),
-            Kind::Environment => {
-                postman::convert_environment(json).map(|env| self.environments.push(env))
-            }
-            Kind::Globals => postman::convert_environment(json).map(|env| self.globals.push(env)),
-        };
-        if let Err(e) = result {
-            self.errors.push((source, e.to_string()));
-        }
-    }
-}
-
-/// Reads every Postman export in `path`: a folder (searched a few levels
-/// deep, skipping hidden folders) or a `.zip`.
+/// Reads every export in `path`: a folder (searched a few levels deep,
+/// skipping hidden folders) or a `.zip`.
 pub fn scan(path: &Path) -> Result<Found, ImportError> {
     let mut found = Found::default();
     if path.is_dir() {
@@ -96,7 +45,7 @@ pub fn scan(path: &Path) -> Result<Found, ImportError> {
         })?;
         let mut names: Vec<String> = archive
             .file_names()
-            .filter(|n| n.to_ascii_lowercase().ends_with(".json"))
+            .filter(|n| is_candidate(n))
             .map(str::to_owned)
             .collect();
         names.sort();
@@ -133,101 +82,18 @@ fn json_files(dir: &Path, depth: usize, out: &mut Vec<PathBuf>) {
             if depth < MAX_DEPTH {
                 json_files(&path, depth + 1, out);
             }
-        } else if name.ends_with(".json")
-            && entry.metadata().is_ok_and(|m| m.len() <= MAX_FILE_BYTES)
-        {
+        } else if is_candidate(&name) && entry.metadata().is_ok_and(|m| m.len() <= MAX_FILE_BYTES) {
             out.push(path);
         }
     }
 }
 
-/// What `write_project` made.
-#[derive(Debug)]
-pub struct Written {
-    pub root: PathBuf,
-    pub collections: usize,
-    pub requests: usize,
-    pub environments: usize,
-    pub global_vars: usize,
-    /// One line per warning, file error or thing worth knowing.
-    pub notes: Vec<String>,
-}
-
-/// Writes `found` as a new project `parent/<slug of name>/`.
-pub fn write_project(found: &Found, parent: &Path, name: &str) -> Result<Written, ImportError> {
-    let root = project::create_project(parent, name, &[])?;
-    let mut notes = Vec::new();
-    for (source, plan) in &found.collections {
-        let dir = store::unique_path(&root, &store::slug(&plan.meta.name, "collection"), "");
-        plan.write(&dir)?;
-        for w in &plan.report.warnings {
-            let at = if w.item.is_empty() {
-                plan.meta.name.clone()
-            } else {
-                format!("{} / {}", plan.meta.name, w.item)
-            };
-            notes.push(format!("{at}: {}", w.message));
-        }
-        if plan.report.scripts > 0 {
-            notes.push(format!(
-                "{}: {} scripts kept as .js files ({source}).",
-                plan.meta.name, plan.report.scripts
-            ));
-        }
-    }
-
-    let mut environments = 0;
-    for env in &found.environments {
-        // Postman allows two environments with one name; Apix files do not.
-        let mut env = env.clone();
-        let taken = store::environment_names_at(&root);
-        let base = env.name.clone();
-        let mut n = 2;
-        while taken.contains(&env.name) {
-            env.name = format!("{base}-{n}");
-            n += 1;
-        }
-        if env.name != base {
-            notes.push(format!(
-                "Environment \"{}\" was saved as {} (the name was taken).",
-                env.title, env.name
-            ));
-        }
-        env.write(&root)?;
-        environments += 1;
-    }
-
-    let mut project = Project::open(&root)?;
-    let mut global_vars = 0;
-    for globals in &found.globals {
-        global_vars += globals.vars.len();
-        project.meta.vars.extend(globals.vars.clone());
-        if !globals.secrets.is_empty() {
-            notes.push(format!(
-                "Secret globals were not imported (project variables are committed): {}.",
-                globals
-                    .secrets
-                    .keys()
-                    .cloned()
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            ));
-        }
-    }
-    if global_vars > 0 {
-        project.save()?;
-    }
-    for (source, error) in &found.errors {
-        notes.push(format!("{source}: {error}"));
-    }
-    Ok(Written {
-        root,
-        collections: found.collections.len(),
-        requests: found.request_count(),
-        environments,
-        global_vars,
-        notes,
-    })
+/// File names worth reading: JSON exports, OpenAPI in YAML, HAR.
+fn is_candidate(name: &str) -> bool {
+    let name = name.to_ascii_lowercase();
+    [".json", ".yaml", ".yml", ".har"]
+        .iter()
+        .any(|ext| name.ends_with(ext))
 }
 
 /// The project name for a folder or zip: its file name, else "Postman".
@@ -241,6 +107,7 @@ pub fn project_name(path: &Path) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use apix_core::Project;
     use std::io::Write as _;
 
     const SHOP: &str = include_str!("../tests/fixtures/shop.postman_collection.json");

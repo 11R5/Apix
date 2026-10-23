@@ -27,6 +27,7 @@ command line runs the same requests in a terminal or CI.
 - [Encrypted collections](#encrypted-collections)
 - [Copy as and paste curl](#copy-as-and-paste-curl)
 - [Importing from Postman](#importing-from-postman)
+- [Importing from Insomnia, OpenAPI and HAR](#importing-from-insomnia-openapi-and-har)
 - [History](#history)
 - [Command palette](#command-palette)
 - [Settings and language](#settings-and-language)
@@ -284,7 +285,7 @@ auth and body.
 
 ## Importing from Postman
 
-**File › Import from Postman…**, or drop a Postman export onto the window.
+**File › Import…**, or drop a Postman export onto the window.
 Collections (v2.0 and v2.1) and environments are supported. Folders, requests,
 bodies, auth and variables are carried over; anything Apix cannot take over yet
 is listed in a report. Pre-request and test scripts are kept as `.js` files next
@@ -308,6 +309,20 @@ exported with their names only; the notification lists what was left out.
 
 On the command line: `apix import <file, folder or zip>` and
 `apix export <collection> --out <folder>`.
+
+## Importing from Insomnia, OpenAPI and HAR
+
+**File › Import…** (or dropping the file on the window) also reads these; the
+format is recognised by content, and a folder or zip may mix them:
+
+| Format | What you get |
+|---|---|
+| Insomnia v4 (JSON export) | A collection per workspace, folders with their auth, the base environment as collection variables and every sub-environment as an environment. `{{ _.name }}` becomes `{{name}}`. |
+| OpenAPI 3 / Swagger 2 (JSON or YAML) | A request per operation, a folder per tag. The server becomes the `baseUrl` variable (several servers: an environment each), path parameters become variables with their example values, required query and header parameters are switched on, bodies come from examples or are built from the schema, and security schemes become auth with empty credential variables (`bearerToken`, `apiKey`, …) to fill in an environment. |
+| HAR (browser DevTools "Save all as HAR") | API calls only, a folder per host. Scripts, styles, images and fonts, `data:` URLs and repeats are left out, and so are `Cookie` headers: they carry the browser's session. |
+
+One collection from one file is imported as a collection; several become a
+project. The report lists everything that could not be carried over.
 
 ## History
 

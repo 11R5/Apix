@@ -232,13 +232,14 @@ import.environment_needs_open: Önce bu ortamın ait olduğu koleksiyonu veya pr
 import.environment_saved: “%{title}”, %{count} değişkenle environments/%{name}.toml olarak kaydedildi.
 import.environment_saved_with_secrets: “%{title}”, %{count} değişkenle environments/%{name}.toml olarak kaydedildi. %{secrets} gizli değer, git'in yok saydığı %{name}.local.toml dosyasına yazıldı.
 import.found_ok: İçe aktar
-import.found_text: "%{path} Postman dışa aktarımları içeriyor: %{requests} istekli %{collections} koleksiyon ve %{environments} ortam. Apix projesi olarak içe aktarılsın mı?"
-import.found_title: Postman dışa aktarımı bulundu
+import.found_text: "%{path} API dışa aktarımları içeriyor (Postman, Insomnia, OpenAPI, HAR): %{requests} istekli %{collections} koleksiyon ve %{environments} ortam. Apix projesi olarak içe aktarılsın mı?"
+import.found_title: API dışa aktarımları bulundu
 import.nothing_found: "%{path} içinde Postman koleksiyonu veya ortamı bulunamadı."
-import.project_done: Postman dışa aktarımı içe aktarıldı
-import.project_in: Projenin oluşturulacağı klasör…
+import.project_done: İçe aktarma tamamlandı
+import.project_in: Oluşturulacağı klasör…
 import.project_summary: "%{collections} koleksiyon, %{requests} istek ve %{environments} ortam artık %{name} içinde."
-import.prompt: Postman dışa aktarımını içe aktar
+import.prompt: Postman, Insomnia, OpenAPI veya HAR dosyası içe aktar
+import.unknown_format: "%{path} Apix'in okuyabildiği bir dışa aktarım değil (Postman, Insomnia v4, OpenAPI/Swagger, HAR)."
 menu.active_environment: Etkin ortam
 menu.cancel: İptal
 menu.close_tab: Sekmeyi kapat
@@ -257,7 +258,7 @@ menu.group_collection: Koleksiyon
 menu.group_environment: Ortam
 menu.help: Yardım
 menu.history: Geçmiş…
-menu.import_postman: Postman'dan içe aktar…
+menu.import_postman: İçe aktar (Postman, Insomnia, OpenAPI, HAR)…
 menu.lock_collections: Şifreli koleksiyonları kilitle
 menu.method: Metot
 menu.new_collection: Yeni koleksiyon…
@@ -413,13 +414,13 @@ sidebar.auth: Yetkilendirme…
 sidebar.change_password: Parolayı değiştir…
 sidebar.copy_as_code: Kod olarak kopyala
 sidebar.copy_as_shell: "%{shell} olarak kopyala"
-sidebar.drop_hint: Ya da bir Postman dışa aktarımını veya bir klasörü pencereye bırakın.
+sidebar.drop_hint: Ya da bir dışa aktarımı (Postman, Insomnia, OpenAPI, HAR) veya bir klasörü pencereye bırakın.
 sidebar.duplicate: Çoğalt
 sidebar.edit_variables: Değişkenleri düzenle…
 sidebar.edit_variables_tooltip: Değişkenleri düzenle (%{key})
 sidebar.empty: Boş
 sidebar.encrypt: Şifrele…
-sidebar.import_postman: Postman'dan içe aktar
+sidebar.import_postman: İçe aktar…
 sidebar.kind_collection: KOLEKSİYON
 sidebar.kind_project: PROJE
 sidebar.lock: Kilitle

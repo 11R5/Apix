@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:42d8c17efcb44374 -->
+<!-- translated from en/user-guide.md sha256:e54194808eab8c11 -->
 
 # Apix kullanım kılavuzu
 
@@ -30,6 +30,7 @@ veya CI'da çalıştırır.
 - [Şifreli koleksiyonlar](#şifreli-koleksiyonlar)
 - [Komut olarak kopyala ve curl yapıştırma](#komut-olarak-kopyala-ve-curl-yapıştırma)
 - [Postman'dan içe aktarma](#postmandan-içe-aktarma)
+- [Insomnia, OpenAPI ve HAR'dan içe aktarma](#insomnia-openapi-ve-hardan-içe-aktarma)
 - [Geçmiş](#geçmiş)
 - [Komut paleti](#komut-paleti)
 - [Ayarlar ve dil](#ayarlar-ve-dil)
@@ -298,7 +299,7 @@ yetkilendirme ve gövde.
 
 ## Postman'dan içe aktarma
 
-**Dosya › Postman'dan içe aktar…** menüsünü kullanın ya da bir Postman dışa
+**Dosya › İçe aktar…** menüsünü kullanın ya da bir Postman dışa
 aktarımını pencereye bırakın. Koleksiyonlar (v2.0 ve v2.1) ve ortamlar
 desteklenir. Klasörler, istekler, gövdeler, yetkilendirme ve değişkenler
 aktarılır; Apix'in henüz devralamadığı her şey bir raporda listelenir.
@@ -325,6 +326,20 @@ aktarılır. Bildirim, nelerin aktarılmadığını listeler.
 
 Komut satırında: `apix import <dosya, klasör veya zip>` ve
 `apix export <koleksiyon> --out <klasör>`.
+
+## Insomnia, OpenAPI ve HAR'dan içe aktarma
+
+**Dosya › İçe aktar…** (veya dosyayı pencereye bırakmak) bunları da okur; biçim
+içerikten tanınır, bir klasör ya da zip bunları karışık içerebilir:
+
+| Biçim | Ne elde edersiniz |
+|---|---|
+| Insomnia v4 (JSON dışa aktarım) | Her çalışma alanı için bir koleksiyon, auth'larıyla klasörler, koleksiyon değişkeni olarak temel ortam ve ortam olarak her alt ortam. `{{ _.ad }}`, `{{ad}}` olur. |
+| OpenAPI 3 / Swagger 2 (JSON veya YAML) | Her işlem için bir istek, her etiket için bir klasör. Sunucu `baseUrl` değişkeni olur (birden fazla sunucu varsa her biri bir ortam), yol parametreleri örnek değerleriyle değişken olur, zorunlu sorgu ve başlık parametreleri açık gelir, gövdeler örneklerden alınır ya da şemadan üretilir, güvenlik tanımları da bir ortamda doldurulacak boş kimlik değişkenleriyle (`bearerToken`, `apiKey`, …) auth'a dönüşür. |
+| HAR (tarayıcı geliştirici araçlarında "Save all as HAR") | Yalnızca API çağrıları, ana makine başına bir klasör. Betikler, stiller, resimler ve fontlar, `data:` adresleri ve tekrarlar alınmaz; tarayıcının oturumunu taşıdığı için `Cookie` başlıkları da alınmaz. |
+
+Tek dosyadan tek koleksiyon çıkarsa koleksiyon olarak, birden fazlası proje
+olarak içe aktarılır. Rapor, aktarılamayan her şeyi listeler.
 
 ## Geçmiş
 

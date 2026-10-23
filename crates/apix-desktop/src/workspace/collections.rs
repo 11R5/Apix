@@ -14,6 +14,7 @@ use apix_core::project::{self, GroupBy, Project};
 use apix_core::store::{self, CollectionMeta, StoreError, TreeNode};
 use apix_core::vfs;
 use apix_core::{Body, Collection, Method, Request};
+use apix_import::Format;
 use apix_import::postman::{self, Kind};
 use apix_import::{postman_dump, postman_export};
 use gpui_kit::component::IndexPath;
@@ -936,17 +937,23 @@ impl Workspace {
                 .ok_text(tr!("import.found_ok"))
                 .on_ok(move |_, window, cx| {
                     let (found, source) = (found.clone(), source.clone());
-                    view.update(cx, |this, cx| this.write_dump(source, found, window, cx))
-                        .ok();
+                    view.update(cx, |this, cx| {
+                        this.write_dump(source, found, false, window, cx)
+                    })
+                    .ok();
                     true
                 })
         });
     }
 
+    /// Asks where to put `found`, writes it and opens it. `single` (one
+    /// imported file) writes a lone collection as just that collection;
+    /// otherwise everything becomes a project.
     fn write_dump(
         &mut self,
         source: PathBuf,
         found: Rc<postman_dump::Found>,
+        single: bool,
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
@@ -965,7 +972,12 @@ impl Workspace {
             };
             this.update_in(cx, |this, window, cx| {
                 let name = postman_dump::project_name(&source);
-                let written = match postman_dump::write_project(&found, &parent, &name) {
+                let result = if single {
+                    found.write(&parent, &name)
+                } else {
+                    postman_dump::write_project(&found, &parent, &name)
+                };
+                let written = match result {
                     Ok(written) => written,
                     Err(e) => return this.notify_error(e.to_string(), window, cx),
                 };
@@ -1072,9 +1084,27 @@ impl Workspace {
                 return;
             }
         };
-        match postman::detect(&json) {
-            Ok(Kind::Collection) => self.import_collection(&json, window, cx),
-            Ok(Kind::Environment | Kind::Globals) => self.import_environment(&json, window, cx),
+        match apix_import::detect(&json) {
+            Ok(Some(Format::Postman(Kind::Collection))) => {
+                self.import_collection(&json, window, cx)
+            }
+            Ok(Some(Format::Postman(Kind::Environment | Kind::Globals))) => {
+                self.import_environment(&json, window, cx)
+            }
+            // Insomnia, OpenAPI, HAR: a collection, or a project when there are several.
+            Ok(Some(_)) => {
+                let name = postman_dump::project_name(&file);
+                match apix_import::convert_named(&json, &name) {
+                    Ok(Some(found)) => self.write_dump(file, Rc::new(found), true, window, cx),
+                    Ok(None) => {}
+                    Err(e) => self.notify_error(e.to_string(), window, cx),
+                }
+            }
+            Ok(None) => self.notify_error(
+                tr!("import.unknown_format", path = file.display()),
+                window,
+                cx,
+            ),
             Err(e) => self.notify_error(e.to_string(), window, cx),
         }
     }

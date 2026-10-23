@@ -73,7 +73,7 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [x] **Code and history**: Copy as code in 10 languages (fetch, axios, Python requests, Go, Rust reqwest, C#, Java, PHP, Swift, Kotlin; settings a language cannot express are noted in the snippet), `apix code --as <lang>`; a searchable history of sent requests and their responses (Ctrl+H), kept per machine with variables unresolved, never for encrypted collections
 - [x] **Postman, complete**: Postman exports in an opened or dropped folder are recognised by content; a folder or "Export data" zip becomes one project (globals as project variables); export a collection to Postman v2.1 with its environments (`apix import <folder|zip>`, `apix export`)
 - [x] **Content types**: HTML request bodies; XML and HTML colouring and indentation (bodies and responses); response kind detection; image preview; a Hex tab; save the response body to a file
-- [ ] Insomnia, OpenAPI 3 and HAR import
+- [x] **More importers**: Insomnia v4, OpenAPI 3 / Swagger 2 (JSON or YAML) and HAR, recognised by content in a file, a folder or a zip (`apix import` reads them all)
 - [ ] gRPC (unary and streaming, `.proto` or server reflection) — asked for on 2026-10-23, after the importers
 
 ## M5 — Scripting, testing, runner

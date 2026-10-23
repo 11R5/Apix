@@ -1,4 +1,4 @@
-<!-- translated from en/workflows.md sha256:dcc2addfa29b2d7e -->
+<!-- translated from en/workflows.md sha256:7bc04465eaba6d1c -->
 
 # İş akışları
 
@@ -90,7 +90,7 @@ kurtarma anahtarını kullanmak için `--recovery` ekleyin.
 ## Postman'dan geçiş
 
 1. Postman'da koleksiyonu (Collection v2.1) ve her ortamı dışa aktarın.
-2. Apix'te **Dosya › Postman'dan içe aktar…** seçin ya da dosyaları pencereye
+2. Apix'te **Dosya › İçe aktar…** seçin ya da dosyaları pencereye
    bırakın. Veya bir terminalde:
 
    ```sh

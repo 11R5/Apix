@@ -232,13 +232,14 @@ import.environment_needs_open: افتح أولًا المجموعة أو الم�
 import.environment_saved: حُفظت «%{title}» في environments/%{name}.toml، وعدد المتغيرات %{count}.
 import.environment_saved_with_secrets: حُفظت «%{title}» في environments/%{name}.toml، وعدد المتغيرات %{count}. ذهب %{secrets} من الأسرار إلى %{name}.local.toml، الذي يتجاهله git.
 import.found_ok: استيراد
-import.found_text: "يحتوي %{path} على تصديرات Postman: %{collections} مجموعة بها %{requests} طلبًا و%{environments} بيئة. هل تريد استيرادها كمشروع Apix؟"
-import.found_title: عُثر على تصدير Postman
+import.found_text: "يحتوي %{path} على تصديرات API (Postman وInsomnia وOpenAPI وHAR): %{collections} مجموعة بها %{requests} طلبًا و%{environments} بيئة. هل تريد استيرادها كمشروع Apix؟"
+import.found_title: عُثر على تصديرات API
 import.nothing_found: لم يُعثر على مجموعات أو بيئات Postman في %{path}.
-import.project_done: استُورد تصدير Postman
-import.project_in: أنشئ المشروع في…
+import.project_done: اكتمل الاستيراد
+import.project_in: أنشئه في…
 import.project_summary: "أصبحت %{collections} مجموعة و%{requests} طلبًا و%{environments} بيئة في %{name}."
-import.prompt: استيراد ملف تصدير من Postman
+import.prompt: استيراد ملف Postman أو Insomnia أو OpenAPI أو HAR
+import.unknown_format: "%{path} ليس تصديرًا يقرؤه Apix (Postman وInsomnia v4 وOpenAPI/Swagger وHAR)."
 menu.active_environment: البيئة النشطة
 menu.cancel: إلغاء
 menu.close_tab: إغلاق علامة التبويب
@@ -257,7 +258,7 @@ menu.group_collection: المجموعة
 menu.group_environment: البيئة
 menu.help: تعليمات
 menu.history: السجل…
-menu.import_postman: استيراد من Postman…
+menu.import_postman: استيراد (Postman وInsomnia وOpenAPI وHAR)…
 menu.lock_collections: قفل المجموعات المشفّرة
 menu.method: الطريقة
 menu.new_collection: مجموعة جديدة…
@@ -413,13 +414,13 @@ sidebar.auth: المصادقة…
 sidebar.change_password: تغيير كلمة المرور…
 sidebar.copy_as_code: نسخ كشيفرة برمجية
 sidebar.copy_as_shell: نسخ كـ %{shell}
-sidebar.drop_hint: أو أفلت ملف تصدير من Postman أو مجلدًا على النافذة.
+sidebar.drop_hint: أو أفلت تصديرًا (Postman وInsomnia وOpenAPI وHAR) أو مجلدًا على النافذة.
 sidebar.duplicate: تكرار
 sidebar.edit_variables: تحرير المتغيرات…
 sidebar.edit_variables_tooltip: تحرير المتغيرات (%{key})
 sidebar.empty: فارغ
 sidebar.encrypt: تشفير…
-sidebar.import_postman: استيراد من Postman
+sidebar.import_postman: استيراد…
 sidebar.kind_collection: مجموعة
 sidebar.kind_project: مشروع
 sidebar.lock: قفل

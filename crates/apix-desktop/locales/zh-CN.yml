@@ -232,13 +232,14 @@ import.environment_needs_open: 请先打开此环境所属的集合或项目，�
 import.environment_saved: “%{title}”已保存为 environments/%{name}.toml，包含 %{count} 个变量。
 import.environment_saved_with_secrets: “%{title}”已保存为 environments/%{name}.toml，包含 %{count} 个变量。%{secrets} 个机密已存入 %{name}.local.toml，git 会忽略该文件。
 import.found_ok: 导入
-import.found_text: "%{path} 中有 Postman 导出：%{collections} 个集合（%{requests} 个请求）和 %{environments} 个环境。要作为 Apix 项目导入吗？"
-import.found_title: 发现 Postman 导出
+import.found_text: "%{path} 中有 API 导出（Postman、Insomnia、OpenAPI、HAR）：%{collections} 个集合（%{requests} 个请求）和 %{environments} 个环境。要作为 Apix 项目导入吗？"
+import.found_title: 发现 API 导出
 import.nothing_found: 在 %{path} 中没有找到 Postman 集合或环境。
-import.project_done: 已导入 Postman 导出
-import.project_in: 在此处创建项目…
+import.project_done: 导入完成
+import.project_in: 创建位置…
 import.project_summary: "%{collections} 个集合、%{requests} 个请求和 %{environments} 个环境现已位于 %{name}。"
-import.prompt: 导入 Postman 导出文件
+import.prompt: 导入 Postman、Insomnia、OpenAPI 或 HAR 文件
+import.unknown_format: "%{path} 不是 Apix 能读取的导出（Postman、Insomnia v4、OpenAPI/Swagger、HAR）。"
 menu.active_environment: 当前环境
 menu.cancel: 取消
 menu.close_tab: 关闭标签页
@@ -257,7 +258,7 @@ menu.group_collection: 集合
 menu.group_environment: 环境
 menu.help: 帮助
 menu.history: 历史…
-menu.import_postman: 从 Postman 导入…
+menu.import_postman: 导入（Postman、Insomnia、OpenAPI、HAR）…
 menu.lock_collections: 锁定加密集合
 menu.method: 方法
 menu.new_collection: 新建集合…
@@ -413,13 +414,13 @@ sidebar.auth: 认证…
 sidebar.change_password: 更改密码…
 sidebar.copy_as_code: 复制为代码
 sidebar.copy_as_shell: 复制为 %{shell}
-sidebar.drop_hint: 也可以将 Postman 导出文件或文件夹拖放到窗口中。
+sidebar.drop_hint: 或将导出（Postman、Insomnia、OpenAPI、HAR）或文件夹拖到窗口中。
 sidebar.duplicate: 创建副本
 sidebar.edit_variables: 编辑变量…
 sidebar.edit_variables_tooltip: 编辑变量（%{key}）
 sidebar.empty: 空
 sidebar.encrypt: 加密…
-sidebar.import_postman: 从 Postman 导入
+sidebar.import_postman: 导入…
 sidebar.kind_collection: 集合
 sidebar.kind_project: 项目
 sidebar.lock: 锁定

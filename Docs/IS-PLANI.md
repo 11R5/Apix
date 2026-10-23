@@ -14,10 +14,10 @@
 | M1 Arayüzden istek | ✅ 100 MB JSON ~0.33 s'de açılıyor |
 | M2 Koleksiyonlar, Postman içe aktarma | ✅ (sekmeler ve sürükle-bırak M3'te tamamlandı) |
 | M3 Simge, projeler, ortamlar, kopyalama, auth | ✅ 9/9 · bitti: simge, ortam seçici ve editörü, dinamik değişkenler, projeler, kabuk komutu olarak kopyalama, metotla yeni istek, değişken çipleri, Auth sekmesi ve miras, komut paleti, sekmeler, sürükle-bırak ile taşıma · küçük kalanlar M3 bölümünün sonunda |
-| M4 Günlük kullanım | 🔜 · bitti: menü çubuğu, şifreli koleksiyonlar (motor, uygulama, CLI), ağ denetçisi (Network sekmesi), multipart/binary/GraphQL gövdeleri, auth tipleri (Digest, OAuth 1.0, OAuth 2.0, AWS SigV4), ayarlar ekranı ve 9 dilli arayüz, Arapça için sağdan sola düzen, dokümantasyon yapısı (İngilizce, Türkçe), README karşılaştırması ve performans ölçümü, istek ayarları (zaman aşımı, yönlendirmeler, TLS doğrulama, proxy, istemci sertifikaları; klasör/koleksiyon/proje kalıtımıyla) ve çerez yöneticisi, 10 dilde kod üretimi, geçmiş, Postman otomatik tanıma, toplu içe aktarma ve Postman'a dışa aktarma, içerik tipleri (HTML gövde, XML/HTML renklendirme ve biçimlendirme, resim önizleme, Hex, yanıtı kaydetme) · sıradaki: HAR, Insomnia ve OpenAPI içe aktarma; ardından gRPC (not 17) |
+| M4 Günlük kullanım | 🔜 · bitti: menü çubuğu, şifreli koleksiyonlar (motor, uygulama, CLI), ağ denetçisi (Network sekmesi), multipart/binary/GraphQL gövdeleri, auth tipleri (Digest, OAuth 1.0, OAuth 2.0, AWS SigV4), ayarlar ekranı ve 9 dilli arayüz, Arapça için sağdan sola düzen, dokümantasyon yapısı (İngilizce, Türkçe), README karşılaştırması ve performans ölçümü, istek ayarları (zaman aşımı, yönlendirmeler, TLS doğrulama, proxy, istemci sertifikaları; klasör/koleksiyon/proje kalıtımıyla) ve çerez yöneticisi, 10 dilde kod üretimi, geçmiş, Postman otomatik tanıma, toplu içe aktarma ve Postman'a dışa aktarma, içerik tipleri (HTML gövde, XML/HTML renklendirme ve biçimlendirme, resim önizleme, Hex, yanıtı kaydetme), Insomnia/OpenAPI/HAR içe aktarma · sıradaki: gRPC (not 17) ya da şifreli koleksiyon parolasını işletim sistemi anahtarlığında hatırlama |
 | M5–M9 | ⬜ |
 
-Release ikili dosyası 33.6 MB (üst sınır 100 MB). Testler: core 53, vault 7, desktop 12, codegen 21, import 18, http 19 (hepsi geçiyor, clippy uyarısız).
+Release ikili dosyası 33.6 MB (üst sınır 100 MB). Testler: core 53, vault 7, desktop 12, codegen 21, import 26, http 19 (hepsi geçiyor, clippy uyarısız).
 
 ### Kullanıcı notları (17 Ekim 2026) ve plana nasıl işlendikleri
 | # | Not | Nereye işlendi |
@@ -320,9 +320,10 @@ Bir koleksiyon (veya proje) parola ile şifrelenir. Parolayı bilmeyen hiçbir a
 | **Postman v1** | Tanınıyor; kullanıcıya v2.1 olarak yeniden dışa aktarması söyleniyor. | ✅ |
 | **Postman'e dışa aktarma** | Apix koleksiyonu Postman v2.1 formatına dönüştürülür, böylece ekip arkadaşı Postman kullanmaya devam edebilir. | ✅ koleksiyon + ortam dosyaları; içe aktarmanın tersi (gidiş-dönüş testiyle aynı sonuç); Postman'ın tutamadığı ayarlar ve gizli ortam değerleri raporlanır; sağ tık, Dosya menüsü, palet, CLI `apix export` |
 | **CLI ile içe aktarma** | `apix import <dosya> [--out klasör] [--into koleksiyon]` | ✅ |
-| Insomnia v4, Bruno, Hoppscotch | | ⬜ M her biri |
-| OpenAPI 3 / Swagger 2 | İçe aktarma ve koleksiyon üretme | ⬜ L |
-| HAR | Tarayıcı kayıtlarını içe aktarma | ⬜ M |
+| Insomnia v4, Bruno, Hoppscotch | | ✅ Insomnia v4 JSON (`apix_import::insomnia`): çalışma alanı → koleksiyon, istek grubu → klasör (auth'uyla), temel ortam → koleksiyon değişkenleri, alt ortamlar → ortamlar (iç içe değerler `a.b`), `{{ _.x }}` → `{{x}}`, bearer/basic/digest/API anahtarı/OAuth 1-2/AWS; gRPC ve WebSocket istekleri ile `{% %}` etiketleri raporlanır · ⬜ Insomnia v5 YAML, Bruno, Hoppscotch |
+| OpenAPI 3 / Swagger 2 | İçe aktarma ve koleksiyon üretme | ✅ JSON ve YAML (`apix_import::openapi`): işlem başına istek, etiket başına klasör, `baseUrl` (her sunucu bir ortam), yol parametreleri `{{değişken}}` (örnek değerleriyle), sorgu/başlık parametreleri (zorunlu olanlar açık), örnekten ya da şemadan gövde (`$ref`, `allOf`, `oneOf`, biçimler, readOnly hariç), form/multipart/XML, güvenlik → auth (bearer, basic, API anahtarı, OAuth2), kimlik bilgileri boş değişken; gerçek API'ye karşı denendi |
+| HAR | Tarayıcı kayıtlarını içe aktarma | ✅ (`apix_import::har`): ana makine başına klasör, statik dosyalar ve tekrarlar atlanır, `Cookie` başlığı oturum taşıdığı için alınmaz, Bearer → auth, JSON/form/multipart/XML/HTML gövdeler |
+| **Biçimi içerikten tanıma** | Tek dosya, klasör ya da zip: Postman, Insomnia, OpenAPI/Swagger, HAR hepsi içerikten tanınır (`apix_import::detect`); tek dosyadan tek koleksiyon çıkarsa koleksiyon, birden fazlaysa proje oluşturulur | ✅ masaüstü (Dosya › İçe aktar, sürükle-bırak, klasör açınca öneri) ve CLI `apix import` |
 | cURL | İçe ve dışa aktarma | ✅ (yapıştırma ve "Copy as", §I) |
 
 ### E. Ortamlar ve değişkenler
@@ -540,7 +541,7 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 - **Kod üretici ve geçmiş** (M) ✅: `apix_codegen::to_code` ile 10 dil (fetch, axios, Python requests, Go, Rust reqwest, C#, Java, PHP, Swift, Kotlin) ve kabukları da kapsayan ortak `Format`; "Copy as" menüleri, kenar çubuğunda "Kod olarak kopyala", komut paleti, `apix code`. Geçmiş: `apix_core::history` (ayar klasöründe `history/`), Ctrl+H penceresi; kayıt kendi sekmesine kaydedilmemiş değişiklik olarak ve yanıtıyla geri gelir.
 - **Postman tamamlama (§D)** (M) ✅: otomatik tanıma, toplu dışa aktarımı (klasör/zip) projeye çevirme, globals → proje değişkenleri, Postman v2.1'e dışa aktarma (`apix_import::postman_dump`, `postman_export`).
 - **İçerik tipleri (§A4, §B, not 17)** (M) ✅: HTML gövde tipi; XML ve HTML renklendirme (gövde ve yanıt); XML ve HTML yanıtları girintileme; yanıt türünü tanıma; resim önizleme; Hex sekmesi; yanıt gövdesini dosyaya kaydetme.
-- Insomnia, OpenAPI ve HAR içe aktarma
+- **İçe aktarıcılar (§D)** (L) ✅: Insomnia v4, OpenAPI 3 / Swagger 2 (JSON ve YAML), HAR; hepsi içerikten tanınır ve Postman'la aynı yoldan (`apix_import::bundle::Found`) koleksiyon ya da proje olarak yazılır; klasör/zip taraması YAML ve `.har` dosyalarını da okur.
 
 ### M5 — Scriptler, testler, runner
 - `apix-script` (QuickJS) ve `pm.*` uyumluluğu, hazır kütüphaneler, kodsuz testler

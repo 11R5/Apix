@@ -5,9 +5,95 @@
 //! Nothing is dropped silently: whatever Apix cannot represent yet is listed
 //! in the [`Report`].
 
+pub mod bundle;
+pub mod har;
+pub mod insomnia;
+pub mod openapi;
 pub mod postman;
 pub mod postman_dump;
 pub mod postman_export;
+
+pub use bundle::{Found, Written};
+
+/// The export formats Apix reads, told apart by content.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Format {
+    Postman(postman::Kind),
+    Insomnia,
+    OpenApi,
+    Har,
+}
+
+impl Format {
+    pub fn label(self) -> &'static str {
+        match self {
+            Format::Postman(postman::Kind::Collection) => "Postman collection",
+            Format::Postman(postman::Kind::Environment) => "Postman environment",
+            Format::Postman(postman::Kind::Globals) => "Postman globals",
+            Format::Insomnia => "Insomnia",
+            Format::OpenApi => "OpenAPI",
+            Format::Har => "HAR",
+        }
+    }
+}
+
+/// Which export `text` is, or `None` for anything else. A Postman v1
+/// collection is an error with advice, not `None`.
+pub fn detect(text: &str) -> Result<Option<Format>, ImportError> {
+    let Some(value) = openapi::parse(text) else {
+        return Ok(None);
+    };
+    if openapi::is_openapi(&value) {
+        return Ok(Some(Format::OpenApi));
+    }
+    if insomnia::is_insomnia(&value) {
+        return Ok(Some(Format::Insomnia));
+    }
+    if har::is_har(&value) {
+        return Ok(Some(Format::Har));
+    }
+    if !value.is_object() {
+        return Ok(None);
+    }
+    match postman::detect(text) {
+        Ok(kind) => Ok(Some(Format::Postman(kind))),
+        Err(ImportError::Unsupported(message)) if message.contains("v1") => {
+            Err(ImportError::Unsupported(message))
+        }
+        Err(_) => Ok(None),
+    }
+}
+
+/// Converts any export Apix reads; `None` when `text` is none of them.
+/// `name` titles what has no name of its own (a HAR file).
+pub fn convert_named(text: &str, name: &str) -> Result<Option<Found>, ImportError> {
+    let Some(format) = detect(text)? else {
+        return Ok(None);
+    };
+    let found = match format {
+        Format::Postman(postman::Kind::Collection) => Found {
+            collections: vec![(String::new(), postman::convert_collection(text)?)],
+            ..Found::default()
+        },
+        Format::Postman(postman::Kind::Environment) => Found {
+            environments: vec![postman::convert_environment(text)?],
+            ..Found::default()
+        },
+        Format::Postman(postman::Kind::Globals) => Found {
+            globals: vec![postman::convert_environment(text)?],
+            ..Found::default()
+        },
+        Format::Insomnia => insomnia::convert(text)?,
+        Format::OpenApi => openapi::convert(text)?,
+        Format::Har => har::convert(text, name)?,
+    };
+    Ok(Some(found))
+}
+
+/// [`convert_named`] without a name.
+pub fn convert(text: &str) -> Result<Option<Found>, ImportError> {
+    convert_named(text, "HAR import")
+}
 
 use std::collections::HashSet;
 use std::fmt;
@@ -207,6 +293,71 @@ fn request_file(stem: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn tells_every_format_apart() {
+        let postman = include_str!("../tests/fixtures/shop.postman_collection.json");
+        let env = include_str!("../tests/fixtures/staging.postman_environment.json");
+        assert_eq!(
+            detect(postman).unwrap(),
+            Some(Format::Postman(postman::Kind::Collection))
+        );
+        assert_eq!(
+            detect(env).unwrap(),
+            Some(Format::Postman(postman::Kind::Environment))
+        );
+        assert_eq!(
+            detect(r#"{"_type":"export","__export_format":4,"resources":[]}"#).unwrap(),
+            Some(Format::Insomnia)
+        );
+        assert_eq!(
+            detect("openapi: 3.1.0\ninfo: { title: x }\npaths: {}\n").unwrap(),
+            Some(Format::OpenApi)
+        );
+        assert_eq!(
+            detect(r#"{"swagger":"2.0","paths":{}}"#).unwrap(),
+            Some(Format::OpenApi)
+        );
+        assert_eq!(
+            detect(r#"{"log":{"entries":[]}}"#).unwrap(),
+            Some(Format::Har)
+        );
+        assert_eq!(detect(r#"{"name":"package"}"#).unwrap(), None);
+        assert_eq!(detect("just: yaml").unwrap(), None);
+        assert_eq!(detect("not json at all {").unwrap(), None);
+        assert!(
+            detect(r#"{"id":"x","order":[],"requests":[]}"#).is_err(),
+            "Postman v1 gets advice"
+        );
+    }
+
+    #[test]
+    fn a_folder_with_mixed_exports_is_read_whole() {
+        let dir = std::env::temp_dir().join(format!("apix-mixed-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(dir.join("specs")).unwrap();
+        fs::write(
+            dir.join("specs/api.yaml"),
+            "openapi: 3.0.0\ninfo: { title: Spec }\npaths:\n  /a:\n    get: { summary: A }\n",
+        )
+        .unwrap();
+        fs::write(
+            dir.join("session.har"),
+            r#"{"log":{"entries":[{"request":{"method":"GET","url":"https://x.dev/api/b","headers":[]}}]}}"#,
+        )
+        .unwrap();
+        fs::write(dir.join("docker-compose.yml"), "services: {}\n").unwrap();
+        let found = postman_dump::scan(&dir).unwrap();
+        assert_eq!(found.collections.len(), 2, "{:?}", found.errors);
+        assert_eq!(found.request_count(), 2);
+        let out = dir.join("out");
+        let written = found.write(&out, "Mixed").unwrap();
+        assert!(
+            apix_core::Project::open(&written.root).is_ok(),
+            "two collections make a project"
+        );
+        fs::remove_dir_all(&dir).ok();
+    }
 
     #[test]
     fn unique_names_get_a_counter() {

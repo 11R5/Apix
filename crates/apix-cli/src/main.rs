@@ -69,10 +69,11 @@ enum Command {
         #[command(flatten)]
         vars: VarArgs,
     },
-    /// Import a Postman collection (v2.0/v2.1) or environment export, or a
-    /// whole folder / "Export data" zip of them as a project
+    /// Import a Postman collection or environment, an Insomnia v4 export, an
+    /// OpenAPI 3 / Swagger 2 spec (JSON or YAML) or a HAR file; or a whole
+    /// folder / "Export data" zip of them as a project
     Import {
-        /// A Postman collection or environment `.json`, a folder of them, or a `.zip`
+        /// An export file, a folder of them, or a `.zip`
         file: PathBuf,
         /// Folder to create for a collection (default: ./<collection-name>);
         /// for a folder or zip, the folder to create the project in (default: .)
@@ -485,7 +486,40 @@ fn import(style: &Style, file: &Path, out: Option<PathBuf>, into: Option<PathBuf
 
     let json =
         std::fs::read_to_string(file).with_context(|| format!("reading {}", file.display()))?;
-    match postman::detect(&json)? {
+    let format = apix_import::detect(&json)?.with_context(|| {
+        format!(
+            "{} is not an export Apix reads (Postman, Insomnia v4, OpenAPI/Swagger, HAR)",
+            file.display()
+        )
+    })?;
+    let kind = match format {
+        apix_import::Format::Postman(kind) => kind,
+        other => {
+            let name = postman_dump::project_name(file);
+            let found =
+                apix_import::convert_named(&json, &name)?.expect("detected formats always convert");
+            let written = found.write(&out.unwrap_or_else(|| PathBuf::from(".")), &name)?;
+            println!(
+                "Imported {} from {}: {} collections, {} requests, {} environments.",
+                other.label(),
+                file.display(),
+                written.collections,
+                written.requests,
+                written.environments
+            );
+            for note in &written.notes {
+                println!("  ! {note}");
+            }
+            println!(
+                "{}Created {}{}",
+                style.green,
+                written.root.display(),
+                style.reset
+            );
+            return Ok(true);
+        }
+    };
+    match kind {
         Kind::Collection => {
             let plan = postman::convert_collection(&json)?;
             let root = out
