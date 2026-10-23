@@ -6,6 +6,8 @@
 //! in the [`Report`].
 
 pub mod postman;
+pub mod postman_dump;
+pub mod postman_export;
 
 use std::collections::HashSet;
 use std::fmt;

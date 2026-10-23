@@ -101,6 +101,12 @@ APIX_PASSWORD='…' apix run my-api --env staging
    redirect URL such as `http://127.0.0.1:8765/callback` with your identity
    provider and set it in the Auth tab.
 
+Moving a whole workspace? Use Postman's **Settings › Data › Export data**,
+then open or drop the folder (or the zip) in Apix: every collection,
+environment and global comes over as one project
+(`apix import postman-export.zip` does the same). Teammates who stay on
+Postman get your collection back with **Export to Postman…**.
+
 ## Run a collection in CI
 
 `apix run` sends every request in a folder and exits with a non-zero code if any
