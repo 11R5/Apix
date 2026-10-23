@@ -408,6 +408,12 @@ impl Workspace {
             run(Workspace::prompt_import),
         ));
         out.push(Entry::command(name!("menu.history"), run(Workspace::open_history)).keys("H"));
+        if open {
+            out.push(Entry::command(
+                name!("menu.export_postman"),
+                run(Workspace::export_active_to_postman),
+            ));
+        }
         if !open {
             out.extend(self.palette_recent());
             return out;

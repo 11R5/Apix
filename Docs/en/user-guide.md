@@ -279,6 +279,25 @@ bodies, auth and variables are carried over; anything Apix cannot take over yet
 is listed in a report. Pre-request and test scripts are kept as `.js` files next
 to their requests, and environment secrets go to the gitignored `.local.toml`.
 
+**Many files at once.** Open or drop a folder that holds Postman exports — or
+the zip that Postman's *Export data* produces — and Apix recognises the files
+by their content, not their names, and offers to import everything as one
+project: a collection per Postman collection, the environments shared by all
+of them, and globals as project variables (secret globals are left out, since
+project variables are committed). Two environments with the same name are kept
+as `name` and `name-2`.
+
+**Export to Postman.** Right-click a collection and choose **Export to
+Postman…** (or **File › Export to Postman…**) to write a Postman v2.1
+collection file and one environment file per environment, so teammates on
+Postman can keep working with it. Folders, auth, bodies, scripts, variables and
+the redirect, TLS and cookie settings carry over. Postman has no per-request
+timeout, proxy or client certificate, and secret environment values are
+exported with their names only; the notification lists what was left out.
+
+On the command line: `apix import <file, folder or zip>` and
+`apix export <collection> --out <folder>`.
+
 ## History
 
 Every request you send is kept with its response. **View › History…**

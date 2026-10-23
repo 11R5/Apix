@@ -208,6 +208,9 @@ env.title.collection: "%{name} の変数"
 env.title.environment: 環境
 env.title.project: プロジェクトの変数
 env.undo_delete: 削除を元に戻す
+export.done: "%{count} 個のファイルを %{path} に書き出しました。"
+export.done_title: Postman にエクスポートしました
+export.prompt: Postman ファイルの保存先…
 history.ago_days: "%{count}日前"
 history.ago_hours: "%{count}時間前"
 history.ago_minutes: "%{count}分前"
@@ -228,6 +231,13 @@ import.environment_done: 環境をインポートしました
 import.environment_needs_open: この環境が属するコレクションまたはプロジェクトを先に開いてから、インポートしてください。
 import.environment_saved: 「%{title}」を %{count} 個の変数とともに environments/%{name}.toml として保存しました。
 import.environment_saved_with_secrets: 「%{title}」を %{count} 個の変数とともに environments/%{name}.toml として保存しました。%{secrets} 個のシークレットは git で無視される %{name}.local.toml に保存しました。
+import.found_ok: インポート
+import.found_text: "%{path} に Postman のエクスポートがあります: コレクション %{collections} 件（リクエスト %{requests} 件）、環境 %{environments} 件。Apix プロジェクトとしてインポートしますか？"
+import.found_title: Postman のエクスポートが見つかりました
+import.nothing_found: "%{path} に Postman のコレクションや環境は見つかりませんでした。"
+import.project_done: Postman のエクスポートをインポートしました
+import.project_in: プロジェクトの作成先…
+import.project_summary: "コレクション %{collections} 件、リクエスト %{requests} 件、環境 %{environments} 件を %{name} に作成しました。"
 import.prompt: Postman のエクスポートをインポート
 menu.active_environment: アクティブな環境
 menu.cancel: キャンセル
@@ -240,6 +250,7 @@ menu.copy_as: 形式を指定してコピー
 menu.documentation: ドキュメント
 menu.encrypt_collection: このコレクションを暗号化…
 menu.environment: 環境
+menu.export_postman: Postman にエクスポート…
 menu.file: ファイル
 menu.group_by: サイドバーのグループ化
 menu.group_collection: コレクション

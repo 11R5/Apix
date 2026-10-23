@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:556e8694c78793d2 -->
+<!-- translated from en/user-guide.md sha256:b91d94787dc5feaf -->
 
 # Apix kullanım kılavuzu
 
@@ -294,6 +294,26 @@ aktarılır; Apix'in henüz devralamadığı her şey bir raporda listelenir.
 Pre-request ve test betikleri isteklerinin yanında `.js` dosyaları olarak
 saklanır, ortamlardaki gizli değerler ise git'in yok saydığı `.local.toml`
 dosyasına gider.
+
+**Birçok dosya birden.** Postman dışa aktarımları içeren bir klasörü — ya da
+Postman'ın *Export data* ile verdiği zip'i — açın veya bırakın; Apix dosyaları
+adlarına değil içeriklerine bakarak tanır ve hepsini tek bir proje olarak içe
+aktarmayı önerir: her Postman koleksiyonu için bir koleksiyon, hepsinin
+paylaştığı ortamlar ve proje değişkeni olarak globals (proje değişkenleri
+commit'lendiği için gizli globals alınmaz). Aynı adlı iki ortam `ad` ve `ad-2`
+olarak saklanır.
+
+**Postman'a dışa aktarma.** Bir koleksiyona sağ tıklayıp **Postman'a dışa
+aktar…** (veya **Dosya › Postman'a dışa aktar…**) seçin; bir Postman v2.1
+koleksiyon dosyası ve her ortam için bir ortam dosyası yazılır, böylece
+Postman kullanan ekip arkadaşları onunla çalışmaya devam edebilir. Klasörler,
+yetkilendirme, gövdeler, betikler, değişkenler ve yönlendirme, TLS ve çerez
+ayarları aktarılır. Postman'da istek başına zaman aşımı, proxy ve istemci
+sertifikası yoktur; gizli ortam değerleri de yalnızca adlarıyla dışa
+aktarılır. Bildirim, nelerin aktarılmadığını listeler.
+
+Komut satırında: `apix import <dosya, klasör veya zip>` ve
+`apix export <koleksiyon> --out <klasör>`.
 
 ## Geçmiş
 

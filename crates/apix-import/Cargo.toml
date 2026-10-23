@@ -11,3 +11,5 @@ apix-core.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
+# Postman's "Export data" arrives as a zip of collection and environment files.
+zip = { version = "2", default-features = false, features = ["deflate"] }

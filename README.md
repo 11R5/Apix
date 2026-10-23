@@ -83,7 +83,9 @@ Measurements of the other tools on the same machine are planned.
 - **Variables:** project, collection and environment layers, secrets kept out of
   git, dynamic values such as `{{$guid}}`, coloured chips in the URL bar.
 - **Encrypted collections** with a recovery key and auto-lock.
-- **Postman import** of collections and environments, with a report.
+- **Postman import** of collections and environments, with a report; a whole
+  "Export data" zip or folder becomes one project. **Export to Postman** for
+  teammates who stay on it.
 - **Copy as** `curl`, `curl.exe` or PowerShell, or as code in fetch, axios,
   Python, Go, Rust, C#, Java, PHP, Swift and Kotlin; **paste** a `curl` command
   to fill a request.

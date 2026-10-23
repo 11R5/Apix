@@ -208,6 +208,9 @@ env.title.collection: "Variablen von %{name}"
 env.title.environment: Umgebung
 env.title.project: Projektvariablen
 env.undo_delete: Löschen rückgängig machen
+export.done: "%{count} Dateien nach %{path} geschrieben."
+export.done_title: Nach Postman exportiert
+export.prompt: Postman-Dateien speichern in…
 history.ago_days: vor %{count} T.
 history.ago_hours: vor %{count} Std.
 history.ago_minutes: vor %{count} Min.
@@ -228,6 +231,13 @@ import.environment_done: Umgebung importiert
 import.environment_needs_open: Öffnen Sie zuerst die Sammlung oder das Projekt, zu dem diese Umgebung gehört, und importieren Sie sie dann.
 import.environment_saved: „%{title}“ als environments/%{name}.toml mit %{count} Variablen gespeichert.
 import.environment_saved_with_secrets: „%{title}“ als environments/%{name}.toml mit %{count} Variablen gespeichert. %{secrets} geheime Werte stehen in %{name}.local.toml, die von git ignoriert wird.
+import.found_ok: Importieren
+import.found_text: "%{path} enthält Postman-Exporte: %{collections} Sammlungen mit %{requests} Anfragen und %{environments} Umgebungen. Als Apix-Projekt importieren?"
+import.found_title: Postman-Export gefunden
+import.nothing_found: In %{path} wurden keine Postman-Sammlungen oder -Umgebungen gefunden.
+import.project_done: Postman-Export importiert
+import.project_in: Projekt anlegen in…
+import.project_summary: "%{collections} Sammlungen, %{requests} Anfragen und %{environments} Umgebungen liegen jetzt in %{name}."
 import.prompt: Postman-Export importieren
 menu.active_environment: Aktive Umgebung
 menu.cancel: Abbrechen
@@ -240,6 +250,7 @@ menu.copy_as: Kopieren als
 menu.documentation: Dokumentation
 menu.encrypt_collection: Diese Sammlung verschlüsseln…
 menu.environment: Umgebung
+menu.export_postman: Nach Postman exportieren…
 menu.file: Datei
 menu.group_by: Seitenleiste gruppieren nach
 menu.group_collection: Sammlung

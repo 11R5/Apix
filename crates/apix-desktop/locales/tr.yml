@@ -208,6 +208,9 @@ env.title.collection: "%{name} değişkenleri"
 env.title.environment: Ortam
 env.title.project: Proje değişkenleri
 env.undo_delete: Silmeyi geri al
+export.done: "%{count} dosya %{path} klasörüne yazıldı."
+export.done_title: Postman'a aktarıldı
+export.prompt: Postman dosyalarının kaydedileceği klasör…
 history.ago_days: "%{count} gün önce"
 history.ago_hours: "%{count} sa önce"
 history.ago_minutes: "%{count} dk önce"
@@ -228,6 +231,13 @@ import.environment_done: Ortam içe aktarıldı
 import.environment_needs_open: Önce bu ortamın ait olduğu koleksiyonu veya projeyi açın, sonra içe aktarın.
 import.environment_saved: “%{title}”, %{count} değişkenle environments/%{name}.toml olarak kaydedildi.
 import.environment_saved_with_secrets: “%{title}”, %{count} değişkenle environments/%{name}.toml olarak kaydedildi. %{secrets} gizli değer, git'in yok saydığı %{name}.local.toml dosyasına yazıldı.
+import.found_ok: İçe aktar
+import.found_text: "%{path} Postman dışa aktarımları içeriyor: %{requests} istekli %{collections} koleksiyon ve %{environments} ortam. Apix projesi olarak içe aktarılsın mı?"
+import.found_title: Postman dışa aktarımı bulundu
+import.nothing_found: "%{path} içinde Postman koleksiyonu veya ortamı bulunamadı."
+import.project_done: Postman dışa aktarımı içe aktarıldı
+import.project_in: Projenin oluşturulacağı klasör…
+import.project_summary: "%{collections} koleksiyon, %{requests} istek ve %{environments} ortam artık %{name} içinde."
 import.prompt: Postman dışa aktarımını içe aktar
 menu.active_environment: Etkin ortam
 menu.cancel: İptal
@@ -240,6 +250,7 @@ menu.copy_as: Komut veya kod olarak kopyala
 menu.documentation: Belgeler
 menu.encrypt_collection: Bu koleksiyonu şifrele…
 menu.environment: Ortam
+menu.export_postman: Postman'a dışa aktar…
 menu.file: Dosya
 menu.group_by: Kenar çubuğunu grupla
 menu.group_collection: Koleksiyon

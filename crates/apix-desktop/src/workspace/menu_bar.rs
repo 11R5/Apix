@@ -103,6 +103,12 @@ impl MenuState {
             );
         }
         menu = menu.menu(tr!("menu.import_postman"), Box::new(ImportFile));
+        if self.open {
+            menu = menu.item(self.item(
+                tr!("menu.export_postman"),
+                Workspace::export_active_to_postman,
+            ));
+        }
         if let Some(root) = self.plain_collection.clone() {
             menu = menu.separator().item(
                 self.item(tr!("menu.encrypt_collection"), move |ws, window, cx| {

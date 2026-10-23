@@ -1,4 +1,4 @@
-<!-- translated from en/workflows.md sha256:bfc02ed967effc4b -->
+<!-- translated from en/workflows.md sha256:dcc2addfa29b2d7e -->
 
 # İş akışları
 
@@ -105,6 +105,12 @@ kurtarma anahtarını kullanmak için `--recovery` ekleyin.
 5. Yetkilendirme kodu akışlı OAuth 2.0 için kimlik sağlayıcınıza
    `http://127.0.0.1:8765/callback` gibi bir loopback yönlendirme URL'si
    kaydedin ve bunu Yetkilendirme sekmesinde ayarlayın.
+
+Tüm çalışma alanını mı taşıyorsunuz? Postman'da **Settings › Data › Export
+data** kullanın, sonra klasörü (veya zip'i) Apix'te açın ya da pencereye
+bırakın: her koleksiyon, ortam ve global tek bir proje olarak gelir
+(`apix import postman-export.zip` de aynısını yapar). Postman'da kalan ekip
+arkadaşları koleksiyonunuzu **Postman'a dışa aktar…** ile geri alır.
 
 ## Koleksiyonu CI'da çalıştırma
 

@@ -15,6 +15,7 @@ use apix_core::store::{self, CollectionMeta, StoreError, TreeNode};
 use apix_core::vfs;
 use apix_core::{Body, Collection, Method, Request};
 use apix_import::postman::{self, Kind};
+use apix_import::{postman_dump, postman_export};
 use gpui_kit::component::IndexPath;
 use gpui_kit::component::button::{Button, ButtonVariants as _};
 use gpui_kit::component::dialog::AlertDialog;
@@ -641,6 +642,7 @@ impl Workspace {
             alert
                 .on_close(refocus(view.clone()))
                 .confirm()
+                .cancel_text(tr!("dialog.cancel"))
                 .text_start()
                 .title(what)
                 .description(bidi::para(detail))
@@ -786,12 +788,30 @@ impl Workspace {
             );
             return;
         }
+        // Not Apix yet: Postman exports in it are offered for import,
+        // otherwise a new collection can start here.
+        let scan_dir = dir.clone();
+        let scan = cx.background_spawn(async move { postman_dump::scan(&scan_dir) });
+        cx.spawn_in(window, async move |this, cx| {
+            let found = scan.await.ok().filter(|f| !f.is_empty());
+            this.update_in(cx, |this, window, cx| match found {
+                Some(found) => this.offer_dump(dir, found, window, cx),
+                None => this.offer_start_here(dir, window, cx),
+            })
+            .ok();
+        })
+        .detach();
+    }
+
+    /// Offers to make `dir` a new collection.
+    fn offer_start_here(&mut self, dir: PathBuf, window: &mut Window, cx: &mut Context<Self>) {
         let view = cx.entity().downgrade();
         window.open_alert_dialog(cx, move |alert: AlertDialog, _, _| {
             let (view, dir) = (view.clone(), dir.clone());
             alert
                 .on_close(refocus(view.clone()))
                 .confirm()
+                .cancel_text(tr!("dialog.cancel"))
                 .text_start()
                 .title(tr!("collection.start_here_title"))
                 .description(bidi::para(tr!(
@@ -862,7 +882,189 @@ impl Workspace {
         }
     }
 
+    /// Reads every Postman export in a folder or "Export data" zip, then
+    /// offers to import them as a project.
+    fn import_dump(&mut self, path: PathBuf, window: &mut Window, cx: &mut Context<Self>) {
+        let scan_path = path.clone();
+        let scan = cx.background_spawn(async move { postman_dump::scan(&scan_path) });
+        cx.spawn_in(window, async move |this, cx| {
+            let result = scan.await;
+            this.update_in(cx, |this, window, cx| match result {
+                Ok(found) if found.is_empty() => this.notify_error(
+                    tr!("import.nothing_found", path = path.display()),
+                    window,
+                    cx,
+                ),
+                Ok(found) => this.offer_dump(path, found, window, cx),
+                Err(e) => this.notify_error(e.to_string(), window, cx),
+            })
+            .ok();
+        })
+        .detach();
+    }
+
+    /// "Postman export found: import it as a project?", then where to put it.
+    fn offer_dump(
+        &mut self,
+        source: PathBuf,
+        found: postman_dump::Found,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let found = Rc::new(found);
+        let view = cx.entity().downgrade();
+        let folder = source
+            .file_name()
+            .map(|n| n.to_string_lossy().into_owned())
+            .unwrap_or_else(|| source.display().to_string());
+        let text = tr!(
+            "import.found_text",
+            path = folder,
+            collections = found.collections.len(),
+            requests = found.request_count(),
+            environments = found.environments.len() + found.globals.len()
+        );
+        window.open_alert_dialog(cx, move |alert: AlertDialog, _, _| {
+            let (view, found, source) = (view.clone(), found.clone(), source.clone());
+            alert
+                .on_close(refocus(view.clone()))
+                .confirm()
+                .cancel_text(tr!("dialog.cancel"))
+                .text_start()
+                .title(tr!("import.found_title"))
+                .description(bidi::para(text.clone()))
+                .ok_text(tr!("import.found_ok"))
+                .on_ok(move |_, window, cx| {
+                    let (found, source) = (found.clone(), source.clone());
+                    view.update(cx, |this, cx| this.write_dump(source, found, window, cx))
+                        .ok();
+                    true
+                })
+        });
+    }
+
+    fn write_dump(
+        &mut self,
+        source: PathBuf,
+        found: Rc<postman_dump::Found>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let picked = cx.prompt_for_paths(PathPromptOptions {
+            files: false,
+            directories: true,
+            multiple: false,
+            prompt: Some(tr!("import.project_in")),
+        });
+        cx.spawn_in(window, async move |this, cx| {
+            let Ok(Ok(Some(paths))) = picked.await else {
+                return;
+            };
+            let Some(parent) = paths.into_iter().next() else {
+                return;
+            };
+            this.update_in(cx, |this, window, cx| {
+                let name = postman_dump::project_name(&source);
+                let written = match postman_dump::write_project(&found, &parent, &name) {
+                    Ok(written) => written,
+                    Err(e) => return this.notify_error(e.to_string(), window, cx),
+                };
+                let mut message = tr!(
+                    "import.project_summary",
+                    collections = written.collections,
+                    requests = written.requests,
+                    environments = written.environments,
+                    name = written.root.display()
+                )
+                .to_string();
+                for note in &written.notes {
+                    message.push_str("\n• ");
+                    message.push_str(note);
+                }
+                let root = written.root.clone();
+                this.guard_all_tabs(
+                    window,
+                    cx,
+                    Rc::new(move |this, window, cx| this.open_collection_dir(&root, window, cx)),
+                );
+                window.push_notification(
+                    Notification::success(message)
+                        .title(tr!("import.project_done"))
+                        .autohide(written.notes.is_empty()),
+                    cx,
+                );
+            })
+            .ok();
+        })
+        .detach();
+    }
+
+    /// Writes the collection at `root` as Postman files into a folder the
+    /// user picks.
+    pub(super) fn export_to_postman(
+        &mut self,
+        root: PathBuf,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let export = match postman_export::export_collection(&root, self.project.as_ref()) {
+            Ok(export) => export,
+            Err(e) => return self.notify_error(e.to_string(), window, cx),
+        };
+        let picked = cx.prompt_for_paths(PathPromptOptions {
+            files: false,
+            directories: true,
+            multiple: false,
+            prompt: Some(tr!("export.prompt")),
+        });
+        cx.spawn_in(window, async move |this, cx| {
+            let Ok(Ok(Some(paths))) = picked.await else {
+                return;
+            };
+            let Some(dir) = paths.into_iter().next() else {
+                return;
+            };
+            this.update_in(cx, |this, window, cx| match export.write(&dir) {
+                Ok(written) => {
+                    let mut message =
+                        tr!("export.done", count = written.len(), path = dir.display()).to_string();
+                    for note in &export.notes {
+                        message.push_str("\n• ");
+                        message.push_str(note);
+                    }
+                    window.push_notification(
+                        Notification::success(message)
+                            .title(tr!("export.done_title"))
+                            .autohide(export.notes.is_empty()),
+                        cx,
+                    );
+                }
+                Err(e) => this.notify_error(e.to_string(), window, cx),
+            })
+            .ok();
+        })
+        .detach();
+    }
+
+    /// Export for the open collection (File menu, palette).
+    pub(super) fn export_active_to_postman(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        match self.collection.as_ref().map(|c| c.root.clone()) {
+            Some(root) => self.export_to_postman(root, window, cx),
+            None => self.notify_error(
+                tr!("collection.open_first", key = key_hint("O")),
+                window,
+                cx,
+            ),
+        }
+    }
+
     fn import_file(&mut self, file: PathBuf, window: &mut Window, cx: &mut Context<Self>) {
+        if file
+            .extension()
+            .is_some_and(|e| e.eq_ignore_ascii_case("zip"))
+        {
+            return self.import_dump(file, window, cx);
+        }
         let json = match std::fs::read_to_string(&file) {
             Ok(json) => json,
             Err(e) => {
@@ -1753,6 +1955,10 @@ fn collection_menu(
         .item(item(tr!("sidebar.settings"), |this, root, window, cx| {
             this.open_settings_dialog(AuthOwner::Collection(root), window, cx)
         }))
+        .item(item(
+            tr!("menu.export_postman"),
+            |this, root, window, cx| this.export_to_postman(root, window, cx),
+        ))
         .separator();
     menu = if vfs::is_virtual(&root) {
         menu.item(item(tr!("sidebar.lock"), |this, _, window, cx| {

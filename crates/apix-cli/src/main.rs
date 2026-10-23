@@ -69,16 +69,27 @@ enum Command {
         #[command(flatten)]
         vars: VarArgs,
     },
-    /// Import a Postman collection (v2.0/v2.1) or environment export
+    /// Import a Postman collection (v2.0/v2.1) or environment export, or a
+    /// whole folder / "Export data" zip of them as a project
     Import {
-        /// A Postman `.postman_collection.json` or `.postman_environment.json` file
+        /// A Postman collection or environment `.json`, a folder of them, or a `.zip`
         file: PathBuf,
-        /// Folder to create for a collection (default: ./<collection-name>)
+        /// Folder to create for a collection (default: ./<collection-name>);
+        /// for a folder or zip, the folder to create the project in (default: .)
         #[arg(long)]
         out: Option<PathBuf>,
         /// Collection to add an environment to (default: the collection around the current folder)
         #[arg(long)]
         into: Option<PathBuf>,
+    },
+    /// Export a collection as Postman v2.1 files (collection and environments)
+    Export {
+        /// The collection folder (or a folder inside it)
+        #[arg(default_value = ".")]
+        dir: PathBuf,
+        /// Where to write the files (default: .)
+        #[arg(long)]
+        out: Option<PathBuf>,
     },
     /// Make an encrypted copy of a collection; the original is left as it is
     Encrypt {
@@ -340,6 +351,25 @@ async fn run(cli: Cli) -> Result<bool> {
             Ok(failed == 0)
         }
         Command::Import { file, out, into } => import(&style, &file, out, into),
+        Command::Export { dir, out } => {
+            unlock_around(&dir, &var)?;
+            let scope = Scope::find(&dir)?;
+            let collection = scope.collection.as_ref().with_context(|| {
+                format!("no apix.toml found in {} or its parents", dir.display())
+            })?;
+            let export = apix_import::postman_export::export_collection(
+                &collection.root,
+                scope.project.as_ref(),
+            )?;
+            let written = export.write(&out.unwrap_or_else(|| PathBuf::from(".")))?;
+            for note in &export.notes {
+                println!("  ! {note}");
+            }
+            for path in written {
+                println!("{}Created {}{}", style.green, path.display(), style.reset);
+            }
+            Ok(true)
+        }
         Command::Encrypt { dir, out } => encrypt(&style, &dir, out, &var),
         Command::Decrypt { dir, out, recovery } => decrypt(&style, &dir, &out, recovery, &var),
         Command::Shell {
@@ -420,6 +450,38 @@ fn decrypt(style: &Style, dir: &Path, out: &Path, recovery: bool, var: &str) -> 
 
 fn import(style: &Style, file: &Path, out: Option<PathBuf>, into: Option<PathBuf>) -> Result<bool> {
     use apix_import::postman::{self, Kind};
+    use apix_import::postman_dump;
+
+    // A folder of exports or Postman's "Export data" zip: one project.
+    let is_zip = file
+        .extension()
+        .is_some_and(|e| e.eq_ignore_ascii_case("zip"));
+    if file.is_dir() || is_zip {
+        let found = postman_dump::scan(file)?;
+        if found.is_empty() {
+            bail!(
+                "no Postman collections or environments found in {}",
+                file.display()
+            );
+        }
+        let name = postman_dump::project_name(file);
+        let parent = out.unwrap_or_else(|| PathBuf::from("."));
+        let written = postman_dump::write_project(&found, &parent, &name)?;
+        println!(
+            "Imported {} collections ({} requests), {} environments and {} global variables.",
+            written.collections, written.requests, written.environments, written.global_vars
+        );
+        for note in &written.notes {
+            println!("  ! {note}");
+        }
+        println!(
+            "{}Created project {}{}",
+            style.green,
+            written.root.display(),
+            style.reset
+        );
+        return Ok(true);
+    }
 
     let json =
         std::fs::read_to_string(file).with_context(|| format!("reading {}", file.display()))?;

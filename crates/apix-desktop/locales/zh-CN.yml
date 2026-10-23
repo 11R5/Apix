@@ -208,6 +208,9 @@ env.title.collection: "%{name} 变量"
 env.title.environment: 环境
 env.title.project: 项目变量
 env.undo_delete: 撤销删除
+export.done: "已将 %{count} 个文件写入 %{path}。"
+export.done_title: 已导出到 Postman
+export.prompt: 将 Postman 文件保存到…
 history.ago_days: "%{count} 天前"
 history.ago_hours: "%{count} 小时前"
 history.ago_minutes: "%{count} 分钟前"
@@ -228,6 +231,13 @@ import.environment_done: 已导入环境
 import.environment_needs_open: 请先打开此环境所属的集合或项目，然后再导入。
 import.environment_saved: “%{title}”已保存为 environments/%{name}.toml，包含 %{count} 个变量。
 import.environment_saved_with_secrets: “%{title}”已保存为 environments/%{name}.toml，包含 %{count} 个变量。%{secrets} 个机密已存入 %{name}.local.toml，git 会忽略该文件。
+import.found_ok: 导入
+import.found_text: "%{path} 中有 Postman 导出：%{collections} 个集合（%{requests} 个请求）和 %{environments} 个环境。要作为 Apix 项目导入吗？"
+import.found_title: 发现 Postman 导出
+import.nothing_found: 在 %{path} 中没有找到 Postman 集合或环境。
+import.project_done: 已导入 Postman 导出
+import.project_in: 在此处创建项目…
+import.project_summary: "%{collections} 个集合、%{requests} 个请求和 %{environments} 个环境现已位于 %{name}。"
 import.prompt: 导入 Postman 导出文件
 menu.active_environment: 当前环境
 menu.cancel: 取消
@@ -240,6 +250,7 @@ menu.copy_as: 复制为
 menu.documentation: 文档
 menu.encrypt_collection: 加密此集合…
 menu.environment: 环境
+menu.export_postman: 导出到 Postman…
 menu.file: 文件
 menu.group_by: 侧边栏分组方式
 menu.group_collection: 集合

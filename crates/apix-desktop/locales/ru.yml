@@ -208,6 +208,9 @@ env.title.collection: "Переменные %{name}"
 env.title.environment: Окружение
 env.title.project: Переменные проекта
 env.undo_delete: Отменить удаление
+export.done: "Записано файлов: %{count} в %{path}."
+export.done_title: Экспортировано в Postman
+export.prompt: Сохранить файлы Postman в…
 history.ago_days: "%{count} дн. назад"
 history.ago_hours: "%{count} ч назад"
 history.ago_minutes: "%{count} мин назад"
@@ -228,6 +231,13 @@ import.environment_done: Окружение импортировано
 import.environment_needs_open: Сначала откройте коллекцию или проект, к которому относится это окружение, затем импортируйте его.
 import.environment_saved: "Окружение «%{title}» сохранено как environments/%{name}.toml (переменных: %{count})."
 import.environment_saved_with_secrets: "Окружение «%{title}» сохранено как environments/%{name}.toml (переменных: %{count}). Секреты (%{secrets}) записаны в %{name}.local.toml, который игнорируется git."
+import.found_ok: Импортировать
+import.found_text: "В %{path} есть экспорт Postman: коллекций %{collections} (запросов %{requests}) и окружений %{environments}. Импортировать как проект Apix?"
+import.found_title: Найден экспорт Postman
+import.nothing_found: В %{path} не найдено коллекций или окружений Postman.
+import.project_done: Экспорт Postman импортирован
+import.project_in: Создать проект в…
+import.project_summary: "Коллекций %{collections}, запросов %{requests} и окружений %{environments} теперь в %{name}."
 import.prompt: Импортировать экспорт Postman
 menu.active_environment: Активное окружение
 menu.cancel: Отменить
@@ -240,6 +250,7 @@ menu.copy_as: Копировать как
 menu.documentation: Документация
 menu.encrypt_collection: Зашифровать эту коллекцию…
 menu.environment: Окружение
+menu.export_postman: Экспорт в Postman…
 menu.file: Файл
 menu.group_by: Группировать боковую панель по
 menu.group_collection: Коллекциям

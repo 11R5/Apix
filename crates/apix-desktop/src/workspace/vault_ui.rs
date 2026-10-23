@@ -508,6 +508,7 @@ impl Workspace {
             alert
                 .on_close(refocus(view.clone()))
                 .confirm()
+                .cancel_text(tr!("dialog.cancel"))
                 .text_start()
                 .title(tr!("vault.decrypt_title", name = name))
                 .description(bidi::para(tr!("vault.decrypt_description")))

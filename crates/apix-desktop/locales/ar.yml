@@ -208,6 +208,9 @@ env.title.collection: "متغيرات %{name}"
 env.title.environment: البيئة
 env.title.project: متغيرات المشروع
 env.undo_delete: التراجع عن الحذف
+export.done: "كُتب %{count} ملفًا في %{path}."
+export.done_title: صُدّر إلى Postman
+export.prompt: احفظ ملفات Postman في…
 history.ago_days: منذ %{count} يوم
 history.ago_hours: منذ %{count} ساعة
 history.ago_minutes: منذ %{count} دقيقة
@@ -228,6 +231,13 @@ import.environment_done: تم استيراد البيئة
 import.environment_needs_open: افتح أولًا المجموعة أو المشروع الذي تنتمي إليه هذه البيئة، ثم استوردها.
 import.environment_saved: حُفظت «%{title}» في environments/%{name}.toml، وعدد المتغيرات %{count}.
 import.environment_saved_with_secrets: حُفظت «%{title}» في environments/%{name}.toml، وعدد المتغيرات %{count}. ذهب %{secrets} من الأسرار إلى %{name}.local.toml، الذي يتجاهله git.
+import.found_ok: استيراد
+import.found_text: "يحتوي %{path} على تصديرات Postman: %{collections} مجموعة بها %{requests} طلبًا و%{environments} بيئة. هل تريد استيرادها كمشروع Apix؟"
+import.found_title: عُثر على تصدير Postman
+import.nothing_found: لم يُعثر على مجموعات أو بيئات Postman في %{path}.
+import.project_done: استُورد تصدير Postman
+import.project_in: أنشئ المشروع في…
+import.project_summary: "أصبحت %{collections} مجموعة و%{requests} طلبًا و%{environments} بيئة في %{name}."
 import.prompt: استيراد ملف تصدير من Postman
 menu.active_environment: البيئة النشطة
 menu.cancel: إلغاء
@@ -240,6 +250,7 @@ menu.copy_as: نسخ كـ
 menu.documentation: الوثائق
 menu.encrypt_collection: تشفير هذه المجموعة…
 menu.environment: البيئة
+menu.export_postman: تصدير إلى Postman…
 menu.file: ملف
 menu.group_by: تجميع الشريط الجانبي حسب
 menu.group_collection: المجموعة
