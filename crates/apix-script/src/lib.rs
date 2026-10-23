@@ -18,6 +18,9 @@ use rquickjs::{Context, Function, Runtime};
 use serde::{Deserialize, Serialize};
 
 const PRELUDE: &str = include_str!("prelude.js");
+/// What `require(...)` offers: subsets of crypto-js, lodash, moment, uuid,
+/// ajv, tv4 and chai, written for Apix.
+const LIBRARIES: &str = include_str!("libs.js");
 
 /// How long the scripts of one event may run before they are stopped.
 pub const TIME_LIMIT: Duration = Duration::from_secs(10);
@@ -282,6 +285,77 @@ fn from_js(mut request: Request, js: JsRequest) -> Request {
     request
 }
 
+// ------------------------------------------------------------- natives
+
+fn from_hex(text: &str) -> Vec<u8> {
+    (0..text.len() / 2)
+        .filter_map(|i| u8::from_str_radix(text.get(i * 2..i * 2 + 2)?, 16).ok())
+        .collect()
+}
+
+fn to_hex(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
+
+/// `crypto-js` digests, done in Rust: `alg` over hex-encoded `data`; with a
+/// `key`, the HMAC. Unknown algorithms give an empty string.
+fn digest(alg: &str, data: &[u8], key: Option<&[u8]>) -> Option<Vec<u8>> {
+    use hmac::{Hmac, Mac};
+    use sha2::Digest;
+    macro_rules! hash {
+        ($h:ty) => {
+            match key {
+                None => <$h>::digest(data).to_vec(),
+                Some(key) => {
+                    let mut mac = <Hmac<$h> as Mac>::new_from_slice(key).ok()?;
+                    mac.update(data);
+                    mac.finalize().into_bytes().to_vec()
+                }
+            }
+        };
+    }
+    Some(match alg {
+        "MD5" => hash!(md5::Md5),
+        "SHA1" => hash!(sha1::Sha1),
+        "SHA224" => hash!(sha2::Sha224),
+        "SHA256" => hash!(sha2::Sha256),
+        "SHA384" => hash!(sha2::Sha384),
+        "SHA512" => hash!(sha2::Sha512),
+        _ => return None,
+    })
+}
+
+/// `__apix_hash`, `__apix_hmac` and `__apix_random` for the libraries.
+fn add_natives(ctx: &rquickjs::Ctx) -> rquickjs::Result<()> {
+    let globals = ctx.globals();
+    globals.set(
+        "__apix_hash",
+        Function::new(ctx.clone(), |alg: String, data: String| {
+            digest(&alg, &from_hex(&data), None)
+                .map(|d| to_hex(&d))
+                .unwrap_or_default()
+        })?,
+    )?;
+    globals.set(
+        "__apix_hmac",
+        Function::new(ctx.clone(), |alg: String, data: String, key: String| {
+            digest(&alg, &from_hex(&data), Some(&from_hex(&key)))
+                .map(|d| to_hex(&d))
+                .unwrap_or_default()
+        })?,
+    )?;
+    globals.set(
+        "__apix_random",
+        Function::new(ctx.clone(), |count: u32| {
+            use rand_core::RngCore;
+            let mut bytes = vec![0u8; count.min(1024) as usize];
+            rand_core::OsRng.fill_bytes(&mut bytes);
+            to_hex(&bytes)
+        })?,
+    )?;
+    Ok(())
+}
+
 /// A request a script built for `pm.sendRequest`.
 fn request_from_js(js: JsRequest) -> Request {
     let body = match js.body.mode.as_str() {
@@ -428,8 +502,11 @@ fn execute(
         ctx.globals()
             .set("__apix_input", input)
             .map_err(|e| e.to_string())?;
+        add_natives(&ctx).map_err(|e| e.to_string())?;
         ctx.eval::<(), _>(PRELUDE)
             .map_err(|e| format!("prelude: {}", describe(&ctx, e)))?;
+        ctx.eval::<(), _>(LIBRARIES)
+            .map_err(|e| format!("libraries: {}", describe(&ctx, e)))?;
 
         let mut error = None;
         for script in scripts {
@@ -766,5 +843,64 @@ mod tests {
             out.vars.local["e"],
             Some("pm.sendRequest is not available here".into())
         );
+    }
+
+    #[test]
+    fn built_in_libraries_work() {
+        let request = Request::new(Method::Get, "x");
+        let out = pre(
+            &request,
+            &[script(
+                "libs.js",
+                r#"
+                const CryptoJS = require('crypto-js');
+                const set = (k, v) => pm.variables.set(k, v);
+                set('md5', CryptoJS.MD5('abc').toString());
+                set('sha256', CryptoJS.SHA256('abc').toString(CryptoJS.enc.Hex));
+                const mac = CryptoJS.HmacSHA256('The quick brown fox jumps over the lazy dog', 'key');
+                set('hmac', mac.toString());
+                set('hmac64', CryptoJS.enc.Base64.stringify(mac));
+                set('utf8', CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Base64.parse(CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse('çay ☕')))));
+                set('uuid', require('uuid').validate(require('uuid').v4()));
+                const _ = require('lodash');
+                set('lodash', _.get({ a: [{ b: 7 }] }, 'a[0].b') + ',' + _.uniq([1, 1, 2]).length + ',' + _.sortBy([{ n: 2 }, { n: 1 }], 'n')[0].n + ',' + _.camelCase('hello big world'));
+                const moment = require('moment');
+                set('moment', moment.utc('2026-10-23T08:09:10Z').add(1, 'day').format('YYYY-MM-DD HH:mm [at] ddd'));
+                set('diff', moment.utc('2026-10-23T00:00:00Z').diff(moment.utc('2026-10-20T12:00:00Z'), 'days'));
+                const Ajv = require('ajv');
+                const check = new Ajv().compile({ type: 'object', required: ['id'], properties: { id: { type: 'integer', minimum: 1 }, email: { type: 'string', format: 'email' } }, additionalProperties: false });
+                set('ajv', check({ id: 1, email: 'a@b.co' }) + ',' + check({ id: 0, extra: true }) + ':' + check.errors.length);
+                set('tv4', tv4.validate([1, 2], { type: 'array', minItems: 3 }) + ':' + tv4.error.message);
+                const { assert } = require('chai');
+                assert.deepEqual({ a: 1 }, { a: 1 });
+                set('legacy', CryptoJS === require('crypto-js') && _.isEqual(_.pick({ a: 1, b: 2 }, 'a'), { a: 1 }));
+                try { require('fs'); } catch (e) { set('missing', e.message.slice(0, 30)); }
+                "#,
+            )],
+        );
+        assert_eq!(out.error, None);
+        let get = |k: &str| out.vars.local[k].clone().unwrap();
+        assert_eq!(get("md5"), "900150983cd24fb0d6963f7d28e17f72");
+        assert_eq!(
+            get("sha256"),
+            "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+        );
+        assert_eq!(
+            get("hmac"),
+            "f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8"
+        );
+        assert_eq!(
+            get("hmac64"),
+            "97yD9DBThCSxMpjmqm+xQ+9NWaFJRhdZl0edvC0aPNg="
+        );
+        assert_eq!(get("utf8"), "çay ☕");
+        assert_eq!(get("uuid"), "true");
+        assert_eq!(get("lodash"), "7,2,1,helloBigWorld");
+        assert_eq!(get("moment"), "2026-10-24 08:09 at Sat");
+        assert_eq!(get("diff"), "2");
+        assert_eq!(get("ajv"), "true,false:2");
+        assert_eq!(get("tv4"), "false:the value should have at least 3 items");
+        assert_eq!(get("legacy"), "true");
+        assert_eq!(get("missing"), "require('fs'): not built into ");
     }
 }

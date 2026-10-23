@@ -585,11 +585,31 @@
     },
   });
 
-  // A small JSON Schema check (type, required, properties, items, enum,
-  // minimum/maximum, minLength/maxLength, pattern) for `jsonSchema`.
+  // A JSON Schema check covering what API tests use: type, required,
+  // properties, additionalProperties, items, enum, const, minimum/maximum,
+  // exclusive bounds, minLength/maxLength, pattern, minItems/maxItems,
+  // uniqueItems, format (email, uri, date-time, date, uuid), allOf / anyOf /
+  // oneOf / not. No $ref. Also behind ajv and tv4 in `require`.
+  const formats = {
+    email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+    uri: /^[a-z][a-z0-9+.-]*:[^\s]*$/i,
+    "date-time": /^\d{4}-\d{2}-\d{2}[Tt ]\d{2}:\d{2}:\d{2}(\.\d+)?([Zz]|[+-]\d{2}:?\d{2})$/,
+    date: /^\d{4}-\d{2}-\d{2}$/,
+    uuid: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+  };
   function validate(value, schema, at, problems) {
     if (!schema || typeof schema !== "object") return;
     const where = at || "the value";
+    const passes = (sub) => {
+      const found = [];
+      validate(value, sub, at, found);
+      return found.length === 0;
+    };
+    if (schema.allOf) for (const sub of schema.allOf) validate(value, sub, at, problems);
+    if (schema.anyOf && !schema.anyOf.some(passes)) problems.push(where + " should match one of the anyOf schemas");
+    if (schema.oneOf && schema.oneOf.filter(passes).length !== 1) problems.push(where + " should match exactly one of the oneOf schemas");
+    if (schema.not && passes(schema.not)) problems.push(where + " should not match the schema in not");
+    if (schema.const !== undefined && !deepEqual(value, schema.const)) problems.push(where + " should be " + JSON.stringify(schema.const));
     if (schema.type) {
       const types = [].concat(schema.type);
       const actual = typeName(value) === "number" && Number.isInteger(value) ? ["number", "integer"] : [typeName(value)];
@@ -602,20 +622,42 @@
     if (typeof value === "number") {
       if (schema.minimum !== undefined && value < schema.minimum) problems.push(where + " should be at least " + schema.minimum);
       if (schema.maximum !== undefined && value > schema.maximum) problems.push(where + " should be at most " + schema.maximum);
+      if (typeof schema.exclusiveMinimum === "number" && value <= schema.exclusiveMinimum) problems.push(where + " should be above " + schema.exclusiveMinimum);
+      if (typeof schema.exclusiveMaximum === "number" && value >= schema.exclusiveMaximum) problems.push(where + " should be below " + schema.exclusiveMaximum);
     }
     if (typeof value === "string") {
       if (schema.minLength !== undefined && value.length < schema.minLength) problems.push(where + " should have at least " + schema.minLength + " characters");
       if (schema.maxLength !== undefined && value.length > schema.maxLength) problems.push(where + " should have at most " + schema.maxLength + " characters");
       if (schema.pattern && !new RegExp(schema.pattern).test(value)) problems.push(where + " should match " + schema.pattern);
+      if (schema.format && formats[schema.format] && !formats[schema.format].test(value)) problems.push(where + " should be a valid " + schema.format);
     }
     if (value && typeof value === "object" && !Array.isArray(value)) {
       for (const name of schema.required || []) if (!own(value, name)) problems.push((at ? at + "." : "") + name + " is required");
-      for (const name of Object.keys(schema.properties || {})) {
-        if (own(value, name)) validate(value[name], schema.properties[name], (at ? at + "." : "") + name, problems);
+      const known = schema.properties || {};
+      for (const name of Object.keys(known)) {
+        if (own(value, name)) validate(value[name], known[name], (at ? at + "." : "") + name, problems);
+      }
+      if (schema.additionalProperties !== undefined && schema.additionalProperties !== true) {
+        for (const name of Object.keys(value)) {
+          if (own(known, name)) continue;
+          if (schema.additionalProperties === false) problems.push((at ? at + "." : "") + name + " is not allowed");
+          else validate(value[name], schema.additionalProperties, (at ? at + "." : "") + name, problems);
+        }
       }
     }
-    if (Array.isArray(value) && schema.items) value.forEach((item, i) => validate(item, schema.items, (at || "") + "[" + i + "]", problems));
+    if (Array.isArray(value)) {
+      if (schema.items) value.forEach((item, i) => validate(item, schema.items, (at || "") + "[" + i + "]", problems));
+      if (schema.minItems !== undefined && value.length < schema.minItems) problems.push(where + " should have at least " + schema.minItems + " items");
+      if (schema.maxItems !== undefined && value.length > schema.maxItems) problems.push(where + " should have at most " + schema.maxItems + " items");
+      if (schema.uniqueItems && value.some((x, i) => value.findIndex((y) => deepEqual(x, y)) !== i)) problems.push(where + " should have unique items");
+    }
   }
+  global.__apix_validate = function (value, schema) {
+    const problems = [];
+    validate(value, schema, "", problems);
+    return problems;
+  };
+  global.__apix_deep_equal = deepEqual;
 
   function expect(subject, message) {
     return new Assertion(subject, message);
