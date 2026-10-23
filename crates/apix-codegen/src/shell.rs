@@ -12,16 +12,32 @@ pub enum Shell {
     Cmd,
     /// `Invoke-RestMethod` for Windows PowerShell 5.1 and PowerShell 7.
     PowerShell,
+    /// `curl` for the fish shell, whose single quotes treat `\` specially.
+    Fish,
+    /// HTTPie's `http` command (3.0 or later, for `--raw`), quoted for bash.
+    Httpie,
+    /// GNU `wget`, quoted for bash.
+    Wget,
 }
 
 impl Shell {
-    pub const ALL: [Shell; 3] = [Shell::Bash, Shell::Cmd, Shell::PowerShell];
+    pub const ALL: [Shell; 6] = [
+        Shell::Bash,
+        Shell::Cmd,
+        Shell::PowerShell,
+        Shell::Fish,
+        Shell::Httpie,
+        Shell::Wget,
+    ];
 
     pub fn label(self) -> &'static str {
         match self {
             Shell::Bash => "cURL (bash)",
             Shell::Cmd => "cURL (Windows cmd)",
             Shell::PowerShell => "PowerShell",
+            Shell::Fish => "cURL (fish)",
+            Shell::Httpie => "HTTPie",
+            Shell::Wget => "wget",
         }
     }
 }
@@ -33,7 +49,181 @@ pub fn to_shell(request: &Request, shell: Shell) -> String {
         Shell::Bash => curl(request, "curl", bash_quote, " \\\n  "),
         Shell::Cmd => curl(request, "curl.exe", cmd_quote, " ^\n  "),
         Shell::PowerShell => powershell(request),
+        Shell::Fish => curl(request, "curl", fish_quote, " \\\n  "),
+        Shell::Httpie => httpie(request),
+        Shell::Wget => wget(request),
     }
+}
+
+/// fish single quotes: `\'` and `\\` are the only escapes.
+fn fish_quote(s: &str) -> String {
+    format!("'{}'", s.replace('\\', r"\\").replace('\'', r"\'"))
+}
+
+fn httpie(request: &Request) -> String {
+    let q = bash_quote;
+    let mut notes = Vec::new();
+    let mut first = format!("http {} {}", request.method.as_str(), q(&full_url(request)));
+    let mut parts = Vec::new();
+    match &request.auth {
+        Auth::Basic { username, password } => {
+            parts.push(format!("-a {}", q(&format!("{username}:{password}"))));
+        }
+        Auth::Digest { username, password } => {
+            parts.push("-A digest".into());
+            parts.push(format!("-a {}", q(&format!("{username}:{password}"))));
+        }
+        _ => {}
+    }
+    let settings = &request.settings;
+    if let Some(ms) = settings.timeout_ms.filter(|ms| *ms > 0) {
+        parts.push(format!("--timeout={}", ms as f64 / 1000.0));
+    }
+    // HTTPie does not follow redirects unless asked.
+    if settings.follow_redirects == Some(true)
+        || (settings.follow_redirects.is_none() && settings.max_redirects.is_some())
+    {
+        parts.push("--follow".into());
+        if let Some(n) = settings.max_redirects {
+            parts.push(format!("--max-redirects={n}"));
+        }
+    }
+    if settings.tls_verify == Some(false) {
+        parts.push("--verify=no".into());
+    }
+    match settings.proxy.as_deref() {
+        None => {}
+        Some("") => notes.push("# The proxy is off for this request; unset HTTP(S)_PROXY first"),
+        Some(url) => {
+            parts.push(format!("--proxy={}", q(&format!("http:{url}"))));
+            parts.push(format!("--proxy={}", q(&format!("https:{url}"))));
+        }
+    }
+    if let Some(cert) = &settings.client_cert {
+        parts.push(format!("--cert={}", q(cert)));
+    }
+    if let Some(key) = &settings.client_key {
+        parts.push(format!("--cert-key={}", q(key)));
+    }
+    let multipart = multipart_parts(&request.body);
+    let form = form_fields(&request.body);
+    if multipart.is_some() {
+        parts.push("--multipart".into());
+    } else if form.is_some() {
+        parts.push("--form".into());
+    }
+    let mut redirect = None;
+    if let Some(text) = text_body(&request.body) {
+        parts.push(format!("--raw {}", q(&text)));
+    } else if let Body::Binary { file } = &request.body {
+        redirect = Some(format!("< {}", q(file)));
+    }
+    for (key, value) in effective_headers(request, false) {
+        // `Name:` with nothing after it removes a header; `Name;` sends it empty.
+        let item = if value.is_empty() {
+            format!("{key};")
+        } else {
+            format!("{key}:{value}")
+        };
+        parts.push(q(&item));
+    }
+    if let Some(fields) = form {
+        for field in fields {
+            parts.push(q(&format!("{}={}", field.key, field.value)));
+        }
+    }
+    if let Some(fields) = multipart {
+        for part in fields {
+            if part.file {
+                let mime = part
+                    .content_type
+                    .as_deref()
+                    .filter(|m| !m.is_empty())
+                    .map(|m| format!(";type={m}"))
+                    .unwrap_or_default();
+                parts.push(q(&format!("{}@{}{mime}", part.key, part.value)));
+            } else {
+                parts.push(q(&format!("{}={}", part.key, part.value)));
+            }
+        }
+    }
+    parts.extend(redirect);
+    for part in parts {
+        first.push_str(" \\\n  ");
+        first.push_str(&part);
+    }
+    notes.push("");
+    notes.join("\n") + &first
+}
+
+fn wget(request: &Request) -> String {
+    let q = bash_quote;
+    let mut notes: Vec<&str> = Vec::new();
+    let mut parts = vec!["wget -qO- --content-on-error".to_owned()];
+    let multipart = multipart_parts(&request.body);
+    let has_body = !request.body.is_none() && multipart.is_none();
+    // --body-data and --body-file only go with --method.
+    if request.method != Method::Get || has_body {
+        parts.push(format!("--method={}", request.method.as_str()));
+    }
+    for (key, value) in effective_headers(request, false) {
+        parts.push(format!("--header={}", q(&format!("{key}: {value}"))));
+    }
+    match &request.auth {
+        Auth::Basic { username, password } => {
+            parts.push(format!("--user={}", q(username)));
+            parts.push(format!("--password={}", q(password)));
+            // Without it wget waits for a 401 before sending Basic credentials.
+            parts.push("--auth-no-challenge".into());
+        }
+        Auth::Digest { username, password } => {
+            parts.push(format!("--user={}", q(username)));
+            parts.push(format!("--password={}", q(password)));
+        }
+        _ => {}
+    }
+    let settings = &request.settings;
+    if let Some(ms) = settings.timeout_ms.filter(|ms| *ms > 0) {
+        parts.push(format!("--timeout={}", ms as f64 / 1000.0));
+    }
+    // wget follows up to 20 redirects unless told otherwise.
+    if settings.follow_redirects == Some(false) {
+        parts.push("--max-redirect=0".into());
+    } else if let Some(n) = settings.max_redirects {
+        parts.push(format!("--max-redirect={n}"));
+    }
+    if settings.tls_verify == Some(false) {
+        parts.push("--no-check-certificate".into());
+    }
+    match settings.proxy.as_deref() {
+        None => {}
+        Some("") => parts.push("--no-proxy".into()),
+        Some(url) => {
+            parts.push(format!("-e {}", q(&format!("http_proxy={url}"))));
+            parts.push(format!("-e {}", q(&format!("https_proxy={url}"))));
+        }
+    }
+    if let Some(cert) = &settings.client_cert {
+        parts.push(format!("--certificate={}", q(cert)));
+    }
+    if let Some(key) = &settings.client_key {
+        parts.push(format!("--private-key={}", q(key)));
+    }
+    if let Some(text) = text_body(&request.body) {
+        parts.push(format!("--body-data={}", q(&text)));
+    } else if let Some(fields) = form_fields(&request.body) {
+        let data = url::form_urlencoded::Serializer::new(String::new())
+            .extend_pairs(fields.iter().map(|f| (&f.key, &f.value)))
+            .finish();
+        parts.push(format!("--body-data={}", q(&data)));
+    } else if let Body::Binary { file } = &request.body {
+        parts.push(format!("--body-file={}", q(file)));
+    } else if multipart.is_some() {
+        notes.push("# wget cannot send multipart forms; copy as cURL instead");
+    }
+    parts.push(q(&full_url(request)));
+    notes.push("");
+    notes.join("\n") + &parts.join(" \\\n  ")
 }
 
 fn curl(request: &Request, program: &str, quote: fn(&str) -> String, newline: &str) -> String {
@@ -593,6 +783,84 @@ mod tests {
             "{ps}"
         );
         assert!(ps.ends_with(" -Credential $credential"), "{ps}");
+    }
+
+    #[test]
+    fn fish_escapes_backslashes_and_quotes() {
+        assert_eq!(fish_quote(r"it's C:\tmp"), r"'it\'s C:\\tmp'");
+        let fish = to_shell(&post_json(), Shell::Fish);
+        assert!(
+            fish.ends_with(r#"--data-raw '{"name": "O\'Brien", "path": "C:\\\\tmp"}'"#),
+            "{fish}"
+        );
+    }
+
+    #[test]
+    fn httpie_uses_raw_bodies_items_and_flags() {
+        let mut r = post_json();
+        r.headers.push(KeyValue::new("X-Empty", ""));
+        r.settings.follow_redirects = Some(true);
+        r.settings.tls_verify = Some(false);
+        assert_eq!(
+            to_shell(&r, Shell::Httpie),
+            "http POST 'https://api.example.com/users?dry+run=yes+%26+no' \\\n  \
+             --follow \\\n  \
+             --verify=no \\\n  \
+             --raw '{\"name\": \"O'\\''Brien\", \"path\": \"C:\\\\tmp\"}' \\\n  \
+             'Accept:application/json' \\\n  \
+             'X-Empty;' \\\n  \
+             'Authorization:Bearer t0k3n' \\\n  \
+             'Content-Type:application/json'"
+        );
+
+        let mut r = Request::new(Method::Post, "https://x.dev/up");
+        r.auth = Auth::Digest {
+            username: "u".into(),
+            password: "p".into(),
+        };
+        r.body = Body::Multipart(vec![
+            FormPart::text("note", "hi"),
+            FormPart::file("photo", "a.png"),
+        ]);
+        assert_eq!(
+            to_shell(&r, Shell::Httpie),
+            "http POST 'https://x.dev/up' \\\n  -A digest \\\n  -a 'u:p' \\\n  --multipart \\\n  \
+             'note=hi' \\\n  'photo@a.png'"
+        );
+        r.body = Body::Binary {
+            file: "data.bin".into(),
+        };
+        assert!(to_shell(&r, Shell::Httpie).ends_with("\\\n  < 'data.bin'"));
+    }
+
+    #[test]
+    fn wget_sends_bodies_with_a_method() {
+        let mut r = Request::new(Method::Post, "https://x.dev/form");
+        r.body = Body::Form(vec![KeyValue::new("q", "a b&c")]);
+        r.auth = Auth::Basic {
+            username: "ada".into(),
+            password: "pw".into(),
+        };
+        r.settings.follow_redirects = Some(false);
+        assert_eq!(
+            to_shell(&r, Shell::Wget),
+            "wget -qO- --content-on-error \\\n  \
+             --method=POST \\\n  \
+             --header='Content-Type: application/x-www-form-urlencoded' \\\n  \
+             --user='ada' \\\n  \
+             --password='pw' \\\n  \
+             --auth-no-challenge \\\n  \
+             --max-redirect=0 \\\n  \
+             --body-data='q=a+b%26c' \\\n  \
+             'https://x.dev/form'"
+        );
+        let get = Request::new(Method::Get, "https://x.dev/a");
+        assert_eq!(
+            to_shell(&get, Shell::Wget),
+            "wget -qO- --content-on-error \\\n  'https://x.dev/a'"
+        );
+        r.body = Body::Multipart(vec![FormPart::text("a", "b")]);
+        assert!(to_shell(&r, Shell::Wget).starts_with("# wget cannot send multipart"));
     }
 
     #[test]

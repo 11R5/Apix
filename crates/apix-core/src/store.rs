@@ -99,6 +99,10 @@ pub struct CollectionMeta {
     /// Transport settings for requests that do not set their own.
     #[serde(default, skip_serializing_if = "RequestSettings::is_inherit")]
     pub settings: RequestSettings,
+    /// Folder and request file names in the order the sidebar shows them;
+    /// others follow, folders first, by name.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub order: Vec<String>,
 }
 
 /// Writes `apix.toml` into `root`.
@@ -117,6 +121,9 @@ pub struct FolderMeta {
     /// Transport settings for requests in the folder that do not set their own.
     #[serde(default, skip_serializing_if = "RequestSettings::is_inherit")]
     pub settings: RequestSettings,
+    /// The order of the folder's children, as in [`CollectionMeta::order`].
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub order: Vec<String>,
 }
 
 /// Reads `<dir>/folder.toml`; a folder without one has default settings.
@@ -570,8 +577,9 @@ fn collect_requests(dir: &Path, out: &mut Vec<PathBuf>) {
     }
 }
 
-/// The collection as the sidebar shows it: folders first, then requests,
-/// each sorted by name. Paths are absolute. Empty folders are included so a
+/// The collection as the sidebar shows it: in the order saved in `apix.toml`
+/// and `folder.toml` files, otherwise folders first, then requests, each
+/// sorted by name. Paths are absolute. Empty folders are included so a
 /// folder you just created shows up.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TreeNode {
@@ -592,6 +600,34 @@ impl Collection {
 }
 
 fn tree_of(dir: &Path, is_root: bool) -> Vec<TreeNode> {
+    children_of(dir, is_root)
+        .into_iter()
+        .map(|child| match child {
+            Child::Folder(name, path) => TreeNode::Folder {
+                children: tree_of(&path, false),
+                name,
+                path,
+            },
+            Child::Request(_, path) => TreeNode::Request { path },
+        })
+        .collect()
+}
+
+enum Child {
+    Folder(String, PathBuf),
+    Request(String, PathBuf),
+}
+
+impl Child {
+    fn name(&self) -> &str {
+        match self {
+            Child::Folder(name, _) | Child::Request(name, _) => name,
+        }
+    }
+}
+
+/// The folders and requests directly in `dir`, in sidebar order.
+fn children_of(dir: &Path, is_root: bool) -> Vec<Child> {
     let Ok(entries) = vfs::read_dir(dir) else {
         return Vec::new();
     };
@@ -606,24 +642,95 @@ fn tree_of(dir: &Path, is_root: bool) -> Vec<TreeNode> {
             continue;
         }
         if vfs::is_dir(&path) {
-            folders.push((name, path));
+            folders.push(Child::Folder(name, path));
         } else if is_request_file(&path) {
-            requests.push(path);
+            requests.push(Child::Request(name, path));
         }
     }
-    folders.sort_by_key(|(name, _)| name.to_lowercase());
-    requests.sort_by_key(|p| p.to_string_lossy().to_lowercase());
+    folders.sort_by_key(|c| c.name().to_lowercase());
+    requests.sort_by_key(|c| c.name().to_lowercase());
+    folders.extend(requests);
+    let order = order_of(dir);
+    if !order.is_empty() {
+        // Stable: what the order does not list keeps its place after the rest.
+        folders.sort_by_key(|c| {
+            order
+                .iter()
+                .position(|o| o == c.name())
+                .unwrap_or(usize::MAX)
+        });
+    }
+    folders
+}
 
-    let mut out: Vec<TreeNode> = folders
-        .into_iter()
-        .map(|(name, path)| TreeNode::Folder {
-            children: tree_of(&path, false),
-            name,
-            path,
-        })
+/// The saved order of `dir`'s children: from `apix.toml` for a collection
+/// root, from `folder.toml` for any other folder. Empty when none was saved.
+pub fn order_of(dir: &Path) -> Vec<String> {
+    let meta = dir.join(COLLECTION_FILE);
+    if vfs::is_file(&meta) {
+        read_toml::<CollectionMeta>(&meta)
+            .map(|m| m.order)
+            .unwrap_or_default()
+    } else {
+        load_folder_meta(dir).map(|m| m.order).unwrap_or_default()
+    }
+}
+
+fn save_order(dir: &Path, order: Vec<String>) -> Result<(), StoreError> {
+    let meta = dir.join(COLLECTION_FILE);
+    if vfs::is_file(&meta) {
+        let mut collection: CollectionMeta = read_toml(&meta)?;
+        collection.order = order;
+        save_collection_meta(dir, &collection)
+    } else {
+        let mut folder = load_folder_meta(dir)?;
+        folder.order = order;
+        save_folder_meta(dir, &folder)
+    }
+}
+
+/// Puts `item` (a request file or folder) just before `anchor`, or after it,
+/// among their siblings, and saves that order. Both must share a folder.
+pub fn place(item: &Path, anchor: &Path, after: bool) -> Result<(), StoreError> {
+    let dir = item.parent().unwrap_or(Path::new("."));
+    if anchor.parent() != Some(dir) || item == anchor {
+        return Ok(());
+    }
+    let is_root = vfs::is_file(&dir.join(COLLECTION_FILE));
+    let mut names: Vec<String> = children_of(dir, is_root)
+        .iter()
+        .map(|c| c.name().to_owned())
         .collect();
-    out.extend(requests.into_iter().map(|path| TreeNode::Request { path }));
-    out
+    let name = |p: &Path| {
+        p.file_name()
+            .unwrap_or_default()
+            .to_string_lossy()
+            .into_owned()
+    };
+    let (item, anchor) = (name(item), name(anchor));
+    names.retain(|n| *n != item);
+    let Some(at) = names.iter().position(|n| *n == anchor) else {
+        return Ok(());
+    };
+    names.insert(if after { at + 1 } else { at }, item);
+    save_order(dir, names)
+}
+
+/// Keeps a saved order in step when a child of `dir` is renamed (`to`) or
+/// leaves (`None`).
+fn rename_in_order(dir: &Path, from: &Path, to: Option<&Path>) -> Result<(), StoreError> {
+    let mut order = order_of(dir);
+    let from = from.file_name().unwrap_or_default().to_string_lossy();
+    let Some(at) = order.iter().position(|n| *n == from) else {
+        return Ok(());
+    };
+    match to.and_then(Path::file_name) {
+        Some(to) => order[at] = to.to_string_lossy().into_owned(),
+        None => {
+            order.remove(at);
+        }
+    }
+    save_order(dir, order)
 }
 
 /// A file or folder name made from a free-form title: lowercase, words
@@ -745,6 +852,8 @@ pub fn rename_folder(path: &Path, name: &str) -> Result<PathBuf, StoreError> {
     }
     let target = unique_path(parent, &stem, "");
     vfs::rename(path, &target).map_err(io_error(path))?;
+    // The order is cosmetic: a failure there must not fail the rename.
+    let _ = rename_in_order(parent, path, Some(&target));
     Ok(target)
 }
 
@@ -771,6 +880,7 @@ pub fn rename_request(path: &Path, new_name: &str) -> Result<PathBuf, StoreError
         }
     }
     vfs::remove_file(path).map_err(io_error(path))?;
+    let _ = rename_in_order(dir, path, Some(&new_path));
     Ok(new_path)
 }
 
@@ -791,6 +901,9 @@ pub fn move_request(path: &Path, dir: &Path) -> Result<PathBuf, StoreError> {
         if !vfs::exists(&to) {
             vfs::rename(&script, &to).map_err(io_error(&script))?;
         }
+    }
+    if let Some(old_dir) = path.parent() {
+        let _ = rename_in_order(old_dir, path, None);
     }
     Ok(target)
 }
@@ -813,6 +926,9 @@ pub fn move_folder(path: &Path, dir: &Path) -> Result<PathBuf, StoreError> {
     let name = path.file_name().unwrap_or_default().to_string_lossy();
     let target = unique_path(dir, &name, "");
     vfs::rename(path, &target).map_err(io_error(path))?;
+    if let Some(old_dir) = path.parent() {
+        let _ = rename_in_order(old_dir, path, None);
+    }
     Ok(target)
 }
 
@@ -1092,6 +1208,68 @@ mod tests {
         assert_eq!(environment_names_at(&root), ["dev", "stage"]);
         assert_eq!(environment_files(&root, "stage").len(), 2);
         assert!(rename_environment(&root, "stage", "dev").is_err());
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn keeps_a_manual_order_through_renames_and_moves() {
+        let root = std::env::temp_dir().join(format!("apix-order-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&root);
+        fs::create_dir_all(&root).unwrap();
+        let request = |name: &str| {
+            let mut r = Request::new(Method::Get, "https://x.dev");
+            r.name = name.into();
+            r
+        };
+        save_collection_meta(
+            &root,
+            &CollectionMeta {
+                name: "Order".into(),
+                ..CollectionMeta::default()
+            },
+        )
+        .unwrap();
+        let admin = create_folder(&root, "Admin").unwrap();
+        let a = create_request(&root, &request("a")).unwrap();
+        let b = create_request(&root, &request("b")).unwrap();
+        let names = |root: &Path| -> Vec<String> {
+            Collection::open(root)
+                .unwrap()
+                .tree()
+                .iter()
+                .map(|n| match n {
+                    TreeNode::Folder { name, .. } => name.clone(),
+                    TreeNode::Request { path } => {
+                        path.file_name().unwrap().to_string_lossy().into_owned()
+                    }
+                })
+                .collect()
+        };
+        let (fa, fb) = (
+            a.file_name().unwrap().to_string_lossy().into_owned(),
+            b.file_name().unwrap().to_string_lossy().into_owned(),
+        );
+        assert_eq!(names(&root), ["admin".to_string(), fa.clone(), fb.clone()]);
+
+        // b first, then the folder after a.
+        place(&b, &admin, false).unwrap();
+        place(&admin, &a, true).unwrap();
+        assert_eq!(names(&root), [fb.clone(), fa.clone(), "admin".into()]);
+
+        // A rename keeps the place; a new request goes last.
+        let renamed = rename_request(&b, "Zeta").unwrap();
+        let fz = renamed.file_name().unwrap().to_string_lossy().into_owned();
+        create_request(&root, &request("c")).unwrap();
+        let listed = names(&root);
+        assert_eq!(listed[..3], [fz.clone(), fa.clone(), "admin".into()]);
+        assert_eq!(listed.len(), 4);
+
+        // Moving out drops the entry; inside a folder the order lives in folder.toml.
+        let moved = move_request(&renamed, &admin).unwrap();
+        assert!(!order_of(&root).contains(&fz));
+        let inner = create_request(&admin, &request("first")).unwrap();
+        place(&inner, &moved, true).unwrap();
+        assert_eq!(load_folder_meta(&admin).unwrap().order.len(), 2);
         fs::remove_dir_all(root).unwrap();
     }
 

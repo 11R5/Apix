@@ -29,7 +29,7 @@ use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
 use super::auth_editor::AuthOwner;
-use super::drag::{DraggedNode, draggable};
+use super::drag::{DraggedNode, Kind as DragKind, draggable};
 use super::{Workspace, describe, key_hint};
 use crate::bidi::{self, Bidi as _, DialogBidi as _};
 use crate::theme;
@@ -95,15 +95,20 @@ impl Workspace {
         self.reload(window, cx);
 
         // Inside a project, start in the collection that was opened, if any.
-        let start = collection
-            .and_then(|c| self.collections.iter().position(|x| x.root == c))
-            .unwrap_or(0);
-        self.collection = self.collections.get(start).cloned();
-        let first = self
+        let chosen = collection.and_then(|c| self.collections.iter().position(|x| x.root == c));
+        self.collection = self.collections.get(chosen.unwrap_or(0)).cloned();
+        let first_of_collection = self
             .collection
             .as_ref()
             .and_then(|c| self.trees.iter().find(|(root, _)| *root == c.root))
             .and_then(|(_, tree)| first_request(tree));
+        let restored = self.restore_tabs(&root, window, cx);
+        // A collection opened by name inside a project comes to the front.
+        let first = if self.project.is_some() && chosen.is_some() {
+            first_of_collection.or(restored)
+        } else {
+            restored.or(first_of_collection)
+        };
         match first {
             Some(path) => self.open_path(path, window, cx),
             None => {
@@ -876,7 +881,14 @@ impl Workspace {
         let Some(path) = paths.into_iter().next() else {
             return;
         };
-        if path.is_dir() {
+        let outside_project = self
+            .project
+            .as_ref()
+            .is_some_and(|p| !path.starts_with(&p.root) && !p.root.starts_with(&path));
+        let is_collection = path.join(store::COLLECTION_FILE).is_file() || vfs::is_encrypted(&path);
+        if path.is_dir() && outside_project && is_collection {
+            self.offer_move_into_project(path, window, cx);
+        } else if path.is_dir() {
             self.open_or_create(path, window, cx);
         } else {
             self.import_file(path, window, cx);
@@ -1422,54 +1434,84 @@ impl Workspace {
                 .collect();
             (all, shown)
         });
+        let color_name = self
+            .project
+            .as_ref()
+            .map(|project| project.color_of(&collection.root).map(str::to_owned));
+        let color = color_name
+            .clone()
+            .flatten()
+            .and_then(|name| theme::collection_color(&name));
+        let header = row_base(&collection.root, depth);
+        // Inside a project, collections can be dragged to reorder them.
+        let header = if self.project.is_some() {
+            draggable(
+                header,
+                DraggedNode::new(
+                    &collection.root,
+                    DragKind::Collection,
+                    collection.meta.name.clone(),
+                    p,
+                ),
+            )
+        } else {
+            header
+        };
         out.push(
-            self.drop_target(
-                row_base(&collection.root, depth),
-                collection.root.clone(),
-                cx,
-            )
-            .font_weight(FontWeight::SEMIBOLD)
-            .text_color(if active { p.text } else { p.text_muted })
-            .on_click(cx.listener(move |this, _: &ClickEvent, _, cx| {
-                if !this.collapsed.remove(&toggle) {
-                    this.collapsed.insert(toggle.clone());
-                }
-                cx.notify();
-            }))
-            .child(
-                Icon::new(if collapsed {
-                    bidi::chevron_collapsed()
-                } else {
-                    IconName::ChevronDown
+            self.drop_zones(header, &collection.root, DragKind::Collection, cx)
+                .font_weight(FontWeight::SEMIBOLD)
+                .text_color(if active { p.text } else { p.text_muted })
+                .on_click(cx.listener(move |this, _: &ClickEvent, _, cx| {
+                    if !this.collapsed.remove(&toggle) {
+                        this.collapsed.insert(toggle.clone());
+                    }
+                    cx.notify();
+                }))
+                .child(
+                    Icon::new(if collapsed {
+                        bidi::chevron_collapsed()
+                    } else {
+                        IconName::ChevronDown
+                    })
+                    .xsmall(),
+                )
+                .when_some(color, |row, color| {
+                    row.child(
+                        div()
+                            .w(px(8.))
+                            .h(px(8.))
+                            .flex_none()
+                            .rounded_full()
+                            .bg(color),
+                    )
                 })
-                .xsmall(),
-            )
-            .child(
-                div()
-                    .flex_1()
-                    .min_w_0()
-                    .truncate()
-                    .child(collection.meta.name.clone()),
-            )
-            // Unlocked and encrypted: decrypted only in memory.
-            .when(vfs::is_virtual(&collection.root), |row| {
-                row.child(
-                    Icon::new(gpui_kit::assets::IconName::LockOpen)
-                        .xsmall()
-                        .text_color(p.ok),
+                .child(
+                    div()
+                        .flex_1()
+                        .min_w_0()
+                        .truncate()
+                        .child(collection.meta.name.clone()),
                 )
-            })
-            .context_menu(move |menu: PopupMenu, window, cx| {
-                collection_menu(
-                    menu,
-                    view.clone(),
-                    menu_root.clone(),
-                    pins.clone(),
-                    window,
-                    cx,
-                )
-            })
-            .into_any_element(),
+                // Unlocked and encrypted: decrypted only in memory.
+                .when(vfs::is_virtual(&collection.root), |row| {
+                    row.child(
+                        Icon::new(gpui_kit::assets::IconName::LockOpen)
+                            .xsmall()
+                            .text_color(p.ok),
+                    )
+                })
+                .context_menu(move |menu: PopupMenu, window, cx| {
+                    collection_menu(
+                        menu,
+                        view.clone(),
+                        menu_root.clone(),
+                        pins.clone(),
+                        color_name.clone(),
+                        window,
+                        cx,
+                    )
+                })
+                .into_any_element(),
         );
         if !collapsed
             && let Some((_, tree)) = self.trees.iter().find(|(root, _)| *root == collection.root)
@@ -1711,9 +1753,9 @@ impl Workspace {
         let menu_path = path.to_path_buf();
         let row = draggable(
             row_base(path, depth),
-            DraggedNode::new(path, true, name.to_owned(), p),
+            DraggedNode::new(path, DragKind::Folder, name.to_owned(), p),
         );
-        self.drop_target(row, path.to_path_buf(), cx)
+        self.drop_zones(row, path, DragKind::Folder, cx)
             .text_color(p.text_muted)
             .on_click(cx.listener(move |this, _: &ClickEvent, _, cx| {
                 if !this.collapsed.remove(&toggle_path) {
@@ -1756,10 +1798,9 @@ impl Workspace {
         let menu_path = path.to_path_buf();
         let row = draggable(
             row_base(path, depth),
-            DraggedNode::new(path, false, request.name.clone(), p),
+            DraggedNode::new(path, DragKind::Request, request.name.clone(), p),
         );
-        let folder = path.parent().unwrap_or(path).to_path_buf();
-        self.drop_target(row, folder, cx)
+        self.drop_zones(row, path, DragKind::Request, cx)
             .when(selected, |row| row.bg(p.accent.opacity(0.14)))
             .on_click(cx.listener(move |this, _: &ClickEvent, window, cx| {
                 this.select(open_path.clone(), window, cx)
@@ -1960,6 +2001,7 @@ fn collection_menu(
     view: WeakEntity<Workspace>,
     root: PathBuf,
     pins: Option<(Vec<String>, Vec<bool>)>,
+    color: Option<Option<String>>,
     window: &mut Window,
     cx: &mut Context<PopupMenu>,
 ) -> PopupMenu {
@@ -2027,10 +2069,46 @@ fn collection_menu(
             ));
         }
     }
+    if let Some(current) = color {
+        let (view, root) = (view.clone(), root.clone());
+        menu = menu
+            .separator()
+            .submenu(tr!("sidebar.color"), window, cx, move |menu, _, _| {
+                let pick = |label: SharedString, name: Option<&'static str>| {
+                    let (view, root) = (view.clone(), root.clone());
+                    PopupMenuItem::new(label)
+                        .checked(current.as_deref() == name)
+                        .on_click(move |_, window, cx| {
+                            view.update(cx, |this, cx| {
+                                this.set_collection_color(&root, name, window, cx)
+                            })
+                            .ok();
+                        })
+                };
+                let mut menu = menu.item(pick(tr!("color.none"), None));
+                for name in theme::COLLECTION_COLORS {
+                    menu = menu.item(pick(color_label(name), Some(name)));
+                }
+                menu
+            });
+    }
     menu.separator().item(item(
         tr!("sidebar.move_to_trash"),
         |this, root, window, cx| this.confirm_delete(root, true, window, cx),
     ))
+}
+
+fn color_label(name: &str) -> SharedString {
+    match name {
+        "red" => tr!("color.red"),
+        "orange" => tr!("color.orange"),
+        "yellow" => tr!("color.yellow"),
+        "green" => tr!("color.green"),
+        "teal" => tr!("color.teal"),
+        "blue" => tr!("color.blue"),
+        "purple" => tr!("color.purple"),
+        _ => tr!("color.pink"),
+    }
 }
 
 impl Workspace {
@@ -2072,6 +2150,101 @@ impl Workspace {
                 .detach();
             },
         );
+    }
+
+    /// File › Move into a project…: picks a project folder and moves the open
+    /// collection there, then opens the project on it.
+    pub(super) fn prompt_move_into_project(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let Some(collection) = self.collections.first().map(|c| c.root.clone()) else {
+            return;
+        };
+        if self.project.is_some() {
+            return;
+        }
+        let picked = cx.prompt_for_paths(PathPromptOptions {
+            files: false,
+            directories: true,
+            multiple: false,
+            prompt: Some(tr!("project.move_in")),
+        });
+        cx.spawn_in(window, async move |this, cx| {
+            if let Ok(Ok(Some(paths))) = picked.await
+                && let Some(picked) = paths.into_iter().next()
+            {
+                this.update_in(cx, |this, window, cx| {
+                    let Some(project_root) = Project::find_root(&picked) else {
+                        this.notify_error(
+                            tr!("project.not_a_project", path = picked.display()),
+                            window,
+                            cx,
+                        );
+                        return;
+                    };
+                    let collection = collection.clone();
+                    this.guard_all_tabs(
+                        window,
+                        cx,
+                        Rc::new(move |this, window, cx| {
+                            match project::move_collection_into(&project_root, &collection) {
+                                Ok(moved) => this.open_collection_dir(&moved, window, cx),
+                                Err(e) => this.notify_error(describe(&e), window, cx),
+                            }
+                        }),
+                    );
+                })
+                .ok();
+            }
+        })
+        .detach();
+    }
+
+    /// A collection folder dropped onto an open project: offers to move it in.
+    fn offer_move_into_project(
+        &mut self,
+        collection: PathBuf,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let Some(project) = self.project.as_ref() else {
+            return;
+        };
+        let (project_root, project_name) = (project.root.clone(), project.meta.name.clone());
+        let name = Collection::open(&collection)
+            .map(|c| c.meta.name)
+            .unwrap_or_else(|_| {
+                collection
+                    .file_name()
+                    .map(|n| n.to_string_lossy().into_owned())
+                    .unwrap_or_default()
+            });
+        let view = cx.entity().downgrade();
+        window.open_alert_dialog(cx, move |alert: AlertDialog, _, _| {
+            let (view, project_root, collection) =
+                (view.clone(), project_root.clone(), collection.clone());
+            alert
+                .on_close(refocus(view.clone()))
+                .confirm()
+                .cancel_text(tr!("dialog.cancel"))
+                .text_start()
+                .title(tr!("project.move_in_title"))
+                .description(bidi::para(tr!(
+                    "project.move_in_detail",
+                    collection = name,
+                    project = project_name,
+                    path = collection.display()
+                )))
+                .ok_text(tr!("project.move_in"))
+                .on_ok(move |_, window, cx| {
+                    view.update(cx, |this, cx| {
+                        match project::move_collection_into(&project_root, &collection) {
+                            Ok(_) => this.reload(window, cx),
+                            Err(e) => this.notify_error(describe(&e), window, cx),
+                        }
+                    })
+                    .ok();
+                    true
+                })
+        });
     }
 
     /// In a project, adds a collection to it; otherwise asks where to create one.
@@ -2191,6 +2364,30 @@ impl Workspace {
             self.notify_error(describe(&e), window, cx);
         }
         cx.notify();
+    }
+
+    fn set_collection_color(
+        &mut self,
+        root: &Path,
+        color: Option<&str>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let Some(project) = &mut self.project else {
+            return;
+        };
+        project.set_color(root, color);
+        if let Err(e) = project.save() {
+            self.notify_error(describe(&e), window, cx);
+        }
+        cx.notify();
+    }
+
+    /// The colour of the project collection that holds `path`, if it has one.
+    pub(super) fn collection_color(&self, path: &Path) -> Option<Hsla> {
+        let project = self.project.as_ref()?;
+        let collection = self.collection_for(path)?;
+        theme::collection_color(project.color_of(&collection.root)?)
     }
 }
 

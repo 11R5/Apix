@@ -90,7 +90,10 @@ pub fn export_collection(root: &Path, project: Option<&Project>) -> Result<Expor
 
     let mut out = Map::new();
     out.insert("info".into(), Value::Object(info));
-    out.insert("item".into(), json!(ex.items(&collection.tree())?));
+    out.insert(
+        "item".into(),
+        json!(ex.items(&collection.tree(), &collection.root)?),
+    );
     if let Some(auth) = auth_json(&auth) {
         out.insert("auth".into(), auth);
     }
@@ -395,11 +398,17 @@ impl Exporter {
         (!ppb.is_empty()).then_some(Value::Object(ppb))
     }
 
-    fn items(&mut self, nodes: &[TreeNode]) -> Result<Vec<Value>, ImportError> {
-        // `health.apix` before `health-2.apix`: the order the names were
-        // handed out in, so importing the export names them the same way.
+    /// The Postman items for `nodes`, the children of `dir`.
+    fn items(&mut self, nodes: &[TreeNode], dir: &Path) -> Result<Vec<Value>, ImportError> {
         let mut nodes: Vec<&TreeNode> = nodes.iter().collect();
+        // A saved order is the sidebar's, so Postman gets it as it is.
+        // Otherwise `health.apix` before `health-2.apix`: the order the names
+        // were handed out in, so importing the export names them the same way.
+        let manual = !store::order_of(dir).is_empty();
         nodes.sort_by_key(|node| {
+            if manual {
+                return (0, String::new(), 0);
+            }
             let (folder, path) = match node {
                 TreeNode::Folder { path, .. } => (0, path),
                 TreeNode::Request { path } => (1, path),
@@ -427,7 +436,7 @@ impl Exporter {
                     let meta = store::load_folder_meta(path)?;
                     let mut folder = Map::new();
                     folder.insert("name".into(), json!(name));
-                    folder.insert("item".into(), json!(self.items(children)?));
+                    folder.insert("item".into(), json!(self.items(children, path)?));
                     if let Some(auth) = auth_json(&meta.auth) {
                         folder.insert("auth".into(), auth);
                     }

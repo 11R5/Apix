@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:5a3f287f141f11b5 -->
+<!-- translated from en/architecture.md sha256:7ceaf788ab3328ef -->
 
 # Apix mimarisi
 
@@ -203,8 +203,15 @@ Açık sorular:
   `apix_core::dynamic` tarafından doldurulur; her geçişte yeni bir değer üretilir
   (`$guid`, `$timestamp`, `$isoTimestamp`, `$randomEmail`, …). Ek crate yok:
   küçük bir xorshift üreteci ve elle yazılmış bir UTC tarih biçimlendiricisi.
-- **Kenar çubuğunda sıralama.** Klasörler ve dosyalar şimdilik ada göre sıralanır.
-  İleride isteğe bağlı bir `order` alanı eklenebilir.
+- **Kenar çubuğunda sıralama.** Kaydedilmiş bir şey yoksa önce klasörler, sonra
+  istekler gelir; her biri ada göre. Sürüklemek, klasörün `folder.toml`
+  dosyasına (ya da koleksiyonun `apix.toml` dosyasına) alt öğe adlarından oluşan
+  bir `order` listesi kaydeder; `store::place` bir öğeyi diğerinin önüne ya da
+  arkasına koyar, yeniden adlandırma ve taşıma listeyi günceller. Listenin
+  bilmediği adlar varsayılan sırayla arkadan gelir, böylece yeni bir dosya hiç
+  kaybolmaz. Projedeki koleksiyonlar `apix-project.toml` içindeki `order`
+  alanını kullanır (`Project::place_collection`). Postman içe aktarıcısı
+  `order` alanını yalnızca Postman'ın sırası varsayılandan farklıysa yazar.
 
 ### Projeler
 
@@ -212,11 +219,16 @@ Bir proje koleksiyonları gruplar ve hepsinin paylaştığı ortamlara sahiptir:
 
 ```
 shop/
-├── apix-project.toml       ad, paylaşılan [vars], koleksiyon sırası, group_by, pins
+├── apix-project.toml       ad, paylaşılan [vars], koleksiyon sırası, group_by, pins, colors
 ├── environments/           test.toml, prod.toml (+ *.local.toml gizli değerleri)
 ├── users/                  bir koleksiyon (apix.toml + .apix dosyaları)
 └── payments/               bir koleksiyon; bazı ortamlara sabitlenebilir
 ```
+
+`[colors]` bir koleksiyon klasörünü bir renk adıyla eşler (`red`, `orange`,
+`yellow`, `green`, `teal`, `blue`, `purple`, `pink`); uygulama bunu kenar
+çubuğunda ve sekmelerde nokta olarak çizer. `project::move_collection_into` bir
+koleksiyon klasörünü projeye taşır (farklı sürücüde kopyalayıp siler).
 
 Değişken katmanları, sonraki kazanır: proje değişkenleri → koleksiyon değişkenleri
 → projenin ortamı → koleksiyonun aynı adlı ortamı (her biri kendi `.local.toml`

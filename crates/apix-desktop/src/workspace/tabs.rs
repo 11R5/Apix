@@ -15,6 +15,7 @@ use gpui_kit::*;
 use super::{Finished, ResponseState, Workspace};
 use crate::bidi::{self, Bidi as _};
 use crate::large_view::Document;
+use crate::state::OpenTabs;
 use crate::theme;
 
 /// One open request.
@@ -43,6 +44,57 @@ impl Tab {
 }
 
 impl Workspace {
+    /// Writes the open tabs to the app state when they changed. Tabs of
+    /// encrypted collections are left out: their file names are secret too.
+    pub(super) fn remember_tabs(&mut self) {
+        let Some(root) = self.workspace_root() else {
+            return;
+        };
+        // A request of an encrypted collection is open only while it is unlocked.
+        let plain = |p: &&PathBuf| !apix_core::vfs::is_virtual(p);
+        let open = OpenTabs {
+            paths: self
+                .tabs
+                .iter()
+                .map(|t| &t.path)
+                .filter(plain)
+                .cloned()
+                .collect(),
+            front: self.selected.as_ref().filter(plain).cloned(),
+        };
+        let current = (root, open);
+        if self.remembered_tabs.as_ref() != Some(&current) {
+            self.app_state.set_tabs(&current.0, current.1.clone());
+            self.remembered_tabs = Some(current);
+        }
+    }
+
+    /// Reopens the tabs remembered for `root`. Returns the one put in front,
+    /// or `None` when there was nothing left to reopen.
+    pub(super) fn restore_tabs(
+        &mut self,
+        root: &Path,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> Option<PathBuf> {
+        let saved = self.app_state.tabs_for(root)?.clone();
+        // The loaded request's own path: `Path` equality ignores a trailing
+        // separator, but the file system does not.
+        let paths: Vec<PathBuf> = saved
+            .paths
+            .iter()
+            .filter_map(|p| self.requests.get_key_value(p).map(|(k, _)| k.clone()))
+            .collect();
+        let front = saved
+            .front
+            .and_then(|f| paths.iter().find(|p| **p == f).cloned())
+            .or_else(|| paths.last().cloned())?;
+        for path in paths {
+            self.open_tab(path, window, cx);
+        }
+        Some(front)
+    }
+
     fn tab_index(&self, path: &Path) -> Option<usize> {
         self.tabs.iter().position(|t| t.path == path)
     }
@@ -205,7 +257,16 @@ impl Workspace {
 
     /// After a rename or move on disk: tabs under `old` follow to `new`.
     pub(super) fn retarget_tabs(&mut self, old: &Path, new: &Path) {
-        let follow = |p: &Path| p.strip_prefix(old).ok().map(|rest| new.join(rest));
+        // `join("")` would add a trailing separator to the moved file itself.
+        let follow = |p: &Path| {
+            p.strip_prefix(old).ok().map(|rest| {
+                if rest.as_os_str().is_empty() {
+                    new.to_path_buf()
+                } else {
+                    new.join(rest)
+                }
+            })
+        };
         for tab in &mut self.tabs {
             if let Some(moved) = follow(&tab.path) {
                 tab.path = moved;
@@ -343,6 +404,7 @@ impl Workspace {
                 name
             };
             let dirty = self.tab_dirty(tab, cx);
+            let color = self.collection_color(&tab.path);
             let (open, close, middle) = (tab.path.clone(), tab.path.clone(), tab.path.clone());
             h_flex()
                 .id(("tab", ix))
@@ -372,6 +434,17 @@ impl Workspace {
                         this.close_tab(middle.clone(), window, cx)
                     }),
                 )
+                // The colour of the request's collection, in a project.
+                .when_some(color, |t, color| {
+                    t.child(
+                        div()
+                            .w(px(6.))
+                            .h(px(6.))
+                            .flex_none()
+                            .rounded_full()
+                            .bg(color),
+                    )
+                })
                 .child(
                     div()
                         .text_xs()

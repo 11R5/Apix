@@ -169,6 +169,15 @@ collection.start_here_text: "%{path} has no apix.toml yet. Apix will create one;
 collection.start_here_title: Start a new collection here?
 collection.unsaved_text: Save your changes to “%{name}” first?
 collection.unsaved_title: Unsaved changes
+color.blue: Blue
+color.green: Green
+color.none: None
+color.orange: Orange
+color.pink: Pink
+color.purple: Purple
+color.red: Red
+color.teal: Teal
+color.yellow: Yellow
 cookies.clear_all: Remove all
 cookies.empty: No cookies yet. Set-Cookie answers land here automatically.
 cookies.expired: expired
@@ -267,6 +276,7 @@ menu.history: History…
 menu.import_postman: Import (Postman, Insomnia, OpenAPI, HAR)…
 menu.lock_collections: Lock encrypted collections
 menu.method: Method
+menu.move_into_project: Move into a project…
 menu.new_collection: New collection…
 menu.new_encrypted_collection: New encrypted collection…
 menu.new_folder: New folder…
@@ -341,6 +351,13 @@ palette.open_recent: "Open recent: %{name}"
 palette.placeholder: Search requests and commands…
 palette.save_request: Save request
 palette.send_request: Send request
+prod.confirm_detail: "The environment “%{environment}” looks like production. Send %{method} %{url} anyway?"
+prod.confirm_send: "Send %{method}"
+prod.confirm_title: "%{method} in production?"
+project.move_in: Move into project
+project.move_in_detail: "“%{collection}” (%{path}) moves into the folder of the project “%{project}” and appears in its sidebar."
+project.move_in_title: Move the collection into the project?
+project.not_a_project: "%{path} is not inside an Apix project (no apix-project.toml)."
 reqset.client_cert: Client certificate
 reqset.client_key: Certificate key
 reqset.dialog.collection_title: Request settings for “%{name}”
@@ -406,6 +423,8 @@ settings.auto_lock_description: After this much idle time, encrypted collections
 settings.auto_lock_hour: After 1 hour
 settings.auto_lock_minutes: After %{count} minutes
 settings.auto_lock_never: Never
+settings.confirm_prod: Confirm in production
+settings.confirm_prod_description: Ask before sending DELETE, PUT or PATCH while an environment whose name contains “prod” is active.
 settings.history: History
 settings.history_description: Keep every sent request with its response on this computer (Ctrl+H).
 settings.language: Language
@@ -422,6 +441,7 @@ settings.theme_restart: Applies the next time Apix starts.
 settings.title: Settings
 sidebar.auth: Auth…
 sidebar.change_password: Change password…
+sidebar.color: Colour
 sidebar.copy_as_code: Copy as code
 sidebar.copy_as_shell: Copy as %{shell}
 sidebar.drop_hint: Or drop an export (Postman, Insomnia, OpenAPI, HAR) or a folder onto the window.

@@ -191,6 +191,26 @@ pub fn json_token_color(p: &Palette, token: JsonToken) -> Hsla {
     }
 }
 
+/// Colours a collection can be given in a project, by the name saved in
+/// `apix-project.toml`.
+pub const COLLECTION_COLORS: [&str; 8] = [
+    "red", "orange", "yellow", "green", "teal", "blue", "purple", "pink",
+];
+
+pub fn collection_color(name: &str) -> Option<Hsla> {
+    Some(match name {
+        "red" => hex(0xF87171, 1.0),
+        "orange" => hex(0xFB923C, 1.0),
+        "yellow" => hex(0xFACC15, 1.0),
+        "green" => hex(0x4ADE80, 1.0),
+        "teal" => hex(0x2DD4BF, 1.0),
+        "blue" => hex(0x60A5FA, 1.0),
+        "purple" => hex(0xA78BFA, 1.0),
+        "pink" => hex(0xF472B6, 1.0),
+        _ => return None,
+    })
+}
+
 pub fn method_color(method: Method) -> Hsla {
     match method {
         Method::Get => hex(0x34D399, 1.0),

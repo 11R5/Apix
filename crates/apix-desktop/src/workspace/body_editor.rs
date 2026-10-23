@@ -11,6 +11,7 @@ use gpui_kit::component::{IconName, Sizable, h_flex, v_flex};
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
+use super::var_chips::chipped_input;
 use super::{KvRow, Workspace};
 use crate::bidi::{self, Bidi as _};
 use crate::theme::Palette;
@@ -108,30 +109,27 @@ struct PartRow {
     /// Kept from the file; not editable yet.
     content_type: Option<String>,
     enabled: bool,
+    _chips: [Subscription; 3],
 }
 
 impl PartRow {
     fn new(part: &FormPart, window: &mut Window, cx: &mut App) -> Self {
-        let input = |placeholder: SharedString, value: &str, window: &mut Window, cx: &mut App| {
-            let value = value.to_owned();
-            cx.new(|cx| {
-                InputState::new(window, cx)
-                    .placeholder(placeholder)
-                    .default_value(value)
-            })
-        };
         let (text, path) = if part.file {
             ("", part.value.as_str())
         } else {
             (part.value.as_str(), "")
         };
+        let (key, key_chips) = chipped_input(&part.key, tr!("table.key"), window, cx);
+        let (text, text_chips) = chipped_input(text, tr!("table.value"), window, cx);
+        let (path, path_chips) = chipped_input(path, tr!("body.file_path"), window, cx);
         Self {
-            key: input(tr!("table.key"), &part.key, window, cx),
-            text: input(tr!("table.value"), text, window, cx),
-            path: input(tr!("body.file_path"), path, window, cx),
+            key,
+            text,
+            path,
             file: part.file,
             content_type: part.content_type.clone(),
             enabled: part.enabled,
+            _chips: [key_chips, text_chips, path_chips],
         }
     }
 
@@ -372,6 +370,17 @@ impl BodyEditor {
         )
     }
 
+    /// A form or multipart field, with `{{variable}}` chips like the URL bar.
+    fn field(&self, state: &Entity<InputState>, cx: &App) -> AnyElement {
+        match self.workspace.upgrade() {
+            Some(workspace) => workspace
+                .read(cx)
+                .chip_input(state, self.workspace.clone(), cx)
+                .into_any_element(),
+            None => Input::new(state).small().into_any_element(),
+        }
+    }
+
     fn hint(&self, text: impl Into<SharedString>) -> Div {
         div()
             .pt_2()
@@ -395,13 +404,8 @@ impl BodyEditor {
                             cx.notify();
                         })),
                 )
-                .child(div().flex_1().min_w_0().child(Input::new(&row.key).small()))
-                .child(
-                    div()
-                        .flex_1()
-                        .min_w_0()
-                        .child(Input::new(&row.value).small()),
-                )
+                .child(div().flex_1().min_w_0().child(self.field(&row.key, cx)))
+                .child(div().flex_1().min_w_0().child(self.field(&row.value, cx)))
                 .child(remove_button(("form-del", ix), cx, move |this| {
                     if ix < this.form.len() {
                         this.form.remove(ix);
@@ -432,12 +436,7 @@ impl BodyEditor {
                     .flex_1()
                     .min_w_0()
                     .gap_1()
-                    .child(
-                        div()
-                            .flex_1()
-                            .min_w_0()
-                            .child(Input::new(&row.path).small()),
-                    )
+                    .child(div().flex_1().min_w_0().child(self.field(&row.path, cx)))
                     .child(
                         Button::new(("part-pick", ix))
                             .ghost()
@@ -453,7 +452,7 @@ impl BodyEditor {
                 div()
                     .flex_1()
                     .min_w_0()
-                    .child(Input::new(&row.text).small())
+                    .child(self.field(&row.text, cx))
                     .into_any_element()
             };
             h_flex()
@@ -469,7 +468,7 @@ impl BodyEditor {
                             cx.notify();
                         })),
                 )
-                .child(div().flex_1().min_w_0().child(Input::new(&row.key).small()))
+                .child(div().flex_1().min_w_0().child(self.field(&row.key, cx)))
                 .child(
                     Button::new(("part-type", ix))
                         .ghost()

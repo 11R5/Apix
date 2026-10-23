@@ -55,8 +55,8 @@ enum Command {
         #[command(flatten)]
         vars: VarArgs,
     },
-    /// Print a request as a shell command (curl, curl.exe, PowerShell) or as
-    /// code (fetch, axios, Python, Go, Rust, C#, Java, PHP, Swift, Kotlin)
+    /// Print a request as a shell command (curl for bash or fish, curl.exe,
+    /// PowerShell, HTTPie, wget) or as code (fetch, axios, Python, Go, Rust, C#, Java, PHP, Swift, Kotlin)
     #[command(visible_alias = "code")]
     Shell {
         file: PathBuf,
@@ -156,6 +156,9 @@ enum FormatArg {
     Bash,
     Cmd,
     Powershell,
+    Fish,
+    Httpie,
+    Wget,
     Fetch,
     Axios,
     Python,
@@ -175,6 +178,9 @@ impl From<FormatArg> for apix_codegen::Format {
             FormatArg::Bash => Format::Shell(Shell::Bash),
             FormatArg::Cmd => Format::Shell(Shell::Cmd),
             FormatArg::Powershell => Format::Shell(Shell::PowerShell),
+            FormatArg::Fish => Format::Shell(Shell::Fish),
+            FormatArg::Httpie => Format::Shell(Shell::Httpie),
+            FormatArg::Wget => Format::Shell(Shell::Wget),
             FormatArg::Fetch => Format::Code(Lang::Fetch),
             FormatArg::Axios => Format::Code(Lang::Axios),
             FormatArg::Python => Format::Code(Lang::Python),

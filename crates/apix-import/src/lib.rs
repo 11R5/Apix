@@ -290,6 +290,19 @@ fn request_file(stem: &str) -> String {
     format!("{stem}.{REQUEST_EXTENSION}")
 }
 
+/// The `order` to save for children written in this order (names, each with
+/// whether it is a folder): empty when Apix would show them so anyway
+/// (folders first, then requests, each by name), so no file is needed.
+fn manual_order(written: Vec<(String, bool)>) -> Vec<String> {
+    let mut default = written.clone();
+    default.sort_by_key(|(name, folder)| (!*folder, name.to_lowercase()));
+    if default == written {
+        Vec::new()
+    } else {
+        written.into_iter().map(|(name, _)| name).collect()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

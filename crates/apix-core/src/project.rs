@@ -2,7 +2,7 @@
 //!
 //! ```text
 //! shop/
-//! ├── apix-project.toml   name, collection order, sidebar grouping, pins
+//! ├── apix-project.toml   name, collection order and colours, sidebar grouping, pins
 //! ├── environments/       test.toml, prod.toml (+ *.local.toml secrets)
 //! ├── users/              a collection (apix.toml + .apix files)
 //! └── payments/           a collection
@@ -55,6 +55,10 @@ pub struct ProjectMeta {
     /// A collection without an entry is shown in every environment.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub pins: BTreeMap<String, Vec<String>>,
+    /// A colour name per collection folder (`red`, `blue`, …), to tell
+    /// collections apart in the sidebar and in tabs.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub colors: BTreeMap<String, String>,
     /// Auth for every request in the project that does not set its own.
     #[serde(default, skip_serializing_if = "Auth::is_inherit")]
     pub auth: Auth,
@@ -137,6 +141,33 @@ impl Project {
         (collections, errors)
     }
 
+    /// Puts the collection at `item` just before `anchor`, or after it, and
+    /// saves that order.
+    pub fn place_collection(
+        &mut self,
+        item: &Path,
+        anchor: &Path,
+        after: bool,
+    ) -> Result<(), StoreError> {
+        let (item, anchor) = (self.key(item), self.key(anchor));
+        if item == anchor {
+            return Ok(());
+        }
+        let mut keys: Vec<String> = self
+            .collections()
+            .0
+            .iter()
+            .map(|c| self.key(&c.root))
+            .filter(|k| *k != item)
+            .collect();
+        let Some(at) = keys.iter().position(|k| *k == anchor) else {
+            return Ok(());
+        };
+        keys.insert(if after { at + 1 } else { at }, item);
+        self.meta.order = keys;
+        self.save()
+    }
+
     /// How a collection folder is named in `order` and `pins`.
     pub fn key(&self, collection_root: &Path) -> String {
         collection_root
@@ -186,6 +217,23 @@ impl Project {
             self.meta.pins.insert(key, envs);
         }
     }
+
+    /// The colour name given to a collection, if any.
+    pub fn color_of(&self, collection_root: &Path) -> Option<&str> {
+        self.meta
+            .colors
+            .get(&self.key(collection_root))
+            .map(String::as_str)
+    }
+
+    /// Gives a collection a colour name, or takes it away.
+    pub fn set_color(&mut self, collection_root: &Path, color: Option<&str>) {
+        let key = self.key(collection_root);
+        match color {
+            Some(color) => self.meta.colors.insert(key, color.to_owned()),
+            None => self.meta.colors.remove(&key),
+        };
+    }
 }
 
 /// Creates `parent/<slug of name>/` with `apix-project.toml` and empty
@@ -223,6 +271,61 @@ pub fn create_collection(parent: &Path, name: &str) -> Result<PathBuf, StoreErro
         },
     )?;
     Ok(root)
+}
+
+/// Moves the collection folder at `collection` into the project at `project`
+/// (keeping its folder name unless that is taken there). Returns where it went.
+/// Works across drives by copying and then removing the original.
+pub fn move_collection_into(project: &Path, collection: &Path) -> Result<PathBuf, StoreError> {
+    let refuse = |why: &str| StoreError::Io {
+        path: collection.to_owned(),
+        source: std::io::Error::new(std::io::ErrorKind::InvalidInput, why.to_owned()),
+    };
+    if !vfs::is_file(&project.join(PROJECT_FILE)) {
+        return Err(refuse("not a project folder"));
+    }
+    if !collection.join(COLLECTION_FILE).is_file() && !vfs::is_encrypted(collection) {
+        return Err(refuse("not a collection folder"));
+    }
+    if collection.parent() == Some(project) {
+        return Ok(collection.to_owned());
+    }
+    if project.starts_with(collection) || collection.starts_with(project) {
+        return Err(refuse(
+            "the collection is already inside the project, or holds it",
+        ));
+    }
+    let name = collection
+        .file_name()
+        .map(|n| n.to_string_lossy().into_owned())
+        .unwrap_or_else(|| "collection".into());
+    let target = unique_path(project, &name, "");
+    if std::fs::rename(collection, &target).is_err() {
+        // Another drive: copy, and remove the original only once the copy is whole.
+        if let Err(e) = copy_tree(collection, &target) {
+            let _ = std::fs::remove_dir_all(&target);
+            return Err(StoreError::Io {
+                path: collection.to_owned(),
+                source: e,
+            });
+        }
+        std::fs::remove_dir_all(collection).map_err(io_error(collection))?;
+    }
+    Ok(target)
+}
+
+fn copy_tree(from: &Path, to: &Path) -> std::io::Result<()> {
+    std::fs::create_dir_all(to)?;
+    for entry in std::fs::read_dir(from)? {
+        let entry = entry?;
+        let target = to.join(entry.file_name());
+        if entry.file_type()?.is_dir() {
+            copy_tree(&entry.path(), &target)?;
+        } else {
+            std::fs::copy(entry.path(), &target)?;
+        }
+    }
+    Ok(())
 }
 
 /// What a request in `dir` gets when its auth is [`Auth::Inherit`]: the auth
@@ -405,8 +508,18 @@ mod tests {
 
         project.meta.order = vec!["users".into()];
         project.save().unwrap();
-        let project = Project::open(&root).unwrap();
+        let mut project = Project::open(&root).unwrap();
         assert_eq!(names(&project), ["Users", "Orders"]);
+        project.set_color(&users, Some("blue"));
+        assert_eq!(project.color_of(&users), Some("blue"));
+        assert_eq!(project.meta.colors["users"], "blue");
+        project.set_color(&users, None);
+        assert!(project.meta.colors.is_empty());
+        // Dragging Users after Orders.
+        project.place_collection(&users, &orders, true).unwrap();
+        let project = Project::open(&root).unwrap();
+        assert_eq!(names(&project), ["Orders", "Users"]);
+        assert_eq!(project.meta.order, ["orders", "users"]);
         assert_eq!(
             project.environment_names(&project.collections().0),
             ["prod", "test"]
@@ -416,6 +529,22 @@ mod tests {
             Some(root.as_path())
         );
         assert!(orders.join(COLLECTION_FILE).is_file());
+
+        // A collection from elsewhere moves in; a second one with the same
+        // folder name gets its own.
+        let outside = temp("outside");
+        let stray = create_collection(&outside, "Users").unwrap();
+        fs::write(stray.join("ping.apix"), "url = \"x\"\n").unwrap();
+        let moved = move_collection_into(&root, &stray).unwrap();
+        assert_eq!(moved, root.join("users-2"));
+        assert!(moved.join("ping.apix").is_file() && !stray.exists());
+        assert_eq!(Project::open(&root).unwrap().collections().0.len(), 3);
+        assert!(move_collection_into(&root, &users).is_ok(), "already there");
+        assert!(
+            move_collection_into(&outside, &users).is_err(),
+            "not a project"
+        );
+        fs::remove_dir_all(outside).unwrap();
         fs::remove_dir_all(parent).unwrap();
     }
 

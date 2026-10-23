@@ -167,6 +167,15 @@ collection.start_here_text: "لا يحتوي %{path} على apix.toml بعد. س
 collection.start_here_title: بدء مجموعة جديدة هنا؟
 collection.unsaved_text: حفظ تغييراتك على «%{name}» أولًا؟
 collection.unsaved_title: تغييرات غير محفوظة
+color.blue: أزرق
+color.green: أخضر
+color.none: بلا لون
+color.orange: برتقالي
+color.pink: وردي
+color.purple: بنفسجي
+color.red: أحمر
+color.teal: أزرق مخضر
+color.yellow: أصفر
 cookies.clear_all: حذف الكل
 cookies.empty: لا توجد ملفات تعريف ارتباط بعد. تصل ردود Set-Cookie إلى هنا تلقائيًا.
 cookies.expired: منتهية
@@ -265,6 +274,7 @@ menu.history: السجل…
 menu.import_postman: استيراد (Postman وInsomnia وOpenAPI وHAR)…
 menu.lock_collections: قفل المجموعات المشفّرة
 menu.method: الطريقة
+menu.move_into_project: نقل إلى مشروع…
 menu.new_collection: مجموعة جديدة…
 menu.new_encrypted_collection: مجموعة مشفّرة جديدة…
 menu.new_folder: مجلد جديد…
@@ -339,6 +349,13 @@ palette.open_recent: "فتح الأخيرة: %{name}"
 palette.placeholder: البحث في الطلبات والأوامر…
 palette.save_request: حفظ الطلب
 palette.send_request: إرسال الطلب
+prod.confirm_detail: "تبدو البيئة «%{environment}» بيئة إنتاج. هل تريد إرسال %{method} %{url} على أي حال؟"
+prod.confirm_send: "إرسال %{method}"
+prod.confirm_title: "%{method} في بيئة الإنتاج؟"
+project.move_in: نقل إلى المشروع
+project.move_in_detail: "تُنقل «%{collection}» (%{path}) إلى مجلد المشروع «%{project}» وتظهر في شريطه الجانبي."
+project.move_in_title: نقل المجموعة إلى المشروع؟
+project.not_a_project: "%{path} ليس داخل مشروع Apix (لا يوجد apix-project.toml)."
 reqset.client_cert: شهادة العميل
 reqset.client_key: مفتاح الشهادة
 reqset.dialog.collection_title: إعدادات طلبات «%{name}»
@@ -404,6 +421,8 @@ settings.auto_lock_description: بعد هذه المدة من الخمول، ت�
 settings.auto_lock_hour: بعد ساعة واحدة
 settings.auto_lock_minutes: بعد %{count} دقيقة
 settings.auto_lock_never: أبدًا
+settings.confirm_prod: التأكيد في بيئة الإنتاج
+settings.confirm_prod_description: السؤال قبل إرسال DELETE أو PUT أو PATCH عندما تكون بيئة يحتوي اسمها على «prod» نشطة.
 settings.history: السجل
 settings.history_description: احفظ كل طلب مُرسل مع استجابته على هذا الحاسوب (Ctrl+H).
 settings.language: اللغة
@@ -420,6 +439,7 @@ settings.theme_restart: يُطبَّق عند تشغيل Apix في المرة ا
 settings.title: الإعدادات
 sidebar.auth: المصادقة…
 sidebar.change_password: تغيير كلمة المرور…
+sidebar.color: اللون
 sidebar.copy_as_code: نسخ كشيفرة برمجية
 sidebar.copy_as_shell: نسخ كـ %{shell}
 sidebar.drop_hint: أو أفلت تصديرًا (Postman وInsomnia وOpenAPI وHAR) أو مجلدًا على النافذة.

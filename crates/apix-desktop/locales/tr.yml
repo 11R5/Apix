@@ -167,6 +167,15 @@ collection.start_here_text: "%{path} içinde henüz apix.toml yok. Apix bir tane
 collection.start_here_title: Burada yeni bir koleksiyon başlatılsın mı?
 collection.unsaved_text: Önce “%{name}” üzerindeki değişiklikler kaydedilsin mi?
 collection.unsaved_title: Kaydedilmemiş değişiklikler
+color.blue: Mavi
+color.green: Yeşil
+color.none: Yok
+color.orange: Turuncu
+color.pink: Pembe
+color.purple: Mor
+color.red: Kırmızı
+color.teal: Turkuaz
+color.yellow: Sarı
 cookies.clear_all: Tümünü sil
 cookies.empty: Henüz çerez yok. Set-Cookie yanıtları buraya kendiliğinden eklenir.
 cookies.expired: süresi doldu
@@ -265,6 +274,7 @@ menu.history: Geçmiş…
 menu.import_postman: İçe aktar (Postman, Insomnia, OpenAPI, HAR)…
 menu.lock_collections: Şifreli koleksiyonları kilitle
 menu.method: Metot
+menu.move_into_project: Bir projeye taşı…
 menu.new_collection: Yeni koleksiyon…
 menu.new_encrypted_collection: Yeni şifreli koleksiyon…
 menu.new_folder: Yeni klasör…
@@ -339,6 +349,13 @@ palette.open_recent: "Son açılanı aç: %{name}"
 palette.placeholder: İstek ve komut ara…
 palette.save_request: İsteği kaydet
 palette.send_request: İsteği gönder
+prod.confirm_detail: "“%{environment}” ortamı üretim ortamına benziyor. %{method} %{url} yine de gönderilsin mi?"
+prod.confirm_send: "%{method} gönder"
+prod.confirm_title: "Üretimde %{method}?"
+project.move_in: Projeye taşı
+project.move_in_detail: "“%{collection}” (%{path}), “%{project}” projesinin klasörüne taşınır ve kenar çubuğunda görünür."
+project.move_in_title: Koleksiyon projeye taşınsın mı?
+project.not_a_project: "%{path} bir Apix projesinin içinde değil (apix-project.toml yok)."
 reqset.client_cert: İstemci sertifikası
 reqset.client_key: Sertifika anahtarı
 reqset.dialog.collection_title: "“%{name}” istek ayarları"
@@ -404,6 +421,8 @@ settings.auto_lock_description: Bu kadar süre boşta kalındığında şifreli 
 settings.auto_lock_hour: 1 saat sonra
 settings.auto_lock_minutes: "%{count} dakika sonra"
 settings.auto_lock_never: Hiçbir zaman
+settings.confirm_prod: Üretimde onay iste
+settings.confirm_prod_description: Adında “prod” geçen bir ortam seçiliyken DELETE, PUT veya PATCH göndermeden önce sor.
 settings.history: Geçmiş
 settings.history_description: Gönderilen her isteği yanıtıyla birlikte bu bilgisayarda sakla (Ctrl+H).
 settings.language: Dil
@@ -420,6 +439,7 @@ settings.theme_restart: Apix'in bir sonraki açılışında uygulanır.
 settings.title: Ayarlar
 sidebar.auth: Yetkilendirme…
 sidebar.change_password: Parolayı değiştir…
+sidebar.color: Renk
 sidebar.copy_as_code: Kod olarak kopyala
 sidebar.copy_as_shell: "%{shell} olarak kopyala"
 sidebar.drop_hint: Ya da bir dışa aktarımı (Postman, Insomnia, OpenAPI, HAR) veya bir klasörü pencereye bırakın.

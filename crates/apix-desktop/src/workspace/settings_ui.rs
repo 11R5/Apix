@@ -53,6 +53,7 @@ pub(super) struct SettingsView {
     auto_lock: Entity<Picker>,
     history: Entity<Picker>,
     secrets: Entity<Picker>,
+    prod: Entity<Picker>,
     /// The theme the app started with; a change shows "after restart".
     started_theme: Variant,
     _subscriptions: Vec<Subscription>,
@@ -112,7 +113,21 @@ impl SettingsView {
             )
         });
 
+        let prod_ix = if settings.confirm_prod { 0 } else { 1 };
+        let prod = cx.new(|cx| {
+            SelectState::new(history_choices(), Some(IndexPath::new(prod_ix)), window, cx)
+        });
+
         let subscriptions = vec![
+            cx.subscribe_in(
+                &prod,
+                window,
+                |this, state, _: &SelectEvent<Vec<SharedString>>, _, cx| {
+                    if let Some(ix) = state.read(cx).selected_index(cx) {
+                        this.change(|s| s.confirm_prod = ix.row == 0, cx);
+                    }
+                },
+            ),
             cx.subscribe_in(
                 &secrets,
                 window,
@@ -184,6 +199,7 @@ impl SettingsView {
             auto_lock,
             history,
             secrets,
+            prod,
             started_theme,
             _subscriptions: subscriptions,
         }
@@ -215,6 +231,9 @@ impl SettingsView {
         });
         self.secrets.update(cx, |state, cx| {
             state.set_items(secrets_choices(), window, cx)
+        });
+        self.prod.update(cx, |state, cx| {
+            state.set_items(history_choices(), window, cx)
         });
         cx.notify();
     }
@@ -289,6 +308,12 @@ impl Render for SettingsView {
                 tr!("settings.secrets"),
                 tr!("settings.secrets_description"),
                 Select::new(&self.secrets).small(),
+            ))
+            .child(div().h_px().bg(p.hairline))
+            .child(self.row(
+                tr!("settings.confirm_prod"),
+                tr!("settings.confirm_prod_description"),
+                Select::new(&self.prod).small(),
             ))
             .child(div().h_px().bg(p.hairline))
             .child(self.row(

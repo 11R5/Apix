@@ -13,8 +13,8 @@
 | M0 Temel | ✅ |
 | M1 Arayüzden istek | ✅ 100 MB JSON ~0.33 s'de açılıyor |
 | M2 Koleksiyonlar, Postman içe aktarma | ✅ (sekmeler ve sürükle-bırak M3'te tamamlandı) |
-| M3 Simge, projeler, ortamlar, kopyalama, auth | ✅ 9/9 · bitti: simge, ortam seçici ve editörü, dinamik değişkenler, projeler, kabuk komutu olarak kopyalama, metotla yeni istek, değişken çipleri, Auth sekmesi ve miras, komut paleti, sekmeler, sürükle-bırak ile taşıma · küçük kalanlar M3 bölümünün sonunda |
-| M4 Günlük kullanım | 🔜 · bitti: menü çubuğu, şifreli koleksiyonlar (motor, uygulama, CLI), ağ denetçisi (Network sekmesi), multipart/binary/GraphQL gövdeleri, auth tipleri (Digest, OAuth 1.0, OAuth 2.0, AWS SigV4), ayarlar ekranı ve 9 dilli arayüz, Arapça için sağdan sola düzen, dokümantasyon yapısı (İngilizce, Türkçe), README karşılaştırması ve performans ölçümü, istek ayarları (zaman aşımı, yönlendirmeler, TLS doğrulama, proxy, istemci sertifikaları; klasör/koleksiyon/proje kalıtımıyla) ve çerez yöneticisi, 10 dilde kod üretimi, geçmiş, Postman otomatik tanıma, toplu içe aktarma ve Postman'a dışa aktarma, içerik tipleri (HTML gövde, XML/HTML renklendirme ve biçimlendirme, resim önizleme, Hex, yanıtı kaydetme), Insomnia/OpenAPI/HAR içe aktarma, şifreli koleksiyon parolasını ve ortam gizli değerlerini işletim sistemi anahtarlığında saklama · sıradaki: M3'ten küçük kalanlar; gRPC (not 17) sonraki görevlere bırakıldı |
+| M3 Simge, projeler, ortamlar, kopyalama, auth | ✅ 9/9 · bitti: simge, ortam seçici ve editörü, dinamik değişkenler, projeler, kabuk komutu olarak kopyalama, metotla yeni istek, değişken çipleri, Auth sekmesi ve miras, komut paleti, sekmeler, sürükle-bırak ile taşıma · küçük kalanlar M4'te yapıldı (yalnız ham gövde editöründe değişken çipi kaldı) |
+| M4 Günlük kullanım | 🔜 · bitti: menü çubuğu, şifreli koleksiyonlar (motor, uygulama, CLI), ağ denetçisi (Network sekmesi), multipart/binary/GraphQL gövdeleri, auth tipleri (Digest, OAuth 1.0, OAuth 2.0, AWS SigV4), ayarlar ekranı ve 9 dilli arayüz, Arapça için sağdan sola düzen, dokümantasyon yapısı (İngilizce, Türkçe), README karşılaştırması ve performans ölçümü, istek ayarları (zaman aşımı, yönlendirmeler, TLS doğrulama, proxy, istemci sertifikaları; klasör/koleksiyon/proje kalıtımıyla) ve çerez yöneticisi, 10 dilde kod üretimi, geçmiş, Postman otomatik tanıma, toplu içe aktarma ve Postman'a dışa aktarma, içerik tipleri (HTML gövde, XML/HTML renklendirme ve biçimlendirme, resim önizleme, Hex, yanıtı kaydetme), Insomnia/OpenAPI/HAR içe aktarma, şifreli koleksiyon parolasını ve ortam gizli değerlerini işletim sistemi anahtarlığında saklama, M3'ten kalan küçük işler (elle sıralama, sekmeleri hatırlama, proje renkleri, koleksiyonu projeye taşıma, prod onayı, fish/HTTPie/wget kopyalama, Params/Headers/form gövdesinde değişken çipleri) · sıradaki: M5 (scriptler, testler, runner); gRPC (not 17) sonraki görevlere bırakıldı |
 | M5–M9 | ⬜ |
 
 Release ikili dosyası 33.6 MB (üst sınır 100 MB). Testler: core 53, vault 7, desktop 12, codegen 21, import 26, http 19 (hepsi geçiyor, clippy uyarısız).
@@ -169,7 +169,7 @@ Apix, Postman'in yaptığı her şeyi yapan bir API istemcisi olacak. Postman'de
 
 #### A2. URL çubuğu
 - ✅ Düzenlenebilir URL alanı. `{{değişken}}` çip olarak çizilir: tanımlı (camgöbeği), dinamik (mor), tanımsız (kırmızı). Çip tek parça silinir, Ctrl+Z ile metne geri döner.
-- ✅ Fareyle değişkenin üstüne gelince çözülmüş değer ve hangi kapsamdan geldiği görünür. Gizli değerler maskelenir. ⬜ Params, Headers ve Body alanlarında da çip.
+- ✅ Fareyle değişkenin üstüne gelince çözülmüş değer ve hangi kapsamdan geldiği görünür. Gizli değerler maskelenir. ✅ Params, Headers ve Body'nin form/multipart alanlarında da çip · ⬜ ham gövde editöründe (JSON, XML, metin; gpui-kit kod editörü satır içi token desteklemiyor).
 - ⬜ **Path değişkenleri:** `/users/:id` yazılınca Params sekmesinde `id` alanı kendiliğinden açılır.
 - ⬜ **Query senkronu:** `?a=1&b=2` yazılınca tabloya, tabloya yazılınca URL'ye eklenir.
 - ✅ **cURL yapıştırma:** URL çubuğuna bir cURL komutu yapıştırılırsa istek otomatik oluşturulur.
@@ -256,7 +256,7 @@ Her istek için "Network" sekmesi: istek gerçekte nasıl ve nereden geçti?
 | **Ağaç görünümü** | Klasörler açılıp kapanır, her istekte metot rozeti görünür. | ✅ |
 | **Oluştur / yeniden adlandır / çoğalt / sil** | Sağ tık menüsünden ve kısayollardan. Silinen dosyalar çöp kutusuna gider, hemen kalıcı silinmez. | ✅ |
 | **Metot seçerek yeni istek** (not 7) | "+" menüsünde GET, POST, PUT, PATCH, DELETE … seçilir; istek o metotla ve uygun gövde tipiyle açılır (POST/PUT/PATCH için JSON). | ✅ |
-| **Sürükle-bırak** | İstekleri ve klasörleri taşıma ve sıralama. Bir istek veya klasör, başka bir klasörün, koleksiyonun ya da isteğin üstüne bırakılınca oraya taşınır (scriptler ve `folder.toml` da gider; koleksiyonlar arası da olur). | ✅ taşıma · ⬜ elle sıralama (şimdilik ada göre) |
+| **Sürükle-bırak** | İstekleri ve klasörleri taşıma ve sıralama. Bir istek veya klasör, başka bir klasörün, koleksiyonun ya da isteğin üstüne bırakılınca oraya taşınır (scriptler ve `folder.toml` da gider; koleksiyonlar arası da olur). | ✅ taşıma · ✅ elle sıralama (satırın üst/alt kenarına bırakınca önüne/arkasına, klasörün ortasına bırakınca içine; sıra `apix.toml` ve `folder.toml` içinde `order` listesi olarak saklanır, yeniden adlandırma ve taşımada güncellenir; Postman içe aktarma Postman'daki sırayı korur, dışa aktarma bu sırayı izler) |
 | **Miras alma** | Klasör ve koleksiyon seviyesinde auth, header, değişken ve script tanımlanabilir. Alt öğeler bunları devralır. Auth için klasörde `folder.toml`, koleksiyonda `apix.toml`, projede `apix-project.toml` kullanılır (sağ tık → Auth…). | ✅ auth · ⬜ header ve script M |
 | **Dokümantasyon** | Her koleksiyon, klasör ve istek için Markdown açıklama | ⬜ S |
 | **Örnekler (examples)** | Kaydedilmiş istek ve yanıt çiftleri | ⬜ M |
@@ -264,7 +264,7 @@ Her istek için "Network" sekmesi: istek gerçekte nasıl ve nereden geçti?
 | **Çoklu koleksiyon** | Bir çalışma alanında birden fazla koleksiyon açılabilir. | ✅ projelerle (§C1) |
 | **Dosya izleme** | Dosya diskte değişirse (git pull veya başka bir editör) uygulama anında günceller. | ✅ |
 | **Git durumu** | Kenar çubuğunda değişen dosyalar işaretlenir. Durum çubuğunda branch adı görünür. | ⬜ M |
-| **Sekmeler** | Birden çok istek sekmede açık durur. Kaydedilmemiş değişiklik işareti olur. Ctrl+Tab ile sekmeler arası geçilir. Her sekme kendi taslağını, yanıtını ve sürmekte olan isteğini saklar; Ctrl+W ve orta tık kapatır. | ✅ · ⬜ açık sekmeleri oturumlar arasında hatırlama |
+| **Sekmeler** | Birden çok istek sekmede açık durur. Kaydedilmemiş değişiklik işareti olur. Ctrl+Tab ile sekmeler arası geçilir. Her sekme kendi taslağını, yanıtını ve sürmekte olan isteğini saklar; Ctrl+W ve orta tık kapatır. | ✅ · ✅ açık sekmeleri oturumlar arasında hatırlama (proje ya da koleksiyon başına `state.toml` içinde; şifreli koleksiyonların sekmeleri dosya adları gizli kalsın diye yazılmaz) |
 | **Geçmiş** | Gönderilen her istek yanıtıyla birlikte kaydedilir. Aranabilir ve tekrar gönderilebilir. | ✅ Ctrl+H penceresi (arama, geri yükleme, temizleme); istek `{{değişkenler}}` çözülmeden saklanır; son 300 kayıt, gövde 256 KB; şifreli koleksiyonlar kaydedilmez; Ayarlar'dan kapatılabilir · ⬜ yanıtları karşılaştırma (§K) |
 
 ### C1. Projeler: Proje → Ortam → Koleksiyonlar (not 6)
@@ -286,9 +286,9 @@ A Projesi/                      apix-project.toml  (ad, renk, koleksiyon sıras�
 | **Son açılanlar** | Projeler ve koleksiyonlar, son açılma sırasıyla. Boş ekranda "RECENT" listesi ve proje menüsünde "Recent"; kullanıcı ayarlarında `state.toml`. | ✅ |
 | **Proje seçici** | Kenar çubuğunun üstündeki "Shop ▾" menüsü: son açılanlar, Aç, Yeni proje. Windows'ta başlık çubuğu sürükleme alanı olduğu için oraya konmadı. | ✅ |
 | **Proje ortamları** | Projenin `environments/` klasörü, içindeki tüm koleksiyonlara uygulanır. Koleksiyonun kendi ortamı varsa onun üstüne eklenir. Katman sırası: proje → koleksiyon → ortam → yerel. | ✅ (CLI `--env` de aynı katmanları kullanıyor) |
-| **Özelleştirilebilir gruplama** | Kenar çubuğu iki şekilde gösterilebilir: "Proje → Ortam → Koleksiyonlar" ya da "Proje → Koleksiyonlar". Bir koleksiyon belirli ortamlara bağlanabilir, örneğin "Raporlar sadece Test'te". Gruplara renk ve sıra verilebilir. | ✅ gruplama ve "Show in environment" sabitleme · ⬜ renk ve sürükleyerek sıra |
-| **Var olan koleksiyonu projeye ekleme** | Sürükle-bırak ile ya da "Projeye taşı" menüsüyle | ⬜ S |
-| **Prod koruması** | Prod ortamı seçiliyken pencere kenarında kırmızı bir çizgi görünür. DELETE, PUT ve PATCH göndermeden önce onay istenir (açılıp kapatılabilir). | Kırmızı çizgi ✅ (adında "prod" geçen ortamlar) · onay ⬜ S |
+| **Özelleştirilebilir gruplama** | Kenar çubuğu iki şekilde gösterilebilir: "Proje → Ortam → Koleksiyonlar" ya da "Proje → Koleksiyonlar". Bir koleksiyon belirli ortamlara bağlanabilir, örneğin "Raporlar sadece Test'te". Gruplara renk ve sıra verilebilir. | ✅ gruplama ve "Show in environment" sabitleme · ✅ renk (koleksiyon sağ tık › Renk; 8 renk, `apix-project.toml` içinde `[colors]`; kenar çubuğunda ve sekmede nokta) ve sürükleyerek sıra (`order`) |
+| **Var olan koleksiyonu projeye ekleme** | Sürükle-bırak ile ya da "Projeye taşı" menüsüyle | ✅ Dosya › Bir projeye taşı… (tek koleksiyon açıkken) ve proje açıkken koleksiyon klasörünü pencereye bırakma (onay sorar); farklı sürücüde kopyalayıp asılını siler (`project::move_collection_into`) |
+| **Prod koruması** | Prod ortamı seçiliyken pencere kenarında kırmızı bir çizgi görünür. DELETE, PUT ve PATCH göndermeden önce onay istenir (açılıp kapatılabilir). | Kırmızı çizgi ✅ (adında "prod" geçen ortamlar) · onay ✅ (çözülmüş URL'yi gösterir; Ayarlar › Üretimde onay iste) |
 
 ### C2. Şifreli koleksiyonlar 🔐 (not 2)
 Bir koleksiyon (veya proje) parola ile şifrelenir. Parolayı bilmeyen hiçbir araç, dosyalar elinde olsa bile içeriği okuyamaz.
@@ -376,7 +376,7 @@ Bir koleksiyon (veya proje) parola ile şifrelenir. Parolayı bilmeyen hiçbir a
 ### I. Geliştirici araçları
 | Özellik | Durum |
 |---|---|
-| **Kabuk komutu olarak kopyala** (not 8): sağ tık ve URL çubuğundaki "Kopyala ▾" menüsü. Değişkenler çözülmüş veya `{{değişken}}` olarak bırakılabilir. Gizli değerler maskelenip maskelenmeyeceği sorulur. Seçenekler: **bash/zsh/sh** için `curl` (tek tırnak kaçışlı) · **Windows cmd** için `curl.exe` (`^` satır devamı) · **PowerShell** için `Invoke-RestMethod` ve `Invoke-WebRequest` ile `curl.exe` sürümü · **fish** · **HTTPie** · **wget** | ✅ bash, cmd, PowerShell (gerçek kabuklarda httpbin ile doğrulandı) · ⬜ fish, HTTPie, wget |
+| **Kabuk komutu olarak kopyala** (not 8): sağ tık ve URL çubuğundaki "Kopyala ▾" menüsü. Değişkenler çözülmüş veya `{{değişken}}` olarak bırakılabilir. Gizli değerler maskelenip maskelenmeyeceği sorulur. Seçenekler: **bash/zsh/sh** için `curl` (tek tırnak kaçışlı) · **Windows cmd** için `curl.exe` (`^` satır devamı) · **PowerShell** için `Invoke-RestMethod` ve `Invoke-WebRequest` ile `curl.exe` sürümü · **fish** · **HTTPie** · **wget** | ✅ bash, cmd, PowerShell (gerçek kabuklarda httpbin ile doğrulandı) · ✅ fish (`curl`, fish tırnaklarıyla), HTTPie (`http`, 3.0+ için `--raw`), wget (GNU; multipart yapamadığı için not düşer) — birim testleriyle doğrulandı, bu makinede gerçek araçlarla çalıştırılmadı |
 | **Kabuk komutundan içe aktar:** URL çubuğuna yapıştırılan `curl` (bash veya cmd biçimi) ve PowerShell `Invoke-RestMethod` komutları isteğe dönüşür | ✅ curl (bash ve cmd biçimi, tarayıcıların "Copy as cURL" çıktısı dahil) · ⬜ PowerShell |
 | **Kod üretici:** fetch, axios, Python requests, Go, **Rust reqwest**, C#, Java, PHP, Swift, Kotlin, Node | ✅ 10 dil (fetch Node'u da kapsar); istek ayarları koda yazılır, yazılamayan ayar `Not in this snippet` yorumuyla belirtilir; fetch, C#, Java ve Rust çıktıları yerel bir yankı sunucusunda motorla birebir karşılaştırıldı; CLI `apix code --as <dil>` |
 | Çerez yöneticisi: alan adına göre listeleme, silme, tümünü boşaltma; kavanoz `cookies.json` içinde kalıcı, istek başına kapatılabilir (İstek › Çerezler…) | ✅ listeleme, silme, kalıcılık · ⬜ elle ekleme/düzenleme |
@@ -504,7 +504,7 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 2. [x] Kenar çubuğu ağacı: gerçek dosyalardan, iç içe ve açılıp kapanan klasörler, metot rozetleri (M)
 3. [x] İstek seçme, düzenleme ve kaydetme (Ctrl+S). Kaydedilmemiş değişiklik işareti var. Başka isteğe geçerken "Kaydet / Kaydetme / Vazgeç" sorusu çıkar. (M)
 4. [x] Yeni istek (Ctrl+N) ve yeni klasör, yeniden adlandırma, çoğaltma, çöp kutusuna silme. Sağ tık menüsünden yapılır. Scriptler istekle birlikte taşınır. (M)
-5. [x] Sürükle-bırak ile taşıma (M3'te yapıldı). Elle sıralama sonraya kaldı. (M)
+5. [x] Sürükle-bırak ile taşıma (M3'te yapıldı). Elle sıralama M4'te yapıldı. (M)
 6. [x] Sekmeler (M3'te yapıldı) (M)
 7. [x] **Postman v2.1/v2.0 koleksiyon içe aktarma** ve içe aktarma raporu (L). Kenar çubuğu düğmesi, sürükle-bırak ve CLI ile yapılabilir.
 8. [x] **Postman environment içe aktarma** (S). `secret` değerler git'e girmeyen `*.local.toml` dosyasına yazılır.
@@ -520,15 +520,15 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
    - Windows için `.ico` exe'ye gömülür, macOS için `.icns`, Linux için hicolor PNG'leri ve `.desktop` dosyası.
    - Mümkünse saydam zeminli PNG veya vektör (SVG) bir ana dosya edinilir. JPG zemini sabit olduğu için en temiz sonuç bundan alınır.
 2. [x] **Ortam seçici ve ortam editörü:** Seçici ✅ (kenar çubuğunda; Windows'ta başlık çubuğu sürükleme alanı olduğu için oraya konmadı). Koleksiyon başına hatırlanıyor, `.local.toml` gizli değerleri dahil. Ortam editörü ✅ (Ctrl+E). Dinamik değişkenler ✅ (`{{$guid}}` … 28 tane). OS anahtarlığı ✅ (M4'te). (M)
-3. [x] **Projeler (§C1):** proje modeli (`apix-project.toml`), Yeni proje / Yeni koleksiyon / Aç, son açılanlar, proje menüsü, proje genelinde ortamlar (proje → koleksiyon → proje ortamı → koleksiyon ortamı), "Proje → Ortam → Koleksiyonlar" gruplaması, koleksiyonu ortamlara sabitleme, prod çizgisi. Kalanlar: renkler, koleksiyonu sürükleyerek projeye taşıma, prod onay penceresi. (L)
-4. [x] **Kabuk komutu olarak kopyala** (§I): bash `curl`, cmd `curl.exe`, PowerShell `Invoke-RestMethod`; URL çubuğundaki kopyala menüsü, sağ tık ve `apix shell` CLI komutu. Yapıştırılan `curl` komutu isteği doldurur. Kalanlar: fish, HTTPie, wget. (M)
+3. [x] **Projeler (§C1):** proje modeli (`apix-project.toml`), Yeni proje / Yeni koleksiyon / Aç, son açılanlar, proje menüsü, proje genelinde ortamlar (proje → koleksiyon → proje ortamı → koleksiyon ortamı), "Proje → Ortam → Koleksiyonlar" gruplaması, koleksiyonu ortamlara sabitleme, prod çizgisi. Renkler, koleksiyonu projeye taşıma ve prod onay penceresi M4'te yapıldı. (L)
+4. [x] **Kabuk komutu olarak kopyala** (§I): bash `curl`, cmd `curl.exe`, PowerShell `Invoke-RestMethod`; URL çubuğundaki kopyala menüsü, sağ tık ve `apix shell` CLI komutu. Yapıştırılan `curl` komutu isteği doldurur. fish, HTTPie ve wget M4'te eklendi. (M)
 5. [x] **Metot seçerek yeni istek** (§C): kenar çubuğundaki "+" menüsü, klasör ve koleksiyon menülerinde "New request ▸". POST, PUT ve PATCH JSON gövdeyle açılır. URL çubuğunda Alt+1…7 metodu değiştirir. (S)
-6. [x] **Değişken çipleri** (§A2): URL çubuğunda renkli çipler, üstüne gelince değer, kapsam ve gizlilik bilgisi. Kalan: Params, Headers ve Body alanları. (M)
+6. [x] **Değişken çipleri** (§A2): URL çubuğunda renkli çipler, üstüne gelince değer, kapsam ve gizlilik bilgisi. Params, Headers ve form gövdesi alanları M4'te eklendi; ham gövde editörü kaldı. (M)
 7. [x] **Auth sekmesi:** Inherit, No auth, Bearer, Basic, API key. Klasör, koleksiyon ve proje auth'u (sağ tık → Auth…, proje menüsü), istekler en yakın üst öğeden miras alır; masaüstü, CLI ve "Copy as" aynı kuralı kullanır. Postman içe aktarma auth'u olduğu yerde bırakır. OAuth 2.0 M4'e taşındı. (L)
 8. [x] **Komut paleti** (Ctrl+K veya Ctrl+P): tüm istekler ve komutlar içinde bulanık arama ("crus" → "Create user"). Komutlar: gönder, kaydet, metotla yeni istek, klasör, koleksiyon, proje, aç, içe aktar, değişkenler, ortam seçimi, kopyala, auth, gruplama, son açılanlar. (M)
-9. [x] **M2'den kalanlar:** sekmeler (her sekme taslağını, yanıtını ve süren isteğini saklar; Ctrl+W, Ctrl+Tab, orta tık), sürükle-bırak ile istek ve klasör taşıma (koleksiyonlar arası dahil). Elle sıralama sonraya kaldı. (M)
+9. [x] **M2'den kalanlar:** sekmeler (her sekme taslağını, yanıtını ve süren isteğini saklar; Ctrl+W, Ctrl+Tab, orta tık), sürükle-bırak ile istek ve klasör taşıma (koleksiyonlar arası dahil). Elle sıralama M4'te yapıldı. (M)
 
-**M3'ten küçük kalanlar:** proje renkleri, koleksiyonu sürükleyerek projeye taşıma, prod onay penceresi, fish/HTTPie/wget kopyalama, Params/Headers/Body alanlarında değişken çipleri, sidebar'da elle sıralama, açık sekmeleri hatırlama.
+**M3'ten küçük kalanlar:** hepsi M4'te yapıldı (aşağıda "M3'ten kalan küçük işler"). Yalnız ham gövde editöründe değişken çipi kaldı.
 
 ### M4 — Günlük kullanıma hazır
 - **Şifreli koleksiyonlar (§C2)** (not 2): oluşturma, şifreleme ve şifreyi kaldırma, kilit açma ve otomatik kilit, kurtarma anahtarı, CLI desteği (L). Motor ✅ (`apix-vault`), uygulama ✅ (kilit açma, kilitleme, 15 dk otomatik kilit, şifreleme ve şifreyi kaldırma, parola değiştirme, yeni şifreli koleksiyon), CLI ✅, parolayı işletim sistemi anahtarlığında hatırlama ✅ (`apix_vault::keychain`, `keyring` crate'i; kayıt koleksiyon klasörünün mutlak yoluyla adlanır, yanlış çıkan kayıtlı parola silinip yeniden sorulur, parola değişince güncellenir, şifre kaldırılınca silinir).
@@ -541,6 +541,7 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 - **Kod üretici ve geçmiş** (M) ✅: `apix_codegen::to_code` ile 10 dil (fetch, axios, Python requests, Go, Rust reqwest, C#, Java, PHP, Swift, Kotlin) ve kabukları da kapsayan ortak `Format`; "Copy as" menüleri, kenar çubuğunda "Kod olarak kopyala", komut paleti, `apix code`. Geçmiş: `apix_core::history` (ayar klasöründe `history/`), Ctrl+H penceresi; kayıt kendi sekmesine kaydedilmemiş değişiklik olarak ve yanıtıyla geri gelir.
 - **Postman tamamlama (§D)** (M) ✅: otomatik tanıma, toplu dışa aktarımı (klasör/zip) projeye çevirme, globals → proje değişkenleri, Postman v2.1'e dışa aktarma (`apix_import::postman_dump`, `postman_export`).
 - **İçerik tipleri (§A4, §B, not 17)** (M) ✅: HTML gövde tipi; XML ve HTML renklendirme (gövde ve yanıt); XML ve HTML yanıtları girintileme; yanıt türünü tanıma; resim önizleme; Hex sekmesi; yanıt gövdesini dosyaya kaydetme.
+- **M3'ten kalan küçük işler** (L) ✅: fish/HTTPie/wget olarak kopyalama (uygulama ve `apix shell --as fish|httpie|wget`); prod ortamında DELETE/PUT/PATCH öncesi onay (Ayarlar'dan kapatılabilir); açık sekmeleri proje/koleksiyon başına hatırlama; sürükleyerek elle sıralama (istek, klasör ve projedeki koleksiyonlar; `order` listeleri); koleksiyonu projeye taşıma (menü ve klasör bırakma); projedeki koleksiyonlara renk; Params, Headers ve form/multipart alanlarında değişken çipleri. Yolda bulunan hata: sürükleyerek taşınan isteğin sekme yolu sonuna ayraç ekleniyor ve kaydetme başarısız oluyordu; düzeltildi.
 - **Ortam gizli değerleri anahtarlıkta** (M) ✅: Ayarlar › Ortam gizli değerleri (`.local.toml` dosyası / sistem anahtarlığı). Anahtarlık seçilince `<ad>.local.toml` yalnızca `keychain = "<kimlik>"` satırını tutar, değerler `Apix` servisinde `env:<kimlik>` kaydına gider (Windows'un kayıt başına 2560 bayt sınırı için uzun metin parçalara bölünür). Kimlik dosyayla taşındığı için ortamı ya da klasörü yeniden adlandırmak kaydı bozmaz. Okuma ayardan bağımsızdır: CLI de bu işareti görüp anahtarlıktan okur. Seçenek değişince açık koleksiyon ve projedeki ortamlar taşınır, diğerleri ilk kaydedişte taşınır; ortam silinince kayıt da silinir. Windows Credential Manager aynı süreçten eşzamanlı yazma/silmede silinen kayıtları geri getirebildiği için anahtarlık çağrıları sıraya sokulur.
 - **İçe aktarıcılar (§D)** (L) ✅: Insomnia v4, OpenAPI 3 / Swagger 2 (JSON ve YAML), HAR; hepsi içerikten tanınır ve Postman'la aynı yoldan (`apix_import::bundle::Found`) koleksiyon ya da proje olarak yazılır; klasör/zip taraması YAML ve `.har` dosyalarını da okur.
 
@@ -549,6 +550,15 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 - Test sonuçları sekmesi, konsol
 - Runner arayüzü, veri odaklı testler, JUnit/HTML raporlar
 
+### M5 sonrası — Tema paketi (23 Ekim'de kararlaştırıldı)
+1. Temayı yeniden başlatmadan değiştirme (görünümler paleti kopyalamak yerine ortak bir yerden okur); diğerlerinin temeli.
+2. Vurgu rengi seçimi (camgöbeği yerine mor, yeşil, turuncu …).
+3. Açık tema ve "sistemi izle" (Windows/macOS koyu-açık moduna göre); kod renklendirmesi de uyarlanır. M7'deki "açık tema" maddesi buraya alındı.
+4. Dosyadan özel tema (`<config>/Apix/themes/*.toml`), ekipçe paylaşılabilir.
+- Olası ekler: cam efektini (saydamlık/bulanıklık) açıp kapatma, hazır temalar (Dracula, Nord, Solarized …), yazı boyutu ve satır yoğunluğu.
+
+**Not (konuşulacak):** CLI'ın git ve CI/CD entegrasyonuyla büyütülmesi (GitHub Actions adımı, raporlar, pipeline'lar). M5 bitince yeniden ele alınacak.
+
 ### M6 — Protokoller
 - WebSocket, SSE, GraphQL introspection, gRPC, Socket.IO, MQTT, SOAP
 
@@ -556,7 +566,7 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 - **Rota ve ağ haritası (§B2)** (not 9): traceroute, çevrimdışı IP konum veritabanı ile dünya haritası
 - **TLS ayrıntıları (§B2, not 12):** kendi bağlayıcımızla (hyper-util + rustls) TLS sürümü, şifre takımı, ALPN, tam sertifika zinciri, TCP ve TLS ayrı süreler, sıkıştırılmış boyut
 - Mock sunucu, dokümantasyon üretme, monitörler, visualizer, yakalama proxy'si
-- Git entegrasyonu, açık tema, otomatik güncelleme (ayarlar ekranı ve diller M4'e taşındı)
+- Git entegrasyonu, otomatik güncelleme (ayarlar ekranı ve diller M4'e, açık tema M5 sonrası tema paketine taşındı)
 
 ### M8 — Apix'e özel
 - Yük testi, yanıt karşılaştırma, zaman yolculuğu, MCP, AI, WASM eklentileri, Flows

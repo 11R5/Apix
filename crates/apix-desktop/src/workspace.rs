@@ -27,7 +27,8 @@ use apix_core::{Auth, Collection, KeyValue, Method, Request, Variables};
 use apix_http::{BodyKind, ImageKind, Response, group_digits, human_duration, human_size};
 use gpui_kit::component::button::{Button, ButtonVariants};
 use gpui_kit::component::checkbox::Checkbox;
-use gpui_kit::component::input::{Editor, EditorState, Input, InputEvent, InputState};
+use gpui_kit::component::dialog::AlertDialog;
+use gpui_kit::component::input::{Editor, EditorState, InputEvent, InputState};
 use gpui_kit::component::menu::DropdownMenu as _;
 use gpui_kit::component::select::{Select, SelectEvent, SelectState};
 use gpui_kit::component::spinner::Spinner;
@@ -106,29 +107,25 @@ pub fn bind_keys(cx: &mut App) {
 type MethodSelect = SelectState<Vec<&'static str>>;
 type EnvSelect = SelectState<Vec<SharedString>>;
 
-/// One editable row of the Params or Headers table.
+/// One editable row of the Params or Headers table (or a form body).
+/// `{{variables}}` in either field show as chips.
 struct KvRow {
     key: Entity<InputState>,
     value: Entity<InputState>,
     enabled: bool,
+    _chips: [Subscription; 2],
 }
 
 impl KvRow {
     fn new(kv: &KeyValue, window: &mut Window, cx: &mut App) -> Self {
-        let key = kv.key.clone();
-        let value = kv.value.clone();
+        let (key, key_chips) = var_chips::chipped_input(&kv.key, tr!("table.key"), window, cx);
+        let (value, value_chips) =
+            var_chips::chipped_input(&kv.value, tr!("table.value"), window, cx);
         Self {
-            key: cx.new(|cx| {
-                InputState::new(window, cx)
-                    .placeholder(tr!("table.key"))
-                    .default_value(key)
-            }),
-            value: cx.new(|cx| {
-                InputState::new(window, cx)
-                    .placeholder(tr!("table.value"))
-                    .default_value(value)
-            }),
+            key,
+            value,
             enabled: kv.enabled,
+            _chips: [key_chips, value_chips],
         }
     }
 
@@ -365,6 +362,10 @@ pub struct Workspace {
     _auto_lock: Option<Task<()>>,
     /// The in-flight request. Dropping it cancels the request.
     task: Option<Task<()>>,
+    /// The open tabs as last written to the app state.
+    remembered_tabs: Option<(PathBuf, crate::state::OpenTabs)>,
+    /// The sidebar row and zone a drag would drop into.
+    drop_hint: Option<(PathBuf, drag::Zone)>,
     _subscriptions: Vec<Subscription>,
 }
 
@@ -395,6 +396,7 @@ impl Workspace {
         let settings_editor =
             cx.new(|cx| settings_editor::SettingsEditor::new(palette, window, cx));
         let subscriptions = vec![
+            cx.observe_self(|this, _| this.remember_tabs()),
             // Typing in the Auth tab changes the unsaved marker.
             cx.observe(&auth_editor, |_, _, cx| cx.notify()),
             cx.observe(&settings_editor, |_, _, cx| cx.notify()),
@@ -480,6 +482,8 @@ impl Workspace {
             last_input: std::cell::Cell::new(std::time::Instant::now()),
             bench_sent: None,
             _auto_lock: None,
+            remembered_tabs: None,
+            drop_hint: None,
             _subscriptions: subscriptions,
         };
         this._auto_lock = Some(Self::auto_lock_task(window, cx));
@@ -630,7 +634,47 @@ impl Workspace {
         request
     }
 
+    /// Sends the request, after asking first when it would change something
+    /// in a production environment (DELETE, PUT, PATCH).
     pub(super) fn send(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let method = self.build_request(cx).method;
+        if self.settings.confirm_prod
+            && self.is_prod()
+            && matches!(method, Method::Delete | Method::Put | Method::Patch)
+        {
+            self.confirm_prod_send(method, window, cx);
+        } else {
+            self.send_now(window, cx);
+        }
+    }
+
+    fn confirm_prod_send(&mut self, method: Method, window: &mut Window, cx: &mut Context<Self>) {
+        let view = cx.entity().downgrade();
+        let environment = self.environment.clone().unwrap_or_default();
+        let url = self.build_request(cx).resolve(&self.vars).request.url;
+        window.open_alert_dialog(cx, move |alert: AlertDialog, _, _| {
+            let view = view.clone();
+            alert
+                .on_close(collections::refocus(view.clone()))
+                .confirm()
+                .cancel_text(tr!("dialog.cancel"))
+                .text_start()
+                .title(tr!("prod.confirm_title", method = method.as_str()))
+                .description(bidi::para(tr!(
+                    "prod.confirm_detail",
+                    method = method.as_str(),
+                    url = url,
+                    environment = environment
+                )))
+                .ok_text(tr!("prod.confirm_send", method = method.as_str()))
+                .on_ok(move |_, window, cx| {
+                    view.update(cx, |this, cx| this.send_now(window, cx)).ok();
+                    true
+                })
+        });
+    }
+
+    fn send_now(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         let draft = self.build_request(cx);
         let record = self.pending_record(&draft);
         let request = self.with_inherited_auth(draft, self.selected.as_deref());
@@ -1085,6 +1129,7 @@ impl Workspace {
     fn render_table(&self, table: Table, cx: &mut Context<Self>) -> impl IntoElement {
         let p = self.palette;
         let (on_id, del_id, add_id) = table.ids();
+        let view = cx.entity().downgrade();
         let rows = self.rows(table).iter().enumerate().map(|(ix, row)| {
             h_flex()
                 .gap_2()
@@ -1099,13 +1144,17 @@ impl Workspace {
                             cx.notify();
                         })),
                 )
-                .child(div().flex_1().min_w_0().child(Input::new(&row.key).small()))
                 .child(
                     div()
                         .flex_1()
                         .min_w_0()
-                        .child(Input::new(&row.value).small()),
+                        .child(self.chip_input(&row.key, view.clone(), cx)),
                 )
+                .child(div().flex_1().min_w_0().child(self.chip_input(
+                    &row.value,
+                    view.clone(),
+                    cx,
+                )))
                 .child(
                     Button::new((del_id, ix))
                         .ghost()

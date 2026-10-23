@@ -167,6 +167,15 @@ collection.start_here_text: "В %{path} ещё нет apix.toml. Apix созда
 collection.start_here_title: Создать здесь новую коллекцию?
 collection.unsaved_text: Сначала сохранить изменения в «%{name}»?
 collection.unsaved_title: Несохранённые изменения
+color.blue: Синий
+color.green: Зелёный
+color.none: Нет
+color.orange: Оранжевый
+color.pink: Розовый
+color.purple: Фиолетовый
+color.red: Красный
+color.teal: Бирюзовый
+color.yellow: Жёлтый
 cookies.clear_all: Удалить все
 cookies.empty: Пока нет cookie. Ответы Set-Cookie попадают сюда автоматически.
 cookies.expired: истёк
@@ -265,6 +274,7 @@ menu.history: История…
 menu.import_postman: Импорт (Postman, Insomnia, OpenAPI, HAR)…
 menu.lock_collections: Заблокировать зашифрованные коллекции
 menu.method: Метод
+menu.move_into_project: Переместить в проект…
 menu.new_collection: Новая коллекция…
 menu.new_encrypted_collection: Новая зашифрованная коллекция…
 menu.new_folder: Новая папка…
@@ -339,6 +349,13 @@ palette.open_recent: "Открыть недавнее: %{name}"
 palette.placeholder: Поиск запросов и команд…
 palette.save_request: Сохранить запрос
 palette.send_request: Отправить запрос
+prod.confirm_detail: "Окружение «%{environment}» похоже на продакшен. Всё равно отправить %{method} %{url}?"
+prod.confirm_send: "Отправить %{method}"
+prod.confirm_title: "%{method} в продакшене?"
+project.move_in: Переместить в проект
+project.move_in_detail: "«%{collection}» (%{path}) переместится в папку проекта «%{project}» и появится на его боковой панели."
+project.move_in_title: Переместить коллекцию в проект?
+project.not_a_project: "%{path} не находится внутри проекта Apix (нет apix-project.toml)."
 reqset.client_cert: Клиентский сертификат
 reqset.client_key: Ключ сертификата
 reqset.dialog.collection_title: Настройки запросов «%{name}»
@@ -404,6 +421,8 @@ settings.auto_lock_description: После такого времени безд�
 settings.auto_lock_hour: Через 1 час
 settings.auto_lock_minutes: Через %{count} мин
 settings.auto_lock_never: Никогда
+settings.confirm_prod: Подтверждение в продакшене
+settings.confirm_prod_description: Спрашивать перед отправкой DELETE, PUT или PATCH, когда выбрано окружение, в названии которого есть «prod».
 settings.history: История
 settings.history_description: Сохранять каждый отправленный запрос с ответом на этом компьютере (Ctrl+H).
 settings.language: Язык
@@ -420,6 +439,7 @@ settings.theme_restart: Применится при следующем запу�
 settings.title: Настройки
 sidebar.auth: Авторизация…
 sidebar.change_password: Сменить пароль…
+sidebar.color: Цвет
 sidebar.copy_as_code: Копировать как код
 sidebar.copy_as_shell: Копировать как %{shell}
 sidebar.drop_hint: Или перетащите в окно экспорт (Postman, Insomnia, OpenAPI, HAR) или папку.

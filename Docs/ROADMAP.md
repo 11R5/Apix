@@ -40,17 +40,19 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [x] Dynamic variables: `{{$guid}}`, `{{$timestamp}}`, `{{$isoTimestamp}}`, `{{$randomEmail}}` and 24 more, a fresh value for every use
 - [x] Secrets in the OS keychain (done in M4): Settings › Environment secrets; `.local.toml` then keeps only the id of a keychain entry, read by the app and the CLI alike
 - [x] Projects (`apix-project.toml`): New project / New collection / Open from the sidebar menu, recent items, project-wide environments layered under collection ones, grouping as Project → Environment → Collections, pin collections to environments
-- [ ] Projects: colours, drag a collection into a project, prod confirmation dialog
+- [x] Projects (done in M4): a colour per collection (sidebar dot and tab dot), move a collection into a project (File menu, or drop its folder on an open project), confirm DELETE/PUT/PATCH in a prod environment (can be turned off in Settings)
 - [x] Copy as bash `curl`, cmd `curl.exe` or PowerShell `Invoke-RestMethod` (URL bar menu, sidebar, `apix shell`); pasting a `curl` command fills the request
-- [ ] Copy as fish, HTTPie, wget
+- [x] Copy as fish `curl`, HTTPie or wget (done in M4; also `apix shell --as fish|httpie|wget`)
 - [x] New request with a chosen method (sidebar "+" menu, "New request ▸" in folder and collection menus); POST, PUT and PATCH start with a JSON body. Alt+1…7 switch the method
 - [x] Variable chips in the URL bar (defined, dynamic or missing, by colour); hovering one shows its value, with secrets masked, and the scope it comes from
+- [x] The same chips in Params, Headers and form/multipart body fields (done in M4); not yet in the raw body editor
 - [x] Auth tab (inherit, none, Bearer, Basic, API key); folders (`folder.toml`), collections and projects can set auth that requests inherit, in the app and the CLI; Postman imports keep auth where it was set
 - [ ] OAuth 2.0 flows (moved to M4)
 - [x] Command palette (Ctrl+K or Ctrl+P): fuzzy search over every request and command (new request by method, environments, copy as, auth, grouping, recent folders)
 - [x] Menu bar in the title bar (File, Request, Environment, View, Help) with shortcuts; it replaces the sidebar's "Open or create" menu and works on Windows' drag area
 - [x] From M2: tabs (each keeps its draft, response and in-flight request; Ctrl+W, Ctrl+Tab, middle-click), drag to move requests and folders, also across collections
-- [ ] Manual ordering in the sidebar (now sorted by name)
+- [x] Manual ordering in the sidebar (done in M4): drag a request, folder or project collection onto the top or bottom edge of a row; the order is saved as `order` in `apix.toml`, `folder.toml` and `apix-project.toml`, kept through renames and moves, kept from Postman imports and followed by Postman exports
+- [x] Reopen the tabs that were open, per project or collection (done in M4)
 
 ## M4 — Daily driver
 - [x] **Encrypted collections**: password-protected (XChaCha20-Poly1305, Argon2id), per-file encryption with opaque file names, unlock prompt and auto-lock, recovery key, `--password-env` for CI
@@ -82,6 +84,14 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [ ] Test results tab and console
 - [ ] Runner UI, data-driven runs (CSV/JSON), JUnit / HTML reports
 
+## After M5 — Themes
+- [ ] Switch themes without restarting
+- [ ] Choose the accent colour
+- [ ] Light theme and "follow the system"
+- [ ] Custom themes from files (`<config>/Apix/themes/*.toml`)
+- [ ] Maybe: glass effect on/off, preset themes (Dracula, Nord, Solarized…), font size and density
+- To discuss after M5: growing the CLI with git and CI/CD integration
+
 ## M6 — Protocols
 - [ ] WebSocket, SSE, GraphQL introspection, gRPC, Socket.IO, MQTT, SOAP
 
@@ -89,7 +99,7 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [ ] Route (traceroute) and network map, with an offline IP-geolocation database
 - [ ] TLS details in the network inspector with our own connector: TLS version, cipher, ALPN, full chain, separate TCP and TLS times, compressed size
 - [ ] Local mock server, docs generation, monitors, visualizer, capture proxy
-- [ ] Git integration, light theme, auto-update
+- [ ] Git integration, auto-update (the light theme moved to the theme work after M5)
 
 ## M8 — Beyond Postman
 - [ ] Load testing (`apix bench`), response diff, time-travel history

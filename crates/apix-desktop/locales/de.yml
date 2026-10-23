@@ -167,6 +167,15 @@ collection.start_here_text: "%{path} hat noch keine apix.toml. Apix erstellt ein
 collection.start_here_title: Hier eine neue Sammlung beginnen?
 collection.unsaved_text: Änderungen an „%{name}“ zuerst speichern?
 collection.unsaved_title: Ungespeicherte Änderungen
+color.blue: Blau
+color.green: Grün
+color.none: Keine
+color.orange: Orange
+color.pink: Rosa
+color.purple: Lila
+color.red: Rot
+color.teal: Türkis
+color.yellow: Gelb
 cookies.clear_all: Alle entfernen
 cookies.empty: Noch keine Cookies. Set-Cookie-Antworten landen automatisch hier.
 cookies.expired: abgelaufen
@@ -265,6 +274,7 @@ menu.history: Verlauf…
 menu.import_postman: Importieren (Postman, Insomnia, OpenAPI, HAR)…
 menu.lock_collections: Verschlüsselte Sammlungen sperren
 menu.method: Methode
+menu.move_into_project: In ein Projekt verschieben…
 menu.new_collection: Neue Sammlung…
 menu.new_encrypted_collection: Neue verschlüsselte Sammlung…
 menu.new_folder: Neuer Ordner…
@@ -339,6 +349,13 @@ palette.open_recent: "Zuletzt geöffnet: %{name}"
 palette.placeholder: Anfragen und Befehle durchsuchen…
 palette.save_request: Anfrage speichern
 palette.send_request: Anfrage senden
+prod.confirm_detail: "Die Umgebung „%{environment}“ sieht nach Produktion aus. %{method} %{url} trotzdem senden?"
+prod.confirm_send: "%{method} senden"
+prod.confirm_title: "%{method} in Produktion?"
+project.move_in: In das Projekt verschieben
+project.move_in_detail: "„%{collection}“ (%{path}) wird in den Ordner des Projekts „%{project}“ verschoben und erscheint in seiner Seitenleiste."
+project.move_in_title: Die Sammlung in das Projekt verschieben?
+project.not_a_project: "%{path} liegt in keinem Apix-Projekt (keine apix-project.toml)."
 reqset.client_cert: Client-Zertifikat
 reqset.client_key: Zertifikatsschlüssel
 reqset.dialog.collection_title: Anfrage-Einstellungen für „%{name}“
@@ -404,6 +421,8 @@ settings.auto_lock_description: Nach dieser Leerlaufzeit werden verschlüsselte 
 settings.auto_lock_hour: Nach 1 Stunde
 settings.auto_lock_minutes: Nach %{count} Minuten
 settings.auto_lock_never: Nie
+settings.confirm_prod: In Produktion nachfragen
+settings.confirm_prod_description: Vor dem Senden von DELETE, PUT oder PATCH nachfragen, wenn eine Umgebung mit „prod“ im Namen aktiv ist.
 settings.history: Verlauf
 settings.history_description: Jede gesendete Anfrage mit ihrer Antwort auf diesem Computer behalten (Strg+H).
 settings.language: Sprache
@@ -420,6 +439,7 @@ settings.theme_restart: Wird beim nächsten Start von Apix übernommen.
 settings.title: Einstellungen
 sidebar.auth: Authentifizierung…
 sidebar.change_password: Passwort ändern…
+sidebar.color: Farbe
 sidebar.copy_as_code: Als Code kopieren
 sidebar.copy_as_shell: Als %{shell} kopieren
 sidebar.drop_hint: Oder einen Export (Postman, Insomnia, OpenAPI, HAR) oder einen Ordner ins Fenster ziehen.
