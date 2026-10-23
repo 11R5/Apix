@@ -136,6 +136,7 @@ chips.scope.collection: Sammlung „%{name}“
 chips.scope.environment: Umgebung „%{name}“
 chips.scope.environment_of: Umgebung „%{name}“ von „%{collection}“
 chips.scope.project: Projekt „%{name}“
+chips.scope.script: Von einem Skript gesetzt
 chips.secret_scope: "%{scope} · geheim, nur auf diesem Computer"
 chips.set_for_run: Für diese Sitzung festlegen
 collection.choose_folder: Ordner auswählen…
@@ -176,6 +177,7 @@ color.purple: Lila
 color.red: Rot
 color.teal: Türkis
 color.yellow: Gelb
+console.empty: Nichts ausgegeben. console.log(…) in einem Skript schreibt hierher.
 cookies.clear_all: Alle entfernen
 cookies.empty: Noch keine Cookies. Set-Cookie-Antworten landen automatisch hier.
 cookies.expired: abgelaufen
@@ -396,6 +398,8 @@ request.tab.headers: Header
 request.tab.headers_count: Header %{count}
 request.tab.params: Parameter
 request.tab.params_count: Parameter %{count}
+request.tab.scripts: Skripte
+request.tab.scripts_set: Skripte ●
 request.tab.settings: Einstellungen
 request.tab.settings_set: Einstellungen ●
 request.url_placeholder: "https://api.example.com/users   oder   {{base_url}}/users"
@@ -413,9 +417,22 @@ response.save: Inhalt in Datei speichern…
 response.saved: "%{size} in %{path} gespeichert."
 response.send_hint: "%{key} Senden"
 response.sending: Wird gesendet…  Esc zum Abbrechen
+response.tab.console: Konsole
+response.tab.console_count: "Konsole %{count}"
 response.tab.network: Netzwerk
 response.tab.pretty: Formatiert
 response.tab.raw: Roh
+response.tab.tests: Tests
+response.tab.tests_count: "Tests %{passed}/%{total}"
+scripts.around: "%{hint} Davor laufen %{count} Ordner- oder Sammlungsskripte."
+scripts.error: "Skriptfehler: %{error}"
+scripts.pre: Vor der Anfrage
+scripts.pre_error: "Das Skript vor der Anfrage ist fehlgeschlagen, die Anfrage wurde nicht gesendet: %{error}"
+scripts.pre_hint: Läuft, bevor die Anfrage gesendet wird. pm.request lässt sich ändern, pm.environment.set(…) setzt Variablen.
+scripts.skipped: Das Skript vor der Anfrage hat diese Anfrage übersprungen (pm.execution.skipRequest).
+scripts.tab_set: "%{name} ●"
+scripts.test: Tests
+scripts.test_hint: Läuft, wenn die Antwort da ist. Prüfen mit pm.test("Name", () => pm.expect(…)); die Antwort steht in pm.response.
 settings.auto_lock: Verschlüsselte Sammlungen sperren
 settings.auto_lock_description: Nach dieser Leerlaufzeit werden verschlüsselte Sammlungen gesperrt und benötigen erneut das Passwort.
 settings.auto_lock_hour: Nach 1 Stunde
@@ -469,6 +486,9 @@ sidebar.show_in_environment: In Umgebung anzeigen
 table.add: Hinzufügen
 table.key: Schlüssel
 table.value: Wert
+tests.none: Keine Tests gelaufen. Fügen Sie pm.test(…) im Testskript hinzu.
+tests.skipped: übersprungen
+tests.summary: "%{passed} bestanden, %{failed} fehlgeschlagen"
 time.hours_minutes: "%{hours} Std. %{minutes} Min."
 time.minutes: "%{count} Min."
 vault.auto_locked: Verschlüsselte Sammlungen wurden nach %{count} Minuten Leerlauf gesperrt.

@@ -12,6 +12,7 @@ use gpui_kit::component::h_flex;
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
+use super::script_editor::Scripts;
 use super::{Finished, ResponseState, Workspace};
 use crate::bidi::{self, Bidi as _};
 use crate::large_view::Document;
@@ -29,6 +30,8 @@ pub(super) struct Tab {
 struct Parked {
     base: Request,
     draft: Request,
+    base_scripts: Scripts,
+    scripts: Scripts,
     request_tab: usize,
     response_tab: usize,
     response: ResponseState,
@@ -134,6 +137,8 @@ impl Workspace {
         let parked = Parked {
             base: self.base.clone(),
             draft: self.build_request(cx),
+            base_scripts: self.base_scripts.clone(),
+            scripts: self.script_editor.read(cx).scripts(cx),
             request_tab: self.request_tab,
             response_tab: self.response_tab,
             response: mem::replace(&mut self.response, ResponseState::Idle),
@@ -151,6 +156,8 @@ impl Workspace {
     fn unpark(&mut self, parked: Parked, window: &mut Window, cx: &mut Context<Self>) {
         self.fill_editor(&parked.draft, window, cx);
         self.base = parked.base;
+        self.show_scripts(&parked.scripts, window, cx);
+        self.base_scripts = parked.base_scripts;
         self.request_tab = parked.request_tab;
         self.response = parked.response;
         self.raw_doc = parked.raw_doc;
@@ -194,7 +201,7 @@ impl Workspace {
 
     fn tab_dirty(&self, tab: &Tab, cx: &App) -> bool {
         match &tab.parked {
-            Some(parked) => parked.draft != parked.base,
+            Some(parked) => parked.draft != parked.base || parked.scripts != parked.base_scripts,
             None => self.is_dirty(cx),
         }
     }

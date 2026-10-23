@@ -136,6 +136,7 @@ chips.scope.collection: “%{name}” koleksiyonu
 chips.scope.environment: “%{name}” ortamı
 chips.scope.environment_of: “%{collection}” içindeki “%{name}” ortamı
 chips.scope.project: “%{name}” projesi
+chips.scope.script: Bir script atadı
 chips.secret_scope: "%{scope} · gizli, yalnızca bu bilgisayarda"
 chips.set_for_run: Bu çalıştırma için ayarla
 collection.choose_folder: Klasör seç…
@@ -176,6 +177,7 @@ color.purple: Mor
 color.red: Kırmızı
 color.teal: Turkuaz
 color.yellow: Sarı
+console.empty: Hiçbir şey yazılmadı. Bir scriptteki console.log(…) buraya yazar.
 cookies.clear_all: Tümünü sil
 cookies.empty: Henüz çerez yok. Set-Cookie yanıtları buraya kendiliğinden eklenir.
 cookies.expired: süresi doldu
@@ -396,6 +398,8 @@ request.tab.headers: Başlıklar
 request.tab.headers_count: Başlıklar %{count}
 request.tab.params: Parametreler
 request.tab.params_count: Parametreler %{count}
+request.tab.scripts: Scriptler
+request.tab.scripts_set: Scriptler ●
 request.tab.settings: Ayarlar
 request.tab.settings_set: Ayarlar ●
 request.url_placeholder: "https://api.example.com/users   veya   {{base_url}}/users"
@@ -413,9 +417,22 @@ response.save: Gövdeyi dosyaya kaydet…
 response.saved: "%{size} %{path} dosyasına kaydedildi."
 response.send_hint: "%{key} gönder"
 response.sending: Gönderiliyor…  İptal için Esc
+response.tab.console: Konsol
+response.tab.console_count: "Konsol %{count}"
 response.tab.network: Ağ
 response.tab.pretty: Biçimli
 response.tab.raw: Ham
+response.tab.tests: Testler
+response.tab.tests_count: "Testler %{passed}/%{total}"
+scripts.around: "%{hint} Bundan önce %{count} klasör ya da koleksiyon scripti çalışır."
+scripts.error: "Script hatası: %{error}"
+scripts.pre: İstek öncesi
+scripts.pre_error: "İstek öncesi script hata verdi, istek gönderilmedi: %{error}"
+scripts.pre_hint: İstek gönderilmeden önce çalışır. pm.request değiştirilebilir, pm.environment.set(…) değişken atar.
+scripts.skipped: İstek öncesi script bu isteği atladı (pm.execution.skipRequest).
+scripts.tab_set: "%{name} ●"
+scripts.test: Testler
+scripts.test_hint: Yanıt geldikten sonra çalışır. pm.test("ad", () => pm.expect(…)) ile denetleyin; yanıt pm.response içindedir.
 settings.auto_lock: Şifreli koleksiyonları kilitle
 settings.auto_lock_description: Bu kadar süre boşta kalındığında şifreli koleksiyonlar kilitlenir ve yeniden parola ister.
 settings.auto_lock_hour: 1 saat sonra
@@ -469,6 +486,9 @@ sidebar.show_in_environment: Ortamda göster
 table.add: Ekle
 table.key: Anahtar
 table.value: Değer
+tests.none: Hiç test çalışmadı. Testler scriptine pm.test(…) ekleyin.
+tests.skipped: atlandı
+tests.summary: "%{passed} geçti, %{failed} kaldı"
 time.hours_minutes: "%{hours} sa %{minutes} dk"
 time.minutes: "%{count} dk"
 vault.auto_locked: Şifreli koleksiyonlar %{count} dakika boşta kaldıktan sonra kilitlendi.

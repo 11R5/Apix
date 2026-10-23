@@ -136,6 +136,7 @@ chips.scope.collection: المجموعة «%{name}»
 chips.scope.environment: البيئة «%{name}»
 chips.scope.environment_of: البيئة «%{name}» في «%{collection}»
 chips.scope.project: المشروع «%{name}»
+chips.scope.script: ضبطه سكربت
 chips.secret_scope: "%{scope} · سري، على هذا الحاسوب فقط"
 chips.set_for_run: تعيين لهذا التشغيل
 collection.choose_folder: اختيار مجلد…
@@ -176,6 +177,7 @@ color.purple: بنفسجي
 color.red: أحمر
 color.teal: أزرق مخضر
 color.yellow: أصفر
+console.empty: لم يُكتب شيء. console.log(…) في السكربت يكتب هنا.
 cookies.clear_all: حذف الكل
 cookies.empty: لا توجد ملفات تعريف ارتباط بعد. تصل ردود Set-Cookie إلى هنا تلقائيًا.
 cookies.expired: منتهية
@@ -396,6 +398,8 @@ request.tab.headers: الترويسات
 request.tab.headers_count: الترويسات %{count}
 request.tab.params: المعاملات
 request.tab.params_count: المعاملات %{count}
+request.tab.scripts: السكربتات
+request.tab.scripts_set: السكربتات ●
 request.tab.settings: الإعدادات
 request.tab.settings_set: الإعدادات ●
 request.url_placeholder: "https://api.example.com/users   أو   {{base_url}}/users"
@@ -413,9 +417,22 @@ response.save: حفظ الجسم في ملف…
 response.saved: حُفظ %{size} في %{path}.
 response.send_hint: "%{key} للإرسال"
 response.sending: جارٍ الإرسال…  Esc للإلغاء
+response.tab.console: وحدة التحكم
+response.tab.console_count: "وحدة التحكم %{count}"
 response.tab.network: الشبكة
 response.tab.pretty: منسّق
 response.tab.raw: خام
+response.tab.tests: الاختبارات
+response.tab.tests_count: "الاختبارات %{passed}/%{total}"
+scripts.around: "%{hint} يعمل قبله %{count} من سكربتات المجلدات أو المجموعة."
+scripts.error: "خطأ في السكربت: %{error}"
+scripts.pre: قبل الطلب
+scripts.pre_error: "فشل سكربت ما قبل الطلب، فلم يُرسل الطلب: %{error}"
+scripts.pre_hint: يعمل قبل إرسال الطلب. يمكن تعديل pm.request، و pm.environment.set(…) يضبط المتغيرات.
+scripts.skipped: تخطى سكربت ما قبل الطلب هذا الطلب (pm.execution.skipRequest).
+scripts.tab_set: "%{name} ●"
+scripts.test: الاختبارات
+scripts.test_hint: يعمل بعد وصول الاستجابة. افحصها باستخدام pm.test("الاسم", () => pm.expect(…))؛ الاستجابة في pm.response.
 settings.auto_lock: قفل المجموعات المشفّرة
 settings.auto_lock_description: بعد هذه المدة من الخمول، تُقفل المجموعات المشفّرة وتحتاج إلى كلمة المرور مجددًا.
 settings.auto_lock_hour: بعد ساعة واحدة
@@ -469,6 +486,9 @@ sidebar.show_in_environment: العرض في البيئة
 table.add: إضافة
 table.key: المفتاح
 table.value: القيمة
+tests.none: لم يُنفَّذ أي اختبار. أضف pm.test(…) في سكربت الاختبارات.
+tests.skipped: متخطى
+tests.summary: "نجح %{passed}، فشل %{failed}"
 time.hours_minutes: "%{hours} س %{minutes} د"
 time.minutes: "%{count} د"
 vault.auto_locked: قُفلت المجموعات المشفّرة بعد %{count} دقيقة من الخمول.

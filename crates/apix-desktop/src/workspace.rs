@@ -10,6 +10,8 @@ mod history_ui;
 mod menu_bar;
 mod network;
 mod palette;
+mod script_editor;
+mod script_run;
 mod settings_editor;
 mod settings_ui;
 mod shell_copy;
@@ -179,6 +181,8 @@ struct Finished {
     image: Option<Arc<gpui_kit::Image>>,
     /// This machine's side of the connection, read once per response.
     local: apix_http::LocalNetwork,
+    /// Test results and console lines, when the request has scripts.
+    scripts: Option<script_run::ScriptReport>,
 }
 
 /// Images bigger than this are not previewed (save them instead).
@@ -236,6 +240,7 @@ impl Finished {
             kind,
             image,
             local,
+            scripts: None,
         }
     }
 }
@@ -287,6 +292,25 @@ fn suggested_file_name(response: &Response, url: &str) -> String {
         .collect()
 }
 
+/// "Variable … is not defined", pointing at the Variables dialog.
+fn undefined_message(missing: std::collections::BTreeSet<String>) -> SharedString {
+    let names: Vec<_> = missing.into_iter().collect();
+    let key = key_hint("E");
+    if names.len() == 1 {
+        tr!(
+            "request.error.undefined_variable",
+            name = names[0],
+            key = key
+        )
+    } else {
+        tr!(
+            "request.error.undefined_variables",
+            names = names.join(", "),
+            key = key
+        )
+    }
+}
+
 fn raw_document(response: &Response, json: bool) -> Arc<Document> {
     Arc::new(Document::new(response.raw_body(), json))
 }
@@ -332,6 +356,12 @@ pub struct Workspace {
     body_editor: Entity<body_editor::BodyEditor>,
     /// The Settings tab (timeout, redirects, TLS, proxy, certificates, cookies).
     settings_editor: Entity<settings_editor::SettingsEditor>,
+    /// The Scripts tab (pre-request and test scripts).
+    script_editor: Entity<script_editor::ScriptEditor>,
+    /// The request's scripts as last loaded or saved.
+    base_scripts: script_editor::Scripts,
+    /// What scripts set or unset since the app started; never written to disk.
+    script_vars: apix_core::scripts::ScriptVars,
     /// URL length before the last change, to tell a paste from typing.
     last_url_len: usize,
     /// The URL text whose references were last turned into chips.
@@ -395,11 +425,18 @@ impl Workspace {
             cx.new(|cx| auth_editor::AuthEditor::new(palette, "request", weak, window, cx));
         let settings_editor =
             cx.new(|cx| settings_editor::SettingsEditor::new(palette, window, cx));
+        let script_editor = cx.new(|cx| script_editor::ScriptEditor::new(palette, window, cx));
         let subscriptions = vec![
             cx.observe_self(|this, _| this.remember_tabs()),
             // Typing in the Auth tab changes the unsaved marker.
             cx.observe(&auth_editor, |_, _, cx| cx.notify()),
             cx.observe(&settings_editor, |_, _, cx| cx.notify()),
+            cx.observe(&script_editor, |_, _, cx| cx.notify()),
+            cx.subscribe_in(
+                &script_editor,
+                window,
+                |this, _, _: &body_editor::SendRequested, window, cx| this.send(window, cx),
+            ),
             cx.subscribe_in(
                 &url,
                 window,
@@ -461,6 +498,9 @@ impl Workspace {
             auth_editor,
             body_editor,
             settings_editor,
+            script_editor,
+            base_scripts: Default::default(),
+            script_vars: Default::default(),
             last_url_len: 0,
             last_chipped: None,
             hovered_var: None,
@@ -535,6 +575,13 @@ impl Workspace {
     fn show_request(&mut self, request: Request, window: &mut Window, cx: &mut Context<Self>) {
         self.fill_editor(&request, window, cx);
         self.base = request;
+        let scripts = self
+            .selected
+            .as_deref()
+            .map(script_editor::Scripts::read)
+            .unwrap_or_default();
+        self.show_scripts(&scripts, window, cx);
+        self.base_scripts = scripts;
         self.task = None;
         self.raw_task = None;
         self.hex_doc = None;
@@ -683,24 +730,14 @@ impl Workspace {
             self.fail(tr!("request.error.no_url"), cx);
             return;
         }
+        let (pre_scripts, test_scripts) = self.script_chains(cx);
+        if !pre_scripts.is_empty() || !test_scripts.is_empty() {
+            self.send_scripted(request, record, pre_scripts, test_scripts, window, cx);
+            return;
+        }
         let resolved = request.resolve(&self.vars);
         if !resolved.missing.is_empty() {
-            let names: Vec<_> = resolved.missing.into_iter().collect();
-            let key = key_hint("E");
-            let message = if names.len() == 1 {
-                tr!(
-                    "request.error.undefined_variable",
-                    name = names[0],
-                    key = key
-                )
-            } else {
-                tr!(
-                    "request.error.undefined_variables",
-                    names = names.join(", "),
-                    key = key
-                )
-            };
-            self.fail(message, cx);
+            self.fail(undefined_message(resolved.missing), cx);
             return;
         }
 
@@ -1084,6 +1121,12 @@ impl Workspace {
             tr!("request.tab.settings_set")
         };
 
+        let scripts_label = if self.script_editor.read(cx).scripts(cx).is_empty() {
+            tr!("request.tab.scripts")
+        } else {
+            tr!("request.tab.scripts_set")
+        };
+
         let content = match self.request_tab {
             0 => self.render_table(Table::Params, cx).into_any_element(),
             1 => self.render_table(Table::Headers, cx).into_any_element(),
@@ -1091,7 +1134,8 @@ impl Workspace {
                 .p_2()
                 .child(self.auth_editor.clone())
                 .into_any_element(),
-            4 => div()
+            4 => self.script_editor.clone().into_any_element(),
+            5 => div()
                 .id("request-settings")
                 .p_2()
                 .size_full()
@@ -1116,6 +1160,7 @@ impl Workspace {
                     Tab::new().label(headers_label),
                     Tab::new().label(auth_label),
                     Tab::new().label(body_label),
+                    Tab::new().label(scripts_label),
                     Tab::new().label(settings_label),
                 ],
                 cx.listener(|this, ix: &usize, _, cx| {
@@ -1277,6 +1322,8 @@ impl Workspace {
                     tr!("request.tab.headers_count", count = response.headers.len());
                 let binary = matches!(done.kind, BodyKind::Binary | BodyKind::Image(_));
                 let content = match (&self.large_view, self.response_tab) {
+                    (_, 5) => self.render_tests(done).into_any_element(),
+                    (_, 6) => self.render_console(done, cx).into_any_element(),
                     (_, 2) => self.render_response_headers(response).into_any_element(),
                     (_, 3) => self.render_network(done).into_any_element(),
                     (None, 0) if binary => self.render_binary(done, cx).into_any_element(),
@@ -1355,13 +1402,22 @@ impl Workspace {
                     .child(bidi::tab_bar(
                         "response-tabs",
                         self.response_tab,
-                        vec![
+                        [
                             Tab::new().label(tr!("response.tab.pretty")),
                             Tab::new().label(tr!("response.tab.raw")),
                             Tab::new().label(headers_label),
                             Tab::new().label(tr!("response.tab.network")),
                             Tab::new().label("Hex"),
-                        ],
+                        ]
+                        .into_iter()
+                        .chain(
+                            done.scripts
+                                .as_ref()
+                                .map(script_run::tests_tab)
+                                .into_iter()
+                                .flatten(),
+                        )
+                        .collect(),
                         cx.listener(|this, ix: &usize, window, cx| {
                             this.set_response_tab(*ix, window, cx)
                         }),
