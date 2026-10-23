@@ -78,14 +78,16 @@ impl Workspace {
         cx: &mut Context<Self>,
     ) -> Option<PathBuf> {
         let saved = self.app_state.tabs_for(root)?.clone();
+        // The loaded request's own path: `Path` equality ignores a trailing
+        // separator, but the file system does not.
         let paths: Vec<PathBuf> = saved
             .paths
-            .into_iter()
-            .filter(|p| self.requests.contains_key(p))
+            .iter()
+            .filter_map(|p| self.requests.get_key_value(p).map(|(k, _)| k.clone()))
             .collect();
         let front = saved
             .front
-            .filter(|f| paths.contains(f))
+            .and_then(|f| paths.iter().find(|p| **p == f).cloned())
             .or_else(|| paths.last().cloned())?;
         for path in paths {
             self.open_tab(path, window, cx);
@@ -255,7 +257,16 @@ impl Workspace {
 
     /// After a rename or move on disk: tabs under `old` follow to `new`.
     pub(super) fn retarget_tabs(&mut self, old: &Path, new: &Path) {
-        let follow = |p: &Path| p.strip_prefix(old).ok().map(|rest| new.join(rest));
+        // `join("")` would add a trailing separator to the moved file itself.
+        let follow = |p: &Path| {
+            p.strip_prefix(old).ok().map(|rest| {
+                if rest.as_os_str().is_empty() {
+                    new.to_path_buf()
+                } else {
+                    new.join(rest)
+                }
+            })
+        };
         for tab in &mut self.tabs {
             if let Some(moved) = follow(&tab.path) {
                 tab.path = moved;
