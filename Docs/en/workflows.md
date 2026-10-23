@@ -116,6 +116,24 @@ fails, so it works as a CI step:
 apix run my-api --env staging --var token="$API_TOKEN"
 ```
 
+Requests with test scripts pass or fail by their tests; the others by their
+status code. The output lists each test under its request:
+
+```text
+create.apix                              201 Created  466.7 ms · 42 B
+  │ new id 101
+  ✓ created
+get.apix                                 200 OK  174.7 ms · 292 B
+  ✓ status 200
+  ✗ has the right id expected 1 to equal 2
+
+1 passed, 1 failed (1 failed tests)
+```
+
+What a script sets (`pm.environment.set`, `pm.variables.set`) carries on to
+the next requests of the run, and `pm.execution.setNextRequest("name")`
+jumps to another request (`null` stops the run).
+
 A GitHub Actions step could look like this:
 
 ```yaml

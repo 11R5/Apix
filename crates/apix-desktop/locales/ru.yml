@@ -136,6 +136,7 @@ chips.scope.collection: Коллекция «%{name}»
 chips.scope.environment: Окружение «%{name}»
 chips.scope.environment_of: Окружение «%{name}» из «%{collection}»
 chips.scope.project: Проект «%{name}»
+chips.scope.script: Задано скриптом
 chips.secret_scope: "%{scope} · секрет, только на этом компьютере"
 chips.set_for_run: Задать для этого запуска
 collection.choose_folder: Выбрать папку…
@@ -176,6 +177,7 @@ color.purple: Фиолетовый
 color.red: Красный
 color.teal: Бирюзовый
 color.yellow: Жёлтый
+console.empty: Ничего не выведено. console.log(…) в скрипте пишет сюда.
 cookies.clear_all: Удалить все
 cookies.empty: Пока нет cookie. Ответы Set-Cookie попадают сюда автоматически.
 cookies.expired: истёк
@@ -396,6 +398,8 @@ request.tab.headers: Заголовки
 request.tab.headers_count: Заголовки %{count}
 request.tab.params: Параметры
 request.tab.params_count: Параметры %{count}
+request.tab.scripts: Скрипты
+request.tab.scripts_set: Скрипты ●
 request.tab.settings: Настройки
 request.tab.settings_set: Настройки ●
 request.url_placeholder: "https://api.example.com/users   или   {{base_url}}/users"
@@ -413,9 +417,22 @@ response.save: Сохранить тело в файл…
 response.saved: "%{size} сохранено в %{path}."
 response.send_hint: "%{key} отправить"
 response.sending: Отправка…  Esc для отмены
+response.tab.console: Консоль
+response.tab.console_count: "Консоль %{count}"
 response.tab.network: Сеть
 response.tab.pretty: Форматированный
 response.tab.raw: Исходный
+response.tab.tests: Тесты
+response.tab.tests_count: "Тесты %{passed}/%{total}"
+scripts.around: "%{hint} Перед ним выполняются скрипты папок и коллекции: %{count}."
+scripts.error: "Ошибка скрипта: %{error}"
+scripts.pre: До запроса
+scripts.pre_error: "Скрипт перед запросом завершился с ошибкой, запрос не отправлен: %{error}"
+scripts.pre_hint: Выполняется перед отправкой запроса. pm.request можно изменить, pm.environment.set(…) задаёт переменные.
+scripts.skipped: Скрипт перед запросом пропустил этот запрос (pm.execution.skipRequest).
+scripts.tab_set: "%{name} ●"
+scripts.test: Тесты
+scripts.test_hint: Выполняется после ответа. Проверяйте его через pm.test("имя", () => pm.expect(…)); ответ в pm.response.
 settings.auto_lock: Блокировка зашифрованных коллекций
 settings.auto_lock_description: После такого времени бездействия зашифрованные коллекции блокируются и снова запрашивают пароль.
 settings.auto_lock_hour: Через 1 час
@@ -469,6 +486,9 @@ sidebar.show_in_environment: Показать в окружении
 table.add: Добавить
 table.key: Ключ
 table.value: Значение
+tests.none: Тесты не выполнялись. Добавьте pm.test(…) в скрипт тестов.
+tests.skipped: пропущен
+tests.summary: "Пройдено: %{passed}, провалено: %{failed}"
 time.hours_minutes: "%{hours} ч %{minutes} мин"
 time.minutes: "%{count} мин"
 vault.auto_locked: Зашифрованные коллекции заблокированы после %{count} мин бездействия.

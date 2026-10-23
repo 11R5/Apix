@@ -136,6 +136,7 @@ chips.scope.collection: 集合“%{name}”
 chips.scope.environment: 环境“%{name}”
 chips.scope.environment_of: “%{collection}”的环境“%{name}”
 chips.scope.project: 项目“%{name}”
+chips.scope.script: 由脚本设置
 chips.secret_scope: "%{scope} · 机密，仅在这台电脑上"
 chips.set_for_run: 为本次运行设置
 collection.choose_folder: 选择文件夹…
@@ -176,6 +177,7 @@ color.purple: 紫色
 color.red: 红色
 color.teal: 青色
 color.yellow: 黄色
+console.empty: 没有输出。脚本中的 console.log(…) 会写到这里。
 cookies.clear_all: 全部删除
 cookies.empty: 还没有 Cookie。Set-Cookie 响应会自动出现在这里。
 cookies.expired: 已过期
@@ -396,6 +398,8 @@ request.tab.headers: 请求头
 request.tab.headers_count: 请求头 %{count}
 request.tab.params: 参数
 request.tab.params_count: 参数 %{count}
+request.tab.scripts: 脚本
+request.tab.scripts_set: 脚本 ●
 request.tab.settings: 设置
 request.tab.settings_set: 设置 ●
 request.url_placeholder: "https://api.example.com/users   或   {{base_url}}/users"
@@ -413,9 +417,22 @@ response.save: 将正文保存到文件…
 response.saved: "已将 %{size} 保存到 %{path}。"
 response.send_hint: "%{key} 发送"
 response.sending: 正在发送…  按 Esc 取消
+response.tab.console: 控制台
+response.tab.console_count: "控制台 %{count}"
 response.tab.network: 网络
 response.tab.pretty: 美化
 response.tab.raw: 原始
+response.tab.tests: 测试
+response.tab.tests_count: "测试 %{passed}/%{total}"
+scripts.around: "%{hint} 在它之前会运行 %{count} 个文件夹或集合脚本。"
+scripts.error: "脚本错误：%{error}"
+scripts.pre: 请求前
+scripts.pre_error: "请求前脚本出错，请求未发送：%{error}"
+scripts.pre_hint: 在发送请求之前运行。可以修改 pm.request，pm.environment.set(…) 设置变量。
+scripts.skipped: 请求前脚本跳过了此请求（pm.execution.skipRequest）。
+scripts.tab_set: "%{name} ●"
+scripts.test: 测试
+scripts.test_hint: 在收到响应后运行。用 pm.test("名称", () => pm.expect(…)) 检查；响应在 pm.response 中。
 settings.auto_lock: 自动锁定加密集合
 settings.auto_lock_description: 空闲达到此时长后，加密集合将被锁定，需要重新输入密码。
 settings.auto_lock_hour: 1 小时后
@@ -469,6 +486,9 @@ sidebar.show_in_environment: 在环境中显示
 table.add: 添加
 table.key: 键
 table.value: 值
+tests.none: 没有运行任何测试。请在测试脚本中添加 pm.test(…)。
+tests.skipped: 已跳过
+tests.summary: "通过 %{passed}，失败 %{failed}"
 time.hours_minutes: "%{hours} 小时 %{minutes} 分钟"
 time.minutes: "%{count} 分钟"
 vault.auto_locked: 加密集合已在空闲 %{count} 分钟后锁定。

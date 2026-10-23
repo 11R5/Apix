@@ -136,6 +136,7 @@ chips.scope.collection: Collection « %{name} »
 chips.scope.environment: Environnement « %{name} »
 chips.scope.environment_of: Environnement « %{name} » de « %{collection} »
 chips.scope.project: Projet « %{name} »
+chips.scope.script: Défini par un script
 chips.secret_scope: "%{scope} · secrète, uniquement sur cet ordinateur"
 chips.set_for_run: Définir pour cette exécution
 collection.choose_folder: Choisir un dossier…
@@ -176,6 +177,7 @@ color.purple: Violet
 color.red: Rouge
 color.teal: Turquoise
 color.yellow: Jaune
+console.empty: Rien n’a été écrit. console.log(…) dans un script écrit ici.
 cookies.clear_all: Tout supprimer
 cookies.empty: Pas encore de cookies. Les réponses Set-Cookie arrivent ici automatiquement.
 cookies.expired: expiré
@@ -396,6 +398,8 @@ request.tab.headers: En-têtes
 request.tab.headers_count: En-têtes %{count}
 request.tab.params: Paramètres
 request.tab.params_count: Paramètres %{count}
+request.tab.scripts: Scripts
+request.tab.scripts_set: Scripts ●
 request.tab.settings: Réglages
 request.tab.settings_set: Réglages ●
 request.url_placeholder: "https://api.example.com/users   ou   {{base_url}}/users"
@@ -413,9 +417,22 @@ response.save: Enregistrer le corps dans un fichier…
 response.saved: "%{size} enregistrés dans %{path}."
 response.send_hint: "%{key} envoyer"
 response.sending: Envoi…  Esc pour annuler
+response.tab.console: Console
+response.tab.console_count: "Console %{count}"
 response.tab.network: Réseau
 response.tab.pretty: Formaté
 response.tab.raw: Brut
+response.tab.tests: Tests
+response.tab.tests_count: "Tests %{passed}/%{total}"
+scripts.around: "%{hint} %{count} scripts de dossier ou de collection s’exécutent avant celui-ci."
+scripts.error: "Erreur de script : %{error}"
+scripts.pre: Avant la requête
+scripts.pre_error: "Le script avant la requête a échoué, la requête n’a pas été envoyée : %{error}"
+scripts.pre_hint: S’exécute avant l’envoi de la requête. pm.request peut être modifiée, pm.environment.set(…) définit des variables.
+scripts.skipped: Le script avant la requête a sauté cette requête (pm.execution.skipRequest).
+scripts.tab_set: "%{name} ●"
+scripts.test: Tests
+scripts.test_hint: S’exécute à l’arrivée de la réponse. Vérifiez-la avec pm.test("nom", () => pm.expect(…)) ; elle est dans pm.response.
 settings.auto_lock: Verrouiller les collections chiffrées
 settings.auto_lock_description: Après ce délai d'inactivité, les collections chiffrées se verrouillent et redemandent le mot de passe.
 settings.auto_lock_hour: Après 1 heure
@@ -469,6 +486,9 @@ sidebar.show_in_environment: Afficher dans l'environnement
 table.add: Ajouter
 table.key: Clé
 table.value: Valeur
+tests.none: Aucun test exécuté. Ajoutez pm.test(…) dans le script de tests.
+tests.skipped: ignoré
+tests.summary: "%{passed} réussis, %{failed} échoués"
 time.hours_minutes: "%{hours} h %{minutes} min"
 time.minutes: "%{count} min"
 vault.auto_locked: Les collections chiffrées ont été verrouillées après %{count} minutes d'inactivité.

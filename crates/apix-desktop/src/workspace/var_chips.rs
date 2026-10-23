@@ -339,6 +339,7 @@ fn scope_label(scope: &str) -> SharedString {
         scope.split(' ').next().unwrap_or_default(),
         quoted.as_slice(),
     ) {
+        (apix_core::scripts::SCRIPT_SCOPE, []) => tr!("chips.scope.script"),
         ("Project", [name]) => tr!("chips.scope.project", name = name),
         ("Collection", [name]) => tr!("chips.scope.collection", name = name),
         ("Environment", [name]) => tr!("chips.scope.environment", name = name),

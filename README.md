@@ -86,6 +86,10 @@ Measurements of the other tools on the same machine are planned.
 - **Variables:** project, collection and environment layers, secrets kept out of
   git, dynamic values such as `{{$guid}}`, coloured chips in the URL bar, params,
   headers and form fields.
+- **Scripts and tests:** pre-request and test scripts in JavaScript (QuickJS,
+  built in) with a Postman-compatible `pm.*` API, so imported Postman scripts
+  run; `pm.test` / `pm.expect` results and `console` output in the app and in
+  `apix run`, which fails the build when a test fails.
 - **Encrypted collections** with a recovery key, auto-lock and, if you choose,
   the password remembered in the OS keychain.
 - **Import** from Postman (collections, environments, a whole "Export data"

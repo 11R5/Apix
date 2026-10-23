@@ -138,6 +138,7 @@ chips.scope.collection: Collection “%{name}”
 chips.scope.environment: Environment “%{name}”
 chips.scope.environment_of: Environment “%{name}” of “%{collection}”
 chips.scope.project: Project “%{name}”
+chips.scope.script: Set by a script
 chips.secret_scope: "%{scope} · secret, only on this computer"
 chips.set_for_run: Set for this run
 collection.choose_folder: Choose folder…
@@ -178,6 +179,7 @@ color.purple: Purple
 color.red: Red
 color.teal: Teal
 color.yellow: Yellow
+console.empty: Nothing logged. console.log(…) in a script writes here.
 cookies.clear_all: Remove all
 cookies.empty: No cookies yet. Set-Cookie answers land here automatically.
 cookies.expired: expired
@@ -398,6 +400,8 @@ request.tab.headers: Headers
 request.tab.headers_count: Headers %{count}
 request.tab.params: Params
 request.tab.params_count: Params %{count}
+request.tab.scripts: Scripts
+request.tab.scripts_set: Scripts ●
 request.tab.settings: Settings
 request.tab.settings_set: Settings ●
 request.url_placeholder: "https://api.example.com/users   or   {{base_url}}/users"
@@ -415,9 +419,22 @@ response.save: Save body to a file…
 response.saved: Saved %{size} to %{path}.
 response.send_hint: "%{key} send"
 response.sending: Sending…  Esc to cancel
+response.tab.console: Console
+response.tab.console_count: "Console %{count}"
 response.tab.network: Network
 response.tab.pretty: Pretty
 response.tab.raw: Raw
+response.tab.tests: Tests
+response.tab.tests_count: "Tests %{passed}/%{total}"
+scripts.around: "%{hint} %{count} folder or collection scripts run before this one."
+scripts.error: "Script error: %{error}"
+scripts.pre: Pre-request
+scripts.pre_error: "The pre-request script failed, so the request was not sent: %{error}"
+scripts.pre_hint: Runs before the request is sent. pm.request can be changed, pm.environment.set(…) sets variables.
+scripts.skipped: The pre-request script skipped this request (pm.execution.skipRequest).
+scripts.tab_set: "%{name} ●"
+scripts.test: Tests
+scripts.test_hint: Runs after the response arrives. Check it with pm.test("name", () => pm.expect(…)); pm.response holds it.
 settings.auto_lock: Lock encrypted collections
 settings.auto_lock_description: After this much idle time, encrypted collections lock and need the password again.
 settings.auto_lock_hour: After 1 hour
@@ -471,6 +488,9 @@ sidebar.show_in_environment: Show in environment
 table.add: Add
 table.key: Key
 table.value: Value
+tests.none: No tests ran. Add pm.test(…) in the Tests script.
+tests.skipped: skipped
+tests.summary: "%{passed} passed, %{failed} failed"
 time.hours_minutes: "%{hours} h %{minutes} min"
 time.minutes: "%{count} min"
 vault.auto_locked: Encrypted collections were locked after %{count} idle minutes.

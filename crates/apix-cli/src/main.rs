@@ -279,6 +279,18 @@ impl VarArgs {
         }
         Ok(vars)
     }
+
+    /// The same values kept apart by scope, for scripts; `--var` values are
+    /// the run's data.
+    fn scopes(&self, scope: &Scope) -> Result<apix_core::scripts::ScopeValues> {
+        let mut scopes = apix_core::project::scope_values(
+            scope.project.as_ref(),
+            scope.collection.as_ref(),
+            self.env.as_deref(),
+        )?;
+        scopes.data.extend(self.vars.iter().cloned());
+        Ok(scopes)
+    }
 }
 
 #[tokio::main(flavor = "current_thread")]
@@ -310,6 +322,7 @@ async fn run(cli: Cli) -> Result<bool> {
         } => {
             unlock_around(&file, &var)?;
             let scope = Scope::find(&file)?;
+            let scopes = vars.scopes(&scope)?;
             let vars = vars.build(&scope)?;
             let overrides = apix_core::RequestSettings {
                 timeout_ms: timeout.map(|s| (s * 1000.0) as u64),
@@ -317,19 +330,31 @@ async fn run(cli: Cli) -> Result<bool> {
                 proxy,
                 ..Default::default()
             };
-            let response = send_file(&client, &scope, &file, &vars, &overrides).await?;
-            print_status(&style, &response);
-            if include_headers {
-                for (k, v) in &response.headers {
-                    println!("{}{k}{}: {v}", style.dim, style.reset);
+            let mut state = Default::default();
+            let info = apix_script::Info {
+                request_id: file.display().to_string(),
+                iteration_count: 1,
+                ..Default::default()
+            };
+            let done = exchange(
+                &client, &scope, &file, &vars, &scopes, &mut state, &overrides, info,
+            )
+            .await?;
+            if let Some(response) = &done.response {
+                print_status(&style, response);
+                if include_headers {
+                    for (k, v) in &response.headers {
+                        println!("{}{k}{}: {v}", style.dim, style.reset);
+                    }
+                    println!();
                 }
-                println!();
+                if network {
+                    print_network(&style, response);
+                }
+                println!("{}", response.pretty_body());
             }
-            if network {
-                print_network(&style, &response);
-            }
-            println!("{}", response.pretty_body());
-            Ok(response.is_success())
+            print_scripts(&style, &done);
+            Ok(done.passed())
         }
         Command::Run { dir, vars } => {
             unlock_around(&dir, &var)?;
@@ -338,31 +363,87 @@ async fn run(cli: Cli) -> Result<bool> {
             })?;
             let scope = Scope::find(&root)?;
             let collection = Collection::open(&root)?;
+            let scopes = vars.scopes(&scope)?;
             let vars = vars.build(&scope)?;
-            let (mut passed, mut failed) = (0, 0);
-            for path in collection.request_paths() {
+            let paths = collection.request_paths();
+            let names: Vec<String> = paths
+                .iter()
+                .map(|p| load_request(p).map(|r| r.name).unwrap_or_default())
+                .collect();
+            let mut state = apix_core::scripts::ScriptVars::default();
+            let (mut passed, mut failed, mut tests_failed) = (0, 0, 0);
+            let mut at = 0;
+            // `setNextRequest` may loop (polling); a ceiling keeps a mistake from running forever.
+            let mut steps = 0;
+            while at < paths.len() && steps < paths.len() * 100 {
+                steps += 1;
+                let path = &paths[at];
                 let label = path
                     .strip_prefix(&root)
-                    .unwrap_or(&path)
+                    .unwrap_or(path)
                     .display()
                     .to_string();
-                match send_file(&client, &scope, &path, &vars, &Default::default()).await {
-                    Ok(response) => {
-                        if response.is_success() {
+                let info = apix_script::Info {
+                    request_id: label.clone(),
+                    iteration_count: 1,
+                    ..Default::default()
+                };
+                let mut next = at + 1;
+                match exchange(
+                    &client,
+                    &scope,
+                    path,
+                    &vars,
+                    &scopes,
+                    &mut state,
+                    &Default::default(),
+                    info,
+                )
+                .await
+                {
+                    Ok(done) => {
+                        if done.passed() {
                             passed += 1
                         } else {
                             failed += 1
                         }
+                        tests_failed += done.tests.failed_tests();
                         print!("{label:<40} ");
-                        print_status(&style, &response);
+                        match &done.response {
+                            Some(response) => print_status(&style, response),
+                            None => println!(),
+                        }
+                        print_scripts(&style, &done);
+                        let wanted = done
+                            .tests
+                            .next_request
+                            .clone()
+                            .or(done.pre.next_request.clone());
+                        match wanted {
+                            Some(None) => next = paths.len(),
+                            Some(Some(name)) => match names.iter().position(|n| *n == name) {
+                                Some(ix) => next = ix,
+                                None => println!(
+                                    "  {}setNextRequest: no request named \"{name}\"{}",
+                                    style.red, style.reset
+                                ),
+                            },
+                            None => {}
+                        }
                     }
                     Err(err) => {
                         failed += 1;
                         println!("{label:<40} {}error{} {err:#}", style.red, style.reset);
                     }
                 }
+                at = next;
             }
-            println!("\n{passed} passed, {failed} failed");
+            let tests = if tests_failed > 0 {
+                format!(" ({tests_failed} failed tests)")
+            } else {
+                String::new()
+            };
+            println!("\n{passed} passed, {failed} failed{tests}");
             Ok(failed == 0)
         }
         Command::Import { file, out, into } => import(&style, &file, out, into),
@@ -572,26 +653,144 @@ fn import(style: &Style, file: &Path, out: Option<PathBuf>, into: Option<PathBuf
     Ok(true)
 }
 
-async fn send_file(
+/// One request with its scripts: what the pre-request scripts did, the
+/// response (unless a script stopped it), and what the test scripts did.
+struct Exchange {
+    pre: apix_script::Output,
+    response: Option<Response>,
+    tests: apix_script::Output,
+}
+
+impl Exchange {
+    /// Whether this request counts as passed: no script error, no failed
+    /// test, and, for requests without tests, a successful status.
+    fn passed(&self) -> bool {
+        let scripts_ok = self.pre.error.is_none()
+            && self.tests.error.is_none()
+            && self.tests.failed_tests() == 0;
+        let status_ok =
+            !self.tests.tests.is_empty() || self.response.as_ref().is_none_or(Response::is_success);
+        scripts_ok && status_ok && (self.response.is_some() || self.pre.skip_request)
+    }
+}
+
+/// Sends the request at `path`: pre-request scripts, then the request with
+/// variables filled in, then test scripts. `state` carries what scripts set
+/// from one request to the next.
+#[allow(clippy::too_many_arguments)]
+async fn exchange(
     client: &HttpClient,
     scope: &Scope,
     path: &Path,
     vars: &Variables,
+    scopes: &apix_core::scripts::ScopeValues,
+    state: &mut apix_core::scripts::ScriptVars,
     overrides: &apix_core::RequestSettings,
-) -> Result<Response> {
+    info: apix_script::Info,
+) -> Result<Exchange> {
+    use apix_core::scripts::{Event, chain};
+
     let mut request = scope.load(path)?;
     request.settings = overrides.clone().or_inherit(&request.settings);
-    let resolved = request.resolve(vars);
+    let mut info = info;
+    if info.request_name.is_empty() {
+        info.request_name = request.name.clone();
+    }
+    let root = scope.collection.as_ref().map(|c| c.root.as_path());
+    let pre = apix_script::run(
+        &chain(path, root, Event::PreRequest),
+        &apix_script::Input {
+            event: Event::PreRequest,
+            request: &request,
+            response: None,
+            scopes,
+            vars: state,
+            info: info.clone(),
+        },
+    );
+    *state = pre.vars.clone();
+    let mut done = Exchange {
+        pre,
+        response: None,
+        tests: apix_script::Output::default(),
+    };
+    if done.pre.error.is_some() || done.pre.skip_request {
+        return Ok(done);
+    }
+    let resolved = done.pre.request.resolve(&state.apply(vars.clone()));
     if !resolved.missing.is_empty() {
         let names: Vec<_> = resolved.missing.into_iter().collect();
         bail!("undefined variable(s): {}", names.join(", "));
     }
     // Body files are relative to the request file.
-    let request = match path.parent() {
+    let sent = match path.parent() {
         Some(dir) => resolved.request.with_files_relative_to(dir),
         None => resolved.request,
     };
-    Ok(client.send(&request).await?)
+    let response = client.send(&sent).await?;
+    let view = apix_script::ResponseView::new(
+        response.status,
+        response.reason.unwrap_or(""),
+        &response.headers,
+        &response.body,
+        response.timing.total,
+    );
+    done.tests = apix_script::run(
+        &chain(path, root, Event::Test),
+        &apix_script::Input {
+            event: Event::Test,
+            request: &done.pre.request,
+            response: Some(&view),
+            scopes,
+            vars: state,
+            info,
+        },
+    );
+    *state = done.tests.vars.clone();
+    done.response = Some(response);
+    Ok(done)
+}
+
+/// Console lines, script errors and test results, indented under a request.
+fn print_scripts(style: &Style, exchange: &Exchange) {
+    for output in [&exchange.pre, &exchange.tests] {
+        for log in &output.logs {
+            let color = match log.level.as_str() {
+                "error" => style.red,
+                "warn" => style.yellow,
+                _ => style.dim,
+            };
+            println!("  {color}│ {}{}", log.text, style.reset);
+        }
+    }
+    if let Some(error) = &exchange.pre.error {
+        println!(
+            "  {}pre-request script error: {error}{}",
+            style.red, style.reset
+        );
+    }
+    if exchange.pre.skip_request {
+        println!(
+            "  {}skipped by its pre-request script{}",
+            style.dim, style.reset
+        );
+    }
+    for test in &exchange.tests.tests {
+        if test.skipped {
+            println!("  {}- {} (skipped){}", style.dim, test.name, style.reset);
+        } else if test.passed {
+            println!("  {}✓{} {}", style.green, style.reset, test.name);
+        } else {
+            let why = test.error.as_deref().unwrap_or("failed");
+            println!(
+                "  {}✗ {}{} {}{why}{}",
+                style.red, test.name, style.reset, style.dim, style.reset
+            );
+        }
+    }
+    if let Some(error) = &exchange.tests.error {
+        println!("  {}test script error: {error}{}", style.red, style.reset);
+    }
 }
 
 fn print_status(style: &Style, response: &Response) {
@@ -696,6 +895,7 @@ fn print_network(style: &Style, response: &Response) {
 struct Style {
     green: &'static str,
     red: &'static str,
+    yellow: &'static str,
     dim: &'static str,
     reset: &'static str,
 }
@@ -706,6 +906,7 @@ impl Style {
             Self {
                 green: "\x1b[32m",
                 red: "\x1b[31m",
+                yellow: "\x1b[33m",
                 dim: "\x1b[2m",
                 reset: "\x1b[0m",
             }
@@ -713,6 +914,7 @@ impl Style {
             Self {
                 green: "",
                 red: "",
+                yellow: "",
                 dim: "",
                 reset: "",
             }

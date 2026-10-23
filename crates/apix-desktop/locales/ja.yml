@@ -136,6 +136,7 @@ chips.scope.collection: コレクション「%{name}」
 chips.scope.environment: 環境「%{name}」
 chips.scope.environment_of: 「%{collection}」の環境「%{name}」
 chips.scope.project: プロジェクト「%{name}」
+chips.scope.script: スクリプトが設定
 chips.secret_scope: "%{scope} · シークレット、このコンピューターのみ"
 chips.set_for_run: この実行のみ設定
 collection.choose_folder: フォルダーを選択…
@@ -176,6 +177,7 @@ color.purple: 紫
 color.red: 赤
 color.teal: ティール
 color.yellow: 黄
+console.empty: 出力はありません。スクリプトの console.log(…) がここに書き込みます。
 cookies.clear_all: すべて削除
 cookies.empty: まだCookieはありません。Set-Cookie応答は自動的にここに入ります。
 cookies.expired: 期限切れ
@@ -396,6 +398,8 @@ request.tab.headers: ヘッダー
 request.tab.headers_count: ヘッダー %{count}
 request.tab.params: パラメーター
 request.tab.params_count: パラメーター %{count}
+request.tab.scripts: スクリプト
+request.tab.scripts_set: スクリプト ●
 request.tab.settings: 設定
 request.tab.settings_set: 設定 ●
 request.url_placeholder: "https://api.example.com/users   または   {{base_url}}/users"
@@ -413,9 +417,22 @@ response.save: 本文をファイルに保存…
 response.saved: "%{size} を %{path} に保存しました。"
 response.send_hint: "%{key} で送信"
 response.sending: 送信中…  Esc でキャンセル
+response.tab.console: コンソール
+response.tab.console_count: "コンソール %{count}"
 response.tab.network: ネットワーク
 response.tab.pretty: 整形
 response.tab.raw: 生データ
+response.tab.tests: テスト
+response.tab.tests_count: "テスト %{passed}/%{total}"
+scripts.around: "%{hint} この前にフォルダーまたはコレクションのスクリプトが %{count} 個実行されます。"
+scripts.error: "スクリプトエラー: %{error}"
+scripts.pre: リクエスト前
+scripts.pre_error: "リクエスト前スクリプトが失敗したため、リクエストは送信されませんでした: %{error}"
+scripts.pre_hint: リクエストの送信前に実行されます。pm.request を変更でき、pm.environment.set(…) で変数を設定します。
+scripts.skipped: リクエスト前スクリプトがこのリクエストをスキップしました (pm.execution.skipRequest)。
+scripts.tab_set: "%{name} ●"
+scripts.test: テスト
+scripts.test_hint: レスポンスの受信後に実行されます。pm.test("名前", () => pm.expect(…)) で確認します。レスポンスは pm.response にあります。
 settings.auto_lock: 暗号化されたコレクションのロック
 settings.auto_lock_description: この時間操作がないと、暗号化されたコレクションはロックされ、再度パスワードが必要になります。
 settings.auto_lock_hour: 1 時間後
@@ -469,6 +486,9 @@ sidebar.show_in_environment: 環境で表示
 table.add: 追加
 table.key: キー
 table.value: 値
+tests.none: テストは実行されていません。テストスクリプトに pm.test(…) を追加してください。
+tests.skipped: スキップ
+tests.summary: "%{passed} 件成功、%{failed} 件失敗"
 time.hours_minutes: "%{hours} 時間 %{minutes} 分"
 time.minutes: "%{count} 分"
 vault.auto_locked: "%{count} 分間操作がなかったため、暗号化されたコレクションをロックしました。"

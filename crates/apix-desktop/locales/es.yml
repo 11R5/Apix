@@ -136,6 +136,7 @@ chips.scope.collection: Colección “%{name}”
 chips.scope.environment: Entorno “%{name}”
 chips.scope.environment_of: Entorno “%{name}” de “%{collection}”
 chips.scope.project: Proyecto “%{name}”
+chips.scope.script: Definida por un script
 chips.secret_scope: "%{scope} · secreto, solo en este equipo"
 chips.set_for_run: Definir para esta ejecución
 collection.choose_folder: Elegir carpeta…
@@ -176,6 +177,7 @@ color.purple: Morado
 color.red: Rojo
 color.teal: Turquesa
 color.yellow: Amarillo
+console.empty: No se escribió nada. console.log(…) en un script escribe aquí.
 cookies.clear_all: Eliminar todo
 cookies.empty: Aún no hay cookies. Las respuestas Set-Cookie llegan aquí automáticamente.
 cookies.expired: caducada
@@ -396,6 +398,8 @@ request.tab.headers: Encabezados
 request.tab.headers_count: Encabezados %{count}
 request.tab.params: Parámetros
 request.tab.params_count: Parámetros %{count}
+request.tab.scripts: Scripts
+request.tab.scripts_set: Scripts ●
 request.tab.settings: Ajustes
 request.tab.settings_set: Ajustes ●
 request.url_placeholder: "https://api.example.com/users   o   {{base_url}}/users"
@@ -413,9 +417,22 @@ response.save: Guardar el cuerpo en un archivo…
 response.saved: "%{size} guardados en %{path}."
 response.send_hint: "%{key} enviar"
 response.sending: Enviando…  Esc para cancelar
+response.tab.console: Consola
+response.tab.console_count: "Consola %{count}"
 response.tab.network: Red
 response.tab.pretty: Formateado
 response.tab.raw: Sin formato
+response.tab.tests: Pruebas
+response.tab.tests_count: "Pruebas %{passed}/%{total}"
+scripts.around: "%{hint} Antes de este se ejecutan %{count} scripts de carpeta o colección."
+scripts.error: "Error de script: %{error}"
+scripts.pre: Antes de la petición
+scripts.pre_error: "El script previo falló y la petición no se envió: %{error}"
+scripts.pre_hint: Se ejecuta antes de enviar la petición. pm.request se puede cambiar y pm.environment.set(…) define variables.
+scripts.skipped: El script previo omitió esta petición (pm.execution.skipRequest).
+scripts.tab_set: "%{name} ●"
+scripts.test: Pruebas
+scripts.test_hint: Se ejecuta al llegar la respuesta. Compruébala con pm.test("nombre", () => pm.expect(…)); está en pm.response.
 settings.auto_lock: Bloquear colecciones cifradas
 settings.auto_lock_description: Tras este tiempo de inactividad, las colecciones cifradas se bloquean y vuelven a pedir la contraseña.
 settings.auto_lock_hour: Tras 1 hora
@@ -469,6 +486,9 @@ sidebar.show_in_environment: Mostrar en el entorno
 table.add: Añadir
 table.key: Clave
 table.value: Valor
+tests.none: No se ejecutó ninguna prueba. Añade pm.test(…) en el script de pruebas.
+tests.skipped: omitida
+tests.summary: "%{passed} correctas, %{failed} fallidas"
 time.hours_minutes: "%{hours} h %{minutes} min"
 time.minutes: "%{count} min"
 vault.auto_locked: Las colecciones cifradas se bloquearon tras %{count} minutos de inactividad.

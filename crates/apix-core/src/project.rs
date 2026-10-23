@@ -469,6 +469,38 @@ pub fn variables(
     }
 }
 
+/// The same layers as [`variables`], kept apart by scope for scripts
+/// (`pm.globals`, `pm.collectionVariables`, `pm.environment`). A missing
+/// environment just leaves that scope empty.
+pub fn scope_values(
+    project: Option<&Project>,
+    collection: Option<&Collection>,
+    environment: Option<&str>,
+) -> Result<crate::scripts::ScopeValues, StoreError> {
+    let mut out = crate::scripts::ScopeValues {
+        environment_name: environment.map(str::to_owned),
+        ..Default::default()
+    };
+    if let Some(p) = project {
+        out.globals.extend(p.meta.vars.clone());
+    }
+    if let Some(c) = collection {
+        out.collection.extend(c.meta.vars.clone());
+    }
+    if let Some(name) = environment {
+        let roots = [project.map(|p| &p.root), collection.map(|c| &c.root)];
+        for root in roots.into_iter().flatten() {
+            if store::environment_files(root, name).is_empty() {
+                continue;
+            }
+            let parts = store::EnvironmentParts::read(root, name)?;
+            out.environment.extend(parts.vars);
+            out.environment.extend(parts.secrets);
+        }
+    }
+    Ok(out)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

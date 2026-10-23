@@ -92,6 +92,7 @@ impl Workspace {
         self.collapsed.clear();
         self.selected = None;
         self.tabs.clear();
+        self.script_vars = Default::default();
         self.reload(window, cx);
 
         // Inside a project, start in the collection that was opened, if any.
@@ -268,6 +269,8 @@ impl Workspace {
             return;
         }
         self.environment = name;
+        // `pm.environment.set` belonged to the environment that was active.
+        self.script_vars.environment.clear();
         if let Some(root) = self.workspace_root() {
             self.app_state
                 .set_environment(&root, self.environment.as_deref());
@@ -300,7 +303,7 @@ impl Workspace {
 
     /// Project → collection → project environment → collection environment,
     /// for the collection of the open request.
-    fn rebuild_vars(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+    pub(super) fn rebuild_vars(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         match project::variables(
             self.project.as_ref(),
             self.collection.as_ref(),
@@ -314,6 +317,10 @@ impl Workspace {
                         .unwrap_or_default();
             }
             Err(e) => self.notify_error(describe(&e), window, cx),
+        }
+        // What scripts set wins, as it would when sending.
+        if !self.script_vars.is_empty() {
+            self.vars = self.script_vars.apply(std::mem::take(&mut self.vars));
         }
     }
 
@@ -356,7 +363,9 @@ impl Workspace {
     }
 
     pub(super) fn is_dirty(&self, cx: &App) -> bool {
-        self.selected.is_some() && self.build_request(cx) != self.base
+        self.selected.is_some()
+            && (self.build_request(cx) != self.base
+                || self.script_editor.read(cx).scripts(cx) != self.base_scripts)
     }
 
     /// Runs `then` now, or after the user saves or discards unsaved edits.
@@ -461,6 +470,12 @@ impl Workspace {
             self.notify_error(describe(&e), window, cx);
             return false;
         }
+        let scripts = self.script_editor.read(cx).scripts(cx);
+        if let Err(e) = scripts.write(&path) {
+            self.notify_error(e.to_string(), window, cx);
+            return false;
+        }
+        self.base_scripts = scripts;
         let created = self.selected.is_none();
         self.base = request.clone();
         self.requests.insert(path.clone(), request);

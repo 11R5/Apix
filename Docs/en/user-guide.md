@@ -21,6 +21,7 @@ command line runs the same requests in a terminal or CI.
 - [Variables and environments](#variables-and-environments)
 - [The response](#the-response)
 - [The Network tab](#the-network-tab)
+- [Scripts and tests](#scripts-and-tests)
 - [Tabs](#tabs)
 - [Organising requests](#organising-requests)
 - [Projects](#projects)
@@ -238,6 +239,48 @@ The **Network** tab explains where the time went and what the connection was:
 - the server certificate: issuer, validity and days left
 
 ![The Network tab](images/network.png)
+
+## Scripts and tests
+
+The **Scripts** tab holds two JavaScript scripts for the request:
+
+- **Pre-request** runs before the request is sent. It can change the request
+  (`pm.request.headers.upsert(…)`, `pm.request.url.query.add(…)`,
+  `pm.request.body.raw = …`) and set variables
+  (`pm.environment.set("token", …)`).
+- **Tests** runs after the response arrives and checks it:
+
+```js
+pm.test("status is 200", () => pm.response.to.have.status(200));
+pm.test("has users", () => {
+  const body = pm.response.json();
+  pm.expect(body.users).to.be.an("array").that.is.not.empty;
+});
+```
+
+The API is Postman's `pm.*` (also available as `apix.*`), so scripts imported
+from Postman run as they are: `pm.environment`, `pm.collectionVariables`,
+`pm.globals` (the project's variables), `pm.variables`, `pm.request`,
+`pm.response`, `pm.test`, `pm.expect` with Chai-style assertions,
+`pm.info`, `console.log`, and the older `tests["…"] = …` and
+`postman.setEnvironmentVariable(…)`. `pm.sendRequest` and `require(…)` come
+later.
+
+Scripts are files next to what they belong to: `<request>.prerequest.js` and
+`<request>.test.js` next to the request, `_folder.prerequest.js` /
+`_folder.test.js` in a folder, `_collection.prerequest.js` /
+`_collection.test.js` in the collection root. They run from the outside in:
+collection, folders, then the request. Ctrl+S saves the request's scripts with
+it; the editor's text is used even before you save.
+
+After sending, the response pane gets a **Tests** tab (✓ passed, ✗ failed with
+the reason) and a **Console** tab with `console.*` output. If a pre-request
+script throws, the request is not sent and the error says which file failed.
+Scripts stop after 10 seconds.
+
+Values a script sets are not written to any file. They last while Apix is open
+(switching environment drops what `pm.environment.set` set) and show up in the
+variable cards as “Set by a script”. `pm.variables.set` lasts for one send.
 
 ## Tabs
 

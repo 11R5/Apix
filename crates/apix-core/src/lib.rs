@@ -6,6 +6,7 @@ pub mod dynamic;
 pub mod history;
 pub mod model;
 pub mod project;
+pub mod scripts;
 pub mod secrets;
 pub mod sign;
 pub mod store;

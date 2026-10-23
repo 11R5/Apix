@@ -79,9 +79,11 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [ ] gRPC (unary and streaming, `.proto` or server reflection) — asked for on 2026-10-23, after the importers
 
 ## M5 — Scripting, testing, runner
-- [ ] `apix-script` on QuickJS with a `pm.*`-compatible API
-- [ ] Pre-request and test scripts, built-in libraries, no-code assertions
-- [ ] Test results tab and console
+- [x] `apix-script` on QuickJS with a `pm.*`-compatible API: variable scopes, `pm.request` (editable in pre-request scripts), `pm.response`, `pm.test`, Chai-style `pm.expect`, `pm.response.to.have.*`, the older `tests[...]` / `postman.*` API, `console`
+- [x] Pre-request and test scripts next to requests, folders and the collection (`<name>.prerequest.js`, `_folder.test.js`, `_collection.prerequest.js`, …), run collection → folders → request; what scripts set lasts for the app session or the run, never written to disk
+- [x] Scripts tab in the app; Tests and Console tabs on the response
+- [x] `apix send` / `apix run` run scripts, print test results and console lines, follow `setNextRequest`, and fail when a test fails
+- [ ] `pm.sendRequest`, built-in libraries (`require('crypto-js')`, lodash, moment, uuid, ajv), no-code assertions, save a response value as a variable
 - [ ] Runner UI, data-driven runs (CSV/JSON), JUnit / HTML reports
 
 ## After M5 — Themes
