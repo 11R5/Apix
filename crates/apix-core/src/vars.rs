@@ -65,6 +65,27 @@ impl Variables {
         self.map.insert(key, value.into());
     }
 
+    /// Sets one value and remembers `scope` as where it came from.
+    pub fn set_with_scope(&mut self, key: &str, value: &str, scope: &str) {
+        self.map.insert(key.to_owned(), value.to_owned());
+        let origin = Origin {
+            scope: scope.to_owned(),
+            secret: false,
+        };
+        self.origins.insert(key.to_owned(), origin);
+    }
+
+    /// Removes a value, as if no layer had set it.
+    pub fn unset(&mut self, key: &str) {
+        self.map.remove(key);
+        self.origins.remove(key);
+    }
+
+    /// Every variable and its value, in no particular order.
+    pub fn iter(&self) -> impl Iterator<Item = (&str, &str)> {
+        self.map.iter().map(|(k, v)| (k.as_str(), v.as_str()))
+    }
+
     pub fn get(&self, key: &str) -> Option<&str> {
         self.map.get(key).map(String::as_str)
     }
