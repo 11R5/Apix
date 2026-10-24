@@ -302,6 +302,7 @@ menu.project_settings: Настройки запросов проекта…
 menu.quit: Выход
 menu.report_problem: Сообщить о проблеме
 menu.request: Запрос
+menu.runner: "Runner…"
 menu.save: Сохранить
 menu.send: Отправить
 menu.settings: Настройки…
@@ -434,6 +435,42 @@ response.tab.pretty: Форматированный
 response.tab.raw: Исходный
 response.tab.tests: Тесты
 response.tab.tests_count: "Тесты %{passed}/%{total}"
+runner.all: "Все"
+runner.bad_number: "Итерации и пауза должны быть целыми числами."
+runner.bail: "Остановиться на первой ошибке"
+runner.busy: "Запуск ещё идёт; остановите его, прежде чем начинать новый."
+runner.choose_data: "Выбрать файл CSV или JSON…"
+runner.data: "Файл данных"
+runner.data_empty: "В файле данных нет строк."
+runner.data_error: "Не удалось прочитать файл данных: %{error}"
+runner.data_rows: "Строк: %{count} · %{columns}"
+runner.delay: "Пауза (мс)"
+runner.environment: "Окружение"
+runner.error: "Не удалось подготовить запуск: %{error}"
+runner.finished: "Готово за %{seconds} с"
+runner.idle: "Выберите запросы, их порядок и число повторов, затем нажмите «Запустить». Отправляются сохранённые версии; результаты появятся здесь."
+runner.iteration: "Итерация %{iteration}/%{total}"
+runner.iterations: "Итерации"
+runner.iterations_hint: "Пусто — один раз. Пауза делается между двумя запросами."
+runner.iterations_rows: "Пусто — по разу на каждую строку данных (%{count}). Пауза делается между двумя запросами."
+runner.none: "Ни одного"
+runner.not_sent: "не отправлен"
+runner.nothing_selected: "Выберите хотя бы один запрос."
+runner.pause: "Пауза"
+runner.paused: "На паузе"
+runner.requests: "Запросы (%{count})"
+runner.resume: "Продолжить"
+runner.run: "Запустить"
+runner.save_report: "Сохранить отчёт:"
+runner.saved: "Отчёт сохранён: %{path}"
+runner.sending: "Отправка %{name}…"
+runner.skipped: "пропущен"
+runner.stop: "Остановить"
+runner.stopped: "Остановлено через %{seconds} с"
+runner.stopping: "Остановка после этого запроса…"
+runner.summary: "Успешно: %{passed} · с ошибкой: %{failed} · тесты %{tests_passed}/%{tests}"
+runner.title: "Runner · %{name}"
+runner.waiting: "Ожидание…"
 scripts.around: "%{hint} Перед ним выполняются скрипты папок и коллекции: %{count}."
 scripts.asserts: Проверки
 scripts.asserts_count: "Проверки %{count}"
@@ -494,6 +531,7 @@ sidebar.open_folder: Открыть папку
 sidebar.recent: НЕДАВНИЕ
 sidebar.remove_encryption: Снять шифрование…
 sidebar.rename: Переименовать…
+sidebar.run: "Запустить…"
 sidebar.settings: Настройки запросов…
 sidebar.show_in_environment: Показать в окружении
 table.add: Добавить

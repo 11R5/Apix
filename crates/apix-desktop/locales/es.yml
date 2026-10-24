@@ -302,6 +302,7 @@ menu.project_settings: Ajustes de petición del proyecto…
 menu.quit: Salir
 menu.report_problem: Informar de un problema
 menu.request: Solicitud
+menu.runner: "Runner…"
 menu.save: Guardar
 menu.send: Enviar
 menu.settings: Configuración…
@@ -434,6 +435,42 @@ response.tab.pretty: Formateado
 response.tab.raw: Sin formato
 response.tab.tests: Pruebas
 response.tab.tests_count: "Pruebas %{passed}/%{total}"
+runner.all: "Todas"
+runner.bad_number: "Las iteraciones y la espera deben ser números enteros."
+runner.bail: "Parar en el primer fallo"
+runner.busy: "Hay una ejecución en curso; detenla antes de empezar otra."
+runner.choose_data: "Elegir un archivo CSV o JSON…"
+runner.data: "Archivo de datos"
+runner.data_empty: "El archivo de datos no tiene filas."
+runner.data_error: "No se pudo leer el archivo de datos: %{error}"
+runner.data_rows: "%{count} filas · %{columns}"
+runner.delay: "Espera (ms)"
+runner.environment: "Entorno"
+runner.error: "No se pudo preparar la ejecución: %{error}"
+runner.finished: "Terminado en %{seconds} s"
+runner.idle: "Elige las peticiones, su orden y cuántas veces ejecutarlas, y pulsa Ejecutar. Se envían las versiones guardadas; los resultados aparecen aquí."
+runner.iteration: "Iteración %{iteration}/%{total}"
+runner.iterations: "Iteraciones"
+runner.iterations_hint: "Vacío: una vez. La espera es la pausa entre dos peticiones."
+runner.iterations_rows: "Vacío: una vez por fila de datos (%{count}). La espera es la pausa entre dos peticiones."
+runner.none: "Ninguna"
+runner.not_sent: "no enviada"
+runner.nothing_selected: "Elige al menos una petición."
+runner.pause: "Pausar"
+runner.paused: "En pausa"
+runner.requests: "Peticiones (%{count})"
+runner.resume: "Continuar"
+runner.run: "Ejecutar"
+runner.save_report: "Guardar informe:"
+runner.saved: "Informe guardado en %{path}"
+runner.sending: "Enviando %{name}…"
+runner.skipped: "omitida"
+runner.stop: "Detener"
+runner.stopped: "Detenido tras %{seconds} s"
+runner.stopping: "Deteniendo tras esta petición…"
+runner.summary: "%{passed} correctas · %{failed} fallidas · pruebas %{tests_passed}/%{tests}"
+runner.title: "Runner · %{name}"
+runner.waiting: "Esperando…"
 scripts.around: "%{hint} Antes de este se ejecutan %{count} scripts de carpeta o colección."
 scripts.asserts: Comprobaciones
 scripts.asserts_count: "Comprobaciones %{count}"
@@ -494,6 +531,7 @@ sidebar.open_folder: Abrir una carpeta
 sidebar.recent: RECIENTES
 sidebar.remove_encryption: Quitar el cifrado…
 sidebar.rename: Cambiar nombre…
+sidebar.run: "Ejecutar…"
 sidebar.settings: Ajustes de petición…
 sidebar.show_in_environment: Mostrar en el entorno
 table.add: Añadir

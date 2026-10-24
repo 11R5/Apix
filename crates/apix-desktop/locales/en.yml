@@ -304,6 +304,7 @@ menu.project_settings: Project request settings…
 menu.quit: Quit
 menu.report_problem: Report a problem
 menu.request: Request
+menu.runner: "Runner…"
 menu.save: Save
 menu.send: Send
 menu.settings: Settings…
@@ -436,6 +437,42 @@ response.tab.pretty: Pretty
 response.tab.raw: Raw
 response.tab.tests: Tests
 response.tab.tests_count: "Tests %{passed}/%{total}"
+runner.all: "All"
+runner.bad_number: "Iterations and delay must be whole numbers."
+runner.bail: "Stop at the first failure"
+runner.busy: "A run is still going; stop it before starting another."
+runner.choose_data: "Choose a CSV or JSON file…"
+runner.data: "Data file"
+runner.data_empty: "The data file has no rows."
+runner.data_error: "Could not read the data file: %{error}"
+runner.data_rows: "%{count} rows · %{columns}"
+runner.delay: "Delay (ms)"
+runner.environment: "Environment"
+runner.error: "Could not prepare the run: %{error}"
+runner.finished: "Done in %{seconds} s"
+runner.idle: "Pick the requests, their order and how often to run them, then press Run. The saved versions are sent; results appear here."
+runner.iteration: "Iteration %{iteration}/%{total}"
+runner.iterations: "Iterations"
+runner.iterations_hint: "Empty means once. The delay is the pause between two requests."
+runner.iterations_rows: "Empty means once per data row (%{count}). The delay is the pause between two requests."
+runner.none: "None"
+runner.not_sent: "not sent"
+runner.nothing_selected: "Pick at least one request."
+runner.pause: "Pause"
+runner.paused: "Paused"
+runner.requests: "Requests (%{count})"
+runner.resume: "Resume"
+runner.run: "Run"
+runner.save_report: "Save report:"
+runner.saved: "Report saved to %{path}"
+runner.sending: "Sending %{name}…"
+runner.skipped: "skipped"
+runner.stop: "Stop"
+runner.stopped: "Stopped after %{seconds} s"
+runner.stopping: "Stopping after this request…"
+runner.summary: "%{passed} passed · %{failed} failed · tests %{tests_passed}/%{tests}"
+runner.title: "Runner · %{name}"
+runner.waiting: "Waiting…"
 scripts.around: "%{hint} %{count} folder or collection scripts run before this one."
 scripts.asserts: Checks
 scripts.asserts_count: "Checks %{count}"
@@ -496,6 +533,7 @@ sidebar.open_folder: Open a folder
 sidebar.recent: RECENT
 sidebar.remove_encryption: Remove encryption…
 sidebar.rename: Rename…
+sidebar.run: "Run…"
 sidebar.settings: Request settings…
 sidebar.show_in_environment: Show in environment
 table.add: Add

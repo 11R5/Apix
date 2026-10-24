@@ -11,6 +11,7 @@ mod history_ui;
 mod menu_bar;
 mod network;
 mod palette;
+mod runner_ui;
 mod script_editor;
 mod script_run;
 mod settings_editor;
@@ -64,6 +65,7 @@ actions!(
         OpenPalette,
         OpenSettings,
         OpenHistory,
+        OpenRunner,
         CloseTab,
         NextTab,
         PrevTab,
@@ -93,6 +95,7 @@ pub fn bind_keys(cx: &mut App) {
         KeyBinding::new("secondary-p", OpenPalette, Some(CONTEXT)),
         KeyBinding::new("secondary-,", OpenSettings, Some(CONTEXT)),
         KeyBinding::new("secondary-h", OpenHistory, Some(CONTEXT)),
+        KeyBinding::new("secondary-shift-r", OpenRunner, Some(CONTEXT)),
         KeyBinding::new("secondary-w", CloseTab, Some(CONTEXT)),
         KeyBinding::new("ctrl-tab", NextTab, Some(CONTEXT)),
         KeyBinding::new("ctrl-shift-tab", PrevTab, Some(CONTEXT)),
@@ -397,6 +400,8 @@ pub struct Workspace {
     remembered_tabs: Option<(PathBuf, crate::state::OpenTabs)>,
     /// The sidebar row and zone a drag would drop into.
     drop_hint: Option<(PathBuf, drag::Zone)>,
+    /// The Runner, kept so a run goes on with its dialog closed.
+    runner: Option<Entity<runner_ui::RunnerView>>,
     _subscriptions: Vec<Subscription>,
 }
 
@@ -525,6 +530,7 @@ impl Workspace {
             _auto_lock: None,
             remembered_tabs: None,
             drop_hint: None,
+            runner: None,
             _subscriptions: subscriptions,
         };
         this._auto_lock = Some(Self::auto_lock_task(window, cx));
@@ -1700,6 +1706,7 @@ impl Render for Workspace {
             .on_action(
                 cx.listener(|this, _: &OpenHistory, window, cx| this.open_history(window, cx)),
             )
+            .on_action(cx.listener(|this, _: &OpenRunner, window, cx| this.open_runner(window, cx)))
             // A click anywhere brings focus back inside the workspace (inputs
             // focus themselves first, so they keep it), so shortcuts keep working.
             .on_mouse_down(

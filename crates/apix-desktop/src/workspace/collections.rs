@@ -186,7 +186,7 @@ impl Workspace {
         self.requests.clear();
         let mut paths = Vec::new();
         for (_, tree) in &self.trees {
-            request_paths(tree, &mut paths);
+            paths.extend(TreeNode::request_paths(tree));
         }
         let root = self.workspace_root().unwrap_or_default();
         for path in paths {
@@ -2002,6 +2002,9 @@ fn folder_menu(
         .item(item(tr!("sidebar.settings"), |this, path, window, cx| {
             this.open_settings_dialog(AuthOwner::Folder(path), window, cx)
         }))
+        .item(item(tr!("sidebar.run"), |this, path, window, cx| {
+            this.run_folder(path, window, cx)
+        }))
         .separator()
         .item(item(
             tr!("sidebar.move_to_trash"),
@@ -2041,6 +2044,9 @@ fn collection_menu(
         }))
         .item(item(tr!("sidebar.settings"), |this, root, window, cx| {
             this.open_settings_dialog(AuthOwner::Collection(root), window, cx)
+        }))
+        .item(item(tr!("sidebar.run"), |this, root, window, cx| {
+            this.run_folder(root, window, cx)
         }))
         .item(item(
             tr!("menu.export_postman"),
@@ -2452,15 +2458,6 @@ fn first_request(nodes: &[TreeNode]) -> Option<PathBuf> {
         TreeNode::Request { path } => Some(path.clone()),
         TreeNode::Folder { children, .. } => first_request(children),
     })
-}
-
-fn request_paths(nodes: &[TreeNode], out: &mut Vec<PathBuf>) {
-    for node in nodes {
-        match node {
-            TreeNode::Request { path } => out.push(path.clone()),
-            TreeNode::Folder { children, .. } => request_paths(children, out),
-        }
-    }
 }
 
 fn file_stem(path: &Path) -> String {

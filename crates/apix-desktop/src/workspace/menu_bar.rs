@@ -285,6 +285,7 @@ impl MenuState {
         menu.action_context(self.focus.clone())
             .menu(tr!("menu.command_palette"), Box::new(OpenPalette))
             .menu(tr!("menu.history"), Box::new(OpenHistory))
+            .menu(tr!("menu.runner"), Box::new(OpenRunner))
             .separator()
             .menu(tr!("menu.next_tab"), Box::new(NextTab))
             .menu(tr!("menu.previous_tab"), Box::new(PrevTab))

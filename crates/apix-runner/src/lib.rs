@@ -296,6 +296,9 @@ pub struct Plan {
     pub bail: bool,
     /// Transport settings that win over the requests' own.
     pub overrides: RequestSettings,
+    /// What scripts set before the run (the desktop app's session); the
+    /// run goes on from there.
+    pub state: ScriptVars,
 }
 
 impl Plan {
@@ -371,7 +374,7 @@ pub async fn run(
         .iter()
         .map(|p| load_request(p).map(|r| r.name).unwrap_or_default())
         .collect();
-    let mut state = ScriptVars::default();
+    let mut state = plan.state.clone();
     let mut first = true;
     'run: for iteration in 0..iterations {
         let (vars, scopes, row) = plan.iteration(iteration);

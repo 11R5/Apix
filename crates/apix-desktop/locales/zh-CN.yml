@@ -302,6 +302,7 @@ menu.project_settings: 项目请求设置…
 menu.quit: 退出
 menu.report_problem: 报告问题
 menu.request: 请求
+menu.runner: "Runner…"
 menu.save: 保存
 menu.send: 发送
 menu.settings: 设置…
@@ -434,6 +435,42 @@ response.tab.pretty: 美化
 response.tab.raw: 原始
 response.tab.tests: 测试
 response.tab.tests_count: "测试 %{passed}/%{total}"
+runner.all: "全选"
+runner.bad_number: "迭代次数和间隔必须是整数。"
+runner.bail: "首次失败时停止"
+runner.busy: "仍有运行在进行，请先停止它再开始新的运行。"
+runner.choose_data: "选择 CSV 或 JSON 文件…"
+runner.data: "数据文件"
+runner.data_empty: "数据文件没有任何行。"
+runner.data_error: "无法读取数据文件：%{error}"
+runner.data_rows: "%{count} 行 · %{columns}"
+runner.delay: "间隔 (毫秒)"
+runner.environment: "环境"
+runner.error: "无法准备运行：%{error}"
+runner.finished: "%{seconds} 秒内完成"
+runner.idle: "选择请求、顺序和运行次数，然后点击“运行”。发送的是已保存的版本，结果会显示在这里。"
+runner.iteration: "迭代 %{iteration}/%{total}"
+runner.iterations: "迭代次数"
+runner.iterations_hint: "留空表示一次。间隔是两个请求之间的停顿。"
+runner.iterations_rows: "留空表示每行数据一次 (%{count})。间隔是两个请求之间的停顿。"
+runner.none: "全不选"
+runner.not_sent: "未发送"
+runner.nothing_selected: "请至少选择一个请求。"
+runner.pause: "暂停"
+runner.paused: "已暂停"
+runner.requests: "请求 (%{count})"
+runner.resume: "继续"
+runner.run: "运行"
+runner.save_report: "保存报告："
+runner.saved: "报告已保存到 %{path}"
+runner.sending: "正在发送 %{name}…"
+runner.skipped: "已跳过"
+runner.stop: "停止"
+runner.stopped: "%{seconds} 秒后已停止"
+runner.stopping: "将在此请求后停止…"
+runner.summary: "通过 %{passed} · 失败 %{failed} · 测试 %{tests_passed}/%{tests}"
+runner.title: "Runner · %{name}"
+runner.waiting: "等待中…"
 scripts.around: "%{hint} 在它之前会运行 %{count} 个文件夹或集合脚本。"
 scripts.asserts: 检查
 scripts.asserts_count: "检查 %{count}"
@@ -494,6 +531,7 @@ sidebar.open_folder: 打开文件夹
 sidebar.recent: 最近
 sidebar.remove_encryption: 移除加密…
 sidebar.rename: 重命名…
+sidebar.run: "运行…"
 sidebar.settings: 请求设置…
 sidebar.show_in_environment: 在环境中显示
 table.add: 添加

@@ -312,6 +312,7 @@ dependencies = [
  "apix-core",
  "apix-http",
  "apix-import",
+ "apix-runner",
  "apix-script",
  "dirs 6.0.0",
  "embed-resource",
