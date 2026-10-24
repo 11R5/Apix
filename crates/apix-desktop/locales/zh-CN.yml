@@ -407,6 +407,8 @@ request.tab.body: 请求体
 request.tab.body_kind: 请求体 · %{kind}
 request.tab.headers: 请求头
 request.tab.headers_count: 请求头 %{count}
+request.tab.messages: "消息"
+request.tab.messages_count: "消息 %{count}"
 request.tab.params: 参数
 request.tab.params_count: 参数 %{count}
 request.tab.scripts: 脚本
@@ -626,3 +628,19 @@ vault.unlock_title: 解锁“%{name}”
 vault.use_password: 改用密码
 vault.use_recovery: 忘记密码？使用恢复密钥
 vault.working: 正在处理…密钥派生需要一些时间，这是有意设计的。
+ws.binary: "<%{count} 字节的二进制数据>"
+ws.closed: "已关闭"
+ws.closed_code: "已关闭 (%{code})"
+ws.closed_reason: "已关闭 (%{code})：%{reason}"
+ws.connect: "连接"
+ws.connected: "已连接到 %{url}"
+ws.connecting: "正在连接…"
+ws.disconnect: "断开"
+ws.error: "错误：%{error}"
+ws.failed: "连接已断开"
+ws.open: "已连接"
+ws.save: "保存消息"
+ws.saved: "已保存的消息 (%{count})"
+ws.saved_empty: "在这里保存的消息会存入请求文件。点击一条即可编辑。"
+ws.send: "发送"
+ws.send_hint: "Ctrl+Enter 发送；{{变量}} 会被替换"

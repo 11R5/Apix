@@ -17,10 +17,12 @@ mod script_run;
 mod settings_editor;
 mod settings_ui;
 mod shell_copy;
+mod socket_ui;
 mod stream_ui;
 mod tabs;
 mod var_chips;
 mod vault_ui;
+mod ws_editor;
 
 use std::collections::{BTreeMap, HashSet};
 use std::path::PathBuf;
@@ -331,6 +333,8 @@ enum ResponseState {
     Loading,
     /// Server-sent events still coming in.
     Streaming(Rc<std::cell::RefCell<stream_ui::LiveStream>>),
+    /// A WebSocket connection: opening, open, or over (its log stays).
+    Socket(Rc<std::cell::RefCell<socket_ui::SocketSession>>),
     Done(Rc<Finished>),
     Failed(String),
     Cancelled,
@@ -370,6 +374,8 @@ pub struct Workspace {
     settings_editor: Entity<settings_editor::SettingsEditor>,
     /// The Scripts tab (pre-request and test scripts).
     script_editor: Entity<script_editor::ScriptEditor>,
+    /// The Messages tab of a WebSocket request.
+    ws_editor: Entity<ws_editor::WsEditor>,
     /// The request's scripts as last loaded or saved.
     base_scripts: script_editor::Scripts,
     /// What scripts set or unset since the app started; never written to disk.
@@ -435,6 +441,7 @@ impl Workspace {
         let auth_editor = cx.new(|cx| auth_editor::AuthEditor::new("request", weak, window, cx));
         let settings_editor = cx.new(|cx| settings_editor::SettingsEditor::new(window, cx));
         let script_editor = cx.new(|cx| script_editor::ScriptEditor::new(window, cx));
+        let ws_editor = cx.new(|cx| ws_editor::WsEditor::new(window, cx));
         let subscriptions = vec![
             cx.observe_self(|this, _| this.remember_tabs()),
             // "Follow the system": repaint when the OS switches between light and dark.
@@ -449,6 +456,14 @@ impl Workspace {
             cx.observe(&auth_editor, |_, _, cx| cx.notify()),
             cx.observe(&settings_editor, |_, _, cx| cx.notify()),
             cx.observe(&script_editor, |_, _, cx| cx.notify()),
+            cx.observe(&ws_editor, |_, _, cx| cx.notify()),
+            cx.subscribe_in(
+                &ws_editor,
+                window,
+                |this, _, event: &ws_editor::SendMessage, window, cx| {
+                    this.send_socket_message(event.0.clone(), window, cx)
+                },
+            ),
             cx.subscribe_in(
                 &script_editor,
                 window,
@@ -515,6 +530,7 @@ impl Workspace {
             body_editor,
             settings_editor,
             script_editor,
+            ws_editor,
             base_scripts: Default::default(),
             script_vars: Default::default(),
             last_url_len: 0,
@@ -659,6 +675,9 @@ impl Workspace {
         let asserts = request.asserts.clone();
         self.script_editor
             .update(cx, |editor, cx| editor.set_asserts(&asserts, window, cx));
+        let messages = request.messages.clone();
+        self.ws_editor
+            .update(cx, |editor, cx| editor.set_messages(&messages, cx));
         cx.notify();
     }
 
@@ -700,12 +719,17 @@ impl Workspace {
         request.body = self.body_editor.read(cx).body(cx);
         request.settings = self.settings_editor.read(cx).settings(cx);
         request.asserts = self.script_editor.read(cx).asserts(cx);
+        request.messages = self.ws_editor.read(cx).messages();
         request
     }
 
     /// Sends the request, after asking first when it would change something
     /// in a production environment (DELETE, PUT, PATCH).
     pub(super) fn send(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        // A WebSocket that is already open is closed with Esc or its button.
+        if self.live_socket().is_some() {
+            return;
+        }
         let method = self.build_request(cx).method;
         if self.settings.confirm_prod
             && self.is_prod()
@@ -752,6 +776,16 @@ impl Workspace {
             self.fail(tr!("request.error.no_url"), cx);
             return;
         }
+        // ws:// and wss:// open a connection; there is no single response.
+        let resolved = request.resolve(&self.vars);
+        if apix_http::ws::is_websocket_url(&resolved.request.url) {
+            if !resolved.missing.is_empty() {
+                self.fail(undefined_message(resolved.missing), cx);
+                return;
+            }
+            self.connect_socket(resolved.request, window, cx);
+            return;
+        }
         let (pre_scripts, test_scripts) = self.script_chains(cx);
         if !pre_scripts.is_empty() || !test_scripts.is_empty() {
             self.send_scripted(request, record, pre_scripts, test_scripts, window, cx);
@@ -772,6 +806,9 @@ impl Workspace {
     }
 
     fn cancel(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        if self.disconnect_socket(cx) {
+            return;
+        }
         if self.stop_stream(window, cx) {
             return;
         }
@@ -1038,7 +1075,22 @@ impl Workspace {
     fn render_url_bar(&self, cx: &mut Context<Self>) -> impl IntoElement {
         let method = self.current_method(cx);
         let busy = matches!(self.response, ResponseState::Loading);
-        let action = if busy {
+        let websocket = self.websocket_mode(cx);
+        let action = if self.live_socket().is_some() {
+            Button::new("disconnect")
+                .small()
+                .icon(IconName::Close)
+                .label(tr!("ws.disconnect"))
+                .on_click(cx.listener(|this, _: &ClickEvent, _, cx| {
+                    this.disconnect_socket(cx);
+                }))
+        } else if websocket {
+            Button::new("connect")
+                .primary()
+                .small()
+                .label(tr!("ws.connect"))
+                .on_click(cx.listener(|this, _: &ClickEvent, window, cx| this.send(window, cx)))
+        } else if busy {
             Button::new("cancel")
                 .small()
                 .icon(IconName::Close)
@@ -1082,7 +1134,7 @@ impl Workspace {
                         }
                     }),
             )
-            .child(div().w(px(92.)).flex_none().child(action))
+            .child(div().min_w(px(92.)).flex_none().child(action))
     }
 
     fn render_request_pane(&self, cx: &mut Context<Self>) -> impl IntoElement {
@@ -1097,9 +1149,18 @@ impl Workspace {
             0 => tr!("request.tab.headers"),
             n => tr!("request.tab.headers_count", count = n),
         };
-        let body_label = match self.body_editor.read(cx).kind() {
-            body_editor::BodyKind::None => tr!("request.tab.body"),
-            kind => tr!("request.tab.body_kind", kind = kind.label()),
+        // A WebSocket request has messages where an HTTP one has a body.
+        let websocket = self.websocket_mode(cx);
+        let body_label = if websocket {
+            match self.ws_editor.read(cx).messages().len() {
+                0 => tr!("request.tab.messages"),
+                n => tr!("request.tab.messages_count", count = n),
+            }
+        } else {
+            match self.body_editor.read(cx).kind() {
+                body_editor::BodyKind::None => tr!("request.tab.body"),
+                kind => tr!("request.tab.body_kind", kind = kind.label()),
+            }
         };
 
         // Technical names stay as they are; only the frame is translated.
@@ -1145,6 +1206,7 @@ impl Workspace {
                 .overflow_y_scroll()
                 .child(self.settings_editor.clone())
                 .into_any_element(),
+            _ if websocket => self.ws_editor.clone().into_any_element(),
             _ => self.body_editor.clone().into_any_element(),
         };
 
@@ -1276,6 +1338,7 @@ impl Workspace {
             ResponseState::Streaming(stream) => {
                 shell.child(self.render_stream(&stream.borrow(), cx))
             }
+            ResponseState::Socket(session) => shell.child(self.render_socket(session, cx)),
             ResponseState::Cancelled => shell.child(centered(
                 div()
                     .text_sm()

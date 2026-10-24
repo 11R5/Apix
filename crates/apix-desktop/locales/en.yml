@@ -409,6 +409,8 @@ request.tab.body: Body
 request.tab.body_kind: Body · %{kind}
 request.tab.headers: Headers
 request.tab.headers_count: Headers %{count}
+request.tab.messages: "Messages"
+request.tab.messages_count: "Messages %{count}"
 request.tab.params: Params
 request.tab.params_count: Params %{count}
 request.tab.scripts: Scripts
@@ -628,3 +630,19 @@ vault.unlock_title: Unlock “%{name}”
 vault.use_password: Use the password instead
 vault.use_recovery: Forgot the password? Use the recovery key
 vault.working: Working… deriving the key takes a moment on purpose.
+ws.binary: "<%{count} bytes of binary>"
+ws.closed: "Closed"
+ws.closed_code: "Closed (%{code})"
+ws.closed_reason: "Closed (%{code}): %{reason}"
+ws.connect: "Connect"
+ws.connected: "Connected to %{url}"
+ws.connecting: "Connecting…"
+ws.disconnect: "Disconnect"
+ws.error: "Error: %{error}"
+ws.failed: "Connection lost"
+ws.open: "Connected"
+ws.save: "Save message"
+ws.saved: "Saved messages (%{count})"
+ws.saved_empty: "Messages you save here are kept in the request file. Click one to edit it."
+ws.send: "Send"
+ws.send_hint: "Ctrl+Enter sends; {{variables}} are filled in"

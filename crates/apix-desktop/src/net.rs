@@ -183,3 +183,52 @@ pub fn send_streaming(
     });
     (incoming, AbortOnDrop(handle))
 }
+
+/// What an open WebSocket has to report; the UI takes it as it comes.
+#[derive(Default)]
+pub struct SocketIncoming {
+    /// When the handshake finished, its status and headers.
+    pub opened: Option<(std::time::Instant, u16, Vec<(String, String)>)>,
+    /// Messages and the closing, each with when it happened.
+    pub events: Vec<(std::time::Instant, apix_http::ws::WsEvent)>,
+    /// Why the connection could not be opened.
+    pub failed: Option<String>,
+    /// The connection is over (closed or failed).
+    pub done: bool,
+}
+
+/// Opens a WebSocket for an already-resolved request on the network
+/// runtime. Commands sent before it is open wait their turn. Dropping the
+/// guard drops the connection.
+pub fn ws_connect(
+    request: Request,
+) -> (
+    std::sync::Arc<std::sync::Mutex<SocketIncoming>>,
+    tokio::sync::mpsc::UnboundedSender<apix_http::ws::WsCommand>,
+    impl Drop + Send + 'static,
+) {
+    let incoming = std::sync::Arc::new(std::sync::Mutex::new(SocketIncoming::default()));
+    let shared = incoming.clone();
+    let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+    let handle = net().runtime.spawn(async move {
+        let lock = || shared.lock().unwrap_or_else(|e| e.into_inner());
+        match apix_http::ws::connect(&request).await {
+            Err(e) => lock().failed = Some(error_chain(&e)),
+            Ok(connection) => {
+                lock().opened = Some((
+                    std::time::Instant::now(),
+                    connection.status,
+                    connection.headers.clone(),
+                ));
+                connection
+                    .run(rx, |event| {
+                        lock().events.push((std::time::Instant::now(), event));
+                    })
+                    .await;
+            }
+        }
+        lock().done = true;
+        Ok(())
+    });
+    (incoming, tx, AbortOnDrop(handle))
+}

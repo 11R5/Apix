@@ -407,6 +407,8 @@ request.tab.body: Corps
 request.tab.body_kind: Corps · %{kind}
 request.tab.headers: En-têtes
 request.tab.headers_count: En-têtes %{count}
+request.tab.messages: "Messages"
+request.tab.messages_count: "Messages %{count}"
 request.tab.params: Paramètres
 request.tab.params_count: Paramètres %{count}
 request.tab.scripts: Scripts
@@ -626,3 +628,19 @@ vault.unlock_title: Déverrouiller « %{name} »
 vault.use_password: Utiliser plutôt le mot de passe
 vault.use_recovery: Mot de passe oublié ? Utiliser la clé de récupération
 vault.working: Traitement… la dérivation de la clé prend volontairement un moment.
+ws.binary: "<%{count} octets binaires>"
+ws.closed: "Fermée"
+ws.closed_code: "Fermée (%{code})"
+ws.closed_reason: "Fermée (%{code}) : %{reason}"
+ws.connect: "Se connecter"
+ws.connected: "Connecté à %{url}"
+ws.connecting: "Connexion…"
+ws.disconnect: "Se déconnecter"
+ws.error: "Erreur : %{error}"
+ws.failed: "Connexion perdue"
+ws.open: "Connecté"
+ws.save: "Enregistrer le message"
+ws.saved: "Messages enregistrés (%{count})"
+ws.saved_empty: "Les messages enregistrés ici sont gardés dans le fichier de la requête. Cliquez pour en modifier un."
+ws.send: "Envoyer"
+ws.send_hint: "Ctrl+Entrée envoie ; les {{variables}} sont remplacées"
