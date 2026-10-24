@@ -394,7 +394,7 @@ impl Workspace {
         if self.tabs.is_empty() {
             return None;
         }
-        let p = self.palette;
+        let p = crate::theme::current();
         let front_method = self.current_method(cx);
         let tabs = self.tabs.iter().enumerate().map(|(ix, tab)| {
             let front = tab.parked.is_none();

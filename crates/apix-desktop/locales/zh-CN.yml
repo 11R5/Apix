@@ -502,7 +502,6 @@ settings.theme: 主题
 settings.theme_cyber: 赛博玻璃
 settings.theme_description: 窗口的配色。
 settings.theme_obsidian: 黑曜石
-settings.theme_restart: 下次启动 Apix 时生效。
 settings.title: 设置
 sidebar.auth: 认证…
 sidebar.change_password: 更改密码…

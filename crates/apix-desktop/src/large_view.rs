@@ -15,7 +15,7 @@ use apix_core::text::{RowIndex, json_tokens};
 use gpui_kit::component::{ActiveTheme as _, h_flex, v_flex};
 use gpui_kit::*;
 
-use crate::theme::{self, Palette};
+use crate::theme;
 
 /// Bodies at least this large use this viewer instead of the code editor,
 /// which is comfortable up to a few tens of thousands of lines.
@@ -93,7 +93,6 @@ struct Drag {
 
 pub struct LargeView {
     doc: Arc<Document>,
-    palette: Palette,
     focus: FocusHandle,
     /// First row on screen.
     top: usize,
@@ -107,10 +106,9 @@ pub struct LargeView {
 }
 
 impl LargeView {
-    pub fn new(doc: Arc<Document>, palette: Palette, cx: &mut Context<Self>) -> Self {
+    pub fn new(doc: Arc<Document>, cx: &mut Context<Self>) -> Self {
         Self {
             doc,
-            palette,
             focus: cx.focus_handle(),
             top: 0,
             wheel_rest: 0.,
@@ -237,7 +235,7 @@ impl LargeView {
     }
 
     fn row(&self, ix: usize, gutter: f32) -> Div {
-        let p = self.palette;
+        let p = crate::theme::current();
         let (text, line, continuation) = self.doc.rows.row(&self.doc.text, ix);
         let number: SharedString = if continuation {
             SharedString::default()
@@ -274,7 +272,7 @@ impl LargeView {
         if self.max_top() == 0 {
             return None;
         }
-        let p = self.palette;
+        let p = crate::theme::current();
         let (thumb, _) = self.thumb_metrics();
         let dragging = self.drag.is_some();
         Some(

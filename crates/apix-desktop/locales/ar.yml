@@ -502,7 +502,6 @@ settings.theme: السمة
 settings.theme_cyber: زجاج سيبراني
 settings.theme_description: ألوان النافذة.
 settings.theme_obsidian: أوبسيديان
-settings.theme_restart: يُطبَّق عند تشغيل Apix في المرة القادمة.
 settings.title: الإعدادات
 sidebar.auth: المصادقة…
 sidebar.change_password: تغيير كلمة المرور…

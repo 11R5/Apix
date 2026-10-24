@@ -502,7 +502,6 @@ settings.theme: Tema
 settings.theme_cyber: Siber cam
 settings.theme_description: Pencerenin renkleri.
 settings.theme_obsidian: Obsidyen
-settings.theme_restart: Apix'in bir sonraki açılışında uygulanır.
 settings.title: Ayarlar
 sidebar.auth: Yetkilendirme…
 sidebar.change_password: Parolayı değiştir…

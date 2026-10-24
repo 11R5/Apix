@@ -22,7 +22,6 @@ use gpui_kit::*;
 
 use super::Workspace;
 use crate::bidi::{self, Bidi as _, DialogBidi as _};
-use crate::theme::Palette;
 use crate::tr;
 
 /// The picker's entries, in `kind_index` order.
@@ -182,7 +181,6 @@ enum Fetch {
 }
 
 pub(super) struct AuthEditor {
-    palette: Palette,
     workspace: WeakEntity<Workspace>,
     kind: Entity<Picker>,
     fields: HashMap<F, Entity<InputState>>,
@@ -203,7 +201,6 @@ pub(super) struct AuthEditor {
 
 impl AuthEditor {
     pub(super) fn new(
-        palette: Palette,
         owner: &'static str,
         workspace: WeakEntity<Workspace>,
         window: &mut Window,
@@ -246,7 +243,6 @@ impl AuthEditor {
             fields.insert(f, input);
         }
         Self {
-            palette,
             workspace,
             kind,
             fields,
@@ -533,7 +529,7 @@ impl AuthEditor {
                     .w(px(150.))
                     .flex_none()
                     .text_sm()
-                    .text_color(self.palette.text_muted)
+                    .text_color(crate::theme::current().text_muted)
                     .child(label),
             )
             .child(
@@ -560,7 +556,7 @@ impl AuthEditor {
     fn note(&self, text: impl Into<SharedString>) -> AnyElement {
         div()
             .text_sm()
-            .text_color(self.palette.text_muted)
+            .text_color(crate::theme::current().text_muted)
             .child(bidi::para(text))
             .into_any_element()
     }
@@ -594,7 +590,7 @@ impl AuthEditor {
                     .w(px(150.))
                     .flex_none()
                     .text_sm()
-                    .text_color(self.palette.text_muted)
+                    .text_color(crate::theme::current().text_muted)
                     .child(label),
             )
             .children(buttons)
@@ -619,7 +615,7 @@ impl AuthEditor {
     }
 
     fn render_oauth2(&self, cx: &mut Context<Self>) -> Vec<AnyElement> {
-        let p = self.palette;
+        let p = crate::theme::current();
         let grant = self.grant(cx);
         let mut out = vec![
             self.row(
@@ -776,7 +772,7 @@ fn inherited_note(what: SharedString, from: &str) -> SharedString {
 
 impl Render for AuthEditor {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let p = self.palette;
+        let p = crate::theme::current();
         let kind = self.kind(cx);
         let body: Vec<AnyElement> = match kind {
             0 => {
@@ -990,10 +986,10 @@ impl super::Workspace {
             Err(e) => return self.notify_error(super::describe(&e), window, cx),
         };
         let inherited = inherited.unwrap_or((Auth::None, None));
-        let palette = self.palette;
+        let palette = crate::theme::current();
         let workspace = cx.entity().downgrade();
         let editor = cx.new(|cx| {
-            let mut editor = AuthEditor::new(palette, label, workspace, window, cx);
+            let mut editor = AuthEditor::new(label, workspace, window, cx);
             editor.set_auth(&current, window, cx);
             editor.set_inherited(inherited, cx);
             editor

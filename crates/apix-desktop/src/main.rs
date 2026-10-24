@@ -51,7 +51,7 @@ fn main() {
             i18n::set(settings.language_code());
             apix_core::secrets::use_keychain(settings.secrets_in_keychain);
             let palette = Palette::new(Variant::chosen(&settings));
-            theme::apply(&palette, embedded_fonts, cx);
+            theme::init(palette, embedded_fonts, cx);
             workspace::bind_keys(cx);
             workspace::register_graphql();
             large_view::bind_keys(cx);
@@ -72,7 +72,7 @@ fn main() {
             };
 
             gpui_kit::open_window(options, cx, |window, cx| {
-                cx.new(|cx| Workspace::new(dir, palette, window, cx))
+                cx.new(|cx| Workspace::new(dir, window, cx))
             })
             .expect("failed to open the Apix window");
         });

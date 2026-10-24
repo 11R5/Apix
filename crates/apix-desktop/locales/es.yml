@@ -502,7 +502,6 @@ settings.theme: Tema
 settings.theme_cyber: Cyber glass
 settings.theme_description: Los colores de la ventana.
 settings.theme_obsidian: Obsidian
-settings.theme_restart: Se aplica la próxima vez que se inicie Apix.
 settings.title: Configuración
 sidebar.auth: Autenticación…
 sidebar.change_password: Cambiar contraseña…

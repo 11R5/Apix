@@ -9,7 +9,7 @@ use super::Workspace;
 use crate::bidi::{self, Bidi as _, DialogBidi as _};
 use crate::i18n;
 use crate::settings::Settings;
-use crate::theme::{Palette, Variant};
+use crate::theme::Variant;
 use crate::tr;
 
 type Picker = SelectState<Vec<SharedString>>;
@@ -46,7 +46,6 @@ fn theme_label(variant: Variant) -> SharedString {
 }
 
 pub(super) struct SettingsView {
-    palette: Palette,
     workspace: WeakEntity<Workspace>,
     language: Entity<Picker>,
     theme: Entity<Picker>,
@@ -54,14 +53,11 @@ pub(super) struct SettingsView {
     history: Entity<Picker>,
     secrets: Entity<Picker>,
     prod: Entity<Picker>,
-    /// The theme the app started with; a change shows "after restart".
-    started_theme: Variant,
     _subscriptions: Vec<Subscription>,
 }
 
 impl SettingsView {
     fn new(
-        palette: Palette,
         workspace: WeakEntity<Workspace>,
         settings: &Settings,
         window: &mut Window,
@@ -174,8 +170,9 @@ impl SettingsView {
                 window,
                 |this, state, _: &SelectEvent<Vec<SharedString>>, _, cx| {
                     if let Some(ix) = state.read(cx).selected_index(cx) {
-                        let id = Variant::ALL[ix.row].id();
-                        this.change(|s| s.theme = id.to_owned(), cx);
+                        let variant = Variant::ALL[ix.row];
+                        this.change(|s| s.theme = variant.id().to_owned(), cx);
+                        crate::theme::set(crate::theme::Palette::new(variant), cx);
                     }
                     cx.notify();
                 },
@@ -192,7 +189,6 @@ impl SettingsView {
             ),
         ];
         Self {
-            palette,
             workspace,
             language,
             theme,
@@ -200,7 +196,6 @@ impl SettingsView {
             history,
             secrets,
             prod,
-            started_theme,
             _subscriptions: subscriptions,
         }
     }
@@ -244,7 +239,7 @@ impl SettingsView {
         description: SharedString,
         control: impl IntoElement,
     ) -> impl IntoElement {
-        let p = self.palette;
+        let p = crate::theme::current();
         h_flex()
             .dir_row()
             .gap_4()
@@ -272,18 +267,8 @@ fn log_save_error(e: &std::io::Error) {
 }
 
 impl Render for SettingsView {
-    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let p = self.palette;
-        let chosen = self
-            .theme
-            .read(cx)
-            .selected_index(cx)
-            .map_or(self.started_theme, |ix| Variant::ALL[ix.row]);
-        let theme_note = if chosen == self.started_theme {
-            tr!("settings.theme_description")
-        } else {
-            tr!("settings.theme_restart")
-        };
+    fn render(&mut self, _: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
+        let p = crate::theme::current();
         v_flex()
             .gap_1()
             .child(self.row(
@@ -294,7 +279,7 @@ impl Render for SettingsView {
             .child(div().h_px().bg(p.hairline))
             .child(self.row(
                 tr!("settings.theme"),
-                theme_note,
+                tr!("settings.theme_description"),
                 Select::new(&self.theme).small(),
             ))
             .child(div().h_px().bg(p.hairline))
@@ -327,9 +312,8 @@ impl Render for SettingsView {
 impl Workspace {
     pub(super) fn open_settings(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         let view = cx.entity().downgrade();
-        let palette = self.palette;
         let settings = self.settings.clone();
-        let editor = cx.new(|cx| SettingsView::new(palette, view.clone(), &settings, window, cx));
+        let editor = cx.new(|cx| SettingsView::new(view.clone(), &settings, window, cx));
         window.open_dialog(cx, move |dialog, _, _| {
             let close_view = view.clone();
             dialog

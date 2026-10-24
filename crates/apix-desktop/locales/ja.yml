@@ -502,7 +502,6 @@ settings.theme: テーマ
 settings.theme_cyber: サイバーグラス
 settings.theme_description: ウィンドウの配色です。
 settings.theme_obsidian: オブシディアン
-settings.theme_restart: 次回 Apix の起動時に適用されます。
 settings.title: 設定
 sidebar.auth: 認証…
 sidebar.change_password: パスワードを変更…

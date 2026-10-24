@@ -265,7 +265,7 @@ impl Workspace {
     }
 
     pub(super) fn render_tests(&self, done: &Finished) -> impl IntoElement {
-        let p = self.palette;
+        let p = crate::theme::current();
         let Some(report) = &done.scripts else {
             return v_flex().into_any_element();
         };
@@ -337,7 +337,7 @@ impl Workspace {
 
     pub(super) fn render_console(&self, done: &Finished, cx: &App) -> impl IntoElement {
         use gpui_kit::component::ActiveTheme as _;
-        let p = self.palette;
+        let p = crate::theme::current();
         let Some(report) = &done.scripts else {
             return v_flex().into_any_element();
         };

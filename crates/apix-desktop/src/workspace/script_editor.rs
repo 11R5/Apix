@@ -18,7 +18,6 @@ use gpui_kit::*;
 
 use super::body_editor::SendRequested;
 use crate::bidi::{self, Bidi as _};
-use crate::theme::Palette;
 use crate::tr;
 
 /// The two scripts of a request, as text.
@@ -49,7 +48,6 @@ impl Scripts {
 }
 
 pub(super) struct ScriptEditor {
-    palette: Palette,
     view: View,
     pre: Entity<EditorState>,
     test: Entity<EditorState>,
@@ -236,7 +234,7 @@ impl ScriptEditor {
             )
     }
 
-    pub(super) fn new(palette: Palette, window: &mut Window, cx: &mut Context<Self>) -> Self {
+    pub(super) fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
         let pre = cx.new(|cx| EditorState::new(window, cx).language("javascript"));
         let test = cx.new(|cx| EditorState::new(window, cx).language("javascript"));
         let subscriptions = [&pre, &test]
@@ -252,7 +250,6 @@ impl ScriptEditor {
             })
             .collect();
         Self {
-            palette,
             view: View::Script(Event::PreRequest),
             pre,
             test,
@@ -351,7 +348,7 @@ impl ScriptEditor {
 
 impl Render for ScriptEditor {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let p = self.palette;
+        let p = crate::theme::current();
         let (content, note) = match self.view {
             View::Asserts => (
                 self.render_asserts(cx).into_any_element(),

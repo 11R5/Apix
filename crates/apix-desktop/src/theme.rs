@@ -11,9 +11,44 @@ use gpui_kit::{
     transparent_black,
 };
 
+/// The palette now in use, which every view reads when it paints. Views
+/// never keep a copy, so changing it repaints the whole app in the new colours.
+static CURRENT: std::sync::RwLock<Option<Palette>> = std::sync::RwLock::new(None);
+
+pub fn current() -> Palette {
+    CURRENT
+        .read()
+        .ok()
+        .and_then(|p| *p)
+        .unwrap_or_else(|| Palette::new(Variant::default()))
+}
+
+/// Whether the embedded fonts loaded, for every later `set`.
+static EMBEDDED_FONTS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// The first palette, at start.
+pub fn init(palette: Palette, embedded_fonts: bool, cx: &mut App) {
+    EMBEDDED_FONTS.store(embedded_fonts, std::sync::atomic::Ordering::Relaxed);
+    set(palette, cx);
+}
+
+/// Makes `palette` the app's, for gpui-kit's components too, and repaints
+/// every window.
+pub fn set(palette: Palette, cx: &mut App) {
+    apply(
+        &palette,
+        EMBEDDED_FONTS.load(std::sync::atomic::Ordering::Relaxed),
+        cx,
+    );
+    if let Ok(mut current) = CURRENT.write() {
+        *current = Some(palette);
+    }
+    cx.refresh_windows();
+}
+
 /// Points gpui-kit's component theme at our palette so built-in inputs,
 /// tabs, menus and buttons match the rest of the window.
-pub fn apply(palette: &Palette, embedded_fonts: bool, cx: &mut App) {
+fn apply(palette: &Palette, embedded_fonts: bool, cx: &mut App) {
     // Switching mode reloads the stock colours, so it must happen before our overrides.
     Theme::change(ThemeMode::Dark, None, cx);
     let p = *palette;

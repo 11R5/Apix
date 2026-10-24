@@ -277,7 +277,7 @@ impl Workspace {
         let requests = self.palette_requests();
         let commands = self.palette_commands();
         let workspace = cx.entity().downgrade();
-        let colors = self.palette;
+        let colors = crate::theme::current();
         let palette = cx.new(|cx| CommandPalette {
             state: cx.new(|cx| CommandState::new(window, cx)),
             workspace,

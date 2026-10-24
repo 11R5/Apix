@@ -27,7 +27,7 @@ use gpui_kit::*;
 
 use super::Workspace;
 use crate::bidi::{self, Bidi as _, DialogBidi as _};
-use crate::theme::{self, Palette};
+use crate::theme;
 use crate::{net, tr};
 
 /// One request in the run's list.
@@ -81,7 +81,6 @@ impl ReportKind {
 }
 
 pub(super) struct RunnerView {
-    palette: Palette,
     collection: Collection,
     project: Option<Project>,
     /// The folder the run was opened on, when not the whole collection.
@@ -111,7 +110,6 @@ pub(super) struct RunnerView {
 impl RunnerView {
     #[allow(clippy::too_many_arguments)]
     fn new(
-        palette: Palette,
         collection: Collection,
         project: Option<Project>,
         folder: Option<PathBuf>,
@@ -152,7 +150,6 @@ impl RunnerView {
         let iterations = cx.new(|cx| InputState::new(window, cx));
         let delay = cx.new(|cx| InputState::new(window, cx).placeholder("0"));
         Self {
-            palette,
             collection,
             project,
             folder,
@@ -437,7 +434,7 @@ impl RunnerView {
     }
 
     fn render_requests(&self, cx: &mut Context<Self>) -> impl IntoElement {
-        let p = self.palette;
+        let p = crate::theme::current();
         let running = self.is_running();
         let all_on = self.items.iter().all(|i| i.on);
         let rows = self.items.iter().enumerate().map(|(ix, item)| {
@@ -560,7 +557,7 @@ impl RunnerView {
     }
 
     fn render_options(&self, cx: &mut Context<Self>) -> impl IntoElement {
-        let p = self.palette;
+        let p = crate::theme::current();
         let running = self.is_running();
         let label = |text: SharedString| div().text_xs().text_color(p.text_muted).child(text);
         let env_label = self
@@ -746,7 +743,7 @@ impl RunnerView {
     }
 
     fn render_results(&self, cx: &mut Context<Self>) -> impl IntoElement {
-        let p = self.palette;
+        let p = crate::theme::current();
         if self.results.is_empty() && !self.is_running() && self.report.is_none() {
             return v_flex()
                 .flex_1()
@@ -995,7 +992,7 @@ impl RunnerView {
     }
 
     fn render_details(&self, item: &ItemResult) -> impl IntoElement {
-        let p = self.palette;
+        let p = crate::theme::current();
         let errors = item
             .errors()
             .into_iter()
@@ -1058,7 +1055,7 @@ impl RunnerView {
 
 impl Render for RunnerView {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let p = self.palette;
+        let p = crate::theme::current();
         h_flex()
             .dir_row()
             .h(px(540.))
@@ -1129,10 +1126,8 @@ impl Workspace {
             .filter(|p| collection.root.starts_with(&p.root));
         let environment = self.environment.clone();
         let script_vars = self.script_vars.clone();
-        let palette = self.palette;
         let runner = cx.new(|cx| {
             RunnerView::new(
-                palette,
                 collection,
                 project,
                 folder,

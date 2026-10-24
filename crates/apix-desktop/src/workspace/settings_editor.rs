@@ -16,7 +16,6 @@ use gpui_kit::*;
 
 use super::auth_editor::AuthOwner;
 use crate::bidi::{self, Bidi as _, DialogBidi as _};
-use crate::theme::Palette;
 use crate::tr;
 
 type Picker = SelectState<Vec<SharedString>>;
@@ -81,7 +80,6 @@ impl F {
 }
 
 pub(super) struct SettingsEditor {
-    palette: Palette,
     fields: HashMap<F, Entity<InputState>>,
     follow: Entity<Picker>,
     tls: Entity<Picker>,
@@ -93,7 +91,7 @@ pub(super) struct SettingsEditor {
 }
 
 impl SettingsEditor {
-    pub(super) fn new(palette: Palette, window: &mut Window, cx: &mut Context<Self>) -> Self {
+    pub(super) fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
         let picker = |items: Vec<SharedString>, window: &mut Window, cx: &mut Context<Self>| {
             cx.new(|cx| SelectState::new(items, Some(IndexPath::new(0)), window, cx))
         };
@@ -121,7 +119,6 @@ impl SettingsEditor {
             fields.insert(f, input);
         }
         Self {
-            palette,
             fields,
             follow,
             tls,
@@ -259,7 +256,7 @@ impl SettingsEditor {
                     .w(px(150.))
                     .flex_none()
                     .text_sm()
-                    .text_color(self.palette.text_muted)
+                    .text_color(crate::theme::current().text_muted)
                     .child(label),
             )
             .child(
@@ -319,7 +316,7 @@ impl SettingsEditor {
 
 impl Render for SettingsEditor {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let p = self.palette;
+        let p = crate::theme::current();
         let custom_proxy = Self::selected(&self.proxy_kind, cx) == 2;
         v_flex()
             .gap_3()
@@ -440,9 +437,9 @@ impl super::Workspace {
             Err(e) => return self.notify_error(super::describe(&e), window, cx),
         };
         let inherited = inherited.unwrap_or_default();
-        let palette = self.palette;
+        let palette = crate::theme::current();
         let editor = cx.new(|cx| {
-            let mut editor = SettingsEditor::new(palette, window, cx);
+            let mut editor = SettingsEditor::new(window, cx);
             editor.set_settings(&current, window, cx);
             editor.set_inherited(inherited, cx);
             editor

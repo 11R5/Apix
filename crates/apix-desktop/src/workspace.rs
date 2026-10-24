@@ -49,7 +49,7 @@ use crate::large_view::{Document, LARGE_BODY_BYTES, LargeView};
 use crate::net;
 use crate::settings::Settings;
 use crate::state::AppState;
-use crate::theme::{self, Palette};
+use crate::theme;
 use crate::tr;
 
 actions!(
@@ -329,7 +329,6 @@ enum ResponseState {
 
 pub struct Workspace {
     focus: FocusHandle,
-    palette: Palette,
     /// The open project, if the folder belongs to one.
     project: Option<apix_core::Project>,
     /// Every open collection: the project's, or the single one opened.
@@ -406,18 +405,13 @@ pub struct Workspace {
 }
 
 impl Workspace {
-    pub fn new(
-        dir: Option<PathBuf>,
-        palette: Palette,
-        window: &mut Window,
-        cx: &mut Context<Self>,
-    ) -> Self {
+    pub fn new(dir: Option<PathBuf>, window: &mut Window, cx: &mut Context<Self>) -> Self {
         let methods: Vec<&'static str> = Method::ALL.iter().map(|m| m.as_str()).collect();
         let method = cx.new(|cx| SelectState::new(methods, Some(IndexPath::new(0)), window, cx));
         let url =
             cx.new(|cx| InputState::new(window, cx).placeholder(tr!("request.url_placeholder")));
         let workspace = cx.weak_entity();
-        let body_editor = cx.new(|cx| body_editor::BodyEditor::new(palette, workspace, window, cx));
+        let body_editor = cx.new(|cx| body_editor::BodyEditor::new(workspace, window, cx));
         let env_select = cx
             .new(|cx| SelectState::new(vec![tr!("env.none")], Some(IndexPath::new(0)), window, cx));
         let response_body = cx.new(|cx| {
@@ -427,11 +421,9 @@ impl Workspace {
         });
 
         let weak = cx.weak_entity();
-        let auth_editor =
-            cx.new(|cx| auth_editor::AuthEditor::new(palette, "request", weak, window, cx));
-        let settings_editor =
-            cx.new(|cx| settings_editor::SettingsEditor::new(palette, window, cx));
-        let script_editor = cx.new(|cx| script_editor::ScriptEditor::new(palette, window, cx));
+        let auth_editor = cx.new(|cx| auth_editor::AuthEditor::new("request", weak, window, cx));
+        let settings_editor = cx.new(|cx| settings_editor::SettingsEditor::new(window, cx));
+        let script_editor = cx.new(|cx| script_editor::ScriptEditor::new(window, cx));
         let subscriptions = vec![
             cx.observe_self(|this, _| this.remember_tabs()),
             // Typing in the Auth tab changes the unsaved marker.
@@ -485,7 +477,6 @@ impl Workspace {
 
         let mut this = Self {
             focus: cx.focus_handle(),
-            palette,
             project: None,
             collections: Vec::new(),
             collection: None,
@@ -859,8 +850,7 @@ impl Workspace {
 
         match doc {
             Some(doc) if done.large => {
-                let palette = self.palette;
-                self.large_view = Some(cx.new(|cx| LargeView::new(doc, palette, cx)));
+                self.large_view = Some(cx.new(|cx| LargeView::new(doc, cx)));
             }
             Some(doc) => {
                 let lang = match done.kind {
@@ -907,8 +897,8 @@ impl Workspace {
         if let Some((for_response, doc)) = &self.hex_doc
             && *for_response == key
         {
-            let (doc, palette) = (doc.clone(), self.palette);
-            self.large_view = Some(cx.new(|cx| LargeView::new(doc, palette, cx)));
+            let doc = doc.clone();
+            self.large_view = Some(cx.new(|cx| LargeView::new(doc, cx)));
             cx.notify();
             return;
         }
@@ -1002,7 +992,7 @@ fn describe(err: &dyn std::error::Error) -> String {
 
 impl Workspace {
     fn render_title_bar(&self, cx: &mut Context<Self>) -> impl IntoElement {
-        let p = self.palette;
+        let p = crate::theme::current();
         let name = match (&self.project, &self.collection) {
             (Some(project), Some(c)) => format!("{}  ›  {}", project.meta.name, c.meta.name),
             (Some(project), None) => project.meta.name.clone(),
@@ -1095,7 +1085,7 @@ impl Workspace {
     }
 
     fn render_request_pane(&self, cx: &mut Context<Self>) -> impl IntoElement {
-        let p = self.palette;
+        let p = crate::theme::current();
         let params = self.active_count(Table::Params, cx);
         let headers = self.active_count(Table::Headers, cx);
         let params_label = match params {
@@ -1184,7 +1174,7 @@ impl Workspace {
     }
 
     fn render_table(&self, table: Table, cx: &mut Context<Self>) -> impl IntoElement {
-        let p = self.palette;
+        let p = crate::theme::current();
         let (on_id, del_id, add_id) = table.ids();
         let view = cx.entity().downgrade();
         let rows = self.rows(table).iter().enumerate().map(|(ix, row)| {
@@ -1262,7 +1252,7 @@ impl Workspace {
     }
 
     fn render_response_pane(&self, cx: &mut Context<Self>) -> impl IntoElement {
-        let p = self.palette;
+        let p = crate::theme::current();
         let shell = v_flex()
             .size_full()
             .rounded_lg()
@@ -1452,7 +1442,7 @@ impl Workspace {
     /// Pretty for an image or other binary body: what it is, the image when
     /// there is one, and how to see or keep the bytes.
     fn render_binary(&self, done: &Finished, cx: &mut Context<Self>) -> impl IntoElement {
-        let p = self.palette;
+        let p = crate::theme::current();
         let response = &done.response;
         let content_type = response
             .header("content-type")
@@ -1515,7 +1505,7 @@ impl Workspace {
     }
 
     fn render_response_headers(&self, response: &Response) -> impl IntoElement {
-        let p = self.palette;
+        let p = crate::theme::current();
         // Header names and values are data: left to right in any language.
         v_flex()
             .id("response-headers")
@@ -1568,7 +1558,7 @@ impl Workspace {
     }
 
     fn render_status_bar(&self, cx: &App) -> impl IntoElement {
-        let p = self.palette;
+        let p = crate::theme::current();
         let location = match &self.collection {
             Some(c) => {
                 // Separate facts joined by dots, so each is translated whole.
@@ -1659,7 +1649,7 @@ fn send_hint() -> SharedString {
 
 impl Render for Workspace {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let p = self.palette;
+        let p = crate::theme::current();
         // Shortcuts dispatch along the focus path. When a dialog closes, focus
         // is left nowhere, so take it back or Ctrl+S / Ctrl+N would stop working.
         if window.focused(cx).is_none() && !window.has_active_dialog(cx) {
