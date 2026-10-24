@@ -508,8 +508,6 @@ settings.confirm_prod: 生产环境确认
 settings.confirm_prod_description: 当名称包含“prod”的环境处于活动状态时，发送 DELETE、PUT 或 PATCH 之前先确认。
 settings.dark_theme: "深色主题"
 settings.dark_theme_description: "在深色外观下使用。"
-settings.glass: "玻璃效果"
-settings.glass_description: "半透明窗口，背后的桌面呈模糊效果。关闭后窗口为不透明。"
 settings.history: 历史
 settings.history_description: 在这台电脑上保存每个已发送的请求及其响应（Ctrl+H）。
 settings.language: 语言
@@ -530,6 +528,9 @@ settings.theme_files_description: "主题是 %{folder} 中的 .toml 文件。首
 settings.theme_files_open: "打开文件夹"
 settings.theme_obsidian: 黑曜石
 settings.title: 设置
+settings.transparency: "透明度"
+settings.transparency_description: "桌面透过窗口显示的程度，像磨砂玻璃一样模糊。0 为不透明。"
+settings.transparency_value: "%{value}%"
 sidebar.auth: 认证…
 sidebar.change_password: 更改密码…
 sidebar.color: 颜色

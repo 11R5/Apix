@@ -1,8 +1,8 @@
 //! Themes. A theme is a set of colours, dark or light; Apix has a few built
 //! in and reads more from `<config>/Apix/themes/*.toml`. The settings pick a
 //! dark and a light theme, which one to show (or follow the system), an
-//! accent colour and whether the window is glass (translucent, with the OS
-//! blur showing through) or solid.
+//! accent colour and how see-through the window is (the OS blurs what is
+//! behind it).
 //!
 //! Views never keep a copy of the colours: they read [`current`] when they
 //! paint, so [`set`] repaints the whole app in a new theme at once.
@@ -35,7 +35,7 @@ pub fn current() -> Palette {
         .read()
         .ok()
         .and_then(|p| *p)
-        .unwrap_or_else(|| Palette::build(&builtin()[0], "", true))
+        .unwrap_or_else(|| Palette::build(&builtin()[0], "", 8))
 }
 
 /// The first palette, at start.
@@ -89,7 +89,7 @@ pub fn from_settings(settings: &Settings, cx: &App) -> Palette {
             .or_else(|| find(fallback))
     });
     let def = def.cloned().unwrap_or_else(|| builtin().remove(0));
-    Palette::build(&def, &settings.accent, settings.glass)
+    Palette::build(&def, &settings.accent, settings.transparency)
 }
 
 pub fn system_is_light(cx: &App) -> bool {
@@ -116,9 +116,14 @@ fn apply(palette: &Palette, embedded_fonts: bool, cx: &mut App) {
             t.font_family = crate::fonts::UI.into();
             t.mono_font_family = crate::fonts::MONO.into();
         }
-        // Dialogs and inputs paint with this, so it stays nearly opaque;
-        // our own panels use the translucent `surface` directly.
-        t.background = p.surface_raised;
+        // gpui-kit paints this under the whole window, so a see-through
+        // window needs it transparent (dialogs set their own, see
+        // `bidi::DialogBidi`). Our own panels use `surface` directly.
+        t.background = if p.glass {
+            transparent_black()
+        } else {
+            p.surface_raised
+        };
         t.overlay = if p.light {
             hsla(0., 0., 0., 0.25)
         } else {
@@ -140,6 +145,8 @@ fn apply(palette: &Palette, embedded_fonts: bool, cx: &mut App) {
         t.button_primary_hover = p.accent.opacity(0.88);
         t.button_primary_active = p.accent.opacity(0.76);
         t.button_primary_foreground = p.accent_fg;
+        t.slider_bar = p.accent;
+        t.slider_thumb = p.surface_raised;
         t.popover = p.surface_raised;
         t.popover_foreground = p.text;
         t.tab_bar = transparent_black();
@@ -591,8 +598,11 @@ fn file_name(path: &Path) -> String {
         .unwrap_or_default()
 }
 
-/// The colours views paint with: a theme's, with the accent and glass
-/// settings applied and a few derived from them.
+/// The most of the window that can be see-through, so text stays on something.
+pub const MAX_TRANSPARENCY: u32 = 90;
+
+/// The colours views paint with: a theme's, with the accent and
+/// transparency settings applied and a few derived from them.
 #[derive(Debug, Clone, Copy)]
 pub struct Palette {
     pub bg_from: Hsla,
@@ -617,11 +627,14 @@ pub struct Palette {
     pub number: Hsla,
     pub keyword: Hsla,
     pub light: bool,
+    /// The window is see-through (with the OS blur behind it).
     pub glass: bool,
 }
 
 impl Palette {
-    pub fn build(def: &ThemeDef, accent: &str, glass: bool) -> Self {
+    /// `transparency` is a percentage: 0 paints the window solid; more lets
+    /// the blurred desktop through the background and, less so, the panels.
+    pub fn build(def: &ThemeDef, accent: &str, transparency: u32) -> Self {
         let c = &def.colors;
         let accent = ACCENTS
             .iter()
@@ -629,12 +642,34 @@ impl Palette {
             .map(|(_, dark, light)| hex(if def.light { *light } else { *dark }, 1.0))
             .or_else(|| parse_color(accent).filter(|_| accent.starts_with('#')))
             .unwrap_or(c.accent);
-        let solid = |color: Hsla| {
-            if glass {
-                color
-            } else {
-                Hsla { a: 1.0, ..color }
+        let mut t = transparency.min(MAX_TRANSPARENCY) as f32 / 100.0;
+        let glass = t > 0.0;
+        // Dark text on a light window turns to mud over whatever dark is
+        // behind it, so light themes keep more of their white.
+        if def.light {
+            t *= 0.7;
+        }
+        // The theme's colours, with the background as opaque as the slider says.
+        let window = |color: Hsla| Hsla {
+            a: 1.0 - t,
+            ..color
+        };
+        // Panels thin out at half the rate, so text keeps a backing.
+        let panel = Hsla {
+            a: c.surface.a * (1.0 - t * 0.6),
+            ..c.surface
+        };
+        // Glass catches light at its edges: borders brighten as it clears.
+        let hairline = if glass {
+            let rim = if def.light { 1.0 } else { 0.9 };
+            let base = c.border;
+            Hsla {
+                l: base.l + (rim - base.l) * t * 0.6,
+                a: base.a + t * 0.12,
+                ..base
             }
+        } else {
+            c.border
         };
         let (hover, input) = if def.light {
             (hsla(0., 0., 0., 0.05), hsla(0., 0., 0., 0.06))
@@ -642,11 +677,11 @@ impl Palette {
             (hsla(0., 0., 1., 0.05), hsla(0., 0., 1., 0.12))
         };
         Self {
-            bg_from: solid(c.background),
-            bg_to: solid(c.background_end),
-            surface: c.surface,
+            bg_from: window(c.background),
+            bg_to: window(c.background_end),
+            surface: panel,
             surface_raised: c.raised,
-            hairline: c.border,
+            hairline,
             border_active: accent.opacity(0.6),
             accent,
             // Above ~0.18, dark text has more contrast than white (WCAG).
@@ -810,22 +845,33 @@ mod tests {
     }
 
     #[test]
-    fn accent_and_glass() {
+    fn accent_and_transparency() {
         let themes = builtin();
         let obsidian = &themes[0];
         let daylight = themes.iter().find(|t| t.id == "daylight").unwrap();
-        let p = Palette::build(obsidian, "purple", true);
+        let p = Palette::build(obsidian, "purple", 20);
         assert_eq!(color_text(p.accent), "#A78BFA");
         assert_eq!(color_text(p.accent_fg), "#04121A");
-        let p = Palette::build(daylight, "purple", true);
+        let p = Palette::build(daylight, "purple", 20);
         assert_eq!(color_text(p.accent), "#7C3AED");
         assert_eq!(color_text(p.accent_fg), "#FFFFFF");
         assert!(p.light);
-        let p = Palette::build(obsidian, "#123456", false);
+        // Light windows clear more gently.
+        assert!((p.bg_from.a - 0.86).abs() < 0.001);
+        let p = Palette::build(obsidian, "#123456", 0);
         assert_eq!(color_text(p.accent), "#123456");
+        assert!(!p.glass);
         assert_eq!(p.bg_from.a, 1.0);
-        let p = Palette::build(obsidian, "", true);
+        assert_eq!(p.surface.a, obsidian.colors.surface.a);
+        let p = Palette::build(obsidian, "", 60);
         assert_eq!(color_text(p.accent), "#22D3EE");
-        assert!(p.bg_from.a < 1.0);
+        assert!(p.glass);
+        assert!((p.bg_from.a - 0.4).abs() < 0.001);
+        // Panels clear more slowly than the window, and edges brighten.
+        assert!(p.surface.a > 0.4 && p.surface.a < obsidian.colors.surface.a);
+        assert!(p.hairline.a > obsidian.colors.border.a);
+        // Never fully see-through.
+        let p = Palette::build(obsidian, "", 100);
+        assert!((p.bg_from.a - 0.1).abs() < 0.001);
     }
 }

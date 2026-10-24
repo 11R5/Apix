@@ -508,8 +508,6 @@ settings.confirm_prod: Üretimde onay iste
 settings.confirm_prod_description: Adında “prod” geçen bir ortam seçiliyken DELETE, PUT veya PATCH göndermeden önce sor.
 settings.dark_theme: "Koyu tema"
 settings.dark_theme_description: "Görünüm koyuyken kullanılır."
-settings.glass: "Cam efekti"
-settings.glass_description: "Arkasındaki masaüstü bulanık görünen yarı saydam pencere. Kapalıyken pencere düz renk olur."
 settings.history: Geçmiş
 settings.history_description: Gönderilen her isteği yanıtıyla birlikte bu bilgisayarda sakla (Ctrl+H).
 settings.language: Dil
@@ -530,6 +528,9 @@ settings.theme_files_description: "Temalar %{folder} içindeki .toml dosyalarıd
 settings.theme_files_open: "Klasörü aç"
 settings.theme_obsidian: Obsidyen
 settings.title: Ayarlar
+settings.transparency: "Saydamlık"
+settings.transparency_description: "Masaüstünün pencereden ne kadar, buzlu cam gibi bulanık görüneceği. 0 düz renktir."
+settings.transparency_value: "%%{value}"
 sidebar.auth: Yetkilendirme…
 sidebar.change_password: Parolayı değiştir…
 sidebar.color: Renk

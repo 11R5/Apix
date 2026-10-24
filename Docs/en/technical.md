@@ -75,7 +75,7 @@ release build of the desktop app takes a few minutes.
 
 | File | Contents |
 |---|---|
-| `<config>/Apix/settings.toml` | language, appearance, dark and light theme, accent colour, glass, auto-lock time, history on or off, where environment secrets go |
+| `<config>/Apix/settings.toml` | language, appearance, dark and light theme, accent colour, transparency, auto-lock time, history on or off, where environment secrets go |
 | `<config>/Apix/state.toml` | recently opened collections, the chosen environment and the open tabs per collection or project (not for encrypted collections) |
 | `<config>/Apix/cookies.json` | the cookie jar (session cookies are not persisted) |
 | `<config>/Apix/themes/*.toml` | your own themes (written only when you press **Open the folder** in Settings and the folder is empty: one example) |
@@ -165,5 +165,5 @@ crate is fixed.
 | apix-script | variables and request changes from pre-request scripts, `pm.test` / `pm.expect` results and messages, the older `tests[...]` API, errors naming the file, endless scripts stopped, `setNextRequest`, `atob`/`btoa`, `pm.sendRequest` (callback and `await`, waiting not counted), the built-in libraries against known digests, checks without code, values and expressions for response targets |
 | apix-runner | CSV (quotes, line breaks, `;`, BOM) and JSON data files, iteration counts and data rows, pause/stop timing, JUnit/JSON/HTML output and escaping, dates; whole runs against a local server (data rows, sidebar order, `bail`, `setNextRequest`) |
 | apix-vault | encryption format, tampering, password change, recovery key, keychain entries (against the real credential store under a test service name; skipped where none exists) |
-| apix-desktop | translations complete, language helpers, file paths, highlighting query, theme files (reading, errors, round trip), accent and glass colours |
+| apix-desktop | translations complete, language helpers, file paths, highlighting query, theme files (reading, errors, round trip), accent and transparency colours |
 | docs-check | documentation structure and stamps |

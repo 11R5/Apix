@@ -508,8 +508,6 @@ settings.confirm_prod: التأكيد في بيئة الإنتاج
 settings.confirm_prod_description: السؤال قبل إرسال DELETE أو PUT أو PATCH عندما تكون بيئة يحتوي اسمها على «prod» نشطة.
 settings.dark_theme: "السمة الداكنة"
 settings.dark_theme_description: "تُستخدم عندما يكون المظهر داكنًا."
-settings.glass: "تأثير الزجاج"
-settings.glass_description: "نافذة شبه شفافة يظهر خلفها سطح المكتب ضبابيًا. عند الإيقاف تصبح معتمة."
 settings.history: السجل
 settings.history_description: احفظ كل طلب مُرسل مع استجابته على هذا الحاسوب (Ctrl+H).
 settings.language: اللغة
@@ -530,6 +528,9 @@ settings.theme_files_description: "السمات ملفات ‎.toml في %{folde
 settings.theme_files_open: "فتح المجلد"
 settings.theme_obsidian: أوبسيديان
 settings.title: الإعدادات
+settings.transparency: "الشفافية"
+settings.transparency_description: "مقدار ما يظهر من سطح المكتب عبر النافذة، ضبابيًا كالزجاج المصنفر. 0 تعني معتمة."
+settings.transparency_value: "%{value}٪"
 sidebar.auth: المصادقة…
 sidebar.change_password: تغيير كلمة المرور…
 sidebar.color: اللون

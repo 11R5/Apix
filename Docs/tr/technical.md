@@ -1,4 +1,4 @@
-<!-- translated from en/technical.md sha256:dfa153f337314b56 -->
+<!-- translated from en/technical.md sha256:9b3e0f0c441e7e0c -->
 
 # Teknik notlar
 
@@ -76,7 +76,7 @@ Masaüstü uygulamasının tam bir release derlemesi birkaç dakika sürer.
 
 | Dosya | İçerik |
 |---|---|
-| `<config>/Apix/settings.toml` | dil, görünüm, koyu ve açık tema, vurgu rengi, cam efekti, otomatik kilit süresi, geçmişin açık ya da kapalı olması, ortam gizli değerlerinin nereye yazılacağı |
+| `<config>/Apix/settings.toml` | dil, görünüm, koyu ve açık tema, vurgu rengi, saydamlık, otomatik kilit süresi, geçmişin açık ya da kapalı olması, ortam gizli değerlerinin nereye yazılacağı |
 | `<config>/Apix/state.toml` | son açılan koleksiyonlar, koleksiyon ya da proje başına seçilen ortam ve açık sekmeler (şifreli koleksiyonlar hariç) |
 | `<config>/Apix/cookies.json` | çerez kavanozu (oturum çerezleri kalıcı değildir) |
 | `<config>/Apix/themes/*.toml` | kendi temaların (yalnızca Ayarlar'da **Klasörü aç**'a basıldığında ve klasör boşsa yazılır: bir örnek) |
@@ -167,5 +167,5 @@ patch ile devreye alır. Upstream crate düzeltildiğinde kaldırılabilir.
 | apix-script | istek öncesi scriptlerden değişken ve istek değişiklikleri, `pm.test` / `pm.expect` sonuçları ve mesajları, eski `tests[...]` API'si, dosyayı adlandıran hatalar, sonsuz scriptlerin durdurulması, `setNextRequest`, `atob`/`btoa`, `pm.sendRequest` (geri çağırma ve `await`, bekleme sayılmaz), bilinen özet değerlerine karşı hazır kütüphaneler, kodsuz doğrulamalar, yanıt hedefleri için değer ve ifade üretimi |
 | apix-runner | CSV (tırnaklar, satır sonları, `;`, BOM) ve JSON veri dosyaları, tekrar sayıları ve veri satırları, duraklatma/durdurma zamanlaması, JUnit/JSON/HTML çıktısı ve kaçışlar, tarihler; yerel bir sunucuya karşı bütün koşular (veri satırları, kenar çubuğu sırası, `bail`, `setNextRequest`) |
 | apix-vault | şifreleme formatı, kurcalama (tampering), parola değişikliği, kurtarma anahtarı, anahtarlık kayıtları (gerçek kimlik bilgisi deposunda, test servis adıyla; depo yoksa atlanır) |
-| apix-desktop | çevirilerin eksiksizliği, dil yardımcıları, dosya yolları, vurgulama sorgusu, tema dosyaları (okuma, hatalar, gidiş-dönüş), vurgu ve cam renkleri |
+| apix-desktop | çevirilerin eksiksizliği, dil yardımcıları, dosya yolları, vurgulama sorgusu, tema dosyaları (okuma, hatalar, gidiş-dönüş), vurgu ve saydamlık renkleri |
 | docs-check | belge yapısı ve damgalar |

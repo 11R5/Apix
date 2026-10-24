@@ -508,8 +508,6 @@ settings.confirm_prod: In Produktion nachfragen
 settings.confirm_prod_description: Vor dem Senden von DELETE, PUT oder PATCH nachfragen, wenn eine Umgebung mit „prod“ im Namen aktiv ist.
 settings.dark_theme: "Dunkles Theme"
 settings.dark_theme_description: "Wird im dunklen Erscheinungsbild verwendet."
-settings.glass: "Glas"
-settings.glass_description: "Ein durchscheinendes Fenster mit verschwommenem Desktop dahinter. Aus: deckend."
 settings.history: Verlauf
 settings.history_description: Jede gesendete Anfrage mit ihrer Antwort auf diesem Computer behalten (Strg+H).
 settings.language: Sprache
@@ -530,6 +528,9 @@ settings.theme_files_description: "Themes sind .toml-Dateien in %{folder}. Beim 
 settings.theme_files_open: "Ordner öffnen"
 settings.theme_obsidian: Obsidian
 settings.title: Einstellungen
+settings.transparency: "Transparenz"
+settings.transparency_description: "Wie viel vom Desktop durch das Fenster scheint, verschwommen wie Milchglas. 0 ist deckend."
+settings.transparency_value: "%{value} %"
 sidebar.auth: Authentifizierung…
 sidebar.change_password: Passwort ändern…
 sidebar.color: Farbe

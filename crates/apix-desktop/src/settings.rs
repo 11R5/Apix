@@ -19,8 +19,9 @@ pub struct Settings {
     pub appearance: String,
     /// An accent name (`cyan`, `purple`, …), `#RRGGBB`, or empty for the theme's own.
     pub accent: String,
-    /// A translucent window with the OS blur behind it; off paints it solid.
-    pub glass: bool,
+    /// How see-through the window is, in percent (0 solid, at most 90); the
+    /// OS blurs what shows through.
+    pub transparency: u32,
     /// Encrypted collections lock after this many idle minutes; 0 never.
     pub auto_lock_minutes: u32,
     /// Keep sent requests and their responses in the history.
@@ -39,7 +40,7 @@ impl Default for Settings {
             light_theme: "daylight".into(),
             appearance: "dark".into(),
             accent: String::new(),
-            glass: true,
+            transparency: 20,
             auto_lock_minutes: 15,
             history: true,
             secrets_in_keychain: false,

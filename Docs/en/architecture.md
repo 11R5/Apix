@@ -337,9 +337,17 @@ workspace, so a run outlives its dialog.
 Daylight) with `Colors` and a dark/light flag. `Palette::build` turns one into
 what views paint with: the accent setting (a named colour with a dark and a
 deeper light shade, or `#RRGGBB`), the text on the accent picked by relative
-luminance, hover and input tints for dark or light, and opaque backgrounds
-when glass is off. `from_settings` picks the dark or light theme by the
-appearance setting and, for "follow the system", `App::window_appearance`.
+luminance, hover and input tints for dark or light, and the transparency
+setting: the window background's alpha is `1 - t`, panels clear at 60% of
+that rate, borders brighten towards white as `t` grows, and light themes use
+70% of `t`. `from_settings` picks the dark or light theme by the appearance
+setting and, for "follow the system", `App::window_appearance`.
+
+gpui-kit's root view paints `Theme::background` under the whole window, which
+would hide the OS blur, so with any transparency it is set transparent and
+dialogs get their own background through `bidi::DialogBidi`, which every
+dialog uses. The OS does the blur: `WindowBackgroundAppearance::Blurred` is
+acrylic on Windows (`SetWindowCompositionAttribute`) and vibrancy on macOS.
 
 Views never keep a copy of the palette: they call `theme::current()` when they
 paint. `theme::set` stores the new palette, points gpui-kit's component theme

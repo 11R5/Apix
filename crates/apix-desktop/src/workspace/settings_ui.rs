@@ -2,6 +2,7 @@
 
 use gpui_kit::component::button::{Button, ButtonVariants as _};
 use gpui_kit::component::select::{Select, SelectEvent, SelectState};
+use gpui_kit::component::slider::{Slider, SliderEvent, SliderState};
 use gpui_kit::component::{IndexPath, Sizable, WindowExt as _, h_flex, v_flex};
 use gpui_kit::*;
 
@@ -94,7 +95,7 @@ pub(super) struct SettingsView {
     dark_theme: Entity<Picker>,
     light_theme: Entity<Picker>,
     accent: Entity<Picker>,
-    glass: Entity<Picker>,
+    transparency: Entity<SliderState>,
     auto_lock: Entity<Picker>,
     history: Entity<Picker>,
     secrets: Entity<Picker>,
@@ -153,13 +154,13 @@ impl SettingsView {
             window,
             cx,
         );
-        let glass_ix = if settings.glass { 0 } else { 1 };
-        let glass = picker(
-            history_choices(),
-            Some(IndexPath::new(glass_ix)),
-            window,
-            cx,
-        );
+        let transparency = cx.new(|_| {
+            SliderState::new()
+                .min(0.)
+                .max(theme::MAX_TRANSPARENCY as f32)
+                .step(5.)
+                .default_value(settings.transparency.min(theme::MAX_TRANSPARENCY) as f32)
+        });
 
         let lock_ix = AUTO_LOCK_MINUTES
             .iter()
@@ -264,11 +265,21 @@ impl SettingsView {
                     this.change_theme(|s| s.accent = id, cx);
                 }
             }),
-            cx.subscribe_in(&glass, window, |this, state, _: &Changed, _, cx| {
-                if let Some(ix) = state.read(cx).selected_index(cx) {
-                    this.change_theme(|s| s.glass = ix.row == 0, cx);
-                }
-            }),
+            // The window follows the slider as it moves; the file is written on release.
+            cx.subscribe_in(
+                &transparency,
+                window,
+                |this, _, event: &SliderEvent, _, cx| match event {
+                    SliderEvent::Change(value) => {
+                        let percent = value.start().round() as u32;
+                        this.preview_theme(|s| s.transparency = percent, cx);
+                    }
+                    SliderEvent::Release(value) => {
+                        let percent = value.start().round() as u32;
+                        this.change_theme(|s| s.transparency = percent, cx);
+                    }
+                },
+            ),
             cx.subscribe_in(&auto_lock, window, |this, state, _: &Changed, _, cx| {
                 if let Some(ix) = state.read(cx).selected_index(cx) {
                     let minutes = AUTO_LOCK_MINUTES[ix.row];
@@ -283,7 +294,7 @@ impl SettingsView {
             dark_theme,
             light_theme,
             accent,
-            glass,
+            transparency,
             auto_lock,
             history,
             secrets,
@@ -308,6 +319,21 @@ impl SettingsView {
                 cx.notify();
             })
             .ok();
+    }
+
+    /// Repaints the app with a theme setting changed, without saving it yet.
+    fn preview_theme(&mut self, f: impl FnOnce(&mut Settings), cx: &mut Context<Self>) {
+        let settings = self
+            .workspace
+            .update(cx, |ws, _| {
+                f(&mut ws.settings);
+                ws.settings.clone()
+            })
+            .ok();
+        if let Some(settings) = settings {
+            theme::set(theme::from_settings(&settings, cx), cx);
+        }
+        cx.notify();
     }
 
     /// Changes a theme setting and repaints the app in it.
@@ -403,7 +429,6 @@ impl SettingsView {
             (&self.dark_theme, self.dark_themes.labels.clone()),
             (&self.light_theme, self.light_themes.labels.clone()),
             (&self.accent, accents),
-            (&self.glass, history_choices()),
             (
                 &self.auto_lock,
                 AUTO_LOCK_MINUTES.map(auto_lock_label).to_vec(),
@@ -546,11 +571,29 @@ impl Render for SettingsView {
                 Select::new(&self.accent).small(),
             ))
             .child(line())
-            .child(self.row(
-                tr!("settings.glass"),
-                tr!("settings.glass_description"),
-                Select::new(&self.glass).small(),
-            ))
+            .child(
+                self.row(
+                    tr!("settings.transparency"),
+                    tr!("settings.transparency_description"),
+                    h_flex()
+                        .dir_row()
+                        .gap_3()
+                        .items_center()
+                        .child(Slider::new(&self.transparency).flex_1())
+                        .child(
+                            div()
+                                .w(px(36.))
+                                .flex_none()
+                                .text_sm()
+                                .text_color(p.text_muted)
+                                .child(tr!(
+                                    "settings.transparency_value",
+                                    value =
+                                        self.transparency.read(cx).value().start().round() as u32
+                                )),
+                        ),
+                ),
+            )
             .child(line())
             .child(
                 self.row(
