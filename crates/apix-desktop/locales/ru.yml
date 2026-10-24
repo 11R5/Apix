@@ -561,6 +561,12 @@ sidebar.rename: Переименовать…
 sidebar.run: "Запустить…"
 sidebar.settings: Настройки запросов…
 sidebar.show_in_environment: Показать в окружении
+stream.count: "Событий: %{count}"
+stream.live: "В эфире"
+stream.older_hidden: "Старые события не показаны: %{count}"
+stream.stop: "Остановить"
+stream.stopped: "остановлено"
+stream.waiting: "Подключено. Ждём первое событие…"
 table.add: Добавить
 table.key: Ключ
 table.value: Значение

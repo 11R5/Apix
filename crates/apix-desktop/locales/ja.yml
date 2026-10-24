@@ -561,6 +561,12 @@ sidebar.rename: 名前を変更…
 sidebar.run: "実行…"
 sidebar.settings: リクエスト設定…
 sidebar.show_in_environment: 環境で表示
+stream.count: "%{count} 件のイベント"
+stream.live: "ライブ"
+stream.older_hidden: "古いイベント %{count} 件は表示されていません"
+stream.stop: "停止"
+stream.stopped: "停止済み"
+stream.waiting: "接続しました。最初のイベントを待っています…"
 table.add: 追加
 table.key: キー
 table.value: 値

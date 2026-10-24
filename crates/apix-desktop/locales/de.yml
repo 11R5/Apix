@@ -561,6 +561,12 @@ sidebar.rename: Umbenennen…
 sidebar.run: "Ausführen…"
 sidebar.settings: Anfrage-Einstellungen…
 sidebar.show_in_environment: In Umgebung anzeigen
+stream.count: "%{count} Ereignisse"
+stream.live: "Live"
+stream.older_hidden: "%{count} ältere Ereignisse werden nicht angezeigt"
+stream.stop: "Stoppen"
+stream.stopped: "gestoppt"
+stream.waiting: "Verbunden. Warte auf das erste Ereignis…"
 table.add: Hinzufügen
 table.key: Schlüssel
 table.value: Wert

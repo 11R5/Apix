@@ -561,6 +561,12 @@ sidebar.rename: إعادة تسمية…
 sidebar.run: "تشغيل…"
 sidebar.settings: إعدادات الطلب…
 sidebar.show_in_environment: العرض في البيئة
+stream.count: "%{count} أحداث"
+stream.live: "مباشر"
+stream.older_hidden: "لا تُعرض %{count} أحداث أقدم"
+stream.stop: "إيقاف"
+stream.stopped: "متوقف"
+stream.waiting: "تم الاتصال. في انتظار أول حدث…"
 table.add: إضافة
 table.key: المفتاح
 table.value: القيمة

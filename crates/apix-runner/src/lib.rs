@@ -121,7 +121,8 @@ impl Exchange {
 
 /// Sends the request at `path`: pre-request scripts, then the request with
 /// variables filled in, then test scripts. `state` carries what scripts set
-/// from one request to the next.
+/// from one request to the next; `progress` sees the response as it arrives
+/// (for streams).
 #[allow(clippy::too_many_arguments)]
 pub async fn exchange(
     client: &HttpClient,
@@ -133,6 +134,7 @@ pub async fn exchange(
     overrides: &RequestSettings,
     info: Info,
     sender: Sender,
+    progress: impl FnMut(apix_http::Progress<'_>) + Send,
 ) -> Result<Exchange> {
     let mut request = scope.load(path)?;
     request.settings = overrides.clone().or_inherit(&request.settings);
@@ -174,7 +176,7 @@ pub async fn exchange(
         Some(dir) => resolved.request.with_files_relative_to(dir),
         None => resolved.request,
     };
-    let response = client.send(&sent).await?;
+    let response = client.send_with(&sent, progress).await?;
     let view = ResponseView::new(
         response.status,
         response.reason.unwrap_or(""),
@@ -411,6 +413,7 @@ pub async fn run(
                 &plan.overrides,
                 info,
                 sender.clone(),
+                |_| {},
             )
             .await
             {

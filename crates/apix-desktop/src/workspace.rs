@@ -17,6 +17,7 @@ mod script_run;
 mod settings_editor;
 mod settings_ui;
 mod shell_copy;
+mod stream_ui;
 mod tabs;
 mod var_chips;
 mod vault_ui;
@@ -46,7 +47,6 @@ use gpui_kit::*;
 
 use crate::bidi::{self, Bidi as _};
 use crate::large_view::{Document, LARGE_BODY_BYTES, LargeView};
-use crate::net;
 use crate::settings::Settings;
 use crate::state::AppState;
 use crate::theme;
@@ -187,6 +187,10 @@ struct Finished {
     local: apix_http::LocalNetwork,
     /// Test results and console lines, when the request has scripts.
     scripts: Option<script_run::ScriptReport>,
+    /// The events of a server-sent event stream.
+    events: Option<Vec<stream_ui::TimedEvent>>,
+    /// The stream was stopped before the server ended it.
+    stopped: bool,
 }
 
 /// Images bigger than this are not previewed (save them instead).
@@ -235,6 +239,7 @@ impl Finished {
             }
         };
         let local = apix_http::local_network(response.trace.local_addr.map(|a| a.ip()));
+        let events = stream_ui::events_of(&response);
         Self {
             response,
             pretty,
@@ -245,6 +250,8 @@ impl Finished {
             image,
             local,
             scripts: None,
+            events,
+            stopped: false,
         }
     }
 }
@@ -322,6 +329,8 @@ fn raw_document(response: &Response, json: bool) -> Arc<Document> {
 enum ResponseState {
     Idle,
     Loading,
+    /// Server-sent events still coming in.
+    Streaming(Rc<std::cell::RefCell<stream_ui::LiveStream>>),
     Done(Rc<Finished>),
     Failed(String),
     Cancelled,
@@ -401,6 +410,8 @@ pub struct Workspace {
     drop_hint: Option<(PathBuf, drag::Zone)>,
     /// The Runner, kept so a run goes on with its dialog closed.
     runner: Option<Entity<runner_ui::RunnerView>>,
+    /// The event list of a finished event stream.
+    events_scroll: ScrollHandle,
     _subscriptions: Vec<Subscription>,
 }
 
@@ -530,6 +541,7 @@ impl Workspace {
             remembered_tabs: None,
             drop_hint: None,
             runner: None,
+            events_scroll: ScrollHandle::new(),
             _subscriptions: subscriptions,
         };
         this._auto_lock = Some(Self::auto_lock_task(window, cx));
@@ -756,32 +768,13 @@ impl Workspace {
             Some(dir) => resolved.request.with_files_relative_to(&dir),
             None => resolved.request,
         };
-        self.response = ResponseState::Loading;
-        let pending = net::send(request);
-        // The tab may be in the back by the time the response arrives.
-        let tab = self.selected.clone();
-        // Replacing an older task drops it, which cancels that request.
-        self.task = Some(cx.spawn_in(window, async move |this, cx| {
-            let result = pending.await;
-            // Formatting and indexing a big body must not stall the UI thread,
-            // and neither must writing the history.
-            let prepared = cx
-                .background_spawn(async move {
-                    if let Some(record) = record {
-                        record.save(&result);
-                    }
-                    result.map(Finished::prepare)
-                })
-                .await;
-            this.update_in(cx, |this, window, cx| {
-                this.finish_for(tab, prepared, window, cx)
-            })
-            .ok();
-        }));
-        cx.notify();
+        self.send_following(request, record, window, cx);
     }
 
-    fn cancel(&mut self, cx: &mut Context<Self>) {
+    fn cancel(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        if self.stop_stream(window, cx) {
+            return;
+        }
         if self.task.take().is_some() {
             self.response = ResponseState::Cancelled;
             cx.notify();
@@ -842,8 +835,8 @@ impl Workspace {
         let done = done.clone();
         let binary = matches!(done.kind, BodyKind::Binary | BodyKind::Image(_));
         let doc = match ix {
-            // Pretty for an image or binary body is drawn by `render_binary`.
-            0 if binary => {
+            // Pretty for an image, a binary body or an event stream is drawn by hand.
+            0 if binary || done.events.is_some() => {
                 cx.notify();
                 return;
             }
@@ -1050,7 +1043,7 @@ impl Workspace {
                 .small()
                 .icon(IconName::Close)
                 .label(tr!("menu.cancel"))
-                .on_click(cx.listener(|this, _: &ClickEvent, _, cx| this.cancel(cx)))
+                .on_click(cx.listener(|this, _: &ClickEvent, window, cx| this.cancel(window, cx)))
         } else {
             Button::new("send")
                 .primary()
@@ -1280,6 +1273,9 @@ impl Workspace {
         };
 
         match &self.response {
+            ResponseState::Streaming(stream) => {
+                shell.child(self.render_stream(&stream.borrow(), cx))
+            }
             ResponseState::Cancelled => shell.child(centered(
                 div()
                     .text_sm()
@@ -1336,6 +1332,11 @@ impl Workspace {
                     (_, 6) => self.render_console(done, cx).into_any_element(),
                     (_, 2) => self.render_response_headers(response).into_any_element(),
                     (_, 3) => self.render_network(done).into_any_element(),
+                    (None, 0) if done.events.is_some() => stream_ui::render_events(
+                        done.events.as_deref().unwrap_or_default(),
+                        &self.events_scroll,
+                        cx,
+                    ),
                     (None, 0) if binary => self.render_binary(done, cx).into_any_element(),
                     (Some(view), _) => view.clone().into_any_element(),
                     (None, 4) => centered(
@@ -1397,6 +1398,12 @@ impl Workspace {
                             .child(human_size(response.body.len()))
                             .child(response.version.clone())
                             .children(viewer_note)
+                            .children(
+                                done.events
+                                    .as_ref()
+                                    .map(|events| tr!("stream.count", count = events.len())),
+                            )
+                            .children(done.stopped.then(|| tr!("stream.stopped")))
                             .child(div().flex_1())
                             .child(
                                 Button::new("extract-value")
@@ -1667,7 +1674,7 @@ impl Render for Workspace {
             .key_context(CONTEXT)
             .track_focus(&self.focus)
             .on_action(cx.listener(|this, _: &SendRequest, window, cx| this.send(window, cx)))
-            .on_action(cx.listener(|this, _: &CancelRequest, _, cx| this.cancel(cx)))
+            .on_action(cx.listener(|this, _: &CancelRequest, window, cx| this.cancel(window, cx)))
             .on_action(cx.listener(|this, _: &SaveRequest, window, cx| {
                 this.save(window, cx);
             }))

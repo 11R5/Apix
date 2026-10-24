@@ -130,3 +130,56 @@ pub fn spawn<T: Send + 'static>(
 ) -> impl Future<Output = Result<T, String>> + Send + 'static {
     AbortOnDrop(net().runtime.spawn(async move { Ok(work.await) }))
 }
+
+/// What a streamed send has received so far; the UI reads it while the
+/// request runs.
+#[derive(Default)]
+pub struct Incoming {
+    /// The status and headers, once they are in.
+    pub head: Option<(u16, Vec<(String, String)>)>,
+    /// The response is server-sent events.
+    pub event_stream: bool,
+    /// Body bytes the UI has not taken yet (event streams only).
+    pub fresh: Vec<u8>,
+    /// The finished response, or why it failed.
+    pub result: Option<Result<Response, String>>,
+}
+
+/// Sends an already-resolved request on the network runtime, filling the
+/// returned `Incoming` as the response arrives. Dropping the guard aborts
+/// the request.
+pub fn send_streaming(
+    request: Request,
+) -> (
+    std::sync::Arc<std::sync::Mutex<Incoming>>,
+    impl Drop + Send + 'static,
+) {
+    let incoming = std::sync::Arc::new(std::sync::Mutex::new(Incoming::default()));
+    let shared = incoming.clone();
+    let net = net();
+    let client = net.client.clone();
+    let handle = net.runtime.spawn(async move {
+        let lock = || shared.lock().unwrap_or_else(|e| e.into_inner());
+        let result = client
+            .send_with(&request, |progress| match progress {
+                apix_http::Progress::Head { status, headers } => {
+                    let mut incoming = lock();
+                    incoming.event_stream = headers.iter().any(|(k, v)| {
+                        k.eq_ignore_ascii_case("content-type") && apix_http::sse::is_event_stream(v)
+                    });
+                    incoming.head = Some((status, headers.to_vec()));
+                }
+                apix_http::Progress::Chunk(chunk) => {
+                    let mut incoming = lock();
+                    if incoming.event_stream {
+                        incoming.fresh.extend_from_slice(chunk);
+                    }
+                }
+            })
+            .await
+            .map_err(|e| error_chain(&e));
+        lock().result = Some(result);
+        Ok(())
+    });
+    (incoming, AbortOnDrop(handle))
+}

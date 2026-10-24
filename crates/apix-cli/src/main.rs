@@ -386,6 +386,9 @@ async fn run(cli: Cli) -> Result<bool> {
                 iteration_count: 1,
                 ..Default::default()
             };
+            // Server-sent events are printed as they arrive, not at the end.
+            let started = std::time::Instant::now();
+            let mut stream: Option<(apix_http::sse::SseParser, usize)> = None;
             let done = apix_runner::exchange(
                 &client,
                 &scope,
@@ -396,9 +399,57 @@ async fn run(cli: Cli) -> Result<bool> {
                 &net.overrides(),
                 info,
                 script_sender(),
+                |progress| match progress {
+                    apix_http::Progress::Head { status, headers } => {
+                        let content_type = headers
+                            .iter()
+                            .find(|(k, _)| k.eq_ignore_ascii_case("content-type"))
+                            .map(|(_, v)| v.as_str())
+                            .unwrap_or_default();
+                        if !apix_http::sse::is_event_stream(content_type) {
+                            return;
+                        }
+                        let color = if (200..400).contains(&status) {
+                            style.green
+                        } else {
+                            style.red
+                        };
+                        println!(
+                            "{color}{status}{}  {}event stream, Ctrl+C to stop{}",
+                            style.reset, style.dim, style.reset
+                        );
+                        if include_headers {
+                            for (k, v) in headers {
+                                println!("{}{k}{}: {v}", style.dim, style.reset);
+                            }
+                            println!();
+                        }
+                        stream = Some((apix_http::sse::SseParser::new(), 0));
+                    }
+                    apix_http::Progress::Chunk(chunk) => {
+                        let Some((parser, count)) = stream.as_mut() else {
+                            return;
+                        };
+                        for event in parser.feed(chunk) {
+                            *count += 1;
+                            print_event(&style, started.elapsed(), &event);
+                        }
+                    }
+                },
             )
             .await?;
-            if let Some(response) = &done.response {
+            if let (Some((_, count)), Some(response)) = (&stream, &done.response) {
+                println!(
+                    "{}stream ended: {count} events in {:.1} s · {}{}",
+                    style.dim,
+                    response.timing.total.as_secs_f64(),
+                    human_size(response.body.len()),
+                    style.reset
+                );
+                if network {
+                    print_network(&style, response);
+                }
+            } else if let Some(response) = &done.response {
                 print_status(
                     &style,
                     response.status,
@@ -817,6 +868,30 @@ fn print_scripts(style: &Style, item: &apix_runner::ItemResult) {
     }
     if let Some(error) = &item.test_error {
         println!("  {}test script error: {error}{}", style.red, style.reset);
+    }
+}
+
+/// One server-sent event: when it came, its type and id, then its data.
+fn print_event(style: &Style, at: std::time::Duration, event: &apix_http::sse::SseEvent) {
+    let id = event
+        .id
+        .as_deref()
+        .map(|id| format!(" #{id}"))
+        .unwrap_or_default();
+    println!(
+        "{}{:>8.2}s{} {}{}{}{}{}{}",
+        style.dim,
+        at.as_secs_f64(),
+        style.reset,
+        style.green,
+        event.event,
+        style.reset,
+        style.dim,
+        id,
+        style.reset
+    );
+    for line in event.data.lines() {
+        println!("          {line}");
     }
 }
 

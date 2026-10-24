@@ -561,6 +561,12 @@ sidebar.rename: Yeniden adlandır…
 sidebar.run: "Çalıştır…"
 sidebar.settings: İstek ayarları…
 sidebar.show_in_environment: Ortamda göster
+stream.count: "%{count} olay"
+stream.live: "Canlı"
+stream.older_hidden: "%{count} eski olay gösterilmiyor"
+stream.stop: "Durdur"
+stream.stopped: "durduruldu"
+stream.waiting: "Bağlandı. İlk olay bekleniyor…"
 table.add: Ekle
 table.key: Anahtar
 table.value: Değer

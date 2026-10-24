@@ -561,6 +561,12 @@ sidebar.rename: 重命名…
 sidebar.run: "运行…"
 sidebar.settings: 请求设置…
 sidebar.show_in_environment: 在环境中显示
+stream.count: "%{count} 个事件"
+stream.live: "实时"
+stream.older_hidden: "未显示 %{count} 个较早的事件"
+stream.stop: "停止"
+stream.stopped: "已停止"
+stream.waiting: "已连接，正在等待第一个事件…"
 table.add: 添加
 table.key: 键
 table.value: 值
