@@ -32,7 +32,7 @@ async fn main() -> std::io::Result<()> {
             let mut n = 0u64;
             loop {
                 n += 1;
-                let event = if n % 4 == 0 {
+                let event = if n.is_multiple_of(4) {
                     format!(
                         "event: price\nid: {n}\ndata: {{\"symbol\":\"APX\",\"price\":{}.{:02}}}\n\n",
                         100 + n % 17,
