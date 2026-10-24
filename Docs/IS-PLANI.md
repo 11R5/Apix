@@ -15,10 +15,10 @@
 | M2 Koleksiyonlar, Postman içe aktarma | ✅ (sekmeler ve sürükle-bırak M3'te tamamlandı) |
 | M3 Simge, projeler, ortamlar, kopyalama, auth | ✅ 9/9 · bitti: simge, ortam seçici ve editörü, dinamik değişkenler, projeler, kabuk komutu olarak kopyalama, metotla yeni istek, değişken çipleri, Auth sekmesi ve miras, komut paleti, sekmeler, sürükle-bırak ile taşıma · küçük kalanlar M4'te yapıldı (yalnız ham gövde editöründe değişken çipi kaldı) |
 | M4 Günlük kullanım | ✅ · bitti: menü çubuğu, şifreli koleksiyonlar (motor, uygulama, CLI), ağ denetçisi (Network sekmesi), multipart/binary/GraphQL gövdeleri, auth tipleri (Digest, OAuth 1.0, OAuth 2.0, AWS SigV4), ayarlar ekranı ve 9 dilli arayüz, Arapça için sağdan sola düzen, dokümantasyon yapısı (İngilizce, Türkçe), README karşılaştırması ve performans ölçümü, istek ayarları (zaman aşımı, yönlendirmeler, TLS doğrulama, proxy, istemci sertifikaları; klasör/koleksiyon/proje kalıtımıyla) ve çerez yöneticisi, 10 dilde kod üretimi, geçmiş, Postman otomatik tanıma, toplu içe aktarma ve Postman'a dışa aktarma, içerik tipleri (HTML gövde, XML/HTML renklendirme ve biçimlendirme, resim önizleme, Hex, yanıtı kaydetme), Insomnia/OpenAPI/HAR içe aktarma, şifreli koleksiyon parolasını ve ortam gizli değerlerini işletim sistemi anahtarlığında saklama, M3'ten kalan küçük işler (elle sıralama, sekmeleri hatırlama, proje renkleri, koleksiyonu projeye taşıma, prod onayı, fish/HTTPie/wget kopyalama, Params/Headers/form gövdesinde değişken çipleri) · gRPC (not 17) sonraki görevlere bırakıldı |
-| M5 Scriptler, testler, runner | 🔜 · bitti: `apix-script` (QuickJS, `pm.*` uyumlu API), istek öncesi ve test scriptleri (koleksiyon → klasör → istek), `pm.test` / `pm.expect` (Chai tarzı), eski `tests[...]` / `postman.*` API'si, konsol, uygulamada Scripts sekmesi ile Tests ve Console sekmeleri, `apix send` / `apix run` script çalıştırma, test sonuçları ve `setNextRequest`, `pm.sendRequest`, hazır kütüphaneler (`require`), kodsuz doğrulamalar, yanıttan değişken kaydetme · sıradaki: Runner arayüzü, veri dosyalı koşular, JUnit/HTML raporlar |
+| M5 Scriptler, testler, runner | ✅ `apix-script` (QuickJS, `pm.*` uyumlu API), istek öncesi ve test scriptleri (koleksiyon → klasör → istek), `pm.test` / `pm.expect` (Chai tarzı), eski `tests[...]` / `postman.*` API'si, konsol, uygulamada Scripts sekmesi ile Tests ve Console sekmeleri, `apix send` / `apix run` script çalıştırma, test sonuçları ve `setNextRequest`, `pm.sendRequest`, hazır kütüphaneler (`require`), kodsuz doğrulamalar, yanıttan değişken kaydetme, Runner penceresi (sıra, tekrar, bekleme, veri dosyası, ilk hatada dur, duraklat/devam/durdur), CSV/JSON veri dosyalı koşular, JUnit XML / JSON / HTML raporlar, `apix run --data/--iterations/--delay/--bail/--junit/--json/--html`, GitHub Actions örneği · sıradaki: tema paketi |
 | M6–M9 | ⬜ |
 
-Release ikili dosyası 37.2 MB (üst sınır 100 MB; QuickJS ve JavaScript renklendirmesi yaklaşık 3.6 MB ekledi). Testler: core 57, script 10, vault 11, desktop 12, codegen 24, import 26, http 19 (hepsi geçiyor, clippy uyarısız).
+Release ikili dosyası 38.0 MB (üst sınır 100 MB; QuickJS ve JavaScript renklendirmesi yaklaşık 3.6 MB, Runner 0.8 MB ekledi). Testler: core 57, script 10, runner 13, vault 11, desktop 12, codegen 24, import 26, http 19 (hepsi geçiyor, clippy uyarısız).
 
 ### Kullanıcı notları (17 Ekim 2026) ve plana nasıl işlendikleri
 | # | Not | Nereye işlendi |
@@ -357,11 +357,11 @@ Bir koleksiyon (veya proje) parola ile şifrelenir. Parolayı bilmeyen hiçbir a
 | `apix send <dosya>` | ✅ |
 | `apix run <klasör>`: hata olursa sıfırdan farklı çıkış kodu döner | ✅ script'leri de çalıştırır: test sonuçları (✓/✗), konsol, `setNextRequest` (sıra değiştirme, `null` ile durdurma); testi olan istek testlere, testi olmayan durum koduna göre geçer/kalır |
 | `--env`, `--var anahtar=değer` | ✅ |
-| Runner arayüzü: sıra seçimi, tekrar sayısı, istekler arası bekleme, durdur ve devam et | ⬜ M |
-| **Veri odaklı test:** CSV veya JSON dosyasındaki her satır için koleksiyonu çalıştırma | ⬜ M |
-| Raporlar: JUnit XML (CI için), JSON, HTML | ⬜ M |
-| `--bail` (ilk hatada dur), `--parallel N`, `--timeout` | ⬜ S |
-| GitHub Actions örneği ve `apix` için resmi Docker imajı | ⬜ S |
+| Runner arayüzü: sıra seçimi, tekrar sayısı, istekler arası bekleme, durdur ve devam et | ✅ Runner penceresi (Ctrl+Shift+R; kenar çubuğunda koleksiyon/klasör › Çalıştır…): istek seçimi ve ↑↓ ile sıra, ortam, tekrar, bekleme, veri dosyası, ilk hatada dur, duraklat/devam et/durdur; pencere kapansa da koşu sürer; sonuçlar testleri ve konsoluyla |
+| **Veri odaklı test:** CSV veya JSON dosyasındaki her satır için koleksiyonu çalıştırma | ✅ Runner ve `apix run --data`; sütunlar `{{değişken}}` ve `pm.iterationData` olur; CSV'de tırnak, satır sonu, BOM ve `;` ayraç okunur |
+| Raporlar: JUnit XML (CI için), JSON, HTML | ✅ Runner'da "Raporu kaydet" ve `apix run --junit/--json/--html`; HTML tek dosya, açık/koyu tema |
+| `--bail` (ilk hatada dur), `--parallel N`, `--timeout` | ✅ `--bail`, `--iterations`, `--delay`, `--timeout`, `-k`, `--proxy`, klasör koşusu · ⬜ `--parallel N` (sonraya) |
+| GitHub Actions örneği ve `apix` için resmi Docker imajı | ✅ `examples/ci/github-actions.yml` (JUnit sonuçları ve HTML rapor) · ⬜ Docker imajı |
 
 ### H. Diğer protokoller
 | Protokol | Ayrıntı | Durum |
@@ -460,7 +460,7 @@ Docs/
 | Environments / Variables | Katmanlı değişkenler + ortam seçici | M3 |
 | Authorization | Tüm tipler | M3–M4 |
 | Pre-request / Tests | QuickJS, `pm.*` uyumlu | M5 |
-| Collection Runner / Newman | Runner arayüzü + `apix run` | M5 (CLI ✅) |
+| Collection Runner / Newman | Runner arayüzü + `apix run` | ✅ M5 |
 | Console | Ağ ve script konsolu | M5 |
 | GraphQL / WebSocket / gRPC / MQTT / SOAP | `apix-proto` | M6 |
 | Code snippets | Kabuk komutu olarak kopyala (bash, cmd, PowerShell) M3 · `apix-codegen` (10 dil) M4 ✅ | M3–M4 |
@@ -550,7 +550,7 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 Üç parçada yapılıyor:
 1. [x] **Script motoru ve testler** (L): `apix-script` (QuickJS) ve `pm.*` uyumluluğu (değişken kapsamları, `pm.request`, `pm.response`, `pm.test`, Chai tarzı `pm.expect`, eski Postman API'si, konsol); `apix_core::scripts` script dosyalarını bulur (koleksiyon → klasör → istek) ve script'lerin atadığı değişkenleri tutar; `apix send` / `apix run` script çalıştırır, test sonuçlarını yazar, `setNextRequest` izler; uygulamada Scripts sekmesi, Tests ve Console sekmeleri. Postman'dan gelen scriptler artık çalışıyor.
 2. [x] **Script'ten istek ve kütüphaneler** (M): `pm.sendRequest` (geri çağırma ve `await`), `require('crypto-js' | 'uuid' | 'lodash' | 'moment' | 'ajv' | 'tv4' | 'chai')` (Apix için yazılmış alt kümeler), kodsuz doğrulamalar (`[[assert]]`), yanıttan değişken kaydetme (**{x}**).
-3. [ ] **Runner** (M): Runner arayüzü (sıra, tekrar, bekleme, durdur/devam), CSV/JSON veri dosyalı koşular, JUnit XML / JSON / HTML raporlar, `--bail`, `--iterations`, `--delay`, GitHub Actions örneği.
+3. [x] **Runner** (M): yeni `apix-runner` crate'i CLI ile uygulamanın ortak koşu döngüsü (sıra, tekrar, veri satırları, bekleme, `bail`, `setNextRequest`, duraklat/durdur, raporlar); Runner penceresi (Ctrl+Shift+R, Görünüm menüsü, komut paleti, koleksiyon/klasör › Çalıştır…); CSV/JSON veri dosyalı koşular; JUnit XML / JSON / HTML raporlar; `apix run` için `--data`, `--iterations`, `--delay`, `--bail`, `--junit`, `--json`, `--html`, `--timeout`/`-k`/`--proxy` ve klasör ya da tek istek koşusu; `examples/ci/github-actions.yml`. Koşu artık kenar çubuğu sırasını izliyor (elle sıralama dahil). `--parallel` ve Docker imajı sonraya kaldı.
 
 ### M5 sonrası — Tema paketi (23 Ekim'de kararlaştırıldı)
 1. Temayı yeniden başlatmadan değiştirme (görünümler paleti kopyalamak yerine ortak bir yerden okur); diğerlerinin temeli.

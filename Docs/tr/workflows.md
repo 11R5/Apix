@@ -1,4 +1,4 @@
-<!-- translated from en/workflows.md sha256:682f2d12d4102a41 -->
+<!-- translated from en/workflows.md sha256:11171caf1a760677 -->
 
 # İş akışları
 
@@ -114,15 +114,16 @@ arkadaşları koleksiyonunuzu **Postman'a dışa aktar…** ile geri alır.
 
 ## Koleksiyonu CI'da çalıştırma
 
-`apix run` bir klasördeki tüm istekleri gönderir ve herhangi biri başarısız
-olursa sıfırdan farklı bir kodla çıkar; bu yüzden bir CI adımı olarak çalışır:
+`apix run` bir koleksiyonun tüm isteklerini kenar çubuğu sırasıyla gönderir ve
+herhangi biri başarısız olursa sıfırdan farklı bir kodla çıkar; bu yüzden bir
+CI adımı olarak çalışır:
 
 ```sh
 apix run my-api --env staging --var token="$API_TOKEN"
 ```
 
-Test scripti olan istekler testlerine, olmayanlar durum koduna göre geçer ya da
-kalır. Çıktı her testi isteğinin altında listeler:
+Testi (script ya da Doğrulama) olan istekler testlerine, olmayanlar durum
+koduna göre geçer ya da kalır. Çıktı her testi isteğinin altında listeler:
 
 ```text
 create.apix                              201 Created  466.7 ms · 42 B
@@ -137,16 +138,46 @@ get.apix                                 200 OK  174.7 ms · 292 B
 
 Bir scriptin atadıkları (`pm.environment.set`, `pm.variables.set`) koşunun
 sonraki isteklerine taşınır; `pm.execution.setNextRequest("ad")` başka bir
-isteğe atlar (`null` koşuyu durdurur).
+isteğe atlar (`null` o tekrarı bitirir).
 
-Bir GitHub Actions adımı şöyle görünebilir:
+Seçenekler:
+
+| Seçenek | Ne yapar |
+|---|---|
+| `apix run my-api/users` | Yalnızca bir klasördeki istekler (ya da tek bir istek dosyası) |
+| `-d, --data users.csv` | Veri odaklı koşu: CSV ya da JSON'daki her satır bir tekrardır, sütunları değişken olur (`{{email}}`, `pm.iterationData.get("email")`) |
+| `-n, --iterations 5` | İstekleri 5 kez dolaşır (varsayılan: veri satırı başına bir kez, yoksa bir kez) |
+| `--delay 200` | İstekler arasında 200 ms bekler |
+| `--bail` | Başarısız olan ilk istekte durur |
+| `--junit report.xml` | CI servislerinin test listesi olarak gösterdiği JUnit XML raporu |
+| `--json report.json` / `--html report.html` | Her şey JSON olarak ya da her tarayıcıda açılan bir sayfa |
+| `--timeout 10`, `-k`, `--proxy URL` | İsteklerin bağlantı ayarlarını geçersiz kılar |
+
+Bir veri dosyası şöyle görünür; `--var` değerleri sütunlarından üstündür:
+
+```csv
+id,name
+1,Leanne Graham
+2,Ervin Howell
+```
+
+[examples/ci/github-actions.yml](../../examples/ci/github-actions.yml) eksiksiz
+bir GitHub Actions iş akışıdır: `apix`'i derler, koleksiyonu bir veri
+dosyasıyla çalıştırır, JUnit sonuçlarını koşunun sayfasında gösterir ve HTML
+raporu saklar. Özü şudur:
 
 ```yaml
-- name: API smoke test
-  run: apix run api-tests --env staging
+- name: Run the collection
+  run: apix run api --env staging --junit reports/apix.xml --html reports/apix.html --var "token=$API_TOKEN"
   env:
+    API_TOKEN: ${{ secrets.API_TOKEN }}
     APIX_PASSWORD: ${{ secrets.APIX_PASSWORD }}   # only for an encrypted collection
 ```
+
+Gizli değerler git'e girmez (`.local.toml` dosyaları yok sayılır), bu yüzden
+CI onları `--var` ile verir. Masaüstü uygulamasının **Runner**'ı
+(Ctrl+Shift+R) aynı koşuları bir pencereyle yapar; bkz.
+[kullanım kılavuzu](user-guide.md#runner).
 
 `apix send <file>` tek bir istek gönderir ve yanıtı yazdırır; başlıklar için
 `-i`, bağlantı ayrıntıları için `--network` ekleyin.

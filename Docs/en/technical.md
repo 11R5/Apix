@@ -14,6 +14,7 @@ crates/
 ├── apix-codegen    "Copy as" (curl, curl.exe, PowerShell, code in 10 languages) and curl paste
 ├── apix-vault      encrypted collections
 ├── apix-script     pre-request and test scripts (QuickJS)
+├── apix-runner     collection runs, data files, JUnit/JSON/HTML reports
 ├── apix-cli        the `apix` command
 └── apix-desktop    the desktop app (GPUI); interface texts in locales/
 tools/
@@ -24,7 +25,8 @@ vendor/
 scripts/
 └── measure.ps1     performance measurements for the README
 examples/
-└── jsonplaceholder a small collection the app opens when run from the repo
+├── jsonplaceholder a small collection the app opens when run from the repo
+└── ci/             a GitHub Actions workflow that runs a collection
 Docs/
 ├── languages.toml  documentation languages
 ├── en/ tr/         user guide, architecture, technical notes, workflows
@@ -160,6 +162,7 @@ crate is fixed.
 | apix-codegen | shell quoting for bash, cmd and PowerShell; curl paste; round trips; every language's URL, headers, bodies, string escaping and settings |
 | apix-import | Postman v2.0/v2.1 fixtures |
 | apix-script | variables and request changes from pre-request scripts, `pm.test` / `pm.expect` results and messages, the older `tests[...]` API, errors naming the file, endless scripts stopped, `setNextRequest`, `atob`/`btoa`, `pm.sendRequest` (callback and `await`, waiting not counted), the built-in libraries against known digests, checks without code, values and expressions for response targets |
+| apix-runner | CSV (quotes, line breaks, `;`, BOM) and JSON data files, iteration counts and data rows, pause/stop timing, JUnit/JSON/HTML output and escaping, dates; whole runs against a local server (data rows, sidebar order, `bail`, `setNextRequest`) |
 | apix-vault | encryption format, tampering, password change, recovery key, keychain entries (against the real credential store under a test service name; skipped where none exists) |
 | apix-desktop | translations complete, language helpers, file paths, highlighting query |
 | docs-check | documentation structure and stamps |

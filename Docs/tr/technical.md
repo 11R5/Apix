@@ -1,4 +1,4 @@
-<!-- translated from en/technical.md sha256:c8d3ab80b6d1b62b -->
+<!-- translated from en/technical.md sha256:a0d0500936246f18 -->
 
 # Teknik notlar
 
@@ -15,6 +15,7 @@ crates/
 ├── apix-codegen    "Komut veya kod olarak kopyala" (curl, curl.exe, PowerShell, 10 dilde kod) ve curl yapıştırma
 ├── apix-vault      şifreli koleksiyonlar
 ├── apix-script     istek öncesi ve test scriptleri (QuickJS)
+├── apix-runner     koleksiyon koşuları, veri dosyaları, JUnit/JSON/HTML raporlar
 ├── apix-cli        `apix` komutu
 └── apix-desktop    masaüstü uygulaması (GPUI); arayüz metinleri locales/ içinde
 tools/
@@ -25,7 +26,8 @@ vendor/
 scripts/
 └── measure.ps1     README için performans ölçümleri
 examples/
-└── jsonplaceholder repodan çalıştırıldığında uygulamanın açtığı küçük bir koleksiyon
+├── jsonplaceholder repodan çalıştırıldığında uygulamanın açtığı küçük bir koleksiyon
+└── ci/             bir koleksiyonu çalıştıran GitHub Actions iş akışı
 Docs/
 ├── languages.toml  belge dilleri
 ├── en/ tr/         kullanıcı kılavuzu, mimari, teknik notlar, iş akışları
@@ -162,6 +164,7 @@ patch ile devreye alır. Upstream crate düzeltildiğinde kaldırılabilir.
 | apix-codegen | bash, cmd ve PowerShell için kabuk tırnaklama; curl yapıştırma; gidiş-dönüş testleri; her dilde URL, başlıklar, gövdeler, dize kaçışları ve ayarlar |
 | apix-import | Postman v2.0/v2.1 fixture'ları |
 | apix-script | istek öncesi scriptlerden değişken ve istek değişiklikleri, `pm.test` / `pm.expect` sonuçları ve mesajları, eski `tests[...]` API'si, dosyayı adlandıran hatalar, sonsuz scriptlerin durdurulması, `setNextRequest`, `atob`/`btoa`, `pm.sendRequest` (geri çağırma ve `await`, bekleme sayılmaz), bilinen özet değerlerine karşı hazır kütüphaneler, kodsuz doğrulamalar, yanıt hedefleri için değer ve ifade üretimi |
+| apix-runner | CSV (tırnaklar, satır sonları, `;`, BOM) ve JSON veri dosyaları, tekrar sayıları ve veri satırları, duraklatma/durdurma zamanlaması, JUnit/JSON/HTML çıktısı ve kaçışlar, tarihler; yerel bir sunucuya karşı bütün koşular (veri satırları, kenar çubuğu sırası, `bail`, `setNextRequest`) |
 | apix-vault | şifreleme formatı, kurcalama (tampering), parola değişikliği, kurtarma anahtarı, anahtarlık kayıtları (gerçek kimlik bilgisi deposunda, test servis adıyla; depo yoksa atlanır) |
 | apix-desktop | çevirilerin eksiksizliği, dil yardımcıları, dosya yolları, vurgulama sorgusu |
 | docs-check | belge yapısı ve damgalar |

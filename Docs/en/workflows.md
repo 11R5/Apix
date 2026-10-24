@@ -109,15 +109,15 @@ Postman get your collection back with **Export to Postman…**.
 
 ## Run a collection in CI
 
-`apix run` sends every request in a folder and exits with a non-zero code if any
-fails, so it works as a CI step:
+`apix run` sends every request of a collection in sidebar order and exits
+with a non-zero code if any fails, so it works as a CI step:
 
 ```sh
 apix run my-api --env staging --var token="$API_TOKEN"
 ```
 
-Requests with test scripts pass or fail by their tests; the others by their
-status code. The output lists each test under its request:
+Requests with tests (scripts or Checks) pass or fail by their tests; the
+others by their status code. The output lists each test under its request:
 
 ```text
 create.apix                              201 Created  466.7 ms · 42 B
@@ -132,16 +132,45 @@ get.apix                                 200 OK  174.7 ms · 292 B
 
 What a script sets (`pm.environment.set`, `pm.variables.set`) carries on to
 the next requests of the run, and `pm.execution.setNextRequest("name")`
-jumps to another request (`null` stops the run).
+jumps to another request (`null` ends the iteration).
 
-A GitHub Actions step could look like this:
+Options:
+
+| Option | What it does |
+|---|---|
+| `apix run my-api/users` | Only the requests in a folder (or one request file) |
+| `-d, --data users.csv` | A data-driven run: each CSV or JSON row is one iteration, its columns are variables (`{{email}}`, `pm.iterationData.get("email")`) |
+| `-n, --iterations 5` | Go through the requests 5 times (default: once per data row, else once) |
+| `--delay 200` | Wait 200 ms between requests |
+| `--bail` | Stop at the first request that fails |
+| `--junit report.xml` | A JUnit XML report, which CI services show as a test list |
+| `--json report.json` / `--html report.html` | Everything as JSON, or a page that opens in any browser |
+| `--timeout 10`, `-k`, `--proxy URL` | Override the requests' transport settings |
+
+A data file looks like this; `--var` values win over its columns:
+
+```csv
+id,name
+1,Leanne Graham
+2,Ervin Howell
+```
+
+[examples/ci/github-actions.yml](../../examples/ci/github-actions.yml) is a
+complete GitHub Actions workflow: it builds `apix`, runs the collection with a
+data file, shows the JUnit results on the run's page and keeps the HTML
+report. The heart of it:
 
 ```yaml
-- name: API smoke test
-  run: apix run api-tests --env staging
+- name: Run the collection
+  run: apix run api --env staging --junit reports/apix.xml --html reports/apix.html --var "token=$API_TOKEN"
   env:
+    API_TOKEN: ${{ secrets.API_TOKEN }}
     APIX_PASSWORD: ${{ secrets.APIX_PASSWORD }}   # only for an encrypted collection
 ```
+
+Secrets stay out of git (`.local.toml` files are ignored), so CI passes them
+with `--var`. The desktop app's **Runner** (Ctrl+Shift+R) does the same runs
+with a window; see the [user guide](user-guide.md#runner).
 
 `apix send <file>` sends one request and prints the response; add `-i` for the
 headers and `--network` for the connection details.

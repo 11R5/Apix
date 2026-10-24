@@ -34,6 +34,7 @@ crates/
 ├── apix-codegen  requests ↔ shell commands: curl (bash), curl.exe (cmd), PowerShell; parses pasted curl; code in 10 languages
 ├── apix-vault    encrypted collections: per-file XChaCha20-Poly1305, Argon2id, recovery key
 ├── apix-script   pre-request and test scripts: QuickJS with a pm.*-compatible API
+├── apix-runner   runs collections: order, iterations, data files, delay, bail, reports
 ├── apix-cli      `apix` binary: send / run / import / shell from terminal & CI
 └── apix-desktop  GPUI desktop app (Windows, macOS and Linux from one crate)
 tools/
@@ -45,7 +46,7 @@ actions and key bindings), `workspace/collections.rs` (sidebar, projects,
 file operations, import, file watching), `workspace/env_editor.rs` (the
 variables dialog), `workspace/auth_editor.rs` (the Auth tab and the folder/collection/project
 Auth dialog), `workspace/palette.rs` (the command palette and its fuzzy matcher),
-`workspace/network.rs` (the response's Network tab), `workspace/vault_ui.rs` (unlock, lock and auto-lock, encrypt, decrypt, change
+`workspace/network.rs` (the response's Network tab), `workspace/runner_ui.rs` (the Runner), `workspace/vault_ui.rs` (unlock, lock and auto-lock, encrypt, decrypt, change
 password, recovery key), `assets.rs` (gpui-kit icons plus the two lock icons),
 `workspace/menu_bar.rs` (File/Request/Environment/View/Help in the title bar;
 the buttons `occlude()` the title bar's drag area so Windows hands them the
@@ -62,7 +63,6 @@ Planned crates:
 
 | Crate          | Purpose                                                            |
 |----------------|--------------------------------------------------------------------|
-| `apix-script`  | Pre-request and test scripts (`pm.*`-compatible API) on QuickJS via `rquickjs` |
 | `apix-proto`   | GraphQL, WebSocket (`tokio-tungstenite`), gRPC (`tonic` + reflection), SSE |
 | `apix-mock`    | A local mock server that serves saved examples (`hyper`)           |
 
@@ -309,10 +309,26 @@ crypto-js (digests and HMACs done in Rust through `__apix_hash` /
 rather than downloaded.
 
 A send with scripts: pre-request scripts, then `ScriptVars::apply` and
-resolving, the HTTP request, then test scripts with a `ResponseView`. The CLI
-does this in `exchange` (state carried through `apix run`); the desktop app in
-`script_run.rs`, with the scripts on a background thread and the request's own
-scripts taken from the editor, saved or not.
+resolving, the HTTP request, then test scripts with a `ResponseView`.
+`apix_runner::exchange` does this for `apix send`, `apix run` and the Runner;
+the desktop app's single send does it in `script_run.rs`, with the scripts on
+a background thread and the request's own scripts taken from the editor, saved
+or not.
+
+`apix_runner::run` takes a `Plan` (request files in order, variables and
+script scopes, data rows, iterations, delay, `bail`, transport overrides, the
+script state to start from) and goes through it: per iteration it lays the
+data row (then `--var` values) over the variables and `pm.iterationData`,
+follows `setNextRequest` by request name, waits between requests, and reports
+`Progress` (iteration, sending, item done) to a callback. A `Control` pauses
+or stops it from another thread. It returns a `RunReport` of `ItemResult`s,
+which `report.rs` writes as JSON, JUnit XML (one suite per request and
+iteration, one case per test, a status case for requests without tests) and a
+self-contained HTML page. `data.rs` reads CSV (RFC 4180, BOM, `;` headers) and
+JSON arrays. The CLI prints progress as it comes; the desktop Runner
+(`workspace/runner_ui.rs`) runs it on the network runtime and copies progress
+out of a shared `Live` struct a few times a second; the view stays in the
+workspace, so a run outlives its dialog.
 
 ## Languages (M4)
 
