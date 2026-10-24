@@ -170,6 +170,15 @@ pub async fn exchange(
         let names: Vec<_> = resolved.missing.into_iter().collect();
         bail!("undefined variable(s): {}", names.join(", "));
     }
+    // A WebSocket conversation has no single response to test; runs skip it.
+    if apix_http::ws::is_websocket_url(&resolved.request.url) {
+        done.pre.skip_request = true;
+        done.pre.logs.push(LogLine {
+            level: "info".into(),
+            text: "WebSocket request: not part of runs (use apix send)".into(),
+        });
+        return Ok(done);
+    }
     done.sent = Some(resolved.request.clone());
     // Body files are relative to the request file.
     let sent = match path.parent() {
