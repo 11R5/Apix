@@ -483,6 +483,22 @@ scripts.skipped: Das Skript vor der Anfrage hat diese Anfrage übersprungen (pm.
 scripts.tab_set: "%{name} ●"
 scripts.test: Tests
 scripts.test_hint: Läuft, wenn die Antwort da ist. Prüfen mit pm.test("Name", () => pm.expect(…)); die Antwort steht in pm.response.
+settings.accent: "Akzentfarbe"
+settings.accent_blue: "Blau"
+settings.accent_cyan: "Cyan"
+settings.accent_description: "Schaltflächen, Auswahl, Fokusrahmen und Links."
+settings.accent_green: "Grün"
+settings.accent_orange: "Orange"
+settings.accent_pink: "Pink"
+settings.accent_purple: "Lila"
+settings.accent_red: "Rot"
+settings.accent_theme: "Die des Themes"
+settings.accent_yellow: "Gelb"
+settings.appearance: "Erscheinungsbild"
+settings.appearance_dark: "Dunkel"
+settings.appearance_description: "Dunkel, hell oder der Hell/Dunkel-Einstellung des Systems folgen."
+settings.appearance_light: "Hell"
+settings.appearance_system: "System folgen"
 settings.auto_lock: Verschlüsselte Sammlungen sperren
 settings.auto_lock_description: Nach dieser Leerlaufzeit werden verschlüsselte Sammlungen gesperrt und benötigen erneut das Passwort.
 settings.auto_lock_hour: Nach 1 Stunde
@@ -490,17 +506,28 @@ settings.auto_lock_minutes: Nach %{count} Minuten
 settings.auto_lock_never: Nie
 settings.confirm_prod: In Produktion nachfragen
 settings.confirm_prod_description: Vor dem Senden von DELETE, PUT oder PATCH nachfragen, wenn eine Umgebung mit „prod“ im Namen aktiv ist.
+settings.dark_theme: "Dunkles Theme"
+settings.dark_theme_description: "Wird im dunklen Erscheinungsbild verwendet."
+settings.glass: "Glas"
+settings.glass_description: "Ein durchscheinendes Fenster mit verschwommenem Desktop dahinter. Aus: deckend."
 settings.history: Verlauf
 settings.history_description: Jede gesendete Anfrage mit ihrer Antwort auf diesem Computer behalten (Strg+H).
 settings.language: Sprache
 settings.language_description: Die Sprache von Menüs, Schaltflächen und Meldungen. Wird sofort übernommen.
+settings.light_theme: "Helles Theme"
+settings.light_theme_description: "Wird im hellen Erscheinungsbild verwendet."
 settings.secrets: Geheime Umgebungswerte
 settings.secrets_description: Wo geheime Umgebungswerte auf diesem Computer liegen. Beides bleibt außerhalb von git; der Schlüsselbund speichert sie zudem nicht als Klartext auf der Festplatte.
 settings.secrets_file: .local.toml-Datei
 settings.secrets_keychain: Schlüsselbund des Systems
-settings.theme: Design
+settings.section_general: "Allgemein"
+settings.section_look: "Theme"
 settings.theme_cyber: Cyber Glass
-settings.theme_description: Die Farben des Fensters.
+settings.theme_daylight: "Tageslicht"
+settings.theme_file_error: "Theme-Datei nicht gelesen: %{error}"
+settings.theme_files: "Eigene Themes"
+settings.theme_files_description: "Themes sind .toml-Dateien in %{folder}. Beim ersten Mal wird dort ein Beispiel zum Kopieren angelegt."
+settings.theme_files_open: "Ordner öffnen"
 settings.theme_obsidian: Obsidian
 settings.title: Einstellungen
 sidebar.auth: Authentifizierung…

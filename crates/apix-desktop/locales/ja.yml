@@ -483,6 +483,22 @@ scripts.skipped: リクエスト前スクリプトがこのリクエストをス
 scripts.tab_set: "%{name} ●"
 scripts.test: テスト
 scripts.test_hint: レスポンスの受信後に実行されます。pm.test("名前", () => pm.expect(…)) で確認します。レスポンスは pm.response にあります。
+settings.accent: "アクセントカラー"
+settings.accent_blue: "ブルー"
+settings.accent_cyan: "シアン"
+settings.accent_description: "ボタン、選択、フォーカス枠、リンク。"
+settings.accent_green: "グリーン"
+settings.accent_orange: "オレンジ"
+settings.accent_pink: "ピンク"
+settings.accent_purple: "パープル"
+settings.accent_red: "レッド"
+settings.accent_theme: "テーマの色"
+settings.accent_yellow: "イエロー"
+settings.appearance: "外観モード"
+settings.appearance_dark: "ダーク"
+settings.appearance_description: "ダーク、ライト、またはシステムのライト/ダーク設定に従います。"
+settings.appearance_light: "ライト"
+settings.appearance_system: "システムに従う"
 settings.auto_lock: 暗号化されたコレクションのロック
 settings.auto_lock_description: この時間操作がないと、暗号化されたコレクションはロックされ、再度パスワードが必要になります。
 settings.auto_lock_hour: 1 時間後
@@ -490,17 +506,28 @@ settings.auto_lock_minutes: "%{count} 分後"
 settings.auto_lock_never: しない
 settings.confirm_prod: 本番環境で確認する
 settings.confirm_prod_description: 名前に「prod」を含む環境が選択されているとき、DELETE・PUT・PATCH を送信する前に確認します。
+settings.dark_theme: "ダークテーマ"
+settings.dark_theme_description: "ダークモードで使われます。"
+settings.glass: "ガラス効果"
+settings.glass_description: "背後のデスクトップがぼやけて見える半透明のウィンドウ。オフにすると不透明になります。"
 settings.history: 履歴
 settings.history_description: 送信したリクエストをレスポンスと一緒にこのコンピューターに保存します（Ctrl+H）。
 settings.language: 言語
 settings.language_description: メニュー、ボタン、メッセージの言語です。すぐに切り替わります。
+settings.light_theme: "ライトテーマ"
+settings.light_theme_description: "ライトモードで使われます。"
 settings.secrets: 環境のシークレット
 settings.secrets_description: 環境のシークレット値をこのコンピューターのどこに保存するか。どちらも git には含まれません。キーチェーンではディスク上に平文で残りません。
 settings.secrets_file: .local.toml ファイル
 settings.secrets_keychain: システムキーチェーン
-settings.theme: テーマ
+settings.section_general: "一般"
+settings.section_look: "外観"
 settings.theme_cyber: サイバーグラス
-settings.theme_description: ウィンドウの配色です。
+settings.theme_daylight: "デイライト"
+settings.theme_file_error: "テーマファイルを読めませんでした: %{error}"
+settings.theme_files: "自作テーマ"
+settings.theme_files_description: "テーマは %{folder} 内の .toml ファイルです。初回はコピー用の例が書き出されます。"
+settings.theme_files_open: "フォルダーを開く"
 settings.theme_obsidian: オブシディアン
 settings.title: 設定
 sidebar.auth: 認証…

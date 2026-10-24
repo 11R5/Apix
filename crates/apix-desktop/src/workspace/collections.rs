@@ -1592,7 +1592,7 @@ impl Workspace {
                     .text_sm()
                     .font_weight(FontWeight::SEMIBOLD)
                     .cursor_pointer()
-                    .hover(|s| s.bg(hsla(0., 0., 1., 0.05)))
+                    .hover(|s| s.bg(crate::theme::current().hover))
                     .when(active, |row| row.bg(p.accent.opacity(0.10)))
                     .on_click(cx.listener(move |this, _: &ClickEvent, window, cx| {
                         this.set_environment(Some(pick.clone()), window, cx)
@@ -1690,7 +1690,7 @@ impl Workspace {
                 .py_1()
                 .rounded_md()
                 .cursor_pointer()
-                .hover(|s| s.bg(hsla(0., 0., 1., 0.05)))
+                .hover(|s| s.bg(crate::theme::current().hover))
                 .on_click(cx.listener(move |this, _: &ClickEvent, window, cx| {
                     this.open_or_create(open.clone(), window, cx)
                 }))
@@ -1876,7 +1876,7 @@ fn row_base(path: &Path, depth: usize) -> Stateful<Div> {
         .rounded_md()
         .text_sm()
         .cursor_pointer()
-        .hover(|s| s.bg(hsla(0., 0., 1., 0.05)))
+        .hover(|s| s.bg(crate::theme::current().hover))
 }
 
 fn request_menu(

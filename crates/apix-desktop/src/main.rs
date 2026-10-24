@@ -18,7 +18,6 @@ use std::path::{Path, PathBuf};
 use gpui_kit::component::TitleBar;
 use gpui_kit::*;
 
-use crate::theme::{Palette, Variant};
 use crate::workspace::Workspace;
 
 // Every `tr!` looks its text up in locales/<code>.yml; English fills any gap.
@@ -50,7 +49,7 @@ fn main() {
             let settings = settings::Settings::load();
             i18n::set(settings.language_code());
             apix_core::secrets::use_keychain(settings.secrets_in_keychain);
-            let palette = Palette::new(Variant::chosen(&settings));
+            let palette = theme::from_settings(&settings, cx);
             theme::init(palette, embedded_fonts, cx);
             workspace::bind_keys(cx);
             workspace::register_graphql();
@@ -67,7 +66,11 @@ fn main() {
                     title: Some("Apix".into()),
                     ..TitleBar::title_bar_options()
                 }),
-                window_background: WindowBackgroundAppearance::Blurred,
+                window_background: if palette.glass {
+                    WindowBackgroundAppearance::Blurred
+                } else {
+                    WindowBackgroundAppearance::Opaque
+                },
                 ..TitleBar::window_options()
             };
 

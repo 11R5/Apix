@@ -396,7 +396,7 @@ impl EnvEditor {
                     .rounded_md()
                     .text_sm()
                     .cursor_pointer()
-                    .hover(|s| s.bg(hsla(0., 0., 1., 0.05)))
+                    .hover(|s| s.bg(crate::theme::current().hover))
                     .when(active, |row| row.bg(p.accent.opacity(0.12)))
                     .when(page.deleted, |row| {
                         row.line_through().text_color(p.text_muted)
@@ -618,7 +618,7 @@ impl EnvEditor {
                     .rounded_md()
                     .text_sm()
                     .cursor_pointer()
-                    .hover(|s| s.bg(hsla(0., 0., 1., 0.05)))
+                    .hover(|s| s.bg(crate::theme::current().hover))
                     .on_click(move |_, _, cx| {
                         cx.write_to_clipboard(ClipboardItem::new_string(copy.clone()))
                     })

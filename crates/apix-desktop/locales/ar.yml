@@ -483,6 +483,22 @@ scripts.skipped: تخطى سكربت ما قبل الطلب هذا الطلب (p
 scripts.tab_set: "%{name} ●"
 scripts.test: الاختبارات
 scripts.test_hint: يعمل بعد وصول الاستجابة. افحصها باستخدام pm.test("الاسم", () => pm.expect(…))؛ الاستجابة في pm.response.
+settings.accent: "لون التمييز"
+settings.accent_blue: "أزرق"
+settings.accent_cyan: "سماوي"
+settings.accent_description: "الأزرار والتحديد وإطارات التركيز والروابط."
+settings.accent_green: "أخضر"
+settings.accent_orange: "برتقالي"
+settings.accent_pink: "وردي"
+settings.accent_purple: "بنفسجي"
+settings.accent_red: "أحمر"
+settings.accent_theme: "لون السمة"
+settings.accent_yellow: "أصفر"
+settings.appearance: "نمط المظهر"
+settings.appearance_dark: "داكن"
+settings.appearance_description: "داكن أو فاتح أو اتباع إعداد النظام."
+settings.appearance_light: "فاتح"
+settings.appearance_system: "اتباع النظام"
 settings.auto_lock: قفل المجموعات المشفّرة
 settings.auto_lock_description: بعد هذه المدة من الخمول، تُقفل المجموعات المشفّرة وتحتاج إلى كلمة المرور مجددًا.
 settings.auto_lock_hour: بعد ساعة واحدة
@@ -490,17 +506,28 @@ settings.auto_lock_minutes: بعد %{count} دقيقة
 settings.auto_lock_never: أبدًا
 settings.confirm_prod: التأكيد في بيئة الإنتاج
 settings.confirm_prod_description: السؤال قبل إرسال DELETE أو PUT أو PATCH عندما تكون بيئة يحتوي اسمها على «prod» نشطة.
+settings.dark_theme: "السمة الداكنة"
+settings.dark_theme_description: "تُستخدم عندما يكون المظهر داكنًا."
+settings.glass: "تأثير الزجاج"
+settings.glass_description: "نافذة شبه شفافة يظهر خلفها سطح المكتب ضبابيًا. عند الإيقاف تصبح معتمة."
 settings.history: السجل
 settings.history_description: احفظ كل طلب مُرسل مع استجابته على هذا الحاسوب (Ctrl+H).
 settings.language: اللغة
 settings.language_description: لغة القوائم والأزرار والرسائل. يُطبَّق التغيير فورًا.
+settings.light_theme: "السمة الفاتحة"
+settings.light_theme_description: "تُستخدم عندما يكون المظهر فاتحًا."
 settings.secrets: القيم السرية للبيئات
 settings.secrets_description: مكان حفظ القيم السرية للبيئات على هذا الحاسوب. كلاهما يبقى خارج git، وسلسلة المفاتيح لا تتركها على القرص نصًا واضحًا.
 settings.secrets_file: ملف .local.toml
 settings.secrets_keychain: سلسلة مفاتيح النظام
-settings.theme: السمة
+settings.section_general: "عام"
+settings.section_look: "المظهر"
 settings.theme_cyber: زجاج سيبراني
-settings.theme_description: ألوان النافذة.
+settings.theme_daylight: "ضوء النهار"
+settings.theme_file_error: "تعذّرت قراءة ملف السمة: %{error}"
+settings.theme_files: "سماتك الخاصة"
+settings.theme_files_description: "السمات ملفات ‎.toml في %{folder}. في المرة الأولى يُكتب هناك مثال للنسخ."
+settings.theme_files_open: "فتح المجلد"
 settings.theme_obsidian: أوبسيديان
 settings.title: الإعدادات
 sidebar.auth: المصادقة…

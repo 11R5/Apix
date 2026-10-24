@@ -483,6 +483,22 @@ scripts.skipped: Скрипт перед запросом пропустил э�
 scripts.tab_set: "%{name} ●"
 scripts.test: Тесты
 scripts.test_hint: Выполняется после ответа. Проверяйте его через pm.test("имя", () => pm.expect(…)); ответ в pm.response.
+settings.accent: "Акцентный цвет"
+settings.accent_blue: "Синий"
+settings.accent_cyan: "Бирюзовый"
+settings.accent_description: "Кнопки, выделение, рамки фокуса и ссылки."
+settings.accent_green: "Зелёный"
+settings.accent_orange: "Оранжевый"
+settings.accent_pink: "Розовый"
+settings.accent_purple: "Фиолетовый"
+settings.accent_red: "Красный"
+settings.accent_theme: "Цвет темы"
+settings.accent_yellow: "Жёлтый"
+settings.appearance: "Оформление"
+settings.appearance_dark: "Тёмное"
+settings.appearance_description: "Тёмное, светлое или как в системе."
+settings.appearance_light: "Светлое"
+settings.appearance_system: "Как в системе"
 settings.auto_lock: Блокировка зашифрованных коллекций
 settings.auto_lock_description: После такого времени бездействия зашифрованные коллекции блокируются и снова запрашивают пароль.
 settings.auto_lock_hour: Через 1 час
@@ -490,17 +506,28 @@ settings.auto_lock_minutes: Через %{count} мин
 settings.auto_lock_never: Никогда
 settings.confirm_prod: Подтверждение в продакшене
 settings.confirm_prod_description: Спрашивать перед отправкой DELETE, PUT или PATCH, когда выбрано окружение, в названии которого есть «prod».
+settings.dark_theme: "Тёмная тема"
+settings.dark_theme_description: "Используется при тёмном оформлении."
+settings.glass: "Стекло"
+settings.glass_description: "Полупрозрачное окно с размытым рабочим столом позади. Выключено — непрозрачное."
 settings.history: История
 settings.history_description: Сохранять каждый отправленный запрос с ответом на этом компьютере (Ctrl+H).
 settings.language: Язык
 settings.language_description: Язык меню, кнопок и сообщений. Меняется сразу.
+settings.light_theme: "Светлая тема"
+settings.light_theme_description: "Используется при светлом оформлении."
 settings.secrets: Секреты окружений
 settings.secrets_description: Где на этом компьютере хранятся секретные значения окружений. Оба варианта не попадают в git; хранилище ключей к тому же не держит их на диске открытым текстом.
 settings.secrets_file: Файл .local.toml
 settings.secrets_keychain: Системное хранилище ключей
-settings.theme: Тема
+settings.section_general: "Общие"
+settings.section_look: "Внешний вид"
 settings.theme_cyber: Кибер-стекло
-settings.theme_description: Цвета окна.
+settings.theme_daylight: "Дневной свет"
+settings.theme_file_error: "Файл темы не прочитан: %{error}"
+settings.theme_files: "Свои темы"
+settings.theme_files_description: "Темы — это файлы .toml в %{folder}. В первый раз туда записывается пример для копирования."
+settings.theme_files_open: "Открыть папку"
 settings.theme_obsidian: Обсидиан
 settings.title: Настройки
 sidebar.auth: Авторизация…

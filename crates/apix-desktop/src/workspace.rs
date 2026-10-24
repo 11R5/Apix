@@ -426,6 +426,14 @@ impl Workspace {
         let script_editor = cx.new(|cx| script_editor::ScriptEditor::new(window, cx));
         let subscriptions = vec![
             cx.observe_self(|this, _| this.remember_tabs()),
+            // "Follow the system": repaint when the OS switches between light and dark.
+            cx.observe_window_appearance(window, |this, _, cx| {
+                if theme::Appearance::from_id(&this.settings.appearance)
+                    == theme::Appearance::System
+                {
+                    theme::set(theme::from_settings(&this.settings, cx), cx);
+                }
+            }),
             // Typing in the Auth tab changes the unsaved marker.
             cx.observe(&auth_editor, |_, _, cx| cx.notify()),
             cx.observe(&settings_editor, |_, _, cx| cx.notify()),

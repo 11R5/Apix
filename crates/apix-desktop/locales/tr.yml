@@ -483,6 +483,22 @@ scripts.skipped: İstek öncesi script bu isteği atladı (pm.execution.skipRequ
 scripts.tab_set: "%{name} ●"
 scripts.test: Testler
 scripts.test_hint: Yanıt geldikten sonra çalışır. pm.test("ad", () => pm.expect(…)) ile denetleyin; yanıt pm.response içindedir.
+settings.accent: "Vurgu rengi"
+settings.accent_blue: "Mavi"
+settings.accent_cyan: "Camgöbeği"
+settings.accent_description: "Düğmeler, seçimler, odak çerçeveleri ve bağlantılar."
+settings.accent_green: "Yeşil"
+settings.accent_orange: "Turuncu"
+settings.accent_pink: "Pembe"
+settings.accent_purple: "Mor"
+settings.accent_red: "Kırmızı"
+settings.accent_theme: "Temanın kendi rengi"
+settings.accent_yellow: "Sarı"
+settings.appearance: "Görünüm"
+settings.appearance_dark: "Koyu"
+settings.appearance_description: "Koyu, açık ya da sistemin açık/koyu ayarını izle."
+settings.appearance_light: "Açık"
+settings.appearance_system: "Sistemi izle"
 settings.auto_lock: Şifreli koleksiyonları kilitle
 settings.auto_lock_description: Bu kadar süre boşta kalındığında şifreli koleksiyonlar kilitlenir ve yeniden parola ister.
 settings.auto_lock_hour: 1 saat sonra
@@ -490,17 +506,28 @@ settings.auto_lock_minutes: "%{count} dakika sonra"
 settings.auto_lock_never: Hiçbir zaman
 settings.confirm_prod: Üretimde onay iste
 settings.confirm_prod_description: Adında “prod” geçen bir ortam seçiliyken DELETE, PUT veya PATCH göndermeden önce sor.
+settings.dark_theme: "Koyu tema"
+settings.dark_theme_description: "Görünüm koyuyken kullanılır."
+settings.glass: "Cam efekti"
+settings.glass_description: "Arkasındaki masaüstü bulanık görünen yarı saydam pencere. Kapalıyken pencere düz renk olur."
 settings.history: Geçmiş
 settings.history_description: Gönderilen her isteği yanıtıyla birlikte bu bilgisayarda sakla (Ctrl+H).
 settings.language: Dil
 settings.language_description: Menülerin, düğmelerin ve iletilerin dili. Hemen değişir.
+settings.light_theme: "Açık tema"
+settings.light_theme_description: "Görünüm açıkken kullanılır."
 settings.secrets: Ortam gizli değerleri
 settings.secrets_description: Gizli ortam değerlerinin bu bilgisayarda nerede tutulacağı. İkisi de git'e girmez; anahtarlık ayrıca onları diskte düz metin olarak bırakmaz.
 settings.secrets_file: .local.toml dosyası
 settings.secrets_keychain: Sistem anahtarlığı
-settings.theme: Tema
+settings.section_general: "Genel"
+settings.section_look: "Tema"
 settings.theme_cyber: Siber cam
-settings.theme_description: Pencerenin renkleri.
+settings.theme_daylight: "Gün ışığı"
+settings.theme_file_error: "Tema dosyası okunamadı: %{error}"
+settings.theme_files: "Kendi temaların"
+settings.theme_files_description: "Temalar %{folder} içindeki .toml dosyalarıdır. İlk seferde oraya kopyalanacak bir örnek yazılır."
+settings.theme_files_open: "Klasörü aç"
 settings.theme_obsidian: Obsidyen
 settings.title: Ayarlar
 sidebar.auth: Yetkilendirme…

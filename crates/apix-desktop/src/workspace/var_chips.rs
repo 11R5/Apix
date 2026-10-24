@@ -149,7 +149,7 @@ impl Workspace {
     fn chip_color(&self, kind: Kind) -> Hsla {
         match kind {
             Kind::Defined => crate::theme::current().accent,
-            Kind::Dynamic => hsla(0.75, 0.75, 0.75, 1.),
+            Kind::Dynamic => crate::theme::current().keyword,
             Kind::Missing => crate::theme::current().err,
         }
     }

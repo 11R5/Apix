@@ -825,7 +825,7 @@ impl Workspace {
             .text_sm()
             .text_color(p.text_muted)
             .cursor_pointer()
-            .hover(|s| s.bg(hsla(0., 0., 1., 0.05)))
+            .hover(|s| s.bg(crate::theme::current().hover))
             .on_click(cx.listener(move |this, _: &ClickEvent, window, cx| {
                 this.prompt_unlock(
                     root.clone(),
