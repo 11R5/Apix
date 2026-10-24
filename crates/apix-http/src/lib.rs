@@ -5,6 +5,7 @@ mod local;
 pub mod oauth2;
 pub mod sse;
 mod trace;
+pub mod ws;
 
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -595,7 +596,10 @@ async fn execute(
 }
 
 /// The request as it goes on the wire, signed for AWS or OAuth 1.0.
-fn prepare(client: &reqwest::Client, req: &Request) -> Result<reqwest::Request, HttpError> {
+pub(crate) fn prepare(
+    client: &reqwest::Client,
+    req: &Request,
+) -> Result<reqwest::Request, HttpError> {
     let mut request = build(client, req)?.build()?;
     match &req.auth {
         Auth::AwsSigV4(aws) => {
