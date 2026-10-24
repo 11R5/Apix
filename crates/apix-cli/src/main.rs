@@ -218,9 +218,22 @@ struct VarArgs {
     /// Environment from the collection's environments/ folder
     #[arg(short, long)]
     env: Option<String>,
-    /// Override a variable, e.g. --var token=abc (repeatable)
+    /// Override a variable, e.g. --var token=abc (repeatable). Variables
+    /// also come from APIX_VAR_<NAME> environment variables (APIX_VAR_TOKEN
+    /// fills {{token}}); --var wins over them
     #[arg(long = "var", value_name = "KEY=VALUE", value_parser = parse_var)]
     vars: Vec<(String, String)>,
+    /// Read variables from a dotenv file (NAME=value lines), e.g. secrets in CI
+    #[arg(long, value_name = "FILE")]
+    env_file: Option<PathBuf>,
+}
+
+/// The variables of a send or run, worked out once.
+struct Resolved {
+    vars: Variables,
+    scopes: apix_core::scripts::ScopeValues,
+    /// What --env-file, APIX_VAR_* and --var set, in that order.
+    overrides: Vec<(String, String)>,
 }
 
 #[derive(Args)]
@@ -255,8 +268,8 @@ fn parse_var(raw: &str) -> Result<(String, String), String> {
 
 impl VarArgs {
     /// project vars < collection vars < project environment < collection
-    /// environment < --var overrides
-    fn build(&self, scope: &Scope) -> Result<Variables> {
+    /// environment < --env-file < APIX_VAR_* < --var
+    fn resolve(&self, scope: &Scope) -> Result<Resolved> {
         let (project, collection) = (&scope.project, scope.collection.as_ref());
         if let Some(name) = &self.env {
             let available = match (project, collection) {
@@ -273,23 +286,70 @@ impl VarArgs {
         }
         let mut vars =
             apix_core::project::variables(project.as_ref(), collection, self.env.as_deref())?;
-        for (k, v) in &self.vars {
+        let mut scopes =
+            apix_core::project::scope_values(project.as_ref(), collection, self.env.as_deref())?;
+        let overrides = self.overrides(&vars, scope)?;
+        for (k, v) in &overrides {
             vars.set(k, v);
         }
-        Ok(vars)
+        // Values from outside the collection are the run's data for scripts.
+        scopes.data.extend(overrides.iter().cloned());
+        Ok(Resolved {
+            vars,
+            scopes,
+            overrides,
+        })
     }
 
-    /// The same values kept apart by scope, for scripts; `--var` values are
-    /// the run's data.
-    fn scopes(&self, scope: &Scope) -> Result<apix_core::scripts::ScopeValues> {
-        let mut scopes = apix_core::project::scope_values(
-            scope.project.as_ref(),
-            scope.collection.as_ref(),
-            self.env.as_deref(),
-        )?;
-        scopes.data.extend(self.vars.iter().cloned());
-        Ok(scopes)
+    fn overrides(&self, known: &Variables, scope: &Scope) -> Result<Vec<(String, String)>> {
+        use apix_runner::vars;
+        // Names the collection defines or its requests use, to match `APIX_VAR_TOKEN` to `token`.
+        let mut names: Vec<String> = known.iter().map(|(k, _)| k.to_owned()).collect();
+        if let Some(collection) = &scope.collection {
+            for path in collection.request_paths() {
+                if let Ok(request) = apix_core::store::load_request(&path) {
+                    names.extend(request.resolve(&Variables::new()).missing);
+                }
+            }
+        }
+        let names: Vec<&str> = names.iter().map(String::as_str).collect();
+        let mut out = Vec::new();
+        if let Some(path) = &self.env_file {
+            let file = vars::match_known(vars::load_env_file(path)?, names.iter().copied());
+            note(&format!(
+                "{}: {}",
+                path.display(),
+                file.iter()
+                    .map(|(k, _)| k.as_str())
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ));
+            out.extend(file);
+        }
+        let from_env = vars::match_known(
+            vars::from_environment(std::env::vars()),
+            names.iter().copied(),
+        );
+        if !from_env.is_empty() {
+            note(&format!(
+                "from {}*: {}",
+                vars::PREFIX,
+                from_env
+                    .iter()
+                    .map(|(k, _)| k.as_str())
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ));
+        }
+        out.extend(from_env);
+        out.extend(self.vars.iter().cloned());
+        Ok(out)
     }
+}
+
+/// A line on stderr about where values came from (names only, never values).
+fn note(text: &str) {
+    eprintln!("variables {text}");
 }
 
 #[tokio::main(flavor = "current_thread")]
@@ -319,8 +379,7 @@ async fn run(cli: Cli) -> Result<bool> {
         } => {
             unlock_around(&file, &var)?;
             let scope = Scope::find(&file)?;
-            let scopes = vars.scopes(&scope)?;
-            let vars = vars.build(&scope)?;
+            let Resolved { vars, scopes, .. } = vars.resolve(&scope)?;
             let mut state = Default::default();
             let info = apix_script::Info {
                 request_id: file.display().to_string(),
@@ -398,13 +457,14 @@ async fn run(cli: Cli) -> Result<bool> {
                 }
                 None => Vec::new(),
             };
+            let resolved = var_args.resolve(&scope)?;
             let plan = apix_runner::Plan {
                 root: root.clone(),
                 requests,
-                vars: var_args.build(&scope)?,
-                scopes: var_args.scopes(&scope)?,
+                vars: resolved.vars,
+                scopes: resolved.scopes,
                 environment: var_args.env.clone(),
-                pinned: var_args.vars.clone(),
+                pinned: resolved.overrides,
                 data,
                 iterations: iterations.unwrap_or(0),
                 delay: std::time::Duration::from_millis(delay),
@@ -523,7 +583,7 @@ async fn run(cli: Cli) -> Result<bool> {
             let request = if raw {
                 request
             } else {
-                let resolved = request.resolve(&vars.build(&scope)?);
+                let resolved = request.resolve(&vars.resolve(&scope)?.vars);
                 if !resolved.missing.is_empty() {
                     let names: Vec<_> = resolved.missing.into_iter().collect();
                     eprintln!("note: left as-is, not defined: {}", names.join(", "));

@@ -1,0 +1,8 @@
+# Only the sources are needed to build the `apix` command.
+target/
+.git/
+.claude/
+Logo/
+Docs/
+examples/
+**/*.png

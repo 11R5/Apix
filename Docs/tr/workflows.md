@@ -1,4 +1,4 @@
-<!-- translated from en/workflows.md sha256:11171caf1a760677 -->
+<!-- translated from en/workflows.md sha256:ea77eb84bb69baa5 -->
 
 # İş akışları
 
@@ -152,8 +152,10 @@ Seçenekler:
 | `--junit report.xml` | CI servislerinin test listesi olarak gösterdiği JUnit XML raporu |
 | `--json report.json` / `--html report.html` | Her şey JSON olarak ya da her tarayıcıda açılan bir sayfa |
 | `--timeout 10`, `-k`, `--proxy URL` | İsteklerin bağlantı ayarlarını geçersiz kılar |
+| `--env-file .env` | Değişkenleri bir dotenv dosyasından okur (aşağıya bakın) |
 
-Bir veri dosyası şöyle görünür; `--var` değerleri sütunlarından üstündür:
+Bir veri dosyası şöyle görünür; koleksiyon dışından gelen değerler (`--var` ve
+aşağıdakiler) sütunlarından üstündür:
 
 ```csv
 id,name
@@ -161,23 +163,59 @@ id,name
 2,Ervin Howell
 ```
 
-[examples/ci/github-actions.yml](../../examples/ci/github-actions.yml) eksiksiz
-bir GitHub Actions iş akışıdır: `apix`'i derler, koleksiyonu bir veri
-dosyasıyla çalıştırır, JUnit sonuçlarını koşunun sayfasında gösterir ve HTML
-raporu saklar. Özü şudur:
+### CI'da gizli değerler
 
-```yaml
-- name: Run the collection
-  run: apix run api --env staging --junit reports/apix.xml --html reports/apix.html --var "token=$API_TOKEN"
-  env:
-    API_TOKEN: ${{ secrets.API_TOKEN }}
-    APIX_PASSWORD: ${{ secrets.APIX_PASSWORD }}   # only for an encrypted collection
+Gizli değerler git'e girmez (`.local.toml` dosyaları yok sayılır, anahtarlık
+senin bilgisayarındadır); bu yüzden bir pipeline onları üç yoldan biriyle
+verir, her biri öncekinden üstündür:
+
+1. `--env-file .env`: `AD=değer` satırlarından oluşan bir dotenv dosyası
+   (`#` yorumları, tırnaklar ve `export` kullanılabilir).
+2. `APIX_VAR_<AD>` ortam değişkenleri: `APIX_VAR_TOKEN`, `{{token}}`'ı
+   doldurur. CI gizli değerleri genellikle büyük harfle yazıldığı için ad,
+   koleksiyonun tanımladığı ya da isteklerinin kullandığı bir değişkenle büyük
+   küçük harf farkı gözetmeden eşleşir.
+3. `--var ad=değer`.
+
+Üçü de ortamın değerlerinden (ve veri dosyasının sütunlarından) üstündür.
+`apix` hangi adları nereden aldığını stderr'e yazar, değerleri asla yazmaz.
+
+```sh
+APIX_VAR_TOKEN="$API_TOKEN" apix run api --env staging
 ```
 
-Gizli değerler git'e girmez (`.local.toml` dosyaları yok sayılır), bu yüzden
-CI onları `--var` ile verir. Masaüstü uygulamasının **Runner**'ı
-(Ctrl+Shift+R) aynı koşuları bir pencereyle yapar; bkz.
-[kullanım kılavuzu](user-guide.md#runner).
+### GitHub Actions
+
+Depo aynı zamanda bir GitHub Action'dır. `apix`'i ilk seferde derler
+(sonra önbellekten alır), koleksiyonu çalıştırır ve JUnit ile HTML raporlarını
+yazar:
+
+```yaml
+- uses: 11R5/Apix@main          # daha iyisi: bir etiket ya da commit
+  with:
+    path: api
+    environment: staging        # ayrıca: data, iterations, delay, bail, env-file, junit, html, json, args
+  env:
+    APIX_VAR_TOKEN: ${{ secrets.API_TOKEN }}
+```
+
+[examples/ci/github-actions.yml](../../examples/ci/github-actions.yml) eksiksiz
+bir iş akışıdır: koleksiyonu her ortam için bir kez çalıştırır (`test` ve
+`staging` matrisi), JUnit sonuçlarını koşunun sayfasında gösterir ve HTML
+raporları saklar.
+
+### Docker
+
+Diğer CI sistemleri için yalnızca `apix` komutunu içeren bir konteyner imajı
+vardır (bir sürüm etiketlendiğinde `ghcr.io/11r5/apix` olarak yayımlanır;
+kendin `docker build -t apix .` ile de derleyebilirsin):
+
+```sh
+docker run --rm -v "$PWD:/work" -e APIX_VAR_TOKEN ghcr.io/11r5/apix run api --env staging --junit reports/apix.xml
+```
+
+Masaüstü uygulamasının **Runner**'ı (Ctrl+Shift+R) aynı koşuları bir
+pencereyle yapar; bkz. [kullanım kılavuzu](user-guide.md#runner).
 
 `apix send <file>` tek bir istek gönderir ve yanıtı yazdırır; başlıklar için
 `-i`, bağlantı ayrıntıları için `--network` ekleyin.

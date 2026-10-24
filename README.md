@@ -99,7 +99,9 @@ Measurements of the other tools on the same machine are planned.
   several times or once per row of a CSV/JSON data file, with a delay between
   requests; pause, resume, stop at the first failure; save JUnit XML, JSON or
   HTML reports. `apix run` does the same in CI and fails the build when a test
-  fails ([GitHub Actions example](examples/ci/github-actions.yml)).
+  fails: as a GitHub Action (`uses: 11R5/Apix@…`,
+  [example](examples/ci/github-actions.yml)), a Docker image, or plain
+  `apix`, with secrets from `APIX_VAR_<NAME>` variables or a `.env` file.
 - **Encrypted collections** with a recovery key, auto-lock and, if you choose,
   the password remembered in the OS keychain.
 - **Import** from Postman (collections, environments, a whole "Export data"
@@ -133,6 +135,7 @@ apix send examples/jsonplaceholder/users/list-users.apix
 apix send examples/jsonplaceholder/health.apix --env local --network
 apix run examples/jsonplaceholder            # non-zero exit if any request fails
 apix run my-api --data users.csv --junit report.xml --html report.html --bail
+APIX_VAR_TOKEN=… apix run my-api --env staging --env-file .env.ci
 apix shell examples/jsonplaceholder/users/create-user.apix --as powershell
 apix import "My API.postman_collection.json"
 APIX_PASSWORD=… apix run my-api-encrypted --env staging

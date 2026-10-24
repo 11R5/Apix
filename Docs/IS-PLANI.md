@@ -16,10 +16,11 @@
 | M3 Simge, projeler, ortamlar, kopyalama, auth | ✅ 9/9 · bitti: simge, ortam seçici ve editörü, dinamik değişkenler, projeler, kabuk komutu olarak kopyalama, metotla yeni istek, değişken çipleri, Auth sekmesi ve miras, komut paleti, sekmeler, sürükle-bırak ile taşıma · küçük kalanlar M4'te yapıldı (yalnız ham gövde editöründe değişken çipi kaldı) |
 | M4 Günlük kullanım | ✅ · bitti: menü çubuğu, şifreli koleksiyonlar (motor, uygulama, CLI), ağ denetçisi (Network sekmesi), multipart/binary/GraphQL gövdeleri, auth tipleri (Digest, OAuth 1.0, OAuth 2.0, AWS SigV4), ayarlar ekranı ve 9 dilli arayüz, Arapça için sağdan sola düzen, dokümantasyon yapısı (İngilizce, Türkçe), README karşılaştırması ve performans ölçümü, istek ayarları (zaman aşımı, yönlendirmeler, TLS doğrulama, proxy, istemci sertifikaları; klasör/koleksiyon/proje kalıtımıyla) ve çerez yöneticisi, 10 dilde kod üretimi, geçmiş, Postman otomatik tanıma, toplu içe aktarma ve Postman'a dışa aktarma, içerik tipleri (HTML gövde, XML/HTML renklendirme ve biçimlendirme, resim önizleme, Hex, yanıtı kaydetme), Insomnia/OpenAPI/HAR içe aktarma, şifreli koleksiyon parolasını ve ortam gizli değerlerini işletim sistemi anahtarlığında saklama, M3'ten kalan küçük işler (elle sıralama, sekmeleri hatırlama, proje renkleri, koleksiyonu projeye taşıma, prod onayı, fish/HTTPie/wget kopyalama, Params/Headers/form gövdesinde değişken çipleri) · gRPC (not 17) sonraki görevlere bırakıldı |
 | M5 Scriptler, testler, runner | ✅ `apix-script` (QuickJS, `pm.*` uyumlu API), istek öncesi ve test scriptleri (koleksiyon → klasör → istek), `pm.test` / `pm.expect` (Chai tarzı), eski `tests[...]` / `postman.*` API'si, konsol, uygulamada Scripts sekmesi ile Tests ve Console sekmeleri, `apix send` / `apix run` script çalıştırma, test sonuçları ve `setNextRequest`, `pm.sendRequest`, hazır kütüphaneler (`require`), kodsuz doğrulamalar, yanıttan değişken kaydetme, Runner penceresi (sıra, tekrar, bekleme, veri dosyası, ilk hatada dur, duraklat/devam/durdur), CSV/JSON veri dosyalı koşular, JUnit XML / JSON / HTML raporlar, `apix run --data/--iterations/--delay/--bail/--junit/--json/--html`, GitHub Actions örneği |
-| Tema paketi (M5 sonrası) | ✅ anında tema değişimi, açık tema ve "sistemi izle", vurgu rengi, saydamlık kaydırıcısı (%0–90, buzlu cam), Dracula/Nord/Solarized/Gün ışığı, `<config>/Apix/themes/*.toml` dosyalarından temalar · sıradaki: CLI'ın git ve CI/CD ile büyütülmesini konuşmak |
+| Tema paketi (M5 sonrası) | ✅ anında tema değişimi, açık tema ve "sistemi izle", vurgu rengi, saydamlık kaydırıcısı (%0–90, buzlu cam), Dracula/Nord/Solarized/Gün ışığı, `<config>/Apix/themes/*.toml` dosyalarından temalar |
+| CLI ve CI/CD | ✅ `APIX_VAR_<AD>` ve `--env-file` ile gizli değerler, GitHub Action (`uses: 11R5/Apix@…`), Docker imajı, ortam matrisli örnek · sıradaki: M6 (WebSocket ve SSE ile başlanması önerildi) |
 | M6–M9 | ⬜ |
 
-Release ikili dosyası 38.0 MB (üst sınır 100 MB; QuickJS ve JavaScript renklendirmesi yaklaşık 3.6 MB, Runner 0.8 MB ekledi). Testler: core 57, script 10, runner 13, vault 11, desktop 12, codegen 24, import 26, http 19 (hepsi geçiyor, clippy uyarısız).
+Release ikili dosyası 38.0 MB (üst sınır 100 MB; QuickJS ve JavaScript renklendirmesi yaklaşık 3.6 MB, Runner 0.8 MB ekledi). Testler: core 57, script 10, runner 16, vault 11, desktop 12, codegen 24, import 26, http 19 (hepsi geçiyor, clippy uyarısız).
 
 ### Kullanıcı notları (17 Ekim 2026) ve plana nasıl işlendikleri
 | # | Not | Nereye işlendi |
@@ -364,7 +365,8 @@ Bir koleksiyon (veya proje) parola ile şifrelenir. Parolayı bilmeyen hiçbir a
 | **Veri odaklı test:** CSV veya JSON dosyasındaki her satır için koleksiyonu çalıştırma | ✅ Runner ve `apix run --data`; sütunlar `{{değişken}}` ve `pm.iterationData` olur; CSV'de tırnak, satır sonu, BOM ve `;` ayraç okunur |
 | Raporlar: JUnit XML (CI için), JSON, HTML | ✅ Runner'da "Raporu kaydet" ve `apix run --junit/--json/--html`; HTML tek dosya, açık/koyu tema |
 | `--bail` (ilk hatada dur), `--parallel N`, `--timeout` | ✅ `--bail`, `--iterations`, `--delay`, `--timeout`, `-k`, `--proxy`, klasör koşusu · ⬜ `--parallel N` (sonraya) |
-| GitHub Actions örneği ve `apix` için resmi Docker imajı | ✅ `examples/ci/github-actions.yml` (JUnit sonuçları ve HTML rapor) · ⬜ Docker imajı |
+| GitHub Actions örneği ve `apix` için resmi Docker imajı | ✅ depo bir GitHub Action (`action.yml`: `uses: 11R5/Apix@…`, `apix`'i derleyip önbelleğe alır, `path`/`environment`/`data`/`junit`/`html` … girdileri), ortam matrisli örnek (`examples/ci/github-actions.yml`), `Dockerfile` ve sürüm etiketinde ghcr.io'ya yayımlayan iş akışı · ⬜ Docker imajı Linux'ta henüz derlenip denenmedi |
+| **CI'da gizli değerler** | ✅ `APIX_VAR_<AD>` ortam değişkenleri ve `--env-file` (dotenv); adlar koleksiyonun tanımladığı ya da isteklerinin kullandığı değişkenle büyük küçük harf gözetmeden eşleşir; sıra: ortam < `--env-file` < `APIX_VAR_*` < `--var`; hangi adların nereden geldiği stderr'e yazılır (değerler asla) |
 
 ### H. Diğer protokoller
 | Protokol | Ayrıntı | Durum |
@@ -564,7 +566,7 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 - Yapılanlar (24 Ekim): görünümler paleti kopyalamak yerine `theme::current()` ile okur, `theme::set` her şeyi hemen yeniden boyar; Ayarlar'da "Tema" bölümü (görünüm: koyu/açık/sistemi izle, koyu tema, açık tema, vurgu rengi: temanın kendi + 8 renk, saydamlık kaydırıcısı, "Klasörü aç" ile tema dosyaları ve örnek dosya); açık temada kod renklendirmesi gpui-kit'in açık temasına geçer, metot/koleksiyon renkleri koyulaşır; okunamayan tema dosyası nedeniyle gösterilir. "Sistemi izle" Windows'ta modu değiştirerek denenmedi (sistem ayarı).
 - ⬜ Kalan: yazı boyutu ve satır yoğunluğu; kod editörü renklerinin temadan gelmesi (şimdilik gpui-kit'in koyu/açık renkleri).
 
-**Not (konuşulacak):** CLI'ın git ve CI/CD entegrasyonuyla büyütülmesi (GitHub Actions adımı, raporlar, pipeline'lar). M5 bitince yeniden ele alınacak.
+**CLI ve CI/CD (24 Ekim'de konuşuldu):** kullanıcı CI'da gizli değerleri, hazır GitHub Action'ı ve Docker imajını seçti; bunlar yapıldı (§G). Bekleyenler: yalnızca PR'da değişen istekleri koşan `--changed`, koşu özetini PR'a yorum yazan rapor, `apix diff`, zamanlanmış izleme koşuları.
 
 ### M6 — Protokoller
 - WebSocket, SSE, GraphQL introspection, gRPC, Socket.IO, MQTT, SOAP

@@ -97,7 +97,7 @@ Nothing depends on `desktop`.
 ```
 
 `{{variables}}` resolve in layers. Later layers win:
-**globals → collection (`apix.toml`) → environment → overrides (CLI `--var`, script `pm.variables.set`)**.
+**globals → collection (`apix.toml`) → environment → overrides (CLI `--env-file`, `APIX_VAR_*` and `--var`, matched to the collection's names whatever their case; script `pm.variables.set`)**.
 Undefined names are left in place and reported, so the UI can underline them
 and the CLI can refuse to send.
 
