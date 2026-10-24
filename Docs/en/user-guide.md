@@ -21,6 +21,7 @@ command line runs the same requests in a terminal or CI.
 - [Variables and environments](#variables-and-environments)
 - [The response](#the-response)
 - [The Network tab](#the-network-tab)
+- [WebSocket and server-sent events](#websocket-and-server-sent-events)
 - [Scripts and tests](#scripts-and-tests)
 - [Runner](#runner)
 - [Tabs](#tabs)
@@ -240,6 +241,39 @@ The **Network** tab explains where the time went and what the connection was:
 - the server certificate: issuer, validity and days left
 
 ![The Network tab](images/network.png)
+
+## WebSocket and server-sent events
+
+**WebSocket.** A request whose URL starts with `ws://` or `wss://` is a
+WebSocket: **Send** becomes **Connect**, and the Body tab becomes
+**Messages**. The handshake uses the request's params, headers and auth
+(Bearer, Basic, API key, OAuth 2.0 …), like any request.
+
+![A WebSocket connection and its Messages tab](images/websocket.png)
+
+- Type a message and press **Send** (or Ctrl+Enter). `{{variables}}` are
+  filled in when it is sent. Without a connection, Apix connects first and
+  sends it once open.
+- **Save message** keeps it in the request file as `[[message]]`; Ctrl+S
+  saves the file. Click a saved message to edit it, or ▷ to send it as it is.
+- The response pane is a log: ↑ sent, ↓ received, with the time since
+  connecting, plus when it connected and how it closed (code and reason).
+  It follows new messages unless you scroll up.
+- **Disconnect** (or Esc) closes the connection; the log stays until you
+  connect again. A connection keeps running while its tab is in the back.
+
+**Server-sent events.** When a response is `text/event-stream`, its events
+show up as they arrive, with the time, the event type and id, and the data.
+**Stop** (or Esc) ends the stream and keeps what came; a stream the server
+ends shows the same list on the Pretty tab, with Raw, Headers, Network and
+Hex as for any response. Send `Accept: text/event-stream` if the server
+needs it. A request timeout in Settings ends a stream too, so leave it empty
+for streams that stay open.
+
+From the command line, `apix send` prints events as they come, and for a
+WebSocket it connects, sends the saved messages (or `--message` texts),
+prints both directions and closes after `--listen` seconds (3 by default,
+`0` waits for the server). `apix run` skips WebSocket requests.
 
 ## Scripts and tests
 

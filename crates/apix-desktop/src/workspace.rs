@@ -17,9 +17,12 @@ mod script_run;
 mod settings_editor;
 mod settings_ui;
 mod shell_copy;
+mod socket_ui;
+mod stream_ui;
 mod tabs;
 mod var_chips;
 mod vault_ui;
+mod ws_editor;
 
 use std::collections::{BTreeMap, HashSet};
 use std::path::PathBuf;
@@ -46,7 +49,6 @@ use gpui_kit::*;
 
 use crate::bidi::{self, Bidi as _};
 use crate::large_view::{Document, LARGE_BODY_BYTES, LargeView};
-use crate::net;
 use crate::settings::Settings;
 use crate::state::AppState;
 use crate::theme;
@@ -187,6 +189,10 @@ struct Finished {
     local: apix_http::LocalNetwork,
     /// Test results and console lines, when the request has scripts.
     scripts: Option<script_run::ScriptReport>,
+    /// The events of a server-sent event stream.
+    events: Option<Vec<stream_ui::TimedEvent>>,
+    /// The stream was stopped before the server ended it.
+    stopped: bool,
 }
 
 /// Images bigger than this are not previewed (save them instead).
@@ -235,6 +241,7 @@ impl Finished {
             }
         };
         let local = apix_http::local_network(response.trace.local_addr.map(|a| a.ip()));
+        let events = stream_ui::events_of(&response);
         Self {
             response,
             pretty,
@@ -245,6 +252,8 @@ impl Finished {
             image,
             local,
             scripts: None,
+            events,
+            stopped: false,
         }
     }
 }
@@ -322,6 +331,10 @@ fn raw_document(response: &Response, json: bool) -> Arc<Document> {
 enum ResponseState {
     Idle,
     Loading,
+    /// Server-sent events still coming in.
+    Streaming(Rc<std::cell::RefCell<stream_ui::LiveStream>>),
+    /// A WebSocket connection: opening, open, or over (its log stays).
+    Socket(Rc<std::cell::RefCell<socket_ui::SocketSession>>),
     Done(Rc<Finished>),
     Failed(String),
     Cancelled,
@@ -361,6 +374,8 @@ pub struct Workspace {
     settings_editor: Entity<settings_editor::SettingsEditor>,
     /// The Scripts tab (pre-request and test scripts).
     script_editor: Entity<script_editor::ScriptEditor>,
+    /// The Messages tab of a WebSocket request.
+    ws_editor: Entity<ws_editor::WsEditor>,
     /// The request's scripts as last loaded or saved.
     base_scripts: script_editor::Scripts,
     /// What scripts set or unset since the app started; never written to disk.
@@ -401,6 +416,8 @@ pub struct Workspace {
     drop_hint: Option<(PathBuf, drag::Zone)>,
     /// The Runner, kept so a run goes on with its dialog closed.
     runner: Option<Entity<runner_ui::RunnerView>>,
+    /// The event list of a finished event stream.
+    events_scroll: ScrollHandle,
     _subscriptions: Vec<Subscription>,
 }
 
@@ -424,6 +441,7 @@ impl Workspace {
         let auth_editor = cx.new(|cx| auth_editor::AuthEditor::new("request", weak, window, cx));
         let settings_editor = cx.new(|cx| settings_editor::SettingsEditor::new(window, cx));
         let script_editor = cx.new(|cx| script_editor::ScriptEditor::new(window, cx));
+        let ws_editor = cx.new(|cx| ws_editor::WsEditor::new(window, cx));
         let subscriptions = vec![
             cx.observe_self(|this, _| this.remember_tabs()),
             // "Follow the system": repaint when the OS switches between light and dark.
@@ -438,6 +456,14 @@ impl Workspace {
             cx.observe(&auth_editor, |_, _, cx| cx.notify()),
             cx.observe(&settings_editor, |_, _, cx| cx.notify()),
             cx.observe(&script_editor, |_, _, cx| cx.notify()),
+            cx.observe(&ws_editor, |_, _, cx| cx.notify()),
+            cx.subscribe_in(
+                &ws_editor,
+                window,
+                |this, _, event: &ws_editor::SendMessage, window, cx| {
+                    this.send_socket_message(event.0.clone(), window, cx)
+                },
+            ),
             cx.subscribe_in(
                 &script_editor,
                 window,
@@ -504,6 +530,7 @@ impl Workspace {
             body_editor,
             settings_editor,
             script_editor,
+            ws_editor,
             base_scripts: Default::default(),
             script_vars: Default::default(),
             last_url_len: 0,
@@ -530,6 +557,7 @@ impl Workspace {
             remembered_tabs: None,
             drop_hint: None,
             runner: None,
+            events_scroll: ScrollHandle::new(),
             _subscriptions: subscriptions,
         };
         this._auto_lock = Some(Self::auto_lock_task(window, cx));
@@ -647,6 +675,9 @@ impl Workspace {
         let asserts = request.asserts.clone();
         self.script_editor
             .update(cx, |editor, cx| editor.set_asserts(&asserts, window, cx));
+        let messages = request.messages.clone();
+        self.ws_editor
+            .update(cx, |editor, cx| editor.set_messages(&messages, cx));
         cx.notify();
     }
 
@@ -688,12 +719,17 @@ impl Workspace {
         request.body = self.body_editor.read(cx).body(cx);
         request.settings = self.settings_editor.read(cx).settings(cx);
         request.asserts = self.script_editor.read(cx).asserts(cx);
+        request.messages = self.ws_editor.read(cx).messages();
         request
     }
 
     /// Sends the request, after asking first when it would change something
     /// in a production environment (DELETE, PUT, PATCH).
     pub(super) fn send(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        // A WebSocket that is already open is closed with Esc or its button.
+        if self.live_socket().is_some() {
+            return;
+        }
         let method = self.build_request(cx).method;
         if self.settings.confirm_prod
             && self.is_prod()
@@ -740,6 +776,16 @@ impl Workspace {
             self.fail(tr!("request.error.no_url"), cx);
             return;
         }
+        // ws:// and wss:// open a connection; there is no single response.
+        let resolved = request.resolve(&self.vars);
+        if apix_http::ws::is_websocket_url(&resolved.request.url) {
+            if !resolved.missing.is_empty() {
+                self.fail(undefined_message(resolved.missing), cx);
+                return;
+            }
+            self.connect_socket(resolved.request, window, cx);
+            return;
+        }
         let (pre_scripts, test_scripts) = self.script_chains(cx);
         if !pre_scripts.is_empty() || !test_scripts.is_empty() {
             self.send_scripted(request, record, pre_scripts, test_scripts, window, cx);
@@ -756,32 +802,16 @@ impl Workspace {
             Some(dir) => resolved.request.with_files_relative_to(&dir),
             None => resolved.request,
         };
-        self.response = ResponseState::Loading;
-        let pending = net::send(request);
-        // The tab may be in the back by the time the response arrives.
-        let tab = self.selected.clone();
-        // Replacing an older task drops it, which cancels that request.
-        self.task = Some(cx.spawn_in(window, async move |this, cx| {
-            let result = pending.await;
-            // Formatting and indexing a big body must not stall the UI thread,
-            // and neither must writing the history.
-            let prepared = cx
-                .background_spawn(async move {
-                    if let Some(record) = record {
-                        record.save(&result);
-                    }
-                    result.map(Finished::prepare)
-                })
-                .await;
-            this.update_in(cx, |this, window, cx| {
-                this.finish_for(tab, prepared, window, cx)
-            })
-            .ok();
-        }));
-        cx.notify();
+        self.send_following(request, record, window, cx);
     }
 
-    fn cancel(&mut self, cx: &mut Context<Self>) {
+    fn cancel(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        if self.disconnect_socket(cx) {
+            return;
+        }
+        if self.stop_stream(window, cx) {
+            return;
+        }
         if self.task.take().is_some() {
             self.response = ResponseState::Cancelled;
             cx.notify();
@@ -842,8 +872,8 @@ impl Workspace {
         let done = done.clone();
         let binary = matches!(done.kind, BodyKind::Binary | BodyKind::Image(_));
         let doc = match ix {
-            // Pretty for an image or binary body is drawn by `render_binary`.
-            0 if binary => {
+            // Pretty for an image, a binary body or an event stream is drawn by hand.
+            0 if binary || done.events.is_some() => {
                 cx.notify();
                 return;
             }
@@ -1045,12 +1075,27 @@ impl Workspace {
     fn render_url_bar(&self, cx: &mut Context<Self>) -> impl IntoElement {
         let method = self.current_method(cx);
         let busy = matches!(self.response, ResponseState::Loading);
-        let action = if busy {
+        let websocket = self.websocket_mode(cx);
+        let action = if self.live_socket().is_some() {
+            Button::new("disconnect")
+                .small()
+                .icon(IconName::Close)
+                .label(tr!("ws.disconnect"))
+                .on_click(cx.listener(|this, _: &ClickEvent, _, cx| {
+                    this.disconnect_socket(cx);
+                }))
+        } else if websocket {
+            Button::new("connect")
+                .primary()
+                .small()
+                .label(tr!("ws.connect"))
+                .on_click(cx.listener(|this, _: &ClickEvent, window, cx| this.send(window, cx)))
+        } else if busy {
             Button::new("cancel")
                 .small()
                 .icon(IconName::Close)
                 .label(tr!("menu.cancel"))
-                .on_click(cx.listener(|this, _: &ClickEvent, _, cx| this.cancel(cx)))
+                .on_click(cx.listener(|this, _: &ClickEvent, window, cx| this.cancel(window, cx)))
         } else {
             Button::new("send")
                 .primary()
@@ -1089,7 +1134,7 @@ impl Workspace {
                         }
                     }),
             )
-            .child(div().w(px(92.)).flex_none().child(action))
+            .child(div().min_w(px(92.)).flex_none().child(action))
     }
 
     fn render_request_pane(&self, cx: &mut Context<Self>) -> impl IntoElement {
@@ -1104,9 +1149,18 @@ impl Workspace {
             0 => tr!("request.tab.headers"),
             n => tr!("request.tab.headers_count", count = n),
         };
-        let body_label = match self.body_editor.read(cx).kind() {
-            body_editor::BodyKind::None => tr!("request.tab.body"),
-            kind => tr!("request.tab.body_kind", kind = kind.label()),
+        // A WebSocket request has messages where an HTTP one has a body.
+        let websocket = self.websocket_mode(cx);
+        let body_label = if websocket {
+            match self.ws_editor.read(cx).messages().len() {
+                0 => tr!("request.tab.messages"),
+                n => tr!("request.tab.messages_count", count = n),
+            }
+        } else {
+            match self.body_editor.read(cx).kind() {
+                body_editor::BodyKind::None => tr!("request.tab.body"),
+                kind => tr!("request.tab.body_kind", kind = kind.label()),
+            }
         };
 
         // Technical names stay as they are; only the frame is translated.
@@ -1152,6 +1206,7 @@ impl Workspace {
                 .overflow_y_scroll()
                 .child(self.settings_editor.clone())
                 .into_any_element(),
+            _ if websocket => self.ws_editor.clone().into_any_element(),
             _ => self.body_editor.clone().into_any_element(),
         };
 
@@ -1280,6 +1335,10 @@ impl Workspace {
         };
 
         match &self.response {
+            ResponseState::Streaming(stream) => {
+                shell.child(self.render_stream(&stream.borrow(), cx))
+            }
+            ResponseState::Socket(session) => shell.child(self.render_socket(session, cx)),
             ResponseState::Cancelled => shell.child(centered(
                 div()
                     .text_sm()
@@ -1336,6 +1395,11 @@ impl Workspace {
                     (_, 6) => self.render_console(done, cx).into_any_element(),
                     (_, 2) => self.render_response_headers(response).into_any_element(),
                     (_, 3) => self.render_network(done).into_any_element(),
+                    (None, 0) if done.events.is_some() => stream_ui::render_events(
+                        done.events.as_deref().unwrap_or_default(),
+                        &self.events_scroll,
+                        cx,
+                    ),
                     (None, 0) if binary => self.render_binary(done, cx).into_any_element(),
                     (Some(view), _) => view.clone().into_any_element(),
                     (None, 4) => centered(
@@ -1397,6 +1461,12 @@ impl Workspace {
                             .child(human_size(response.body.len()))
                             .child(response.version.clone())
                             .children(viewer_note)
+                            .children(
+                                done.events
+                                    .as_ref()
+                                    .map(|events| tr!("stream.count", count = events.len())),
+                            )
+                            .children(done.stopped.then(|| tr!("stream.stopped")))
                             .child(div().flex_1())
                             .child(
                                 Button::new("extract-value")
@@ -1667,7 +1737,7 @@ impl Render for Workspace {
             .key_context(CONTEXT)
             .track_focus(&self.focus)
             .on_action(cx.listener(|this, _: &SendRequest, window, cx| this.send(window, cx)))
-            .on_action(cx.listener(|this, _: &CancelRequest, _, cx| this.cancel(cx)))
+            .on_action(cx.listener(|this, _: &CancelRequest, window, cx| this.cancel(window, cx)))
             .on_action(cx.listener(|this, _: &SaveRequest, window, cx| {
                 this.save(window, cx);
             }))

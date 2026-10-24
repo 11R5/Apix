@@ -38,6 +38,12 @@ enum Command {
         /// Print what happened on the network: DNS, connection, redirects, TLS, local side
         #[arg(short = 'n', long)]
         network: bool,
+        /// WebSocket: send this text instead of the saved messages (repeatable)
+        #[arg(short = 'm', long = "message", value_name = "TEXT")]
+        messages: Vec<String>,
+        /// WebSocket: how long to keep listening after sending, in seconds (0: until the server closes)
+        #[arg(long, value_name = "SECONDS", default_value_t = 3.0)]
+        listen: f64,
         #[command(flatten)]
         net: NetArgs,
     },
@@ -375,17 +381,40 @@ async fn run(cli: Cli) -> Result<bool> {
             vars,
             include_headers,
             network,
+            messages,
+            listen,
             net,
         } => {
             unlock_around(&file, &var)?;
             let scope = Scope::find(&file)?;
             let Resolved { vars, scopes, .. } = vars.resolve(&scope)?;
+            let mut request = scope.load(&file)?;
+            request.settings = net.overrides().or_inherit(&request.settings);
+            let resolved = request.resolve(&vars);
+            if apix_http::ws::is_websocket_url(&resolved.request.url) {
+                if !resolved.missing.is_empty() {
+                    let names: Vec<_> = resolved.missing.into_iter().collect();
+                    bail!("undefined variable(s): {}", names.join(", "));
+                }
+                return websocket(
+                    &style,
+                    resolved.request,
+                    &vars,
+                    messages,
+                    listen,
+                    include_headers,
+                )
+                .await;
+            }
             let mut state = Default::default();
             let info = apix_script::Info {
                 request_id: file.display().to_string(),
                 iteration_count: 1,
                 ..Default::default()
             };
+            // Server-sent events are printed as they arrive, not at the end.
+            let started = std::time::Instant::now();
+            let mut stream: Option<(apix_http::sse::SseParser, usize)> = None;
             let done = apix_runner::exchange(
                 &client,
                 &scope,
@@ -396,9 +425,57 @@ async fn run(cli: Cli) -> Result<bool> {
                 &net.overrides(),
                 info,
                 script_sender(),
+                |progress| match progress {
+                    apix_http::Progress::Head { status, headers } => {
+                        let content_type = headers
+                            .iter()
+                            .find(|(k, _)| k.eq_ignore_ascii_case("content-type"))
+                            .map(|(_, v)| v.as_str())
+                            .unwrap_or_default();
+                        if !apix_http::sse::is_event_stream(content_type) {
+                            return;
+                        }
+                        let color = if (200..400).contains(&status) {
+                            style.green
+                        } else {
+                            style.red
+                        };
+                        println!(
+                            "{color}{status}{}  {}event stream, Ctrl+C to stop{}",
+                            style.reset, style.dim, style.reset
+                        );
+                        if include_headers {
+                            for (k, v) in headers {
+                                println!("{}{k}{}: {v}", style.dim, style.reset);
+                            }
+                            println!();
+                        }
+                        stream = Some((apix_http::sse::SseParser::new(), 0));
+                    }
+                    apix_http::Progress::Chunk(chunk) => {
+                        let Some((parser, count)) = stream.as_mut() else {
+                            return;
+                        };
+                        for event in parser.feed(chunk) {
+                            *count += 1;
+                            print_event(&style, started.elapsed(), &event);
+                        }
+                    }
+                },
             )
             .await?;
-            if let Some(response) = &done.response {
+            if let (Some((_, count)), Some(response)) = (&stream, &done.response) {
+                println!(
+                    "{}stream ended: {count} events in {:.1} s · {}{}",
+                    style.dim,
+                    response.timing.total.as_secs_f64(),
+                    human_size(response.body.len()),
+                    style.reset
+                );
+                if network {
+                    print_network(&style, response);
+                }
+            } else if let Some(response) = &done.response {
                 print_status(
                     &style,
                     response.status,
@@ -797,10 +874,7 @@ fn print_scripts(style: &Style, item: &apix_runner::ItemResult) {
         println!("  {}error: {error}{}", style.red, style.reset);
     }
     if item.skipped {
-        println!(
-            "  {}skipped by its pre-request script{}",
-            style.dim, style.reset
-        );
+        println!("  {}skipped{}", style.dim, style.reset);
     }
     for test in &item.tests {
         if test.skipped {
@@ -817,6 +891,129 @@ fn print_scripts(style: &Style, item: &apix_runner::ItemResult) {
     }
     if let Some(error) = &item.test_error {
         println!("  {}test script error: {error}{}", style.red, style.reset);
+    }
+}
+
+/// `apix send` on a `ws://` or `wss://` request: connect, send the saved
+/// messages (or `--message` texts), print what goes both ways, and close
+/// after `listen` seconds (0 waits for the server). Fails on errors.
+async fn websocket(
+    style: &Style,
+    request: apix_core::Request,
+    vars: &Variables,
+    extra: Vec<String>,
+    listen: f64,
+    include_headers: bool,
+) -> Result<bool> {
+    use apix_http::ws::{WsCommand, WsData, WsEvent};
+
+    let outgoing: Vec<String> = if extra.is_empty() {
+        let mut missing = std::collections::BTreeSet::new();
+        let bodies = request
+            .messages
+            .iter()
+            .map(|m| vars.interpolate(&m.body, &mut missing))
+            .collect();
+        if !missing.is_empty() {
+            let names: Vec<_> = missing.into_iter().collect();
+            bail!(
+                "undefined variable(s) in the messages: {}",
+                names.join(", ")
+            );
+        }
+        bodies
+    } else {
+        extra
+    };
+    let started = std::time::Instant::now();
+    let connection = apix_http::ws::connect(&request).await?;
+    println!(
+        "{}{} Switching Protocols{}  {}connected to {}{}",
+        style.green, connection.status, style.reset, style.dim, request.url, style.reset
+    );
+    if include_headers {
+        for (k, v) in &connection.headers {
+            println!("{}{k}{}: {v}", style.dim, style.reset);
+        }
+        println!();
+    }
+    let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+    for text in outgoing {
+        let _ = tx.send(WsCommand::Send(WsData::Text(text)));
+    }
+    if listen > 0.0 {
+        let closer = tx.clone();
+        tokio::spawn(async move {
+            tokio::time::sleep(std::time::Duration::from_secs_f64(listen)).await;
+            let _ = closer.send(WsCommand::Close);
+        });
+    }
+    let mut ok = true;
+    connection
+        .run(rx, |event| {
+            let at = format!("{:>8.2}s", started.elapsed().as_secs_f64());
+            let show = |data: &WsData| match data {
+                WsData::Text(text) => text.clone(),
+                WsData::Binary(bytes) => format!("<{} bytes of binary>", bytes.len()),
+            };
+            match event {
+                WsEvent::Sent(data) => println!(
+                    "{}{at}{} {}↑{} {}",
+                    style.dim,
+                    style.reset,
+                    style.yellow,
+                    style.reset,
+                    show(&data)
+                ),
+                WsEvent::Received(data) => println!(
+                    "{}{at}{} {}↓{} {}",
+                    style.dim,
+                    style.reset,
+                    style.green,
+                    style.reset,
+                    show(&data)
+                ),
+                WsEvent::Closed { code, reason } => {
+                    let code = code.map(|c| format!(" {c}")).unwrap_or_default();
+                    let reason = if reason.is_empty() {
+                        String::new()
+                    } else {
+                        format!(": {reason}")
+                    };
+                    println!("{}closed{code}{reason}{}", style.dim, style.reset);
+                }
+                WsEvent::Error(message) => {
+                    ok = false;
+                    println!("{}error: {message}{}", style.red, style.reset);
+                }
+            }
+        })
+        .await;
+    drop(tx);
+    Ok(ok)
+}
+
+/// One server-sent event: when it came, its type and id, then its data.
+fn print_event(style: &Style, at: std::time::Duration, event: &apix_http::sse::SseEvent) {
+    let id = event
+        .id
+        .as_deref()
+        .map(|id| format!(" #{id}"))
+        .unwrap_or_default();
+    println!(
+        "{}{:>8.2}s{} {}{}{}{}{}{}",
+        style.dim,
+        at.as_secs_f64(),
+        style.reset,
+        style.green,
+        event.event,
+        style.reset,
+        style.dim,
+        id,
+        style.reset
+    );
+    for line in event.data.lines() {
+        println!("          {line}");
     }
 }
 

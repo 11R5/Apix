@@ -407,6 +407,8 @@ request.tab.body: Cuerpo
 request.tab.body_kind: Cuerpo · %{kind}
 request.tab.headers: Encabezados
 request.tab.headers_count: Encabezados %{count}
+request.tab.messages: "Mensajes"
+request.tab.messages_count: "Mensajes %{count}"
 request.tab.params: Parámetros
 request.tab.params_count: Parámetros %{count}
 request.tab.scripts: Scripts
@@ -561,6 +563,12 @@ sidebar.rename: Cambiar nombre…
 sidebar.run: "Ejecutar…"
 sidebar.settings: Ajustes de petición…
 sidebar.show_in_environment: Mostrar en el entorno
+stream.count: "%{count} eventos"
+stream.live: "En vivo"
+stream.older_hidden: "No se muestran %{count} eventos anteriores"
+stream.stop: "Detener"
+stream.stopped: "detenido"
+stream.waiting: "Conectado. Esperando el primer evento…"
 table.add: Añadir
 table.key: Clave
 table.value: Valor
@@ -620,3 +628,19 @@ vault.unlock_title: Desbloquear “%{name}”
 vault.use_password: Usar la contraseña
 vault.use_recovery: ¿Olvidaste la contraseña? Usa la clave de recuperación
 vault.working: Procesando… derivar la clave tarda un momento a propósito.
+ws.binary: "<%{count} bytes binarios>"
+ws.closed: "Cerrada"
+ws.closed_code: "Cerrada (%{code})"
+ws.closed_reason: "Cerrada (%{code}): %{reason}"
+ws.connect: "Conectar"
+ws.connected: "Conectado a %{url}"
+ws.connecting: "Conectando…"
+ws.disconnect: "Desconectar"
+ws.error: "Error: %{error}"
+ws.failed: "Conexión perdida"
+ws.open: "Conectado"
+ws.save: "Guardar mensaje"
+ws.saved: "Mensajes guardados (%{count})"
+ws.saved_empty: "Los mensajes que guardes aquí se conservan en el archivo de la petición. Haz clic en uno para editarlo."
+ws.send: "Enviar"
+ws.send_hint: "Ctrl+Intro envía; se rellenan las {{variables}}"

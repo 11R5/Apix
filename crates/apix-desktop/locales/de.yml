@@ -407,6 +407,8 @@ request.tab.body: Body
 request.tab.body_kind: Body · %{kind}
 request.tab.headers: Header
 request.tab.headers_count: Header %{count}
+request.tab.messages: "Nachrichten"
+request.tab.messages_count: "Nachrichten %{count}"
 request.tab.params: Parameter
 request.tab.params_count: Parameter %{count}
 request.tab.scripts: Skripte
@@ -561,6 +563,12 @@ sidebar.rename: Umbenennen…
 sidebar.run: "Ausführen…"
 sidebar.settings: Anfrage-Einstellungen…
 sidebar.show_in_environment: In Umgebung anzeigen
+stream.count: "%{count} Ereignisse"
+stream.live: "Live"
+stream.older_hidden: "%{count} ältere Ereignisse werden nicht angezeigt"
+stream.stop: "Stoppen"
+stream.stopped: "gestoppt"
+stream.waiting: "Verbunden. Warte auf das erste Ereignis…"
 table.add: Hinzufügen
 table.key: Schlüssel
 table.value: Wert
@@ -620,3 +628,19 @@ vault.unlock_title: „%{name}“ entsperren
 vault.use_password: Stattdessen das Passwort verwenden
 vault.use_recovery: Passwort vergessen? Wiederherstellungsschlüssel verwenden
 vault.working: Bitte warten… Das Ableiten des Schlüssels dauert absichtlich einen Moment.
+ws.binary: "<%{count} Bytes Binärdaten>"
+ws.closed: "Geschlossen"
+ws.closed_code: "Geschlossen (%{code})"
+ws.closed_reason: "Geschlossen (%{code}): %{reason}"
+ws.connect: "Verbinden"
+ws.connected: "Verbunden mit %{url}"
+ws.connecting: "Verbinde…"
+ws.disconnect: "Trennen"
+ws.error: "Fehler: %{error}"
+ws.failed: "Verbindung verloren"
+ws.open: "Verbunden"
+ws.save: "Nachricht speichern"
+ws.saved: "Gespeicherte Nachrichten (%{count})"
+ws.saved_empty: "Hier gespeicherte Nachrichten stehen in der Anfragedatei. Zum Bearbeiten anklicken."
+ws.send: "Senden"
+ws.send_hint: "Strg+Enter sendet; {{Variablen}} werden ersetzt"

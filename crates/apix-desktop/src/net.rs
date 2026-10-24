@@ -130,3 +130,108 @@ pub fn spawn<T: Send + 'static>(
 ) -> impl Future<Output = Result<T, String>> + Send + 'static {
     AbortOnDrop(net().runtime.spawn(async move { Ok(work.await) }))
 }
+
+/// What a streamed send has received so far; the UI reads it while the
+/// request runs.
+#[derive(Default)]
+pub struct Incoming {
+    /// The status and headers, once they are in.
+    pub head: Option<(u16, Vec<(String, String)>)>,
+    /// The response is server-sent events.
+    pub event_stream: bool,
+    /// Body bytes the UI has not taken yet (event streams only).
+    pub fresh: Vec<u8>,
+    /// The finished response, or why it failed.
+    pub result: Option<Result<Response, String>>,
+}
+
+/// Sends an already-resolved request on the network runtime, filling the
+/// returned `Incoming` as the response arrives. Dropping the guard aborts
+/// the request.
+pub fn send_streaming(
+    request: Request,
+) -> (
+    std::sync::Arc<std::sync::Mutex<Incoming>>,
+    impl Drop + Send + 'static,
+) {
+    let incoming = std::sync::Arc::new(std::sync::Mutex::new(Incoming::default()));
+    let shared = incoming.clone();
+    let net = net();
+    let client = net.client.clone();
+    let handle = net.runtime.spawn(async move {
+        let lock = || shared.lock().unwrap_or_else(|e| e.into_inner());
+        let result = client
+            .send_with(&request, |progress| match progress {
+                apix_http::Progress::Head { status, headers } => {
+                    let mut incoming = lock();
+                    incoming.event_stream = headers.iter().any(|(k, v)| {
+                        k.eq_ignore_ascii_case("content-type") && apix_http::sse::is_event_stream(v)
+                    });
+                    incoming.head = Some((status, headers.to_vec()));
+                }
+                apix_http::Progress::Chunk(chunk) => {
+                    let mut incoming = lock();
+                    if incoming.event_stream {
+                        incoming.fresh.extend_from_slice(chunk);
+                    }
+                }
+            })
+            .await
+            .map_err(|e| error_chain(&e));
+        lock().result = Some(result);
+        Ok(())
+    });
+    (incoming, AbortOnDrop(handle))
+}
+
+/// When a WebSocket handshake finished, with its status and headers.
+pub type Opened = (std::time::Instant, u16, Vec<(String, String)>);
+
+/// What an open WebSocket has to report; the UI takes it as it comes.
+#[derive(Default)]
+pub struct SocketIncoming {
+    /// When the handshake finished, its status and headers.
+    pub opened: Option<Opened>,
+    /// Messages and the closing, each with when it happened.
+    pub events: Vec<(std::time::Instant, apix_http::ws::WsEvent)>,
+    /// Why the connection could not be opened.
+    pub failed: Option<String>,
+    /// The connection is over (closed or failed).
+    pub done: bool,
+}
+
+/// Opens a WebSocket for an already-resolved request on the network
+/// runtime. Commands sent before it is open wait their turn. Dropping the
+/// guard drops the connection.
+pub fn ws_connect(
+    request: Request,
+) -> (
+    std::sync::Arc<std::sync::Mutex<SocketIncoming>>,
+    tokio::sync::mpsc::UnboundedSender<apix_http::ws::WsCommand>,
+    impl Drop + Send + 'static,
+) {
+    let incoming = std::sync::Arc::new(std::sync::Mutex::new(SocketIncoming::default()));
+    let shared = incoming.clone();
+    let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+    let handle = net().runtime.spawn(async move {
+        let lock = || shared.lock().unwrap_or_else(|e| e.into_inner());
+        match apix_http::ws::connect(&request).await {
+            Err(e) => lock().failed = Some(error_chain(&e)),
+            Ok(connection) => {
+                lock().opened = Some((
+                    std::time::Instant::now(),
+                    connection.status,
+                    connection.headers.clone(),
+                ));
+                connection
+                    .run(rx, |event| {
+                        lock().events.push((std::time::Instant::now(), event));
+                    })
+                    .await;
+            }
+        }
+        lock().done = true;
+        Ok(())
+    });
+    (incoming, tx, AbortOnDrop(handle))
+}

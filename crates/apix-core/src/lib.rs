@@ -17,7 +17,7 @@ pub mod vfs;
 pub use model::{
     ApiKeyLocation, AssertOp, Assertion, Auth, AwsSigV4, Body, ClientAuth, EffectiveSettings,
     FormPart, GraphQl, KeyValue, Method, OAuth1, OAuth1Method, OAuth2, OAuth2Grant, ProxyChoice,
-    Request, RequestSettings,
+    Request, RequestSettings, WsMessage,
 };
 pub use project::{GroupBy, Project};
 pub use store::{Collection, Environment, StoreError};

@@ -18,10 +18,11 @@
 | M5 Scriptler, testler, runner | ✅ `apix-script` (QuickJS, `pm.*` uyumlu API), istek öncesi ve test scriptleri (koleksiyon → klasör → istek), `pm.test` / `pm.expect` (Chai tarzı), eski `tests[...]` / `postman.*` API'si, konsol, uygulamada Scripts sekmesi ile Tests ve Console sekmeleri, `apix send` / `apix run` script çalıştırma, test sonuçları ve `setNextRequest`, `pm.sendRequest`, hazır kütüphaneler (`require`), kodsuz doğrulamalar, yanıttan değişken kaydetme, Runner penceresi (sıra, tekrar, bekleme, veri dosyası, ilk hatada dur, duraklat/devam/durdur), CSV/JSON veri dosyalı koşular, JUnit XML / JSON / HTML raporlar, `apix run --data/--iterations/--delay/--bail/--junit/--json/--html`, GitHub Actions örneği |
 | Tema paketi (M5 sonrası) | ✅ anında tema değişimi, açık tema ve "sistemi izle", vurgu rengi, saydamlık kaydırıcısı (%0–90, buzlu cam), Dracula/Nord/Solarized/Gün ışığı, `<config>/Apix/themes/*.toml` dosyalarından temalar |
 | CLI ve CI/CD | ✅ `APIX_VAR_<AD>` ve `--env-file` ile gizli değerler, GitHub Action (`uses: 11R5/Apix@…`), Docker imajı, ortam matrisli örnek  |
-| CI temeli | ✅ üç sistemde CI (biçim, docs-check, clippy, testler; motor ve masaüstü), action'ın kendini sınaması, GitLab ve Azure örnekleri; ilk koşu Windows, macOS ve Linux'ta yeşil · sıradaki: M6 (WebSocket ve SSE) |
-| M6–M9 | ⬜ |
+| CI temeli | ✅ üç sistemde CI (biçim, docs-check, clippy, testler; motor ve masaüstü), action'ın kendini sınaması, GitLab ve Azure örnekleri; ilk koşu Windows, macOS ve Linux'ta yeşil |
+| M6 Protokoller | 🔜 · bitti: WebSocket (uygulamada bağlan/kes, Mesajlar sekmesi ve kayıtlı `[[message]]`'lar, iki yönlü canlı günlük; `apix send` ile `--message`/`--listen`), SSE (olaylar geldikçe uygulamada ve `apix send`'de, Esc gelenleri tutar) · sıradaki: GraphQL introspection ve otomatik tamamlama, gRPC, Socket.IO, MQTT, SOAP |
+| M7–M9 | ⬜ |
 
-Release ikili dosyası 38.0 MB (üst sınır 100 MB; QuickJS ve JavaScript renklendirmesi yaklaşık 3.6 MB, Runner 0.8 MB ekledi). Testler: core 57, script 10, runner 16, vault 11, desktop 12, codegen 24, import 26, http 19 (hepsi geçiyor, clippy uyarısız).
+Release ikili dosyası 38.9 MB (üst sınır 100 MB; QuickJS ve JavaScript renklendirmesi yaklaşık 3.6 MB, Runner 0.8 MB, tema paketi ile WebSocket ve SSE 0.9 MB ekledi). 24 Ekim ölçümü: açılış 278 ms, boşta 84 MB, 100 MB JSON 306 ms. Testler: core 58, script 10, runner 16, vault 11, desktop 16, codegen 24, import 26, http 28 (hepsi geçiyor, clippy uyarısız).
 
 ### Kullanıcı notları (17 Ekim 2026) ve plana nasıl işlendikleri
 | # | Not | Nereye işlendi |
@@ -63,7 +64,7 @@ Apix, Postman'in yaptığı her şeyi yapan bir API istemcisi olacak. Postman'de
 | Kural | Ne anlama geliyor |
 |---|---|
 | **Minimalist** | Ekranda sadece o an gereken şey görünür. Gerisi Ctrl/⌘+K komut paletinde durur. |
-| **Hafif** | Hız, akıcılık ve özellik boyuttan önce gelir. Program dosyası için üst sınır 100 MB (not 11; şu an 33.1 MB; Postman ve Electron uygulamaları 300 MB'ı aşıyor). Açılış 150 ms'nin, boşta bellek kullanımı 60 MB'ın altında kalır (şu an 69 MB ölçüldü). |
+| **Hafif** | Hız, akıcılık ve özellik boyuttan önce gelir. Program dosyası için üst sınır 100 MB (not 11; şu an 38.9 MB; Postman ve Electron uygulamaları 300 MB'ı aşıyor). Açılış 150 ms'nin, boşta bellek kullanımı 60 MB'ın altında kalır (şu an 69 MB ölçüldü). |
 | **Hızlı** | Arayüz hiç donmaz. 100 MB'lık bir yanıt bile kare kaybetmeden kaydırılır. |
 | **Local-first** | Hesap ve bulut zorunlu değildir. Koleksiyonlar düz dosya olarak durur ve git ile versiyonlanır. |
 | **Postman'den kolay geçiş** | Postman koleksiyonları, ortamları ve scriptleri içe aktarılınca çalışır. |
@@ -373,8 +374,8 @@ Bir koleksiyon (veya proje) parola ile şifrelenir. Parolayı bilmeyen hiçbir a
 | Protokol | Ayrıntı | Durum |
 |---|---|---|
 | **GraphQL** | Şema introspection, otomatik tamamlama, değişkenler, şema gezgini | ⬜ L |
-| **WebSocket** | Bağlan ve bağlantıyı kes, mesaj gönder, mesajları zaman damgasıyla listele, kayıtlı mesaj şablonları | ⬜ M |
-| **Server-Sent Events** | Canlı olay akışı | ⬜ S |
+| **WebSocket** | Bağlan ve bağlantıyı kes, mesaj gönder, mesajları zaman damgasıyla listele, kayıtlı mesaj şablonları | ✅ `ws://`/`wss://` adresi isteği WebSocket yapar; el sıkışmada parametre, başlık ve auth (OAuth 2.0 dahil); Mesajlar sekmesi (Ctrl+Enter gönderir, `{{değişkenler}}` doldurulur, bağlantı yoksa önce bağlanır), dosyada `[[message]]` şablonları; ↑/↓ zaman damgalı günlük, kapanış kodu ve nedeni; sekme arkadayken de sürer; `apix send` (`--message`, `--listen`), `apix run` atlar · ⬜ ikili mesaj gönderme, ping aralığı, alt protokol seçimi, TLS doğrulamasını kapatma |
+| **Server-Sent Events** | Canlı olay akışı | ✅ `text/event-stream` yanıtında olaylar geldikçe (zaman, tür, id, veri); Durdur/Esc gelenleri tutar; biten akış Biçimli sekmesinde liste; `apix send` olayları geldikçe yazar; motor `send_with` ile gövdeyi parça parça bildirir · ⬜ olay türüne göre süzme, kopan bağlantıda `retry` ile yeniden bağlanma |
 | **gRPC** | Unary ve streaming çağrılar, `.proto` dosyası veya sunucu yansıması (reflection), metadata | ⬜ L · kullanıcı isteği (not 17): M4 içe aktarıcılarından sonra öne alınabilir |
 | **Socket.IO** | | ⬜ M |
 | **MQTT** | Abone ol ve yayınla | ⬜ M |
@@ -455,7 +456,7 @@ Docs/
 | **Yeni dil ekleme** | `languages.toml`'a bir satır, yeni klasör, arayüz için `locales/<kod>.yml`. Kod değişikliği gerekmez. | ✅ |
 | **Görselli kullanım kılavuzu** (not 15) | Her dilde, o dilin arayüzünden alınmış ekran görüntüleri. Görüntüler bir betikle otomatik alınır (uygulama örnek projeyle, ilgili dilde açılır), böylece arayüz değişince kılavuz bir komutla yenilenir. | ✅ İngilizce ve Türkçe, 7 ekran görüntüsü (elle alındı) · ⬜ betikle otomatik çekim ve diğer diller (M9) |
 | **README: neden Apix** (not 16) | Postman, Insomnia, Bruno, Hoppscotch ve HTTPie ile karşılaştırma: yerel GPU arayüzü (Electron yok), dosya tabanlı koleksiyonlar, hesap zorunluluğu yok, şifreli koleksiyonlar, ağ denetçisi, CLI ile birebir aynı motor. Sadece doğrulanabilir iddialar. | ✅ (Postman, Insomnia, Bruno, Hoppscotch; HTTPie notu) |
-| **Performans ölçümleri** (not 16) | Açılış süresi, boşta bellek, ikili boyutu, 100 MB JSON açma ve kaydırma; ölçüm betiği repoda, sonuçlar README'de ve her sürümde güncellenir. Rakip uygulamalar aynı makinede, aynı betikle ölçülür. | ✅ Apix: `scripts/measure.ps1` (ikili 33.1 MB, ilk kare 274 ms, boşta 83 MB, 100 MB JSON 325 ms) · ⬜ karşılaştırmalı (M9) |
+| **Performans ölçümleri** (not 16) | Açılış süresi, boşta bellek, ikili boyutu, 100 MB JSON açma ve kaydırma; ölçüm betiği repoda, sonuçlar README'de ve her sürümde güncellenir. Rakip uygulamalar aynı makinede, aynı betikle ölçülür. | ✅ Apix: `scripts/measure.ps1` (24 Ekim: ikili 38.9 MB, ilk kare 278 ms, boşta 84 MB, 100 MB JSON 306 ms) · ⬜ karşılaştırmalı (M9) |
 
 ## 3. Postman → Apix karşılık tablosu
 | Postman | Apix | Aşama |
@@ -578,7 +579,9 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 - [x] Linux ve macOS: ilk koşuda (24 Ekim) CLI ve masaüstü uygulaması üç sistemde de hatasız derlendi, clippy ve testler geçti; düzeltme gerekmedi. 10 işin hepsi yeşil, en uzunu Windows masaüstü (~24 dk).
 
 ### M6 — Protokoller
-- WebSocket, SSE (önce bunlar), GraphQL introspection ve otomatik tamamlama, gRPC, Socket.IO, MQTT, SOAP
+1. [x] **WebSocket ve SSE** (24 Ekim): motor `send_with` (yanıt parça parça), `apix_http::sse` (SSE ayrıştırıcı), `apix_http::ws` (tokio-tungstenite, aynı rustls); uygulamada canlı olay listesi, WebSocket Mesajlar sekmesi ve günlüğü; CLI'da olaylar ve mesajlar geldikçe; örnek sunucular `sse_server` ve `ws_server`. Ayrıntı §H.
+2. [ ] GraphQL introspection ve otomatik tamamlama
+3. [ ] gRPC, Socket.IO, MQTT, SOAP
 
 ### M7 — İleri özellikler
 - **Rota ve ağ haritası (§B2)** (not 9): traceroute, çevrimdışı IP konum veritabanı ile dünya haritası
@@ -598,9 +601,9 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 - **Hazır ikili dosyalar** (GitHub Releases); GitHub Action derlemek yerine onları indirir, saniyeler içinde çalışır.
 - **Docker imajı:** Linux'ta derleyip denemek ve ghcr.io'ya yayımlamak (kullanıcı notu: "proje bitince derleyip bakalım").
 - **Marketplace:** GitHub Marketplace iş akışı dosyası olan depoyu kabul etmediği için ayrı, küçük bir `apix-action` deposu.
-- **Performans hedefleri:** açılış 150 ms ve boşta 60 MB bütçesine inmek (şu an 274 ms ve 83 MB).
+- **Performans hedefleri:** açılış 150 ms ve boşta 60 MB bütçesine inmek (şu an 278 ms ve 84 MB).
 - Kurulum paketleri: `.msi` ve winget, `.dmg` ve Homebrew, AppImage, Flatpak ve `.deb`
-- İkili boyutunu izlemek: üst sınır 100 MB (not 11). Şu an release 33.1 MB; içinde 2.2 MB font, simgeler ve tree-sitter var. CJK ve Arapça yazı tipleri eklenince büyür; sınır hız ve akıcılık için tanındı, boyut için ödün verilmez.
+- İkili boyutunu izlemek: üst sınır 100 MB (not 11). Şu an release 38.9 MB; içinde 2.2 MB font, simgeler ve tree-sitter var. CJK ve Arapça yazı tipleri eklenince büyür; sınır hız ve akıcılık için tanındı, boyut için ödün verilmez.
 - **Tüm dillerde dokümantasyon (§N, not 14, 15):** 9 dilde kullanım kılavuzu, mimari, teknik altyapı, iş akışları; her dilin kendi arayüzünden otomatik alınmış ekran görüntüleriyle görselli kılavuz; dokümantasyon sitesinde dil seçici
 - **Karşılaştırmalı performans (not 16):** Apix ile Postman, Insomnia, Bruno ve Hoppscotch aynı makinede, aynı betikle ölçülür; sonuçlar README'de
 - **İmzalı sürümler:** Windows kod imzası (Akıllı Uygulama Denetimi engellemesin diye) ve macOS notarization

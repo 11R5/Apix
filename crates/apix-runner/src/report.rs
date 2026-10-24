@@ -153,7 +153,7 @@ impl RunReport {
             }
             if item.skipped {
                 out += &format!(
-                    "    <testcase name=\"{}\" classname=\"{class}\" time=\"0\">\n      <skipped message=\"skipped by its pre-request script\"/>\n    </testcase>\n",
+                    "    <testcase name=\"{}\" classname=\"{class}\" time=\"0\">\n      <skipped message=\"skipped\"/>\n    </testcase>\n",
                     xml(&format!("{} {}", item.method, item.name)),
                 );
             }

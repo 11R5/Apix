@@ -546,6 +546,34 @@ pub struct Request {
     /// Checks on the response written without code, run after the test scripts.
     #[serde(default, rename = "assert", skip_serializing_if = "Vec::is_empty")]
     pub asserts: Vec<Assertion>,
+    /// Saved messages of a WebSocket request (`ws://` or `wss://`), sent
+    /// when asked; stored as `[[message]]`.
+    #[serde(default, rename = "message", skip_serializing_if = "Vec::is_empty")]
+    pub messages: Vec<WsMessage>,
+}
+
+/// A message saved with a WebSocket request. `{{variables}}` in the body
+/// are filled in when it is sent.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct WsMessage {
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub name: String,
+    pub body: String,
+}
+
+impl WsMessage {
+    /// The name, or the start of the body when it has none.
+    pub fn label(&self) -> String {
+        if !self.name.is_empty() {
+            return self.name.clone();
+        }
+        let first = self.body.trim().lines().next().unwrap_or_default();
+        let mut label: String = first.chars().take(40).collect();
+        if first.chars().count() > 40 || self.body.trim().lines().count() > 1 {
+            label.push('…');
+        }
+        label
+    }
 }
 
 /// A check on the response without code, like `status == 200` or
@@ -758,6 +786,40 @@ proxy = ""
         let text = toml::to_string_pretty(&req).unwrap();
         let back: Request = toml::from_str(&text).unwrap();
         assert_eq!(req, back);
+    }
+
+    #[test]
+    fn websocket_messages_round_trip() {
+        let text = r#"
+name = "Chat"
+url = "wss://example.com/chat"
+
+[[message]]
+name = "Join"
+body = '{"join": "{{room}}"}'
+
+[[message]]
+body = "ping"
+"#;
+        let req: Request = toml::from_str(text).unwrap();
+        assert_eq!(req.messages.len(), 2);
+        assert_eq!(req.messages[0].label(), "Join");
+        assert_eq!(req.messages[1].label(), "ping");
+        let back: Request = toml::from_str(&toml::to_string_pretty(&req).unwrap()).unwrap();
+        assert_eq!(req, back);
+        // Variables in messages wait until each is sent.
+        let mut vars = crate::Variables::new();
+        vars.set("room", "7");
+        assert_eq!(
+            req.resolve(&vars).request.messages[0].body,
+            r#"{"join": "{{room}}"}"#
+        );
+        let long = WsMessage {
+            name: String::new(),
+            body: "a much longer first line that goes on and on and on\nsecond".into(),
+        };
+        assert_eq!(long.label().chars().count(), 41);
+        assert!(long.label().ends_with('…'));
     }
 
     #[test]

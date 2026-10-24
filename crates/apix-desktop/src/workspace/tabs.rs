@@ -520,3 +520,16 @@ fn short(method: Method) -> &'static str {
         other => other.as_str(),
     }
 }
+
+impl Workspace {
+    /// Puts `state` in the parked tab of `path` (a stream that started
+    /// while its tab was in the back).
+    pub(super) fn set_parked_response(&mut self, path: Option<PathBuf>, state: ResponseState) {
+        if let Some(parked) = path
+            .and_then(|p| self.tab_index(&p))
+            .and_then(|ix| self.tabs[ix].parked.as_mut())
+        {
+            parked.response = state;
+        }
+    }
+}

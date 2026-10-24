@@ -407,6 +407,8 @@ request.tab.body: ボディ
 request.tab.body_kind: ボディ · %{kind}
 request.tab.headers: ヘッダー
 request.tab.headers_count: ヘッダー %{count}
+request.tab.messages: "メッセージ"
+request.tab.messages_count: "メッセージ %{count}"
 request.tab.params: パラメーター
 request.tab.params_count: パラメーター %{count}
 request.tab.scripts: スクリプト
@@ -561,6 +563,12 @@ sidebar.rename: 名前を変更…
 sidebar.run: "実行…"
 sidebar.settings: リクエスト設定…
 sidebar.show_in_environment: 環境で表示
+stream.count: "%{count} 件のイベント"
+stream.live: "ライブ"
+stream.older_hidden: "古いイベント %{count} 件は表示されていません"
+stream.stop: "停止"
+stream.stopped: "停止済み"
+stream.waiting: "接続しました。最初のイベントを待っています…"
 table.add: 追加
 table.key: キー
 table.value: 値
@@ -620,3 +628,19 @@ vault.unlock_title: 「%{name}」のロックを解除
 vault.use_password: 代わりにパスワードを使用
 vault.use_recovery: パスワードを忘れた場合は回復キーを使用
 vault.working: 処理中… キーの導出には意図的に時間がかかります。
+ws.binary: "<%{count} バイトのバイナリ>"
+ws.closed: "切断されました"
+ws.closed_code: "切断されました (%{code})"
+ws.closed_reason: "切断されました (%{code}): %{reason}"
+ws.connect: "接続"
+ws.connected: "%{url} に接続しました"
+ws.connecting: "接続中…"
+ws.disconnect: "切断"
+ws.error: "エラー: %{error}"
+ws.failed: "接続が切れました"
+ws.open: "接続済み"
+ws.save: "メッセージを保存"
+ws.saved: "保存したメッセージ (%{count})"
+ws.saved_empty: "ここで保存したメッセージはリクエストファイルに保存されます。クリックすると編集できます。"
+ws.send: "送信"
+ws.send_hint: "Ctrl+Enter で送信。{{変数}} は置き換えられます"

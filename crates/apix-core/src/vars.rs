@@ -236,6 +236,8 @@ impl Request {
             },
             // Filled in when they run, with what scripts set by then.
             asserts: self.asserts.clone(),
+            // Filled in one by one when each is sent.
+            messages: self.messages.clone(),
         };
         Resolved { request, missing }
     }

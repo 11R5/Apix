@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:a35b6e83b59155ff -->
+<!-- translated from en/architecture.md sha256:b4b355db5d4c1496 -->
 
 # Apix mimarisi
 
@@ -21,7 +21,7 @@ Apix, Rust ile yazılmış native bir API istemcisidir. Arayüz,
    kaydırılabilmelidir. Yalnızca görünen satırlar yerleştirilir (sanal listeler) ve
    gövde tembel (lazy) ayrıştırılır.
 5. **Hafif ve hızlı açılış.** Hız ve özellikler boyuttan önce gelir. Release
-   binary'si 100 MB'ın altında kalır (bugün 33.1 MB; Electron uygulamaları 300 MB+)
+   binary'si 100 MB'ın altında kalır (bugün 38.9 MB; Electron uygulamaları 300 MB+)
    ve pencereyi 150 ms'den kısa sürede açar.
 
 ## Crate'ler
@@ -30,7 +30,8 @@ Apix, Rust ile yazılmış native bir API istemcisidir. Arayüz,
 crates/
 ├── apix-core     istek modeli, {{variables}} ve {{$dynamic}} değerleri, disk formatı,
 │                 projeler, ortamlar ve gizli değerler, ağaç ve dosya işlemleri
-├── apix-http     HTTP motoru: reqwest + rustls, zamanlamalar, yanıt yakalama, ağ izi
+├── apix-http     HTTP motoru: reqwest + rustls, zamanlamalar, yanıt yakalama, ağ izi,
+│                 sunucu olayları (SSE), WebSocket (tokio-tungstenite)
 │                 (DNS, bağlantı kurulumu, yönlendirmeler, sertifika, yerel ağ arayüzü)
 ├── apix-import   Postman v2.0/v2.1 koleksiyonları ve ortamları → Apix koleksiyonları
 ├── apix-codegen  istekler ↔ kabuk komutları: curl (bash), curl.exe (cmd), PowerShell; yapıştırılan curl'ü ayrıştırır; 10 dilde kod
@@ -348,6 +349,34 @@ masaüstü Runner'ı (`workspace/runner_ui.rs`) koşuyu ağ çalışma zamanınd
 yürütür ve ilerlemeyi paylaşılan bir `Live` yapısından saniyede birkaç kez
 okur; görünüm workspace'te kaldığı için koşu penceresinden uzun yaşar.
 
+## Akışlar ve WebSocket (M6)
+
+`HttpClient::send_with`, durum ve başlıklar gelir gelmez `Progress::Head`'i,
+sonra gövdenin her parçasını `Progress::Chunk` olarak bildirir; `send` hiçbir
+şey dinlemeyen bir `send_with`'tir ve yanıt yine bütün gövdeyi tutar.
+`apix_http::sse`, `text/event-stream` gövdelerini parça parça okur
+(`SseParser`: her satır sonu biçimi, parça her yerden bölünebilir, `id`
+sonraki olaylara taşınır, bitmemiş son olay atılır).
+
+`apix_http::ws::connect`, el sıkışmayı isteğin HTTP tarafının göndereceği
+biçimden kurar (`prepare`: parametreler, başlıklar, yetkilendirme; OAuth 2.0
+önce bearer token'a döner) ve aynı rustls üzerinde tokio-tungstenite ile
+bağlanır. `WsConnection::run` bir `WsCommand` kanalının istediklerini
+gönderir ve iki taraftan biri kapatana kadar `WsEvent`'leri (gönderildi,
+geldi, kod ve nedenle kapandı, hata) bildirir; ping ve pong'u tungstenite
+yanıtlar.
+
+Masaüstü uygulamasında ağ çalışma zamanı paylaşılan yapıları doldurur (bir
+gönderim için `net::Incoming`, bir soket için `net::SocketIncoming`) ve bir
+arayüz görevi onları 60–80 ms'de bir okur. Olay akışı olan bir yanıt
+`ResponseState::Streaming` olur (`workspace/stream_ui.rs`): yukarı
+kaydırılmadıkça yeni olayları izleyen canlı bir liste; Esc gelenleri bitmiş
+bir yanıta çevirir. `ws://` adresi istek alanını Mesajlar sekmesine
+(`workspace/ws_editor.rs`), yanıt alanını `ResponseState::Socket`'e
+(`workspace/socket_ui.rs`) geçirir. İki durum da bitmiş bir yanıt gibi kendi
+sekmesine yönlendirilir; bu yüzden akış ya da soket arkadaki bir sekmede de
+sürer. CLI olayları ve mesajları aynı geri çağırmalardan yazar.
+
 ## Temalar
 
 Renkler `theme.rs` içindedir. Bir `ThemeDef` bir temadır (yerleşik ya da
@@ -476,11 +505,11 @@ yüklüyken yaklaşık 407 MB'tır; boştayken 69 MB.
 
 | Metrik                              | Hedef             | Ölçülen (Windows, release)  |
 |-------------------------------------|-------------------|-----------------------------|
-| Soğuk başlangıçtan ilk kareye       | < 150 ms          | 274 ms (`main`'den ilk kareye) |
-| Boştaki RAM                         | < 60 MB           | 83 MB working set, örnek koleksiyon açık |
-| Release binary'si                   | < 100 MB          | 33.1 MB |
+| Soğuk başlangıçtan ilk kareye       | < 150 ms          | 278 ms (`main`'den ilk kareye) |
+| Boştaki RAM                         | < 60 MB           | 84 MB working set, örnek koleksiyon açık |
+| Release binary'si                   | < 100 MB          | 38.9 MB |
 | Girdiden çizime gecikme             | 1 kare (120 Hz'de ≤ 8 ms) | ölçülmedi |
-| 100 MB JSON gövdesini açma ve kaydırma | kare düşmesi yok | gönderdikten 325 ms sonra ekranda (yerel sunucu); kare süreleri ölçülmedi |
+| 100 MB JSON gövdesini açma ve kaydırma | kare düşmesi yok | gönderdikten 306 ms sonra ekranda (yerel sunucu); kare süreleri ölçülmedi |
 
 Başlangıç süresi ve boştaki bellek bugün bütçenin üzerinde; bunların profilinin
 çıkarılması planlanıyor. Rakamlar `scripts/measure.ps1`'den gelir (bkz.

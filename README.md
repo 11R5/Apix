@@ -57,12 +57,12 @@ HTTPie is best known for its `http` command; its desktop app (Electron) is in be
 
 | Measure | Apix 0.1.0 |
 |---|---|
-| Release binary | 33.1 MB |
-| Start to first frame | 274 ms |
-| Memory when idle (working set) | 83 MB |
-| 100 MB JSON response on screen | 325 ms |
+| Release binary | 38.9 MB |
+| Start to first frame | 278 ms |
+| Memory when idle (working set) | 84 MB |
+| 100 MB JSON response on screen | 306 ms |
 
-Windows 11 (build 26300), AMD Ryzen 9 7900X, release build, median of 5 runs, 2026-10-18.
+Windows 11 (build 26300), AMD Ryzen 9 7900X, release build, median of 5 runs, 2026-10-24.
 
 Reproduce it with `scripts/measure.ps1` (see the [technical notes](Docs/en/technical.md#measuring-performance)).
 Measurements of the other tools on the same machine are planned.
@@ -112,6 +112,10 @@ Measurements of the other tools on the same machine are planned.
 - **Copy as** `curl` (bash or fish), `curl.exe`, PowerShell, HTTPie or wget, or as code in fetch, axios,
   Python, Go, Rust, C#, Java, PHP, Swift and Kotlin; **paste** a `curl` command
   to fill a request.
+- **WebSocket and server-sent events:** `ws://` requests connect, send typed
+  or saved messages and log both directions live; `text/event-stream`
+  responses show their events as they arrive. `apix send` does both in a
+  terminal.
 - **History** of sent requests with their responses (Ctrl+H): search it and
   send any of them again.
 - **Command palette** (Ctrl+K) and a menu bar that holds every command.
@@ -137,6 +141,8 @@ apix send examples/jsonplaceholder/health.apix --env local --network
 apix run examples/jsonplaceholder            # non-zero exit if any request fails
 apix run my-api --data users.csv --junit report.xml --html report.html --bail
 APIX_VAR_TOKEN=… apix run my-api --env staging --env-file .env.ci
+apix send chat/socket.apix --message '{"join":"room-1"}' --listen 10   # a ws:// request
+apix send events/live.apix                   # server-sent events, printed as they arrive
 apix shell examples/jsonplaceholder/users/create-user.apix --as powershell
 apix import "My API.postman_collection.json"
 APIX_PASSWORD=… apix run my-api-encrypted --env staging

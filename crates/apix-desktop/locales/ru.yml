@@ -407,6 +407,8 @@ request.tab.body: Тело
 request.tab.body_kind: Тело · %{kind}
 request.tab.headers: Заголовки
 request.tab.headers_count: Заголовки %{count}
+request.tab.messages: "Сообщения"
+request.tab.messages_count: "Сообщения %{count}"
 request.tab.params: Параметры
 request.tab.params_count: Параметры %{count}
 request.tab.scripts: Скрипты
@@ -561,6 +563,12 @@ sidebar.rename: Переименовать…
 sidebar.run: "Запустить…"
 sidebar.settings: Настройки запросов…
 sidebar.show_in_environment: Показать в окружении
+stream.count: "Событий: %{count}"
+stream.live: "В эфире"
+stream.older_hidden: "Старые события не показаны: %{count}"
+stream.stop: "Остановить"
+stream.stopped: "остановлено"
+stream.waiting: "Подключено. Ждём первое событие…"
 table.add: Добавить
 table.key: Ключ
 table.value: Значение
@@ -620,3 +628,19 @@ vault.unlock_title: Разблокировать «%{name}»
 vault.use_password: Использовать пароль
 vault.use_recovery: Забыли пароль? Используйте ключ восстановления
 vault.working: Подождите… получение ключа намеренно занимает некоторое время.
+ws.binary: "<%{count} байт двоичных данных>"
+ws.closed: "Закрыто"
+ws.closed_code: "Закрыто (%{code})"
+ws.closed_reason: "Закрыто (%{code}): %{reason}"
+ws.connect: "Подключиться"
+ws.connected: "Подключено к %{url}"
+ws.connecting: "Подключение…"
+ws.disconnect: "Отключиться"
+ws.error: "Ошибка: %{error}"
+ws.failed: "Соединение потеряно"
+ws.open: "Подключено"
+ws.save: "Сохранить сообщение"
+ws.saved: "Сохранённые сообщения (%{count})"
+ws.saved_empty: "Сохранённые здесь сообщения хранятся в файле запроса. Нажмите на сообщение, чтобы изменить его."
+ws.send: "Отправить"
+ws.send_hint: "Ctrl+Enter отправляет; {{переменные}} подставляются"

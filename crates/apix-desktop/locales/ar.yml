@@ -407,6 +407,8 @@ request.tab.body: المتن
 request.tab.body_kind: المتن · %{kind}
 request.tab.headers: الترويسات
 request.tab.headers_count: الترويسات %{count}
+request.tab.messages: "الرسائل"
+request.tab.messages_count: "الرسائل %{count}"
 request.tab.params: المعاملات
 request.tab.params_count: المعاملات %{count}
 request.tab.scripts: السكربتات
@@ -561,6 +563,12 @@ sidebar.rename: إعادة تسمية…
 sidebar.run: "تشغيل…"
 sidebar.settings: إعدادات الطلب…
 sidebar.show_in_environment: العرض في البيئة
+stream.count: "%{count} أحداث"
+stream.live: "مباشر"
+stream.older_hidden: "لا تُعرض %{count} أحداث أقدم"
+stream.stop: "إيقاف"
+stream.stopped: "متوقف"
+stream.waiting: "تم الاتصال. في انتظار أول حدث…"
 table.add: إضافة
 table.key: المفتاح
 table.value: القيمة
@@ -620,3 +628,19 @@ vault.unlock_title: فتح قفل «%{name}»
 vault.use_password: استخدام كلمة المرور بدلًا من ذلك
 vault.use_recovery: نسيت كلمة المرور؟ استخدم مفتاح الاسترداد
 vault.working: جارٍ العمل… اشتقاق المفتاح يستغرق لحظة عن قصد.
+ws.binary: "<%{count} بايت من البيانات الثنائية>"
+ws.closed: "مغلق"
+ws.closed_code: "مغلق (%{code})"
+ws.closed_reason: "مغلق (%{code}): %{reason}"
+ws.connect: "اتصال"
+ws.connected: "تم الاتصال بـ %{url}"
+ws.connecting: "جارٍ الاتصال…"
+ws.disconnect: "قطع الاتصال"
+ws.error: "خطأ: %{error}"
+ws.failed: "انقطع الاتصال"
+ws.open: "متصل"
+ws.save: "حفظ الرسالة"
+ws.saved: "الرسائل المحفوظة (%{count})"
+ws.saved_empty: "تُحفظ الرسائل التي تحفظها هنا في ملف الطلب. انقر على رسالة لتعديلها."
+ws.send: "إرسال"
+ws.send_hint: "Ctrl+Enter للإرسال؛ تُستبدل {{المتغيرات}}"

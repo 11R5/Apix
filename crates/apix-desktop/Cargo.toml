@@ -30,7 +30,7 @@ serde.workspace = true
 serde_json.workspace = true
 # The system language, for the first start (already built by gpui).
 sys-locale = "0.3"
-tokio.workspace = true
+tokio = { workspace = true, features = ["sync"] }
 toml.workspace = true
 # Deleting from the sidebar moves files to the OS trash instead of removing them.
 trash = "5"

@@ -3,7 +3,9 @@
 
 mod local;
 pub mod oauth2;
+pub mod sse;
 mod trace;
+pub mod ws;
 
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -145,6 +147,12 @@ impl Response {
     pub fn is_json(&self) -> bool {
         self.header("content-type")
             .is_some_and(|ct| ct.contains("json"))
+    }
+
+    /// A `text/event-stream` body (server-sent events).
+    pub fn is_event_stream(&self) -> bool {
+        self.header("content-type")
+            .is_some_and(sse::is_event_stream)
     }
 
     pub fn is_success(&self) -> bool {
@@ -429,6 +437,18 @@ impl HttpClient {
 
     /// Sends a request whose `{{variables}}` have already been resolved.
     pub async fn send(&self, req: &Request) -> Result<Response, HttpError> {
+        self.send_with(req, |_| {}).await
+    }
+
+    /// Like `send`, reporting the status and headers as soon as they are in
+    /// and then every piece of the body as it arrives, so a stream (server-
+    /// sent events) can be shown while it lasts. The response still holds
+    /// the whole body at the end.
+    pub async fn send_with(
+        &self,
+        req: &Request,
+        mut progress: impl FnMut(Progress<'_>) + Send,
+    ) -> Result<Response, HttpError> {
         // OAuth 2.0 becomes a bearer token first (from the cache, or fetched).
         let with_token;
         let req = match &req.auth {
@@ -494,7 +514,7 @@ impl HttpClient {
 
         let status = response.status();
         let version = format!("{:?}", response.version());
-        let headers = response
+        let headers: Vec<(String, String)> = response
             .headers()
             .iter()
             .map(|(k, v)| {
@@ -504,13 +524,27 @@ impl HttpClient {
                 )
             })
             .collect();
-        let body = response.bytes().await.map_err(|e| {
-            if e.is_timeout() {
-                HttpError::TimedOut
-            } else {
-                HttpError::Request(e)
-            }
-        })?;
+        progress(Progress::Head {
+            status: status.as_u16(),
+            headers: &headers,
+        });
+        let expected = response.content_length().unwrap_or(0).min(64 * 1024 * 1024) as usize;
+        let mut body = Vec::with_capacity(expected);
+        loop {
+            let chunk = response.chunk().await.map_err(|e| {
+                if e.is_timeout() {
+                    HttpError::TimedOut
+                } else {
+                    HttpError::Request(e)
+                }
+            })?;
+            let Some(chunk) = chunk else {
+                break;
+            };
+            progress(Progress::Chunk(&chunk));
+            body.extend_from_slice(&chunk);
+        }
+        let body = Bytes::from(body);
         let total = started.elapsed();
         self.persist_cookies();
 
@@ -528,6 +562,17 @@ impl HttpClient {
             trace,
         })
     }
+}
+
+/// What `HttpClient::send_with` reports while a response comes in.
+pub enum Progress<'a> {
+    /// The status line and headers.
+    Head {
+        status: u16,
+        headers: &'a [(String, String)],
+    },
+    /// A piece of the body.
+    Chunk(&'a [u8]),
 }
 
 /// Sends one request; a failure after a redirect names the redirect target.
@@ -551,7 +596,10 @@ async fn execute(
 }
 
 /// The request as it goes on the wire, signed for AWS or OAuth 1.0.
-fn prepare(client: &reqwest::Client, req: &Request) -> Result<reqwest::Request, HttpError> {
+pub(crate) fn prepare(
+    client: &reqwest::Client,
+    req: &Request,
+) -> Result<reqwest::Request, HttpError> {
     let mut request = build(client, req)?.build()?;
     match &req.auth {
         Auth::AwsSigV4(aws) => {

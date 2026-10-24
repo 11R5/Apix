@@ -20,4 +20,4 @@ apix-runner.workspace = true
 apix-script.workspace = true
 clap.workspace = true
 rpassword = "7"
-tokio.workspace = true
+tokio = { workspace = true, features = ["sync", "time"] }
