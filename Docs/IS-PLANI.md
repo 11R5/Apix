@@ -64,7 +64,7 @@ Apix, Postman'in yaptığı her şeyi yapan bir API istemcisi olacak. Postman'de
 | Kural | Ne anlama geliyor |
 |---|---|
 | **Minimalist** | Ekranda sadece o an gereken şey görünür. Gerisi Ctrl/⌘+K komut paletinde durur. |
-| **Hafif** | Hız, akıcılık ve özellik boyuttan önce gelir. Program dosyası için üst sınır 100 MB (not 11; şu an 33.1 MB; Postman ve Electron uygulamaları 300 MB'ı aşıyor). Açılış 150 ms'nin, boşta bellek kullanımı 60 MB'ın altında kalır (şu an 69 MB ölçüldü). |
+| **Hafif** | Hız, akıcılık ve özellik boyuttan önce gelir. Program dosyası için üst sınır 100 MB (not 11; şu an 38.9 MB; Postman ve Electron uygulamaları 300 MB'ı aşıyor). Açılış 150 ms'nin, boşta bellek kullanımı 60 MB'ın altında kalır (şu an 69 MB ölçüldü). |
 | **Hızlı** | Arayüz hiç donmaz. 100 MB'lık bir yanıt bile kare kaybetmeden kaydırılır. |
 | **Local-first** | Hesap ve bulut zorunlu değildir. Koleksiyonlar düz dosya olarak durur ve git ile versiyonlanır. |
 | **Postman'den kolay geçiş** | Postman koleksiyonları, ortamları ve scriptleri içe aktarılınca çalışır. |
@@ -601,9 +601,9 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 - **Hazır ikili dosyalar** (GitHub Releases); GitHub Action derlemek yerine onları indirir, saniyeler içinde çalışır.
 - **Docker imajı:** Linux'ta derleyip denemek ve ghcr.io'ya yayımlamak (kullanıcı notu: "proje bitince derleyip bakalım").
 - **Marketplace:** GitHub Marketplace iş akışı dosyası olan depoyu kabul etmediği için ayrı, küçük bir `apix-action` deposu.
-- **Performans hedefleri:** açılış 150 ms ve boşta 60 MB bütçesine inmek (şu an 274 ms ve 83 MB).
+- **Performans hedefleri:** açılış 150 ms ve boşta 60 MB bütçesine inmek (şu an 278 ms ve 84 MB).
 - Kurulum paketleri: `.msi` ve winget, `.dmg` ve Homebrew, AppImage, Flatpak ve `.deb`
-- İkili boyutunu izlemek: üst sınır 100 MB (not 11). Şu an release 33.1 MB; içinde 2.2 MB font, simgeler ve tree-sitter var. CJK ve Arapça yazı tipleri eklenince büyür; sınır hız ve akıcılık için tanındı, boyut için ödün verilmez.
+- İkili boyutunu izlemek: üst sınır 100 MB (not 11). Şu an release 38.9 MB; içinde 2.2 MB font, simgeler ve tree-sitter var. CJK ve Arapça yazı tipleri eklenince büyür; sınır hız ve akıcılık için tanındı, boyut için ödün verilmez.
 - **Tüm dillerde dokümantasyon (§N, not 14, 15):** 9 dilde kullanım kılavuzu, mimari, teknik altyapı, iş akışları; her dilin kendi arayüzünden otomatik alınmış ekran görüntüleriyle görselli kılavuz; dokümantasyon sitesinde dil seçici
 - **Karşılaştırmalı performans (not 16):** Apix ile Postman, Insomnia, Bruno ve Hoppscotch aynı makinede, aynı betikle ölçülür; sonuçlar README'de
 - **İmzalı sürümler:** Windows kod imzası (Akıllı Uygulama Denetimi engellemesin diye) ve macOS notarization
