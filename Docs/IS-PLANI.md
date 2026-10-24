@@ -18,10 +18,11 @@
 | M5 Scriptler, testler, runner | ✅ `apix-script` (QuickJS, `pm.*` uyumlu API), istek öncesi ve test scriptleri (koleksiyon → klasör → istek), `pm.test` / `pm.expect` (Chai tarzı), eski `tests[...]` / `postman.*` API'si, konsol, uygulamada Scripts sekmesi ile Tests ve Console sekmeleri, `apix send` / `apix run` script çalıştırma, test sonuçları ve `setNextRequest`, `pm.sendRequest`, hazır kütüphaneler (`require`), kodsuz doğrulamalar, yanıttan değişken kaydetme, Runner penceresi (sıra, tekrar, bekleme, veri dosyası, ilk hatada dur, duraklat/devam/durdur), CSV/JSON veri dosyalı koşular, JUnit XML / JSON / HTML raporlar, `apix run --data/--iterations/--delay/--bail/--junit/--json/--html`, GitHub Actions örneği |
 | Tema paketi (M5 sonrası) | ✅ anında tema değişimi, açık tema ve "sistemi izle", vurgu rengi, saydamlık kaydırıcısı (%0–90, buzlu cam), Dracula/Nord/Solarized/Gün ışığı, `<config>/Apix/themes/*.toml` dosyalarından temalar |
 | CLI ve CI/CD | ✅ `APIX_VAR_<AD>` ve `--env-file` ile gizli değerler, GitHub Action (`uses: 11R5/Apix@…`), Docker imajı, ortam matrisli örnek  |
-| CI temeli | ✅ üç sistemde CI (biçim, docs-check, clippy, testler; motor ve masaüstü), action'ın kendini sınaması, GitLab ve Azure örnekleri; ilk koşu Windows, macOS ve Linux'ta yeşil · sıradaki: M6 (WebSocket ve SSE) |
-| M6–M9 | ⬜ |
+| CI temeli | ✅ üç sistemde CI (biçim, docs-check, clippy, testler; motor ve masaüstü), action'ın kendini sınaması, GitLab ve Azure örnekleri; ilk koşu Windows, macOS ve Linux'ta yeşil |
+| M6 Protokoller | 🔜 · bitti: WebSocket (uygulamada bağlan/kes, Mesajlar sekmesi ve kayıtlı `[[message]]`'lar, iki yönlü canlı günlük; `apix send` ile `--message`/`--listen`), SSE (olaylar geldikçe uygulamada ve `apix send`'de, Esc gelenleri tutar) · sıradaki: GraphQL introspection ve otomatik tamamlama, gRPC, Socket.IO, MQTT, SOAP |
+| M7–M9 | ⬜ |
 
-Release ikili dosyası 38.0 MB (üst sınır 100 MB; QuickJS ve JavaScript renklendirmesi yaklaşık 3.6 MB, Runner 0.8 MB ekledi). Testler: core 57, script 10, runner 16, vault 11, desktop 12, codegen 24, import 26, http 19 (hepsi geçiyor, clippy uyarısız).
+Release ikili dosyası 38.0 MB (üst sınır 100 MB; QuickJS ve JavaScript renklendirmesi yaklaşık 3.6 MB, Runner 0.8 MB ekledi). Testler: core 58, script 10, runner 16, vault 11, desktop 16, codegen 24, import 26, http 27 (hepsi geçiyor, clippy uyarısız).
 
 ### Kullanıcı notları (17 Ekim 2026) ve plana nasıl işlendikleri
 | # | Not | Nereye işlendi |
@@ -373,8 +374,8 @@ Bir koleksiyon (veya proje) parola ile şifrelenir. Parolayı bilmeyen hiçbir a
 | Protokol | Ayrıntı | Durum |
 |---|---|---|
 | **GraphQL** | Şema introspection, otomatik tamamlama, değişkenler, şema gezgini | ⬜ L |
-| **WebSocket** | Bağlan ve bağlantıyı kes, mesaj gönder, mesajları zaman damgasıyla listele, kayıtlı mesaj şablonları | ⬜ M |
-| **Server-Sent Events** | Canlı olay akışı | ⬜ S |
+| **WebSocket** | Bağlan ve bağlantıyı kes, mesaj gönder, mesajları zaman damgasıyla listele, kayıtlı mesaj şablonları | ✅ `ws://`/`wss://` adresi isteği WebSocket yapar; el sıkışmada parametre, başlık ve auth (OAuth 2.0 dahil); Mesajlar sekmesi (Ctrl+Enter gönderir, `{{değişkenler}}` doldurulur, bağlantı yoksa önce bağlanır), dosyada `[[message]]` şablonları; ↑/↓ zaman damgalı günlük, kapanış kodu ve nedeni; sekme arkadayken de sürer; `apix send` (`--message`, `--listen`), `apix run` atlar · ⬜ ikili mesaj gönderme, ping aralığı, alt protokol seçimi, TLS doğrulamasını kapatma |
+| **Server-Sent Events** | Canlı olay akışı | ✅ `text/event-stream` yanıtında olaylar geldikçe (zaman, tür, id, veri); Durdur/Esc gelenleri tutar; biten akış Biçimli sekmesinde liste; `apix send` olayları geldikçe yazar; motor `send_with` ile gövdeyi parça parça bildirir · ⬜ olay türüne göre süzme, kopan bağlantıda `retry` ile yeniden bağlanma |
 | **gRPC** | Unary ve streaming çağrılar, `.proto` dosyası veya sunucu yansıması (reflection), metadata | ⬜ L · kullanıcı isteği (not 17): M4 içe aktarıcılarından sonra öne alınabilir |
 | **Socket.IO** | | ⬜ M |
 | **MQTT** | Abone ol ve yayınla | ⬜ M |
@@ -578,7 +579,9 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 - [x] Linux ve macOS: ilk koşuda (24 Ekim) CLI ve masaüstü uygulaması üç sistemde de hatasız derlendi, clippy ve testler geçti; düzeltme gerekmedi. 10 işin hepsi yeşil, en uzunu Windows masaüstü (~24 dk).
 
 ### M6 — Protokoller
-- WebSocket, SSE (önce bunlar), GraphQL introspection ve otomatik tamamlama, gRPC, Socket.IO, MQTT, SOAP
+1. [x] **WebSocket ve SSE** (24 Ekim): motor `send_with` (yanıt parça parça), `apix_http::sse` (SSE ayrıştırıcı), `apix_http::ws` (tokio-tungstenite, aynı rustls); uygulamada canlı olay listesi, WebSocket Mesajlar sekmesi ve günlüğü; CLI'da olaylar ve mesajlar geldikçe; örnek sunucular `sse_server` ve `ws_server`. Ayrıntı §H.
+2. [ ] GraphQL introspection ve otomatik tamamlama
+3. [ ] gRPC, Socket.IO, MQTT, SOAP
 
 ### M7 — İleri özellikler
 - **Rota ve ağ haritası (§B2)** (not 9): traceroute, çevrimdışı IP konum veritabanı ile dünya haritası

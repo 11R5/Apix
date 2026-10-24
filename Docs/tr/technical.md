@@ -1,4 +1,4 @@
-<!-- translated from en/technical.md sha256:994f0e9186f61c6d -->
+<!-- translated from en/technical.md sha256:2c44ed8deb6d7959 -->
 
 # Teknik notlar
 
@@ -10,7 +10,7 @@ Apix'in nasıl derlendiği, nelere bağımlı olduğu ve nasıl ölçüleceği.
 ```
 crates/
 ├── apix-core       istek modeli, değişkenler, disk formatı, projeler, imzalama (sign.rs)
-├── apix-http       HTTP motoru (reqwest), ağ izi, OAuth 2.0 token'ları
+├── apix-http       HTTP motoru (reqwest), ağ izi, OAuth 2.0 token'ları, SSE, WebSocket
 ├── apix-import     Postman koleksiyonu ve ortamı içe aktarma
 ├── apix-codegen    "Komut veya kod olarak kopyala" (curl, curl.exe, PowerShell, 10 dilde kod) ve curl yapıştırma
 ├── apix-vault      şifreli koleksiyonlar
@@ -127,6 +127,8 @@ Diğer yardımcılar:
 ```sh
 cargo run -p apix-http --release --example big_json_server -- 100   # :8765 üzerinde 100 MB JSON
 cargo run -p apix-http --example oauth_server                       # :8766 üzerinde OAuth 2.0 test sunucusu
+cargo run -p apix-http --example sse_server                         # :8767 üzerinde sunucu olayları (SSE)
+cargo run -p apix-http --example ws_server                          # :8768 üzerinde WebSocket yankı ve ticker
 ```
 
 ## Arayüz dilleri
@@ -180,7 +182,7 @@ alır; yeni bir commit yeniden derler, değişmeyen kaynak öncekini kullanır.
 | Crate | Kapsananlar |
 |---|---|
 | apix-core | model ve dosya formatı için gidiş-dönüş (round trip) testleri, değişkenler, anahtarlıktaki ortam gizli değerleri (kimlik bilgisi deposu yoksa atlanır), AWS test paketine, RFC 7616'ya (Digest), RFC 7636'ya (PKCE) ve OAuth 1.0 örneğine karşı imzalama |
-| apix-http | istek oluşturma, her gövde türü, OAuth 2.0, Digest, AWS ve OAuth 1.0 için yerel bir sunucu, ağ izi |
+| apix-http | istek oluşturma, her gövde türü, OAuth 2.0, Digest, AWS ve OAuth 1.0 için yerel bir sunucu, ağ izi; SSE ayrıştırıcı (parçaların her yerden bölünmesi dahil), yavaş gönderen bir sunucuya karşı akış, WebSocket (yankı, el sıkışmada auth ve parametreler, iki taraftan kapanış, reddedilen el sıkışma) |
 | apix-codegen | bash, cmd ve PowerShell için kabuk tırnaklama; curl yapıştırma; gidiş-dönüş testleri; her dilde URL, başlıklar, gövdeler, dize kaçışları ve ayarlar |
 | apix-import | Postman v2.0/v2.1 fixture'ları |
 | apix-script | istek öncesi scriptlerden değişken ve istek değişiklikleri, `pm.test` / `pm.expect` sonuçları ve mesajları, eski `tests[...]` API'si, dosyayı adlandıran hatalar, sonsuz scriptlerin durdurulması, `setNextRequest`, `atob`/`btoa`, `pm.sendRequest` (geri çağırma ve `await`, bekleme sayılmaz), bilinen özet değerlerine karşı hazır kütüphaneler, kodsuz doğrulamalar, yanıt hedefleri için değer ve ifade üretimi |

@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:a35b6e83b59155ff -->
+<!-- translated from en/architecture.md sha256:4467a13b0d455b19 -->
 
 # Apix mimarisi
 
@@ -30,7 +30,8 @@ Apix, Rust ile yazılmış native bir API istemcisidir. Arayüz,
 crates/
 ├── apix-core     istek modeli, {{variables}} ve {{$dynamic}} değerleri, disk formatı,
 │                 projeler, ortamlar ve gizli değerler, ağaç ve dosya işlemleri
-├── apix-http     HTTP motoru: reqwest + rustls, zamanlamalar, yanıt yakalama, ağ izi
+├── apix-http     HTTP motoru: reqwest + rustls, zamanlamalar, yanıt yakalama, ağ izi,
+│                 sunucu olayları (SSE), WebSocket (tokio-tungstenite)
 │                 (DNS, bağlantı kurulumu, yönlendirmeler, sertifika, yerel ağ arayüzü)
 ├── apix-import   Postman v2.0/v2.1 koleksiyonları ve ortamları → Apix koleksiyonları
 ├── apix-codegen  istekler ↔ kabuk komutları: curl (bash), curl.exe (cmd), PowerShell; yapıştırılan curl'ü ayrıştırır; 10 dilde kod
@@ -347,6 +348,34 @@ BOM, `;` başlıklar) ve JSON dizilerini okur. CLI ilerlemeyi geldikçe yazar;
 masaüstü Runner'ı (`workspace/runner_ui.rs`) koşuyu ağ çalışma zamanında
 yürütür ve ilerlemeyi paylaşılan bir `Live` yapısından saniyede birkaç kez
 okur; görünüm workspace'te kaldığı için koşu penceresinden uzun yaşar.
+
+## Akışlar ve WebSocket (M6)
+
+`HttpClient::send_with`, durum ve başlıklar gelir gelmez `Progress::Head`'i,
+sonra gövdenin her parçasını `Progress::Chunk` olarak bildirir; `send` hiçbir
+şey dinlemeyen bir `send_with`'tir ve yanıt yine bütün gövdeyi tutar.
+`apix_http::sse`, `text/event-stream` gövdelerini parça parça okur
+(`SseParser`: her satır sonu biçimi, parça her yerden bölünebilir, `id`
+sonraki olaylara taşınır, bitmemiş son olay atılır).
+
+`apix_http::ws::connect`, el sıkışmayı isteğin HTTP tarafının göndereceği
+biçimden kurar (`prepare`: parametreler, başlıklar, yetkilendirme; OAuth 2.0
+önce bearer token'a döner) ve aynı rustls üzerinde tokio-tungstenite ile
+bağlanır. `WsConnection::run` bir `WsCommand` kanalının istediklerini
+gönderir ve iki taraftan biri kapatana kadar `WsEvent`'leri (gönderildi,
+geldi, kod ve nedenle kapandı, hata) bildirir; ping ve pong'u tungstenite
+yanıtlar.
+
+Masaüstü uygulamasında ağ çalışma zamanı paylaşılan yapıları doldurur (bir
+gönderim için `net::Incoming`, bir soket için `net::SocketIncoming`) ve bir
+arayüz görevi onları 60–80 ms'de bir okur. Olay akışı olan bir yanıt
+`ResponseState::Streaming` olur (`workspace/stream_ui.rs`): yukarı
+kaydırılmadıkça yeni olayları izleyen canlı bir liste; Esc gelenleri bitmiş
+bir yanıta çevirir. `ws://` adresi istek alanını Mesajlar sekmesine
+(`workspace/ws_editor.rs`), yanıt alanını `ResponseState::Socket`'e
+(`workspace/socket_ui.rs`) geçirir. İki durum da bitmiş bir yanıt gibi kendi
+sekmesine yönlendirilir; bu yüzden akış ya da soket arkadaki bir sekmede de
+sürer. CLI olayları ve mesajları aynı geri çağırmalardan yazar.
 
 ## Temalar
 

@@ -103,7 +103,9 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [x] Linux and macOS: the first run built and tested everything on all three systems with no fixes needed
 
 ## M6 — Protocols
-- [ ] WebSocket and SSE first, then GraphQL introspection and autocomplete, gRPC, Socket.IO, MQTT, SOAP
+- [x] WebSocket: `ws://`/`wss://` requests connect with the request's params, headers and auth; a Messages tab with saved `[[message]]`s; a live log of both directions; `apix send --message/--listen`
+- [x] Server-sent events: `text/event-stream` responses show their events as they arrive, in the app and in `apix send`; Esc keeps what came
+- [ ] GraphQL introspection and autocomplete, gRPC, Socket.IO, MQTT, SOAP
 
 ## M7 — Advanced
 - [ ] Route (traceroute) and network map, with an offline IP-geolocation database

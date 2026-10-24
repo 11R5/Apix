@@ -28,7 +28,8 @@ no WebView and no Electron.
 crates/
 ├── apix-core     request model, {{variables}} and {{$dynamic}} values, on-disk format,
 │                 projects, environments and secrets, tree and file operations
-├── apix-http     HTTP engine: reqwest + rustls, timings, response capture, network trace
+├── apix-http     HTTP engine: reqwest + rustls, timings, response capture, network trace,
+│                 server-sent events, WebSocket (tokio-tungstenite)
 │                 (DNS, connection setup, redirects, certificate, local interface)
 ├── apix-import   Postman v2.0/v2.1 collections and environments → Apix collections
 ├── apix-codegen  requests ↔ shell commands: curl (bash), curl.exe (cmd), PowerShell; parses pasted curl; code in 10 languages
@@ -329,6 +330,33 @@ JSON arrays. The CLI prints progress as it comes; the desktop Runner
 (`workspace/runner_ui.rs`) runs it on the network runtime and copies progress
 out of a shared `Live` struct a few times a second; the view stays in the
 workspace, so a run outlives its dialog.
+
+## Streams and WebSocket (M6)
+
+`HttpClient::send_with` reports `Progress::Head` (status and headers) as soon
+as they are in and then every body `Progress::Chunk`; `send` is `send_with`
+with nothing listening, and the response still holds the whole body.
+`apix_http::sse` reads `text/event-stream` bodies piece by piece (`SseParser`:
+any line ending, a piece may split anywhere, `id` carries over, an unfinished
+last event is dropped).
+
+`apix_http::ws::connect` builds the handshake from the request as the HTTP
+side would send it (`prepare`: params, headers, auth; OAuth 2.0 becomes a
+bearer token first) and connects with tokio-tungstenite over the same
+rustls. `WsConnection::run` sends what a channel of `WsCommand`s asks and
+reports `WsEvent`s (sent, received, closed with code and reason, error)
+until either side closes; ping and pong are answered by tungstenite.
+
+In the desktop app the network runtime fills shared structs
+(`net::Incoming` for a send, `net::SocketIncoming` for a socket) and a UI
+task reads them every 60–80 ms. An event-stream response becomes
+`ResponseState::Streaming` (`workspace/stream_ui.rs`) with a live event list
+that follows new events unless scrolled up; Esc turns what arrived into a
+finished response. A `ws://` URL switches the request pane to the Messages
+tab (`workspace/ws_editor.rs`) and the response pane to
+`ResponseState::Socket` (`workspace/socket_ui.rs`). Both states are routed to
+their tab like a finished response, so a stream or socket keeps running in a
+tab in the back. The CLI prints events and messages from the same callbacks.
 
 ## Themes
 

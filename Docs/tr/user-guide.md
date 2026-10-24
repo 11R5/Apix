@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:d46c44b0008afbe9 -->
+<!-- translated from en/user-guide.md sha256:2c89555102b3ea7b -->
 
 # Apix kullanım kılavuzu
 
@@ -24,6 +24,7 @@ veya CI'da çalıştırır.
 - [Değişkenler ve ortamlar](#değişkenler-ve-ortamlar)
 - [Yanıt](#yanıt)
 - [Ağ sekmesi](#ağ-sekmesi)
+- [WebSocket ve sunucu olayları (SSE)](#websocket-ve-sunucu-olayları-sse)
 - [Scriptler ve testler](#scriptler-ve-testler)
 - [Runner](#runner)
 - [Sekmeler](#sekmeler)
@@ -252,6 +253,41 @@ uzantı içeriğe göre seçilir.
 - sunucu sertifikası: veren, geçerlilik ve kalan gün sayısı
 
 ![Ağ sekmesi](images/network.png)
+
+## WebSocket ve sunucu olayları (SSE)
+
+**WebSocket.** Adresi `ws://` ya da `wss://` ile başlayan istek bir
+WebSocket'tir: **Gönder** düğmesi **Bağlan** olur, Gövde sekmesi de
+**Mesajlar** olur. El sıkışma, her istekte olduğu gibi isteğin
+parametrelerini, başlıklarını ve yetkilendirmesini (Bearer, Basic, API
+anahtarı, OAuth 2.0 …) kullanır.
+
+![Bir WebSocket bağlantısı ve Mesajlar sekmesi](images/websocket.png)
+
+- Bir mesaj yazıp **Gönder**'e (ya da Ctrl+Enter'a) bas. `{{değişkenler}}`
+  gönderilirken doldurulur. Bağlantı yoksa Apix önce bağlanır, açılınca
+  mesajı gönderir.
+- **Mesajı kaydet** mesajı istek dosyasında `[[message]]` olarak tutar;
+  dosyayı Ctrl+S kaydeder. Düzenlemek için kayıtlı bir mesaja tıkla, olduğu
+  gibi göndermek için ▷'ye bas.
+- Yanıt alanı bir günlüktür: ↑ gönderilen, ↓ gelen, bağlantıdan bu yana
+  geçen süreyle; ayrıca ne zaman bağlandığı ve nasıl kapandığı (kod ve
+  neden). Yukarı kaydırmadıkça yeni mesajları izler.
+- **Bağlantıyı kes** (ya da Esc) bağlantıyı kapatır; günlük yeniden
+  bağlanana kadar kalır. Sekmesi arkadayken de bağlantı sürer.
+
+**Sunucu olayları (server-sent events).** Bir yanıt `text/event-stream` ise
+olayları geldikçe görünür: zamanı, olay türü ve kimliği, sonra verisi.
+**Durdur** (ya da Esc) akışı bitirir ve gelenleri tutar; sunucunun bitirdiği
+bir akış aynı listeyi Biçimli sekmesinde gösterir, Ham, Başlıklar, Ağ ve Hex
+her yanıttaki gibidir. Sunucu istiyorsa `Accept: text/event-stream`
+başlığını gönder. Ayarlar'daki istek zaman aşımı bir akışı da bitirir; açık
+kalan akışlar için onu boş bırak.
+
+Komut satırında `apix send` olayları geldikçe yazar; bir WebSocket'te
+bağlanır, kayıtlı mesajları (ya da `--message` metinlerini) gönderir, iki
+yöndekileri yazar ve `--listen` saniye sonra kapatır (varsayılan 3, `0`
+sunucuyu bekler). `apix run` WebSocket isteklerini atlar.
 
 ## Scriptler ve testler
 

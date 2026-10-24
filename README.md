@@ -112,6 +112,10 @@ Measurements of the other tools on the same machine are planned.
 - **Copy as** `curl` (bash or fish), `curl.exe`, PowerShell, HTTPie or wget, or as code in fetch, axios,
   Python, Go, Rust, C#, Java, PHP, Swift and Kotlin; **paste** a `curl` command
   to fill a request.
+- **WebSocket and server-sent events:** `ws://` requests connect, send typed
+  or saved messages and log both directions live; `text/event-stream`
+  responses show their events as they arrive. `apix send` does both in a
+  terminal.
 - **History** of sent requests with their responses (Ctrl+H): search it and
   send any of them again.
 - **Command palette** (Ctrl+K) and a menu bar that holds every command.
@@ -137,6 +141,8 @@ apix send examples/jsonplaceholder/health.apix --env local --network
 apix run examples/jsonplaceholder            # non-zero exit if any request fails
 apix run my-api --data users.csv --junit report.xml --html report.html --bail
 APIX_VAR_TOKEN=… apix run my-api --env staging --env-file .env.ci
+apix send chat/socket.apix --message '{"join":"room-1"}' --listen 10   # a ws:// request
+apix send events/live.apix                   # server-sent events, printed as they arrive
 apix shell examples/jsonplaceholder/users/create-user.apix --as powershell
 apix import "My API.postman_collection.json"
 APIX_PASSWORD=… apix run my-api-encrypted --env staging

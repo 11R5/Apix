@@ -9,7 +9,7 @@ side.
 ```
 crates/
 ├── apix-core       request model, variables, on-disk format, projects, signing (sign.rs)
-├── apix-http       the HTTP engine (reqwest), network trace, OAuth 2.0 tokens
+├── apix-http       the HTTP engine (reqwest), network trace, OAuth 2.0 tokens, SSE, WebSocket
 ├── apix-import     Postman collection and environment import
 ├── apix-codegen    "Copy as" (curl, curl.exe, PowerShell, code in 10 languages) and curl paste
 ├── apix-vault      encrypted collections
@@ -126,6 +126,8 @@ Other helpers:
 ```sh
 cargo run -p apix-http --release --example big_json_server -- 100   # 100 MB of JSON on :8765
 cargo run -p apix-http --example oauth_server                       # OAuth 2.0 test server on :8766
+cargo run -p apix-http --example sse_server                         # server-sent events on :8767
+cargo run -p apix-http --example ws_server                          # WebSocket echo and ticker on :8768
 ```
 
 ## Interface languages
@@ -178,7 +180,7 @@ so a new commit rebuilds it and an unchanged one reuses it.
 | Crate | What is covered |
 |---|---|
 | apix-core | model and file format round trips, variables, environment secrets in the keychain (skipped without a credential store), signing against the AWS test suite, RFC 7616 (Digest), RFC 7636 (PKCE) and the OAuth 1.0 example |
-| apix-http | request building, every body type, a local server for OAuth 2.0, Digest, AWS and OAuth 1.0, the network trace |
+| apix-http | request building, every body type, a local server for OAuth 2.0, Digest, AWS and OAuth 1.0, the network trace; the SSE parser (pieces split anywhere), streaming against a server that sends slowly, WebSocket (echo, auth and params in the handshake, closing from either side, a refused handshake) |
 | apix-codegen | shell quoting for bash, cmd and PowerShell; curl paste; round trips; every language's URL, headers, bodies, string escaping and settings |
 | apix-import | Postman v2.0/v2.1 fixtures |
 | apix-script | variables and request changes from pre-request scripts, `pm.test` / `pm.expect` results and messages, the older `tests[...]` API, errors naming the file, endless scripts stopped, `setNextRequest`, `atob`/`btoa`, `pm.sendRequest` (callback and `await`, waiting not counted), the built-in libraries against known digests, checks without code, values and expressions for response targets |
