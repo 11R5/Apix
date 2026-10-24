@@ -146,8 +146,10 @@ Options:
 | `--junit report.xml` | A JUnit XML report, which CI services show as a test list |
 | `--json report.json` / `--html report.html` | Everything as JSON, or a page that opens in any browser |
 | `--timeout 10`, `-k`, `--proxy URL` | Override the requests' transport settings |
+| `--env-file .env` | Variables from a dotenv file (see below) |
 
-A data file looks like this; `--var` values win over its columns:
+A data file looks like this; values from outside the collection (`--var` and
+the ones below) win over its columns:
 
 ```csv
 id,name
@@ -155,22 +157,58 @@ id,name
 2,Ervin Howell
 ```
 
-[examples/ci/github-actions.yml](../../examples/ci/github-actions.yml) is a
-complete GitHub Actions workflow: it builds `apix`, runs the collection with a
-data file, shows the JUnit results on the run's page and keeps the HTML
-report. The heart of it:
+### Secrets in CI
 
-```yaml
-- name: Run the collection
-  run: apix run api --env staging --junit reports/apix.xml --html reports/apix.html --var "token=$API_TOKEN"
-  env:
-    API_TOKEN: ${{ secrets.API_TOKEN }}
-    APIX_PASSWORD: ${{ secrets.APIX_PASSWORD }}   # only for an encrypted collection
+Secrets stay out of git (`.local.toml` files are ignored, the keychain is on
+your computer), so a pipeline hands them over in one of three ways, each
+winning over the one before:
+
+1. `--env-file .env`: a dotenv file of `NAME=value` lines (`#` comments,
+   quotes, `export` allowed).
+2. `APIX_VAR_<NAME>` environment variables: `APIX_VAR_TOKEN` fills
+   `{{token}}`. CI secrets are usually written in capitals, so a name matches
+   a variable the collection defines or its requests use whatever its case.
+3. `--var name=value`.
+
+All three win over the environment's values (and over a data file's
+columns). `apix` prints which names it took from where on stderr, never the
+values.
+
+```sh
+APIX_VAR_TOKEN="$API_TOKEN" apix run api --env staging
 ```
 
-Secrets stay out of git (`.local.toml` files are ignored), so CI passes them
-with `--var`. The desktop app's **Runner** (Ctrl+Shift+R) does the same runs
-with a window; see the [user guide](user-guide.md#runner).
+### GitHub Actions
+
+The repository is also a GitHub Action. It builds `apix` the first time
+(cached afterwards), runs the collection and writes JUnit and HTML reports:
+
+```yaml
+- uses: 11R5/Apix@main          # better: a tag or commit
+  with:
+    path: api
+    environment: staging        # also: data, iterations, delay, bail, env-file, junit, html, json, args
+  env:
+    APIX_VAR_TOKEN: ${{ secrets.API_TOKEN }}
+```
+
+[examples/ci/github-actions.yml](../../examples/ci/github-actions.yml) is a
+complete workflow: it runs the collection once per environment (a matrix of
+`test` and `staging`), shows the JUnit results on the run's page and keeps the
+HTML reports.
+
+### Docker
+
+For other CI systems there is a container image with just the `apix` command
+(published to `ghcr.io/11r5/apix` when a version is tagged; build it yourself
+with `docker build -t apix .`):
+
+```sh
+docker run --rm -v "$PWD:/work" -e APIX_VAR_TOKEN ghcr.io/11r5/apix run api --env staging --junit reports/apix.xml
+```
+
+The desktop app's **Runner** (Ctrl+Shift+R) does the same runs with a window;
+see the [user guide](user-guide.md#runner).
 
 `apix send <file>` sends one request and prints the response; add `-i` for the
 headers and `--network` for the connection details.

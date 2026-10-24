@@ -85,7 +85,8 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [x] `apix send` / `apix run` run scripts, print test results and console lines, follow `setNextRequest`, and fail when a test fails
 - [x] `pm.sendRequest` (callback and `await`), built-in libraries (`require` of crypto-js, uuid, lodash, moment, ajv, tv4, chai: the parts API scripts use, written for Apix), checks without code (`[[assert]]`, a Checks table in the Scripts tab), save a response value as a variable
 - [x] Runner: the Runner window (Ctrl+Shift+R, or Run… on a collection or folder: pick and order requests, iterations, delay, environment, data file, stop at the first failure, pause/resume/stop, results with tests and console) and `apix run` options (`--data`, `--iterations`, `--delay`, `--bail`, folder runs); data-driven runs from CSV or JSON; JUnit XML / JSON / HTML reports; a GitHub Actions example (`examples/ci/github-actions.yml`); shared crate `apix-runner`
-- [ ] Later: `--parallel`, an official Docker image for `apix`
+- [x] CI: secrets from `APIX_VAR_<NAME>` environment variables and `--env-file` (names matched whatever their case), the repository as a GitHub Action (`uses: 11R5/Apix@…`, builds and caches `apix`), a Docker image (`Dockerfile`, published to ghcr.io on version tags), an environment-matrix workflow example
+- [ ] Later: `--parallel`; PR comments, `--changed` (only what a PR touched), `apix diff`, scheduled monitor runs
 
 ## After M5 — Themes
 - [x] Switch themes without restarting (views read the current palette)
@@ -94,7 +95,7 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [x] Custom themes from files (`<config>/Apix/themes/*.toml`, "Open the folder" writes an example)
 - [x] Transparency slider (0–90 %, frosted glass: acrylic on Windows, vibrancy on macOS), preset themes (Dracula, Nord, Solarized Dark)
 - [ ] Later: font size and density; code editor colours from the theme
-- To discuss after M5: growing the CLI with git and CI/CD integration
+- [x] Discussed after M5: the CLI's CI side (secrets, GitHub Action, Docker) is done; git-aware runs, PR comments, `apix diff` and monitors wait
 
 ## M6 — Protocols
 - [ ] WebSocket, SSE, GraphQL introspection, gRPC, Socket.IO, MQTT, SOAP

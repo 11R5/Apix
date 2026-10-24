@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:e99e402a27f8abe5 -->
+<!-- translated from en/architecture.md sha256:a35b6e83b59155ff -->
 
 # Apix mimarisi
 
@@ -103,7 +103,7 @@ Hiçbir şey `desktop`'a bağımlı değildir.
 ```
 
 `{{variables}}` katmanlar hâlinde çözümlenir. Sonraki katmanlar kazanır:
-**global değişkenler → koleksiyon (`apix.toml`) → ortam → geçersiz kılmalar (CLI `--var`, betik `pm.variables.set`)**.
+**global değişkenler → koleksiyon (`apix.toml`) → ortam → geçersiz kılmalar (CLI `--env-file`, `APIX_VAR_*` ve `--var`, koleksiyondaki adlarla büyük küçük harf gözetmeden eşleşir; betik `pm.variables.set`)**.
 Tanımsız adlar olduğu gibi bırakılır ve raporlanır; böylece arayüz bunların altını
 çizebilir, CLI ise göndermeyi reddedebilir.
 

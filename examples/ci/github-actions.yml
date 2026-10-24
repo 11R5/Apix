@@ -1,8 +1,9 @@
-# Runs an Apix collection on every push and pull request, shows the test
-# results on the run's page and keeps the HTML report.
+# Runs an Apix collection on every push and pull request, once per
+# environment, shows the test results on the run's page and keeps the HTML
+# reports.
 #
 # Copy this file to .github/workflows/api-tests.yml in your repository and
-# change `api` (the collection folder) and `staging` (its environment).
+# change `api` (the collection folder) and the environments.
 
 name: API tests
 
@@ -16,29 +17,27 @@ jobs:
     permissions:
       contents: read
       checks: write # for the test report
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: [test, staging]
     steps:
       - uses: actions/checkout@v4
 
-      # Builds the `apix` command once, then reuses it from the cache.
-      - uses: actions/cache@v4
-        id: apix-cache
+      # Builds `apix` the first time, then takes it from the cache.
+      # Pin a tag or commit instead of main for repeatable runs.
+      - uses: 11R5/Apix@main
         with:
-          path: ~/.cargo/bin/apix
-          key: apix-${{ runner.os }}-v1
-      - if: steps.apix-cache.outputs.cache-hit != 'true'
-        run: cargo install --locked --git https://github.com/11R5/Apix apix-cli
-
-      - name: Run the collection
-        run: >
-          apix run api --env staging
-          --data api/data/users.csv
-          --junit reports/apix.xml
-          --html reports/apix.html
-          --var "token=$API_TOKEN"
+          path: api
+          environment: ${{ matrix.environment }}
+          data: api/data/users.csv
+          junit: reports/${{ matrix.environment }}.xml
+          html: reports/${{ matrix.environment }}.html
         env:
           # Secrets stay out of the repository (.local.toml files are
-          # gitignored), so CI passes them with --var.
-          API_TOKEN: ${{ secrets.API_TOKEN }}
+          # gitignored). APIX_VAR_<NAME> fills {{name}}: APIX_VAR_TOKEN is
+          # {{token}}. Another way: write them to a file and pass env-file.
+          APIX_VAR_TOKEN: ${{ secrets.API_TOKEN }}
           # Only for an encrypted collection.
           APIX_PASSWORD: ${{ secrets.APIX_PASSWORD }}
 
@@ -46,9 +45,15 @@ jobs:
       - if: ${{ !cancelled() }}
         uses: mikepenz/action-junit-report@v5
         with:
-          report_paths: reports/apix.xml
+          report_paths: reports/${{ matrix.environment }}.xml
+          check_name: API tests (${{ matrix.environment }})
       - if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
-          name: apix-report
+          name: apix-report-${{ matrix.environment }}
           path: reports/
+
+# Without the action, in any CI that runs containers:
+#
+#   docker run --rm -v "$PWD:/work" -e APIX_VAR_TOKEN ghcr.io/11r5/apix \
+#     run api --env staging --junit reports/apix.xml

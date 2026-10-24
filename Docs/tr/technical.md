@@ -1,4 +1,4 @@
-<!-- translated from en/technical.md sha256:9b3e0f0c441e7e0c -->
+<!-- translated from en/technical.md sha256:8f817dc92aacc671 -->
 
 # Teknik notlar
 
@@ -28,6 +28,9 @@ scripts/
 examples/
 ├── jsonplaceholder repodan çalıştırıldığında uygulamanın açtığı küçük bir koleksiyon
 └── ci/             bir koleksiyonu çalıştıran GitHub Actions iş akışı
+action.yml          GitHub Action (`uses: 11R5/Apix@…`)
+Dockerfile          konteyner imajı olarak `apix` komutu
+.github/workflows/  sürüm etiketlerinde imajı yayımlar
 Docs/
 ├── languages.toml  belge dilleri
 ├── en/ tr/         kullanıcı kılavuzu, mimari, teknik notlar, iş akışları
@@ -92,6 +95,7 @@ parolaları asla diske yazılmaz.
 | Değişken | Etkisi |
 |---|---|
 | `APIX_PASSWORD` | CLI için şifreli bir koleksiyonun parolası (`--password-env` başka bir değişken seçer). |
+| `APIX_VAR_<AD>` | CLI için bir değişken: `APIX_VAR_TOKEN`, `{{token}}`'ı doldurur (koleksiyondaki adla büyük küçük harf gözetmeden eşleşir); ortamlardan üstündür, `--var` ondan üstündür. |
 | `APIX_THEME` | bir tema kimliği (`obsidian`, `cyber`, `dracula`, `nord`, `solarized-dark`, `daylight`, `solarized-light` ya da bir tema dosyasının adı); ayarlar ne derse desin o temayı gösterir. |
 | `APIX_BENCH` | `startup` veya `json:<url>`: ölç ve çık (aşağıya bakın). |
 | `APIX_BENCH_OUT` | Ölçümlerin sonuna ekleneceği dosya. |
@@ -165,7 +169,7 @@ patch ile devreye alır. Upstream crate düzeltildiğinde kaldırılabilir.
 | apix-codegen | bash, cmd ve PowerShell için kabuk tırnaklama; curl yapıştırma; gidiş-dönüş testleri; her dilde URL, başlıklar, gövdeler, dize kaçışları ve ayarlar |
 | apix-import | Postman v2.0/v2.1 fixture'ları |
 | apix-script | istek öncesi scriptlerden değişken ve istek değişiklikleri, `pm.test` / `pm.expect` sonuçları ve mesajları, eski `tests[...]` API'si, dosyayı adlandıran hatalar, sonsuz scriptlerin durdurulması, `setNextRequest`, `atob`/`btoa`, `pm.sendRequest` (geri çağırma ve `await`, bekleme sayılmaz), bilinen özet değerlerine karşı hazır kütüphaneler, kodsuz doğrulamalar, yanıt hedefleri için değer ve ifade üretimi |
-| apix-runner | CSV (tırnaklar, satır sonları, `;`, BOM) ve JSON veri dosyaları, tekrar sayıları ve veri satırları, duraklatma/durdurma zamanlaması, JUnit/JSON/HTML çıktısı ve kaçışlar, tarihler; yerel bir sunucuya karşı bütün koşular (veri satırları, kenar çubuğu sırası, `bail`, `setNextRequest`) |
+| apix-runner | CSV (tırnaklar, satır sonları, `;`, BOM) ve JSON veri dosyaları, dotenv dosyaları ve `APIX_VAR_*` adları, tekrar sayıları ve veri satırları, duraklatma/durdurma zamanlaması, JUnit/JSON/HTML çıktısı ve kaçışlar, tarihler; yerel bir sunucuya karşı bütün koşular (veri satırları, kenar çubuğu sırası, `bail`, `setNextRequest`) |
 | apix-vault | şifreleme formatı, kurcalama (tampering), parola değişikliği, kurtarma anahtarı, anahtarlık kayıtları (gerçek kimlik bilgisi deposunda, test servis adıyla; depo yoksa atlanır) |
 | apix-desktop | çevirilerin eksiksizliği, dil yardımcıları, dosya yolları, vurgulama sorgusu, tema dosyaları (okuma, hatalar, gidiş-dönüş), vurgu ve saydamlık renkleri |
 | docs-check | belge yapısı ve damgalar |

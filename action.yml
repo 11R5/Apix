@@ -1,0 +1,99 @@
+# Runs an Apix collection in GitHub Actions:
+#
+#   - uses: 11R5/Apix@main      # better: a tag or commit
+#     with:
+#       path: api
+#       environment: staging
+#     env:
+#       APIX_VAR_TOKEN: ${{ secrets.API_TOKEN }}
+#
+# The first run builds `apix` from this repository at the action's version
+# (a few minutes); later runs take it from the cache.
+name: Apix run
+description: Send an Apix collection's requests, run its tests and write JUnit / HTML reports
+author: Ahmet Demir
+branding:
+  icon: zap
+  color: blue
+
+inputs:
+  path:
+    description: The collection, or a folder or request inside it
+    default: "."
+  environment:
+    description: Environment to use (apix run --env)
+    required: false
+  data:
+    description: A CSV or JSON data file; each row is one iteration
+    required: false
+  iterations:
+    description: How many times to send the requests
+    required: false
+  delay:
+    description: Milliseconds to wait between requests
+    required: false
+  bail:
+    description: Stop at the first request that fails ("true" or "false")
+    default: "false"
+  env-file:
+    description: A dotenv file with variables (NAME=value lines)
+    required: false
+  junit:
+    description: Where to write the JUnit XML report (empty for none)
+    default: apix-report.xml
+  html:
+    description: Where to write the HTML report (empty for none)
+    default: apix-report.html
+  json:
+    description: Where to write the JSON report (empty for none)
+    required: false
+  args:
+    description: More arguments for apix run, e.g. "--timeout 10 --var region=eu"
+    required: false
+
+runs:
+  using: composite
+  steps:
+    - name: Restore apix
+      id: cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/bin/apix
+          ~/.cargo/bin/apix.exe
+        key: apix-${{ runner.os }}-${{ github.action_ref || 'local' }}-v1
+
+    - name: Build apix
+      if: steps.cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: cargo install --locked --path "$GITHUB_ACTION_PATH/crates/apix-cli"
+
+    - name: Run the collection
+      shell: bash
+      # Inputs go through the environment, never into the script text.
+      env:
+        IN_PATH: ${{ inputs.path }}
+        IN_ENVIRONMENT: ${{ inputs.environment }}
+        IN_DATA: ${{ inputs.data }}
+        IN_ITERATIONS: ${{ inputs.iterations }}
+        IN_DELAY: ${{ inputs.delay }}
+        IN_BAIL: ${{ inputs.bail }}
+        IN_ENV_FILE: ${{ inputs.env-file }}
+        IN_JUNIT: ${{ inputs.junit }}
+        IN_HTML: ${{ inputs.html }}
+        IN_JSON: ${{ inputs.json }}
+        IN_ARGS: ${{ inputs.args }}
+      run: |
+        args=(run "$IN_PATH")
+        [ -n "$IN_ENVIRONMENT" ] && args+=(--env "$IN_ENVIRONMENT")
+        [ -n "$IN_DATA" ] && args+=(--data "$IN_DATA")
+        [ -n "$IN_ITERATIONS" ] && args+=(--iterations "$IN_ITERATIONS")
+        [ -n "$IN_DELAY" ] && args+=(--delay "$IN_DELAY")
+        [ "$IN_BAIL" = "true" ] && args+=(--bail)
+        [ -n "$IN_ENV_FILE" ] && args+=(--env-file "$IN_ENV_FILE")
+        [ -n "$IN_JUNIT" ] && args+=(--junit "$IN_JUNIT")
+        [ -n "$IN_HTML" ] && args+=(--html "$IN_HTML")
+        [ -n "$IN_JSON" ] && args+=(--json "$IN_JSON")
+        # Extra arguments are split on spaces, like on a command line.
+        read -r -a extra <<< "$IN_ARGS"
+        apix "${args[@]}" "${extra[@]}"
