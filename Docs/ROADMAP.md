@@ -100,7 +100,7 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [x] CI for the repository on every push and pull request: format and `docs-check`; clippy (`-D warnings`) and tests for the engine, CLI and desktop app on Windows, macOS and Linux
 - [x] The GitHub Action tests itself (`uses: ./` on the example collection, Linux and Windows); its `apix` cache follows a hash of the sources
 - [x] GitLab CI and Azure Pipelines examples
-- [ ] Fix what the first Linux and macOS builds turn up
+- [x] Linux and macOS: the first run built and tested everything on all three systems with no fixes needed
 
 ## M6 — Protocols
 - [ ] WebSocket and SSE first, then GraphQL introspection and autocomplete, gRPC, Socket.IO, MQTT, SOAP

@@ -18,7 +18,7 @@
 | M5 Scriptler, testler, runner | ✅ `apix-script` (QuickJS, `pm.*` uyumlu API), istek öncesi ve test scriptleri (koleksiyon → klasör → istek), `pm.test` / `pm.expect` (Chai tarzı), eski `tests[...]` / `postman.*` API'si, konsol, uygulamada Scripts sekmesi ile Tests ve Console sekmeleri, `apix send` / `apix run` script çalıştırma, test sonuçları ve `setNextRequest`, `pm.sendRequest`, hazır kütüphaneler (`require`), kodsuz doğrulamalar, yanıttan değişken kaydetme, Runner penceresi (sıra, tekrar, bekleme, veri dosyası, ilk hatada dur, duraklat/devam/durdur), CSV/JSON veri dosyalı koşular, JUnit XML / JSON / HTML raporlar, `apix run --data/--iterations/--delay/--bail/--junit/--json/--html`, GitHub Actions örneği |
 | Tema paketi (M5 sonrası) | ✅ anında tema değişimi, açık tema ve "sistemi izle", vurgu rengi, saydamlık kaydırıcısı (%0–90, buzlu cam), Dracula/Nord/Solarized/Gün ışığı, `<config>/Apix/themes/*.toml` dosyalarından temalar |
 | CLI ve CI/CD | ✅ `APIX_VAR_<AD>` ve `--env-file` ile gizli değerler, GitHub Action (`uses: 11R5/Apix@…`), Docker imajı, ortam matrisli örnek  |
-| CI temeli | 🔜 üç sistemde CI (biçim, docs-check, clippy, testler; motor ve masaüstü), action'ın kendini sınaması, GitLab ve Azure örnekleri · ilk koşuda Linux/macOS derleme sorunları bekleniyor · sıradaki: M6 (WebSocket ve SSE) |
+| CI temeli | ✅ üç sistemde CI (biçim, docs-check, clippy, testler; motor ve masaüstü), action'ın kendini sınaması, GitLab ve Azure örnekleri; ilk koşu Windows, macOS ve Linux'ta yeşil · sıradaki: M6 (WebSocket ve SSE) |
 | M6–M9 | ⬜ |
 
 Release ikili dosyası 38.0 MB (üst sınır 100 MB; QuickJS ve JavaScript renklendirmesi yaklaşık 3.6 MB, Runner 0.8 MB ekledi). Testler: core 57, script 10, runner 16, vault 11, desktop 12, codegen 24, import 26, http 19 (hepsi geçiyor, clippy uyarısız).
@@ -575,7 +575,7 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 - [x] Deponun kendi CI'ı (`.github/workflows/ci.yml`): her push ve PR'da biçim ve `docs-check`; motor ve CLI için clippy (`-D warnings`) ve testler Windows, macOS ve Linux'ta; masaüstü uygulaması için aynısı üç sistemde (Linux pencere, yazı tipi ve anahtarlık kütüphanelerini kurar).
 - [x] Action'ın kendini sınaması: `uses: ./` ile `examples/jsonplaceholder`, Linux ve Windows'ta; raporların yazıldığı denetlenir. Action önbelleği artık kaynakların özetiyle anahtarlanır (`` eski `apix`'i kullanmaz).
 - [x] GitLab CI ve Azure Pipelines örnekleri (`examples/ci/`).
-- [ ] İlk koşuda Linux ve macOS'ta çıkacak derleme sorunlarını düzeltmek (CLI ve masaüstü bu sistemlerde hiç derlenmedi).
+- [x] Linux ve macOS: ilk koşuda (24 Ekim) CLI ve masaüstü uygulaması üç sistemde de hatasız derlendi, clippy ve testler geçti; düzeltme gerekmedi. 10 işin hepsi yeşil, en uzunu Windows masaüstü (~24 dk).
 
 ### M6 — Protokoller
 - WebSocket, SSE (önce bunlar), GraphQL introspection ve otomatik tamamlama, gRPC, Socket.IO, MQTT, SOAP
