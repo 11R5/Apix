@@ -57,12 +57,12 @@ HTTPie is best known for its `http` command; its desktop app (Electron) is in be
 
 | Measure | Apix 0.1.0 |
 |---|---|
-| Release binary | 33.1 MB |
-| Start to first frame | 274 ms |
-| Memory when idle (working set) | 83 MB |
-| 100 MB JSON response on screen | 325 ms |
+| Release binary | 38.9 MB |
+| Start to first frame | 278 ms |
+| Memory when idle (working set) | 84 MB |
+| 100 MB JSON response on screen | 306 ms |
 
-Windows 11 (build 26300), AMD Ryzen 9 7900X, release build, median of 5 runs, 2026-10-18.
+Windows 11 (build 26300), AMD Ryzen 9 7900X, release build, median of 5 runs, 2026-10-24.
 
 Reproduce it with `scripts/measure.ps1` (see the [technical notes](Docs/en/technical.md#measuring-performance)).
 Measurements of the other tools on the same machine are planned.
