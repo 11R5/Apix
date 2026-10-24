@@ -4,7 +4,7 @@
 use std::fs;
 use std::io::{BufRead, BufReader, Read, Write};
 use std::net::TcpListener;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 use apix_core::Variables;
@@ -34,7 +34,11 @@ fn serve() -> String {
             let mut body = vec![0; length];
             reader.read_exact(&mut body).unwrap();
             let path = first.split_whitespace().nth(1).unwrap_or("/").to_owned();
-            let status = if path == "/fail" { "500 Internal Server Error" } else { "200 OK" };
+            let status = if path == "/fail" {
+                "500 Internal Server Error"
+            } else {
+                "200 OK"
+            };
             let json = format!("{{\"path\":\"{path}\"}}");
             let mut stream = stream;
             write!(
@@ -71,15 +75,19 @@ pm.collectionVariables.set("seen", (Number(pm.collectionVariables.get("seen") ||
 "#,
     )
     .unwrap();
-    fs::write(root.join("z-fail.apix"), "name = \"Fail\"\nurl = \"{{base}}/fail\"\n").unwrap();
+    fs::write(
+        root.join("z-fail.apix"),
+        "name = \"Fail\"\nurl = \"{{base}}/fail\"\n",
+    )
+    .unwrap();
     root
 }
 
-fn plan(root: &PathBuf, scope: &Scope) -> Plan {
+fn plan(root: &Path, scope: &Scope) -> Plan {
     let collection = scope.collection.as_ref().unwrap();
     let vars: Variables = apix_core::project::variables(None, Some(collection), None).unwrap();
     Plan {
-        root: root.clone(),
+        root: root.to_path_buf(),
         requests: collection.request_paths(),
         vars,
         scopes: apix_core::project::scope_values(None, Some(collection), None).unwrap(),
@@ -126,7 +134,12 @@ fn runs_every_row_and_reports() {
         .collect();
     assert_eq!(
         order,
-        [(0, "users/get.apix"), (0, "z-fail.apix"), (1, "users/get.apix"), (1, "z-fail.apix")]
+        [
+            (0, "users/get.apix"),
+            (0, "z-fail.apix"),
+            (1, "users/get.apix"),
+            (1, "z-fail.apix")
+        ]
     );
     assert!(report.items[0].passed, "{:?}", report.items[0]);
     assert_eq!(report.items[2].url, format!("{base}/users/8"));

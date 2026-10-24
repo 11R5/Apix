@@ -312,7 +312,11 @@ impl Plan {
         let mut vars = self.vars.clone();
         let mut scopes = self.scopes.clone();
         let row = (!self.data.is_empty()).then(|| &self.data[ix as usize % self.data.len()]);
-        for (k, v) in row.into_iter().flatten().chain(self.pinned.iter().map(|(k, v)| (k, v))) {
+        for (k, v) in row
+            .into_iter()
+            .flatten()
+            .chain(self.pinned.iter().map(|(k, v)| (k, v)))
+        {
             vars.set(k, v);
             scopes.data.insert(k.clone(), v.clone());
         }

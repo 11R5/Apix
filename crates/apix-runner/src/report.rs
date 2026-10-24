@@ -32,7 +32,10 @@ pub struct ItemResult {
 
 impl ItemResult {
     pub fn failed_tests(&self) -> usize {
-        self.tests.iter().filter(|t| !t.passed && !t.skipped).count()
+        self.tests
+            .iter()
+            .filter(|t| !t.passed && !t.skipped)
+            .count()
     }
 
     /// The script errors and the send error, each saying where it came from.
@@ -131,7 +134,8 @@ impl RunReport {
         for item in &self.items {
             let suite = self.label(item);
             let failures = item.failed_tests() + usize::from(status_failed(item));
-            let skipped = item.tests.iter().filter(|t| t.skipped).count() + usize::from(item.skipped);
+            let skipped =
+                item.tests.iter().filter(|t| t.skipped).count() + usize::from(item.skipped);
             out += &format!(
                 "  <testsuite name=\"{}\" tests=\"{}\" failures=\"{failures}\" errors=\"{}\" skipped=\"{skipped}\" time=\"{:.3}\">\n",
                 xml(&suite),
@@ -157,7 +161,10 @@ impl RunReport {
                 let status = status_text(item);
                 out += &format!(
                     "    <testcase name=\"{}\" classname=\"{class}\" time=\"{:.3}\">\n",
-                    xml(&format!("{} {} responds with a success status", item.method, item.name)),
+                    xml(&format!(
+                        "{} {} responds with a success status",
+                        item.method, item.name
+                    )),
                     item.time_ms / 1000.0,
                 );
                 if status_failed(item) {
@@ -244,7 +251,13 @@ impl RunReport {
                 let lines: Vec<String> = item
                     .logs
                     .iter()
-                    .map(|l| format!("<div class=\"log {}\">{}</div>", html(&l.level), html(&l.text)))
+                    .map(|l| {
+                        format!(
+                            "<div class=\"log {}\">{}</div>",
+                            html(&l.level),
+                            html(&l.text)
+                        )
+                    })
                     .collect();
                 format!("<div class=\"console\">{}</div>", lines.join(""))
             };
@@ -266,7 +279,9 @@ impl RunReport {
             let body = if details.is_empty() && console.is_empty() {
                 String::new()
             } else {
-                format!("<tr class=\"more\"><td></td><td colspan=\"{span}\"><ul>{details}</ul>{console}</td></tr>")
+                format!(
+                    "<tr class=\"more\"><td></td><td colspan=\"{span}\"><ul>{details}</ul>{console}</td></tr>"
+                )
             };
             rows += &format!(
                 "<tr class=\"{class}\"><td class=\"mark\">{mark}</td>{iteration}<td><span class=\"method\">{}</span> {}<div class=\"url\">{}</div></td><td class=\"num\">{}</td><td class=\"num\">{:.0} ms</td><td class=\"num\">{}</td><td class=\"num\">{tests}</td></tr>{body}\n",
@@ -278,7 +293,11 @@ impl RunReport {
                 apix_http::human_size(item.size as usize),
             );
         }
-        let iteration_head = if self.iterations > 1 { "<th>#</th>" } else { "" };
+        let iteration_head = if self.iterations > 1 {
+            "<th>#</th>"
+        } else {
+            ""
+        };
         let stopped = if self.stopped {
             "<p class=\"bad\">The run was stopped before the end.</p>"
         } else {
@@ -313,6 +332,7 @@ th {{ font-size:12px; color:var(--muted); font-weight:600; }}
 .method {{ font-weight:700; color:var(--accent); font-size:12px; }}
 .url {{ color:var(--muted); font-size:12px; word-break:break-all; }}
 tr.more td {{ padding-top:0; }}
+tr:has(+ tr.more) td {{ border-bottom:none; }}
 ul {{ margin:0; padding:0 0 0 2px; list-style:none; }}
 li {{ margin:2px 0; }}
 .why {{ color:var(--muted); font-size:12px; margin-left:20px; }}
@@ -343,7 +363,9 @@ footer {{ color:var(--muted); font-size:12px; margin-top:16px; }}
 "#,
             title = html(&title),
             name = html(&self.name),
-            started = iso8601(self.started_ms).replace('T', " ").trim_end_matches('Z'),
+            started = iso8601(self.started_ms)
+                .replace('T', " ")
+                .trim_end_matches('Z'),
             iterations = self.iterations,
             duration = self.duration_ms as f64 / 1000.0,
             req_class = if s.failed > 0 { "bad" } else { "ok" },
@@ -531,9 +553,17 @@ mod tests {
     fn junit_has_suites_cases_and_escapes() {
         let xml = report().to_junit();
         assert!(xml.starts_with("<?xml"));
-        assert!(xml.contains(r#"<testsuites name="Shop &lt;API&gt;" tests="4" failures="2" errors="1""#));
+        assert!(
+            xml.contains(
+                r#"<testsuites name="Shop &lt;API&gt;" tests="4" failures="2" errors="1""#
+            )
+        );
         assert!(xml.contains(r#"<testcase name="has &quot;id&quot;" classname="users/list.apix""#));
-        assert!(xml.contains(r#"<failure message="expected undefined to exist" type="AssertionError"/>"#));
+        assert!(
+            xml.contains(
+                r#"<failure message="expected undefined to exist" type="AssertionError"/>"#
+            )
+        );
         assert!(xml.contains(r#"<failure message="got 503" type="StatusError"/>"#));
         assert!(xml.contains(r#"<error message="undefined variable(s): password"/>"#));
         assert_eq!(xml.matches("<testsuite ").count(), 3);

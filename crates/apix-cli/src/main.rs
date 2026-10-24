@@ -3,10 +3,10 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use anyhow::{Context, Result, bail};
-use apix_core::store::load_request;
 use apix_core::vfs::{self, KdfCost, Vault};
-use apix_core::{Collection, Project, Request, Variables};
+use apix_core::{Collection, Variables};
 use apix_http::{HttpClient, Response, human_size};
+use apix_runner::Scope;
 use clap::{Args, Parser, Subcommand};
 
 #[derive(Parser)]
@@ -38,22 +38,40 @@ enum Command {
         /// Print what happened on the network: DNS, connection, redirects, TLS, local side
         #[arg(short = 'n', long)]
         network: bool,
-        /// Give up after this many seconds (overrides the request's settings)
-        #[arg(long, value_name = "SECONDS")]
-        timeout: Option<f64>,
-        /// Do not verify the server certificate
-        #[arg(short = 'k', long)]
-        insecure: bool,
-        /// Send through this proxy (overrides the environment)
-        #[arg(long, value_name = "URL")]
-        proxy: Option<String>,
+        #[command(flatten)]
+        net: NetArgs,
     },
-    /// Send every request in a collection folder; exits non-zero if any fails
+    /// Send every request in a collection (or a folder of it) in sidebar
+    /// order; exits non-zero if any fails
     Run {
+        /// The collection, or a folder or request inside it
         #[arg(default_value = ".")]
         dir: PathBuf,
         #[command(flatten)]
         vars: VarArgs,
+        /// How many times to send the requests (default: once per data row, else once)
+        #[arg(short = 'n', long)]
+        iterations: Option<u32>,
+        /// A CSV or JSON file; each row is one iteration and its columns are variables
+        #[arg(short = 'd', long, value_name = "FILE")]
+        data: Option<PathBuf>,
+        /// Wait this many milliseconds between requests
+        #[arg(long, value_name = "MS", default_value_t = 0)]
+        delay: u64,
+        /// Stop at the first request that fails
+        #[arg(long)]
+        bail: bool,
+        /// Write a JUnit XML report (for CI test views)
+        #[arg(long, value_name = "FILE")]
+        junit: Option<PathBuf>,
+        /// Write everything that happened as JSON
+        #[arg(long, value_name = "FILE")]
+        json: Option<PathBuf>,
+        /// Write a report page that opens in any browser
+        #[arg(long, value_name = "FILE")]
+        html: Option<PathBuf>,
+        #[command(flatten)]
+        net: NetArgs,
     },
     /// Print a request as a shell command (curl for bash or fish, curl.exe,
     /// PowerShell, HTTPie, wget) or as code (fetch, axios, Python, Go, Rust, C#, Java, PHP, Swift, Kotlin)
@@ -205,53 +223,34 @@ struct VarArgs {
     vars: Vec<(String, String)>,
 }
 
+#[derive(Args)]
+struct NetArgs {
+    /// Give up after this many seconds (overrides the requests' settings)
+    #[arg(long, value_name = "SECONDS")]
+    timeout: Option<f64>,
+    /// Do not verify the server certificate
+    #[arg(short = 'k', long)]
+    insecure: bool,
+    /// Send through this proxy (overrides the environment)
+    #[arg(long, value_name = "URL")]
+    proxy: Option<String>,
+}
+
+impl NetArgs {
+    fn overrides(&self) -> apix_core::RequestSettings {
+        apix_core::RequestSettings {
+            timeout_ms: self.timeout.map(|s| (s * 1000.0) as u64),
+            tls_verify: self.insecure.then_some(false),
+            proxy: self.proxy.clone(),
+            ..Default::default()
+        }
+    }
+}
+
 fn parse_var(raw: &str) -> Result<(String, String), String> {
     raw.split_once('=')
         .map(|(k, v)| (k.to_owned(), v.to_owned()))
         .ok_or_else(|| format!("expected KEY=VALUE, got `{raw}`"))
-}
-
-/// The collection, and the project around it, that a file or folder belongs to.
-struct Scope {
-    collection: Option<Collection>,
-    project: Option<Project>,
-}
-
-impl Scope {
-    fn find(start: &Path) -> Result<Self> {
-        let collection = Collection::find_root(start)
-            .map(Collection::open)
-            .transpose()?;
-        let project = collection
-            .as_ref()
-            .and_then(|c| c.root.parent())
-            .and_then(Project::find_root)
-            .map(Project::open)
-            .transpose()?;
-        Ok(Self {
-            collection,
-            project,
-        })
-    }
-
-    /// Loads a request and fills in the auth and transport settings it
-    /// inherits from its folders, collection or project.
-    fn load(&self, path: &Path) -> Result<Request> {
-        let mut request = load_request(path)?;
-        apix_core::project::apply_inherited_auth(
-            &mut request,
-            path,
-            self.collection.as_ref(),
-            self.project.as_ref(),
-        )?;
-        apix_core::project::apply_inherited_settings(
-            &mut request,
-            path,
-            self.collection.as_ref(),
-            self.project.as_ref(),
-        )?;
-        Ok(request)
-    }
 }
 
 impl VarArgs {
@@ -316,32 +315,38 @@ async fn run(cli: Cli) -> Result<bool> {
             vars,
             include_headers,
             network,
-            timeout,
-            insecure,
-            proxy,
+            net,
         } => {
             unlock_around(&file, &var)?;
             let scope = Scope::find(&file)?;
             let scopes = vars.scopes(&scope)?;
             let vars = vars.build(&scope)?;
-            let overrides = apix_core::RequestSettings {
-                timeout_ms: timeout.map(|s| (s * 1000.0) as u64),
-                tls_verify: insecure.then_some(false),
-                proxy,
-                ..Default::default()
-            };
             let mut state = Default::default();
             let info = apix_script::Info {
                 request_id: file.display().to_string(),
                 iteration_count: 1,
                 ..Default::default()
             };
-            let done = exchange(
-                &client, &scope, &file, &vars, &scopes, &mut state, &overrides, info,
+            let done = apix_runner::exchange(
+                &client,
+                &scope,
+                &file,
+                &vars,
+                &scopes,
+                &mut state,
+                &net.overrides(),
+                info,
+                script_sender(),
             )
             .await?;
             if let Some(response) = &done.response {
-                print_status(&style, response);
+                print_status(
+                    &style,
+                    response.status,
+                    response.reason.unwrap_or(""),
+                    response.timing.total.as_secs_f64() * 1000.0,
+                    response.body.len(),
+                );
                 if include_headers {
                     for (k, v) in &response.headers {
                         println!("{}{k}{}: {v}", style.dim, style.reset);
@@ -353,98 +358,135 @@ async fn run(cli: Cli) -> Result<bool> {
                 }
                 println!("{}", response.pretty_body());
             }
-            print_scripts(&style, &done);
+            print_scripts(&style, &done.to_item(0, String::new()));
             Ok(done.passed())
         }
-        Command::Run { dir, vars } => {
+        Command::Run {
+            dir,
+            vars: var_args,
+            iterations,
+            data,
+            delay,
+            bail: stop_on_failure,
+            junit,
+            json,
+            html,
+            net,
+        } => {
             unlock_around(&dir, &var)?;
             let root = Collection::find_root(&dir).with_context(|| {
                 format!("no apix.toml found in {} or its parents", dir.display())
             })?;
             let scope = Scope::find(&root)?;
-            let collection = Collection::open(&root)?;
-            let scopes = vars.scopes(&scope)?;
-            let vars = vars.build(&scope)?;
-            let paths = collection.request_paths();
-            let names: Vec<String> = paths
-                .iter()
-                .map(|p| load_request(p).map(|r| r.name).unwrap_or_default())
-                .collect();
-            let mut state = apix_core::scripts::ScriptVars::default();
-            let (mut passed, mut failed, mut tests_failed) = (0, 0, 0);
-            let mut at = 0;
-            // `setNextRequest` may loop (polling); a ceiling keeps a mistake from running forever.
-            let mut steps = 0;
-            while at < paths.len() && steps < paths.len() * 100 {
-                steps += 1;
-                let path = &paths[at];
-                let label = path
-                    .strip_prefix(&root)
-                    .unwrap_or(path)
-                    .display()
-                    .to_string();
-                let info = apix_script::Info {
-                    request_id: label.clone(),
-                    iteration_count: 1,
-                    ..Default::default()
-                };
-                let mut next = at + 1;
-                match exchange(
-                    &client,
-                    &scope,
-                    path,
-                    &vars,
-                    &scopes,
-                    &mut state,
-                    &Default::default(),
-                    info,
-                )
-                .await
-                {
-                    Ok(done) => {
-                        if done.passed() {
-                            passed += 1
-                        } else {
-                            failed += 1
-                        }
-                        tests_failed += done.tests.failed_tests();
-                        print!("{label:<40} ");
-                        match &done.response {
-                            Some(response) => print_status(&style, response),
+            let collection = scope.collection.as_ref().context("no collection")?;
+            // A folder (or request) inside the collection runs only what is in it.
+            let start = std::path::absolute(&dir).unwrap_or_else(|_| dir.clone());
+            let mut requests = collection.request_paths();
+            if start != root {
+                requests.retain(|p| p.starts_with(&start));
+            }
+            if requests.is_empty() {
+                bail!("no requests in {}", dir.display());
+            }
+            let data = match &data {
+                Some(path) => {
+                    let rows = apix_runner::data::load(path)?;
+                    if rows.is_empty() {
+                        bail!("{} has no rows", path.display());
+                    }
+                    rows
+                }
+                None => Vec::new(),
+            };
+            let plan = apix_runner::Plan {
+                root: root.clone(),
+                requests,
+                vars: var_args.build(&scope)?,
+                scopes: var_args.scopes(&scope)?,
+                environment: var_args.env.clone(),
+                pinned: var_args.vars.clone(),
+                data,
+                iterations: iterations.unwrap_or(0),
+                delay: std::time::Duration::from_millis(delay),
+                bail: stop_on_failure,
+                overrides: net.overrides(),
+            };
+            let total = plan.iteration_count();
+            let control = apix_runner::Control::default();
+            let report = apix_runner::run(
+                &scope,
+                &plan,
+                &client,
+                script_sender(),
+                &control,
+                |progress| match progress {
+                    apix_runner::Progress::Iteration(n, row) if total > 1 => {
+                        let row = row
+                            .map(|r| {
+                                let pairs: Vec<String> =
+                                    r.iter().map(|(k, v)| format!("{k}={v}")).collect();
+                                format!(" · {}", pairs.join(", "))
+                            })
+                            .unwrap_or_default();
+                        println!(
+                            "{}Iteration {}/{total}{row}{}",
+                            style.dim,
+                            n + 1,
+                            style.reset
+                        );
+                    }
+                    apix_runner::Progress::Item(item) => {
+                        print!("{:<40} ", item.path);
+                        match item.status {
+                            Some(status) => print_status(
+                                &style,
+                                status,
+                                &item.reason,
+                                item.time_ms,
+                                item.size as usize,
+                            ),
                             None => println!(),
                         }
-                        print_scripts(&style, &done);
-                        let wanted = done
-                            .tests
-                            .next_request
-                            .clone()
-                            .or(done.pre.next_request.clone());
-                        match wanted {
-                            Some(None) => next = paths.len(),
-                            Some(Some(name)) => match names.iter().position(|n| *n == name) {
-                                Some(ix) => next = ix,
-                                None => println!(
-                                    "  {}setNextRequest: no request named \"{name}\"{}",
-                                    style.red, style.reset
-                                ),
-                            },
-                            None => {}
-                        }
+                        print_scripts(&style, item);
                     }
-                    Err(err) => {
-                        failed += 1;
-                        println!("{label:<40} {}error{} {err:#}", style.red, style.reset);
-                    }
-                }
-                at = next;
-            }
-            let tests = if tests_failed > 0 {
-                format!(" ({tests_failed} failed tests)")
+                    _ => {}
+                },
+            )
+            .await;
+            let summary = report.summary();
+            let tests = if summary.tests_failed > 0 {
+                format!(" ({} failed tests)", summary.tests_failed)
             } else {
                 String::new()
             };
-            println!("\n{passed} passed, {failed} failed{tests}");
-            Ok(failed == 0)
+            let stopped = if report.stopped {
+                format!(
+                    " {}(stopped at the first failure){}",
+                    style.dim, style.reset
+                )
+            } else {
+                String::new()
+            };
+            println!(
+                "\n{} passed, {} failed{tests}{stopped}",
+                summary.passed, summary.failed
+            );
+            for (path, text) in [
+                (junit, report.to_junit()),
+                (json, report.to_json()),
+                (html, report.to_html()),
+            ]
+            .into_iter()
+            .filter_map(|(path, text)| Some((path?, text)))
+            {
+                if let Some(parent) = path.parent().filter(|p| !p.as_os_str().is_empty()) {
+                    std::fs::create_dir_all(parent)?;
+                }
+                std::fs::write(&path, text)
+                    .with_context(|| format!("writing {}", path.display()))?;
+                println!("{}Wrote {}{}", style.dim, path.display(), style.reset);
+            }
+            Ok(summary.failed == 0)
         }
         Command::Import { file, out, into } => import(&style, &file, out, into),
         Command::Export { dir, out } => {
@@ -653,128 +695,6 @@ fn import(style: &Style, file: &Path, out: Option<PathBuf>, into: Option<PathBuf
     Ok(true)
 }
 
-/// One request with its scripts: what the pre-request scripts did, the
-/// response (unless a script stopped it), and what the test scripts did.
-struct Exchange {
-    pre: apix_script::Output,
-    response: Option<Response>,
-    tests: apix_script::Output,
-}
-
-impl Exchange {
-    /// Whether this request counts as passed: no script error, no failed
-    /// test, and, for requests without tests, a successful status.
-    fn passed(&self) -> bool {
-        let scripts_ok = self.pre.error.is_none()
-            && self.tests.error.is_none()
-            && self.tests.failed_tests() == 0;
-        let status_ok =
-            !self.tests.tests.is_empty() || self.response.as_ref().is_none_or(Response::is_success);
-        scripts_ok && status_ok && (self.response.is_some() || self.pre.skip_request)
-    }
-}
-
-/// Sends the request at `path`: pre-request scripts, then the request with
-/// variables filled in, then test scripts. `state` carries what scripts set
-/// from one request to the next.
-#[allow(clippy::too_many_arguments)]
-async fn exchange(
-    client: &HttpClient,
-    scope: &Scope,
-    path: &Path,
-    vars: &Variables,
-    scopes: &apix_core::scripts::ScopeValues,
-    state: &mut apix_core::scripts::ScriptVars,
-    overrides: &apix_core::RequestSettings,
-    info: apix_script::Info,
-) -> Result<Exchange> {
-    use apix_core::scripts::{Event, chain};
-
-    let mut request = scope.load(path)?;
-    request.settings = overrides.clone().or_inherit(&request.settings);
-    let mut info = info;
-    if info.request_name.is_empty() {
-        info.request_name = request.name.clone();
-    }
-    let root = scope.collection.as_ref().map(|c| c.root.as_path());
-    let sender = script_sender();
-    let pre = run_scripts(
-        &chain(path, root, Event::PreRequest),
-        &apix_script::Input {
-            event: Event::PreRequest,
-            request: &request,
-            response: None,
-            scopes,
-            vars: state,
-            info: info.clone(),
-            sender: Some(sender.clone()),
-        },
-    );
-    *state = pre.vars.clone();
-    let mut done = Exchange {
-        pre,
-        response: None,
-        tests: apix_script::Output::default(),
-    };
-    if done.pre.error.is_some() || done.pre.skip_request {
-        return Ok(done);
-    }
-    let resolved = done.pre.request.resolve(&state.apply(vars.clone()));
-    if !resolved.missing.is_empty() {
-        let names: Vec<_> = resolved.missing.into_iter().collect();
-        bail!("undefined variable(s): {}", names.join(", "));
-    }
-    // Body files are relative to the request file.
-    let sent = match path.parent() {
-        Some(dir) => resolved.request.with_files_relative_to(dir),
-        None => resolved.request,
-    };
-    let response = client.send(&sent).await?;
-    let view = apix_script::ResponseView::new(
-        response.status,
-        response.reason.unwrap_or(""),
-        &response.headers,
-        &response.body,
-        response.timing.total,
-    );
-    let mut tests = chain(path, root, Event::Test);
-    tests.extend(apix_script::assertions_script(&done.pre.request.asserts));
-    done.tests = run_scripts(
-        &tests,
-        &apix_script::Input {
-            event: Event::Test,
-            request: &done.pre.request,
-            response: Some(&view),
-            scopes,
-            vars: state,
-            info,
-            sender: Some(sender),
-        },
-    );
-    *state = done.tests.vars.clone();
-    done.response = Some(response);
-    Ok(done)
-}
-
-/// Runs scripts on their own thread: `pm.sendRequest` blocks on its own
-/// tokio runtime, which cannot start inside the CLI's async code.
-fn run_scripts(
-    scripts: &[apix_core::scripts::ScriptFile],
-    input: &apix_script::Input,
-) -> apix_script::Output {
-    std::thread::scope(|scope| {
-        scope
-            .spawn(|| apix_script::run(scripts, input))
-            .join()
-            .unwrap_or_else(|_| apix_script::Output {
-                request: input.request.clone(),
-                vars: input.vars.clone(),
-                error: Some("the script engine stopped unexpectedly".into()),
-                ..Default::default()
-            })
-    })
-}
-
 /// `pm.sendRequest` from the command line: a fresh client per request.
 fn script_sender() -> apix_script::Sender {
     apix_script::Sender::new(|request| {
@@ -797,30 +717,31 @@ fn script_sender() -> apix_script::Sender {
 }
 
 /// Console lines, script errors and test results, indented under a request.
-fn print_scripts(style: &Style, exchange: &Exchange) {
-    for output in [&exchange.pre, &exchange.tests] {
-        for log in &output.logs {
-            let color = match log.level.as_str() {
-                "error" => style.red,
-                "warn" => style.yellow,
-                _ => style.dim,
-            };
-            println!("  {color}│ {}{}", log.text, style.reset);
-        }
+fn print_scripts(style: &Style, item: &apix_runner::ItemResult) {
+    for log in &item.logs {
+        let color = match log.level.as_str() {
+            "error" => style.red,
+            "warn" => style.yellow,
+            _ => style.dim,
+        };
+        println!("  {color}│ {}{}", log.text, style.reset);
     }
-    if let Some(error) = &exchange.pre.error {
+    if let Some(error) = &item.pre_error {
         println!(
             "  {}pre-request script error: {error}{}",
             style.red, style.reset
         );
     }
-    if exchange.pre.skip_request {
+    if let Some(error) = &item.error {
+        println!("  {}error: {error}{}", style.red, style.reset);
+    }
+    if item.skipped {
         println!(
             "  {}skipped by its pre-request script{}",
             style.dim, style.reset
         );
     }
-    for test in &exchange.tests.tests {
+    for test in &item.tests {
         if test.skipped {
             println!("  {}- {} (skipped){}", style.dim, test.name, style.reset);
         } else if test.passed {
@@ -833,25 +754,22 @@ fn print_scripts(style: &Style, exchange: &Exchange) {
             );
         }
     }
-    if let Some(error) = &exchange.tests.error {
+    if let Some(error) = &item.test_error {
         println!("  {}test script error: {error}{}", style.red, style.reset);
     }
 }
 
-fn print_status(style: &Style, response: &Response) {
-    let color = if response.is_success() {
+fn print_status(style: &Style, status: u16, reason: &str, ms: f64, size: usize) {
+    let color = if (200..400).contains(&status) {
         style.green
     } else {
         style.red
     };
     println!(
-        "{color}{} {}{}  {}{:.1} ms · {}{}",
-        response.status,
-        response.reason.unwrap_or(""),
+        "{color}{status} {reason}{}  {}{ms:.1} ms · {}{}",
         style.reset,
         style.dim,
-        response.timing.total.as_secs_f64() * 1000.0,
-        human_size(response.body.len()),
+        human_size(size),
         style.reset,
     );
 }

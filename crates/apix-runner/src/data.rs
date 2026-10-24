@@ -27,9 +27,16 @@ pub fn load(path: &Path) -> Result<Vec<Row>> {
     let json = match ext.as_deref() {
         Some("json") => true,
         Some("csv") => false,
-        _ => text.trim_start_matches('\u{feff}').trim_start().starts_with('['),
+        _ => text
+            .trim_start_matches('\u{feff}')
+            .trim_start()
+            .starts_with('['),
     };
-    let rows = if json { parse_json(&text) } else { parse_csv(&text) };
+    let rows = if json {
+        parse_json(&text)
+    } else {
+        parse_csv(&text)
+    };
     rows.with_context(|| format!("reading the data file {}", path.display()))
 }
 
