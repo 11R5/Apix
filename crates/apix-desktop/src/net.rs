@@ -184,11 +184,14 @@ pub fn send_streaming(
     (incoming, AbortOnDrop(handle))
 }
 
+/// When a WebSocket handshake finished, with its status and headers.
+pub type Opened = (std::time::Instant, u16, Vec<(String, String)>);
+
 /// What an open WebSocket has to report; the UI takes it as it comes.
 #[derive(Default)]
 pub struct SocketIncoming {
     /// When the handshake finished, its status and headers.
-    pub opened: Option<(std::time::Instant, u16, Vec<(String, String)>)>,
+    pub opened: Option<Opened>,
     /// Messages and the closing, each with when it happened.
     pub events: Vec<(std::time::Instant, apix_http::ws::WsEvent)>,
     /// Why the connection could not be opened.
