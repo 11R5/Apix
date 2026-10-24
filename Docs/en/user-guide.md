@@ -22,6 +22,7 @@ command line runs the same requests in a terminal or CI.
 - [The response](#the-response)
 - [The Network tab](#the-network-tab)
 - [Scripts and tests](#scripts-and-tests)
+- [Runner](#runner)
 - [Tabs](#tabs)
 - [Organising requests](#organising-requests)
 - [Projects](#projects)
@@ -304,6 +305,43 @@ Values a script sets are not written to any file. They last while Apix is open
 (switching environment drops what `pm.environment.set` set) and show up in the
 variable cards as “Set by a script”. `pm.variables.set` lasts for one send.
 
+## Runner
+
+The **Runner** sends many requests in one go and checks them all. Open it with
+**View › Runner…** or Ctrl+Shift+R for the collection you are in, or with
+**Run…** on a collection or folder in the sidebar for just that part.
+
+![The Runner after a data-driven run](images/runner.png)
+
+- **Requests**: every request in sidebar order, ticked. Untick the ones to
+  leave out, and move one with ↑ ↓ to change the order for this run.
+- **Environment**: which environment's variables to use.
+- **Iterations**: how many times to go through the requests. Left empty, it is
+  once, or once per row when there is a data file.
+- **Delay (ms)**: a pause between two requests, for rate-limited APIs.
+- **Data file**: a CSV or JSON file for a data-driven run. Every row is one
+  iteration and its columns are variables: `{{email}}` in the request and
+  `pm.iterationData.get("email")` in scripts. CSV needs a header line; quotes
+  and semicolon-separated files (Excel in many languages) are understood. JSON
+  is an array of objects, like `[{"id": 1, "email": "a@x.test"}, …]`.
+- **Stop at the first failure**: end the run at the first request that fails.
+
+A request passes when its tests (scripts and Checks) pass; a request without
+tests passes on a 2xx or 3xx status. While it runs you can **Pause**,
+**Resume** and **Stop** (after the request being sent). Closing the dialog
+does not stop the run: open the Runner again to see it. Click a result to see
+its tests, why it was not sent, and its console lines. `pm.execution
+.setNextRequest("name")` jumps to another request of the run and
+`setNextRequest(null)` ends the iteration, as in Postman.
+
+The Runner sends the saved version of each request. Values scripts set before
+the run are used; what the run's scripts set stays inside the run.
+
+When the run is over, **Save report** writes it as **JUnit XML** (for CI
+test views), **JSON** (everything that happened) or **HTML** (a page that
+opens in any browser, light or dark). `apix run` does the same from a
+terminal; see [Run a collection in CI](workflows.md#run-a-collection-in-ci).
+
 ## Tabs
 
 Each tab keeps its unsaved edits, its last response, and even a request that is
@@ -488,6 +526,7 @@ configuration directory (`%APPDATA%\Apix` on Windows,
 | Ctrl+E | Variables and environments |
 | Ctrl+, | Settings |
 | Ctrl+H | History |
+| Ctrl+Shift+R | Runner |
 | Alt+1…7 | Switch the method |
 | Ctrl+W | Close the tab |
 | Ctrl+Tab / Ctrl+Shift+Tab | Next / previous tab |

@@ -302,6 +302,7 @@ menu.project_settings: Proje istek ayarları…
 menu.quit: Çıkış
 menu.report_problem: Sorun bildir
 menu.request: İstek
+menu.runner: "Runner…"
 menu.save: Kaydet
 menu.send: Gönder
 menu.settings: Ayarlar…
@@ -434,6 +435,42 @@ response.tab.pretty: Biçimli
 response.tab.raw: Ham
 response.tab.tests: Testler
 response.tab.tests_count: "Testler %{passed}/%{total}"
+runner.all: "Hepsi"
+runner.bad_number: "Tekrar ve bekleme tam sayı olmalı."
+runner.bail: "İlk hatada dur"
+runner.busy: "Bir koşu hâlâ sürüyor; yenisini başlatmadan önce onu durdur."
+runner.choose_data: "CSV ya da JSON dosyası seç…"
+runner.data: "Veri dosyası"
+runner.data_empty: "Veri dosyasında satır yok."
+runner.data_error: "Veri dosyası okunamadı: %{error}"
+runner.data_rows: "%{count} satır · %{columns}"
+runner.delay: "Bekleme (ms)"
+runner.environment: "Ortam"
+runner.error: "Koşu hazırlanamadı: %{error}"
+runner.finished: "%{seconds} sn'de bitti"
+runner.idle: "İstekleri, sıralarını ve kaç kez çalışacaklarını seç, sonra Çalıştır'a bas. İsteklerin kayıtlı halleri gönderilir; sonuçlar burada görünür."
+runner.iteration: "Tekrar %{iteration}/%{total}"
+runner.iterations: "Tekrar"
+runner.iterations_hint: "Boş bırakılırsa bir kez. Bekleme, iki istek arasındaki aradır."
+runner.iterations_rows: "Boş bırakılırsa veri dosyasının her satırı için bir kez (%{count}). Bekleme, iki istek arasındaki aradır."
+runner.none: "Hiçbiri"
+runner.not_sent: "gönderilmedi"
+runner.nothing_selected: "En az bir istek seç."
+runner.pause: "Duraklat"
+runner.paused: "Duraklatıldı"
+runner.requests: "İstekler (%{count})"
+runner.resume: "Devam et"
+runner.run: "Çalıştır"
+runner.save_report: "Raporu kaydet:"
+runner.saved: "Rapor kaydedildi: %{path}"
+runner.sending: "%{name} gönderiliyor…"
+runner.skipped: "atlandı"
+runner.stop: "Durdur"
+runner.stopped: "%{seconds} sn sonra durduruldu"
+runner.stopping: "Bu istekten sonra duruyor…"
+runner.summary: "%{passed} geçti · %{failed} kaldı · testler %{tests_passed}/%{tests}"
+runner.title: "Runner · %{name}"
+runner.waiting: "Bekleniyor…"
 scripts.around: "%{hint} Bundan önce %{count} klasör ya da koleksiyon scripti çalışır."
 scripts.asserts: Doğrulamalar
 scripts.asserts_count: "Doğrulamalar %{count}"
@@ -494,6 +531,7 @@ sidebar.open_folder: Klasör aç
 sidebar.recent: SON AÇILANLAR
 sidebar.remove_encryption: Şifrelemeyi kaldır…
 sidebar.rename: Yeniden adlandır…
+sidebar.run: "Çalıştır…"
 sidebar.settings: İstek ayarları…
 sidebar.show_in_environment: Ortamda göster
 table.add: Ekle

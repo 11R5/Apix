@@ -84,7 +84,8 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [x] Scripts tab in the app; Tests and Console tabs on the response
 - [x] `apix send` / `apix run` run scripts, print test results and console lines, follow `setNextRequest`, and fail when a test fails
 - [x] `pm.sendRequest` (callback and `await`), built-in libraries (`require` of crypto-js, uuid, lodash, moment, ajv, tv4, chai: the parts API scripts use, written for Apix), checks without code (`[[assert]]`, a Checks table in the Scripts tab), save a response value as a variable
-- [ ] Runner UI, data-driven runs (CSV/JSON), JUnit / HTML reports
+- [x] Runner: the Runner window (Ctrl+Shift+R, or Run… on a collection or folder: pick and order requests, iterations, delay, environment, data file, stop at the first failure, pause/resume/stop, results with tests and console) and `apix run` options (`--data`, `--iterations`, `--delay`, `--bail`, folder runs); data-driven runs from CSV or JSON; JUnit XML / JSON / HTML reports; a GitHub Actions example (`examples/ci/github-actions.yml`); shared crate `apix-runner`
+- [ ] Later: `--parallel`, an official Docker image for `apix`
 
 ## After M5 — Themes
 - [ ] Switch themes without restarting

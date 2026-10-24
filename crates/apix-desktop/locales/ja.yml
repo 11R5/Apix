@@ -302,6 +302,7 @@ menu.project_settings: プロジェクトのリクエスト設定…
 menu.quit: 終了
 menu.report_problem: 問題を報告
 menu.request: リクエスト
+menu.runner: "Runner…"
 menu.save: 保存
 menu.send: 送信
 menu.settings: 設定…
@@ -434,6 +435,42 @@ response.tab.pretty: 整形
 response.tab.raw: 生データ
 response.tab.tests: テスト
 response.tab.tests_count: "テスト %{passed}/%{total}"
+runner.all: "すべて"
+runner.bad_number: "反復回数と待機は整数で指定してください。"
+runner.bail: "最初の失敗で止める"
+runner.busy: "実行中のものがあります。新しく始める前に停止してください。"
+runner.choose_data: "CSV または JSON ファイルを選択…"
+runner.data: "データファイル"
+runner.data_empty: "データファイルに行がありません。"
+runner.data_error: "データファイルを読み込めませんでした: %{error}"
+runner.data_rows: "%{count} 行 · %{columns}"
+runner.delay: "待機 (ms)"
+runner.environment: "環境"
+runner.error: "実行を準備できませんでした: %{error}"
+runner.finished: "%{seconds} 秒で完了"
+runner.idle: "リクエスト、順番、実行回数を選んで「実行」を押してください。保存済みの内容が送信され、結果はここに表示されます。"
+runner.iteration: "反復 %{iteration}/%{total}"
+runner.iterations: "反復回数"
+runner.iterations_hint: "空欄なら 1 回。待機は 2 つのリクエストの間に入ります。"
+runner.iterations_rows: "空欄ならデータの行ごとに 1 回 (%{count})。待機は 2 つのリクエストの間に入ります。"
+runner.none: "なし"
+runner.not_sent: "未送信"
+runner.nothing_selected: "リクエストを 1 つ以上選んでください。"
+runner.pause: "一時停止"
+runner.paused: "一時停止中"
+runner.requests: "リクエスト (%{count})"
+runner.resume: "再開"
+runner.run: "実行"
+runner.save_report: "レポートを保存:"
+runner.saved: "レポートを保存しました: %{path}"
+runner.sending: "%{name} を送信中…"
+runner.skipped: "スキップ"
+runner.stop: "停止"
+runner.stopped: "%{seconds} 秒で停止しました"
+runner.stopping: "このリクエストの後で停止します…"
+runner.summary: "成功 %{passed} · 失敗 %{failed} · テスト %{tests_passed}/%{tests}"
+runner.title: "Runner · %{name}"
+runner.waiting: "待機中…"
 scripts.around: "%{hint} この前にフォルダーまたはコレクションのスクリプトが %{count} 個実行されます。"
 scripts.asserts: チェック
 scripts.asserts_count: "チェック %{count}"
@@ -494,6 +531,7 @@ sidebar.open_folder: フォルダーを開く
 sidebar.recent: 最近使った項目
 sidebar.remove_encryption: 暗号化を解除…
 sidebar.rename: 名前を変更…
+sidebar.run: "実行…"
 sidebar.settings: リクエスト設定…
 sidebar.show_in_environment: 環境で表示
 table.add: 追加

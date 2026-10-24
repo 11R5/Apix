@@ -1,0 +1,54 @@
+# Runs an Apix collection on every push and pull request, shows the test
+# results on the run's page and keeps the HTML report.
+#
+# Copy this file to .github/workflows/api-tests.yml in your repository and
+# change `api` (the collection folder) and `staging` (its environment).
+
+name: API tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  apix:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write # for the test report
+    steps:
+      - uses: actions/checkout@v4
+
+      # Builds the `apix` command once, then reuses it from the cache.
+      - uses: actions/cache@v4
+        id: apix-cache
+        with:
+          path: ~/.cargo/bin/apix
+          key: apix-${{ runner.os }}-v1
+      - if: steps.apix-cache.outputs.cache-hit != 'true'
+        run: cargo install --locked --git https://github.com/11R5/Apix apix-cli
+
+      - name: Run the collection
+        run: >
+          apix run api --env staging
+          --data api/data/users.csv
+          --junit reports/apix.xml
+          --html reports/apix.html
+          --var "token=$API_TOKEN"
+        env:
+          # Secrets stay out of the repository (.local.toml files are
+          # gitignored), so CI passes them with --var.
+          API_TOKEN: ${{ secrets.API_TOKEN }}
+          # Only for an encrypted collection.
+          APIX_PASSWORD: ${{ secrets.APIX_PASSWORD }}
+
+      # The reports are written even when tests fail.
+      - if: ${{ !cancelled() }}
+        uses: mikepenz/action-junit-report@v5
+        with:
+          report_paths: reports/apix.xml
+      - if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: apix-report
+          path: reports/

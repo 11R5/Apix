@@ -302,6 +302,7 @@ menu.project_settings: Anfrage-Einstellungen des Projekts…
 menu.quit: Beenden
 menu.report_problem: Problem melden
 menu.request: Anfrage
+menu.runner: "Runner…"
 menu.save: Speichern
 menu.send: Senden
 menu.settings: Einstellungen…
@@ -434,6 +435,42 @@ response.tab.pretty: Formatiert
 response.tab.raw: Roh
 response.tab.tests: Tests
 response.tab.tests_count: "Tests %{passed}/%{total}"
+runner.all: "Alle"
+runner.bad_number: "Durchläufe und Pause müssen ganze Zahlen sein."
+runner.bail: "Beim ersten Fehler anhalten"
+runner.busy: "Ein Lauf ist noch aktiv; stoppe ihn, bevor du einen neuen startest."
+runner.choose_data: "CSV- oder JSON-Datei wählen…"
+runner.data: "Datendatei"
+runner.data_empty: "Die Datendatei hat keine Zeilen."
+runner.data_error: "Die Datendatei konnte nicht gelesen werden: %{error}"
+runner.data_rows: "%{count} Zeilen · %{columns}"
+runner.delay: "Pause (ms)"
+runner.environment: "Umgebung"
+runner.error: "Der Lauf konnte nicht vorbereitet werden: %{error}"
+runner.finished: "Fertig in %{seconds} s"
+runner.idle: "Wähle die Anfragen, ihre Reihenfolge und wie oft sie laufen, dann drücke Ausführen. Gesendet werden die gespeicherten Fassungen; die Ergebnisse erscheinen hier."
+runner.iteration: "Durchlauf %{iteration}/%{total}"
+runner.iterations: "Durchläufe"
+runner.iterations_hint: "Leer heißt einmal. Die Pause liegt zwischen zwei Anfragen."
+runner.iterations_rows: "Leer heißt einmal pro Datenzeile (%{count}). Die Pause liegt zwischen zwei Anfragen."
+runner.none: "Keine"
+runner.not_sent: "nicht gesendet"
+runner.nothing_selected: "Wähle mindestens eine Anfrage."
+runner.pause: "Pausieren"
+runner.paused: "Pausiert"
+runner.requests: "Anfragen (%{count})"
+runner.resume: "Fortsetzen"
+runner.run: "Ausführen"
+runner.save_report: "Bericht speichern:"
+runner.saved: "Bericht gespeichert unter %{path}"
+runner.sending: "Sende %{name}…"
+runner.skipped: "übersprungen"
+runner.stop: "Stoppen"
+runner.stopped: "Nach %{seconds} s gestoppt"
+runner.stopping: "Hält nach dieser Anfrage an…"
+runner.summary: "%{passed} bestanden · %{failed} fehlgeschlagen · Tests %{tests_passed}/%{tests}"
+runner.title: "Runner · %{name}"
+runner.waiting: "Wartet…"
 scripts.around: "%{hint} Davor laufen %{count} Ordner- oder Sammlungsskripte."
 scripts.asserts: Prüfungen
 scripts.asserts_count: "Prüfungen %{count}"
@@ -494,6 +531,7 @@ sidebar.open_folder: Ordner öffnen
 sidebar.recent: ZULETZT
 sidebar.remove_encryption: Verschlüsselung entfernen…
 sidebar.rename: Umbenennen…
+sidebar.run: "Ausführen…"
 sidebar.settings: Anfrage-Einstellungen…
 sidebar.show_in_environment: In Umgebung anzeigen
 table.add: Hinzufügen

@@ -90,8 +90,12 @@ Measurements of the other tools on the same machine are planned.
   built in) with a Postman-compatible `pm.*` API, so imported Postman scripts
   run: `pm.sendRequest`, `require('crypto-js' | 'lodash' | 'moment' | …)`,
   `pm.test` / `pm.expect`, `console`. Checks without code (`status == 200`,
-  `body.users[0].id exists`), saving a response value as a variable, and
-  `apix run`, which fails the build when a test fails.
+  `body.users[0].id exists`), and saving a response value as a variable.
+- **Runner** (Ctrl+Shift+R): run a collection or folder in the order you pick,
+  several times or once per row of a CSV/JSON data file, with a delay between
+  requests; pause, resume, stop at the first failure; save JUnit XML, JSON or
+  HTML reports. `apix run` does the same in CI and fails the build when a test
+  fails ([GitHub Actions example](examples/ci/github-actions.yml)).
 - **Encrypted collections** with a recovery key, auto-lock and, if you choose,
   the password remembered in the OS keychain.
 - **Import** from Postman (collections, environments, a whole "Export data"
@@ -124,6 +128,7 @@ More in the [technical notes](Docs/en/technical.md).
 apix send examples/jsonplaceholder/users/list-users.apix
 apix send examples/jsonplaceholder/health.apix --env local --network
 apix run examples/jsonplaceholder            # non-zero exit if any request fails
+apix run my-api --data users.csv --junit report.xml --html report.html --bail
 apix shell examples/jsonplaceholder/users/create-user.apix --as powershell
 apix import "My API.postman_collection.json"
 APIX_PASSWORD=… apix run my-api-encrypted --env staging

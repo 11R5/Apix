@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:5217dc9d20cebb5c -->
+<!-- translated from en/user-guide.md sha256:fa5e88283d280d7c -->
 
 # Apix kullanım kılavuzu
 
@@ -25,6 +25,7 @@ veya CI'da çalıştırır.
 - [Yanıt](#yanıt)
 - [Ağ sekmesi](#ağ-sekmesi)
 - [Scriptler ve testler](#scriptler-ve-testler)
+- [Runner](#runner)
 - [Sekmeler](#sekmeler)
 - [Kenar çubuğunda istekleri düzenleme](#kenar-çubuğunda-istekleri-düzenleme)
 - [Projeler](#projeler)
@@ -318,6 +319,45 @@ geçerlidir (ortam değişince `pm.environment.set` ile atananlar düşer) ve
 değişken kartlarında “Bir script atadı” olarak görünür. `pm.variables.set`
 yalnızca bir gönderim boyunca geçerlidir.
 
+## Runner
+
+**Runner** birçok isteği tek seferde gönderir ve hepsini denetler. İçinde
+bulunduğun koleksiyon için **Görünüm › Runner…** ya da Ctrl+Shift+R ile,
+yalnızca bir bölümü için kenar çubuğunda bir koleksiyona ya da klasöre sağ
+tıklayıp **Çalıştır…** ile açılır.
+
+![Veri dosyalı bir koşudan sonra Runner](images/runner.png)
+
+- **İstekler**: kenar çubuğu sırasıyla tüm istekler, işaretli olarak.
+  Dışarıda kalacakların işaretini kaldır; bu koşunun sırasını değiştirmek
+  için bir isteği ↑ ↓ ile taşı.
+- **Ortam**: hangi ortamın değişkenlerinin kullanılacağı.
+- **Tekrar**: isteklerin kaç kez dolaşılacağı. Boş bırakılırsa bir kez; veri
+  dosyası varsa her satır için bir kez.
+- **Bekleme (ms)**: iki istek arasındaki ara; istek sınırı olan API'ler için.
+- **Veri dosyası**: veri odaklı koşu için bir CSV ya da JSON dosyası. Her satır
+  bir tekrardır ve sütunları değişken olur: istekte `{{email}}`, scriptlerde
+  `pm.iterationData.get("email")`. CSV'nin ilk satırı başlık olmalı; tırnaklı
+  değerler ve noktalı virgülle ayrılmış dosyalar (Türkçe Excel'in yazdığı
+  gibi) okunur. JSON bir nesne dizisidir: `[{"id": 1, "email": "a@x.test"}, …]`.
+- **İlk hatada dur**: başarısız olan ilk istekte koşuyu bitirir.
+
+Bir istek testleri (scriptler ve Doğrulamalar) geçerse geçer; testi olmayan
+bir istek 2xx ya da 3xx durum koduyla geçer. Koşu sürerken **Duraklat**,
+**Devam et** ve **Durdur** (gönderilmekte olan istekten sonra) kullanılabilir.
+Pencereyi kapatmak koşuyu durdurmaz: Runner'ı yeniden açınca kaldığı yerden
+görünür. Bir sonuca tıklayınca testleri, neden gönderilmediği ve konsol
+satırları açılır. `pm.execution.setNextRequest("ad")` koşudaki başka bir
+isteğe atlar, `setNextRequest(null)` o tekrarı bitirir; Postman'daki gibi.
+
+Runner isteklerin kayıtlı halini gönderir. Koşudan önce scriptlerin atadığı
+değerler kullanılır; koşunun scriptlerinin atadıkları koşunun içinde kalır.
+
+Koşu bitince **Raporu kaydet** onu **JUnit XML** (CI test görünümleri için),
+**JSON** (olan her şey) ya da **HTML** (her tarayıcıda açılan, açık ve koyu
+temalı bir sayfa) olarak yazar. `apix run` aynısını terminalden yapar; bkz.
+[Koleksiyonu CI'da çalıştırma](workflows.md#koleksiyonu-cida-çalıştırma).
+
 ## Sekmeler
 
 Her sekme kaydedilmemiş düzenlemelerini, son yanıtını ve hatta hâlâ çalışan bir
@@ -512,6 +552,7 @@ dosyasına kaydedilir (Windows'ta `%APPDATA%\Apix`, macOS'ta
 | Ctrl+E | Değişkenler ve ortamlar |
 | Ctrl+, | Ayarlar |
 | Ctrl+H | Geçmiş |
+| Ctrl+Shift+R | Runner |
 | Alt+1…7 | Metodu değiştir |
 | Ctrl+W | Sekmeyi kapat |
 | Ctrl+Tab / Ctrl+Shift+Tab | Sonraki / önceki sekme |

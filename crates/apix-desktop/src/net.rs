@@ -122,3 +122,11 @@ impl<T> Future for AbortOnDrop<T> {
             .map(|joined| joined.unwrap_or_else(|e| Err(format!("request task failed: {e}"))))
     }
 }
+
+/// Runs `work` on the network runtime (a collection run); dropping the
+/// returned future aborts it.
+pub fn spawn<T: Send + 'static>(
+    work: impl Future<Output = T> + Send + 'static,
+) -> impl Future<Output = Result<T, String>> + Send + 'static {
+    AbortOnDrop(net().runtime.spawn(async move { Ok(work.await) }))
+}

@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:0de40661ea92cdda -->
+<!-- translated from en/architecture.md sha256:3f3c97f17faf7f4a -->
 
 # Apix mimarisi
 
@@ -36,6 +36,7 @@ crates/
 ├── apix-codegen  istekler ↔ kabuk komutları: curl (bash), curl.exe (cmd), PowerShell; yapıştırılan curl'ü ayrıştırır; 10 dilde kod
 ├── apix-vault    şifreli koleksiyonlar: dosya başına XChaCha20-Poly1305, Argon2id, kurtarma anahtarı
 ├── apix-script   istek öncesi ve test scriptleri: pm.* uyumlu API ile QuickJS
+├── apix-runner   koleksiyon koşuları: sıra, tekrar, veri dosyaları, bekleme, bail, raporlar
 ├── apix-cli      `apix` binary'si: terminalden ve CI'dan send / run / import / shell
 └── apix-desktop  GPUI masaüstü uygulaması (tek crate'ten Windows, macOS ve Linux)
 tools/
@@ -48,7 +49,7 @@ dosya işlemleri, içe aktarma, dosya izleme), `workspace/env_editor.rs`
 (değişkenler penceresi), `workspace/auth_editor.rs` (Yetkilendirme sekmesi ve
 klasör/koleksiyon/proje yetkilendirme penceresi), `workspace/palette.rs` (komut
 paleti ve bulanık (fuzzy) eşleştiricisi), `workspace/network.rs` (yanıtın Ağ
-sekmesi), `workspace/vault_ui.rs` (kilit açma, kilitleme ve otomatik kilit,
+sekmesi), `workspace/runner_ui.rs` (Runner), `workspace/vault_ui.rs` (kilit açma, kilitleme ve otomatik kilit,
 şifreleme, şifrelemeyi kaldırma, parola değiştirme, kurtarma anahtarı),
 `assets.rs` (gpui-kit ikonları ve iki kilit ikonu), `workspace/menu_bar.rs`
 (başlık çubuğundaki Dosya/İstek/Ortam/Görünüm/Yardım; düğmeler başlık çubuğunun
@@ -66,7 +67,6 @@ Planlanan crate'ler:
 
 | Crate          | Amaç                                                               |
 |----------------|--------------------------------------------------------------------|
-| `apix-script`  | QuickJS üzerinde `rquickjs` ile istek öncesi ve test betikleri (`pm.*` uyumlu API) |
 | `apix-proto`   | GraphQL, WebSocket (`tokio-tungstenite`), gRPC (`tonic` + reflection), SSE |
 | `apix-mock`    | Kaydedilmiş örnekleri sunan yerel bir mock sunucu (`hyper`)        |
 
@@ -326,10 +326,27 @@ lodash, moment, ajv, tv4 ve chai'nin Apix için yazılmış alt kümeleri;
 indirilmezler.
 
 Scriptli bir gönderim: istek öncesi scriptler, sonra `ScriptVars::apply` ve
-çözümleme, HTTP isteği, ardından `ResponseView` ile test scriptleri. CLI bunu
-`exchange` içinde yapar (durum `apix run` boyunca taşınır); masaüstü uygulaması
-`script_run.rs` içinde, scriptleri arka plan thread'inde çalıştırarak ve
-isteğin kendi scriptlerini kaydedilmiş olsun olmasın editörden alarak yapar.
+çözümleme, HTTP isteği, ardından `ResponseView` ile test scriptleri.
+`apix_runner::exchange` bunu `apix send`, `apix run` ve Runner için yapar;
+masaüstü uygulamasındaki tekil gönderim ise `script_run.rs` içinde,
+scriptleri arka plan thread'inde çalıştırarak ve isteğin kendi scriptlerini
+kaydedilmiş olsun olmasın editörden alarak yapar.
+
+`apix_runner::run` bir `Plan` alır (sıralı istek dosyaları, değişkenler ve
+script kapsamları, veri satırları, tekrar sayısı, bekleme, `bail`, bağlantı
+ayarı geçersiz kılmaları, başlangıçtaki script durumu) ve onu dolaşır: her
+tekrarda veri satırını (ardından `--var` değerlerini) değişkenlerin ve
+`pm.iterationData`'nın üstüne koyar, `setNextRequest`'i istek adına göre
+izler, istekler arasında bekler ve `Progress` (tekrar, gönderiliyor, istek
+bitti) olaylarını bir geri çağırmaya bildirir. Bir `Control` onu başka bir
+thread'den duraklatır ya da durdurur. Sonuç `ItemResult`'lardan oluşan bir
+`RunReport`'tur; `report.rs` bunu JSON, JUnit XML (istek ve tekrar başına bir
+suite, test başına bir case, testi olmayan istekler için bir durum case'i) ve
+kendi başına açılan bir HTML sayfası olarak yazar. `data.rs` CSV (RFC 4180,
+BOM, `;` başlıklar) ve JSON dizilerini okur. CLI ilerlemeyi geldikçe yazar;
+masaüstü Runner'ı (`workspace/runner_ui.rs`) koşuyu ağ çalışma zamanında
+yürütür ve ilerlemeyi paylaşılan bir `Live` yapısından saniyede birkaç kez
+okur; görünüm workspace'te kaldığı için koşu penceresinden uzun yaşar.
 
 ## Diller (M4)
 

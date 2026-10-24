@@ -302,6 +302,7 @@ menu.project_settings: Réglages de requête du projet…
 menu.quit: Quitter
 menu.report_problem: Signaler un problème
 menu.request: Requête
+menu.runner: "Runner…"
 menu.save: Enregistrer
 menu.send: Envoyer
 menu.settings: Paramètres…
@@ -434,6 +435,42 @@ response.tab.pretty: Formaté
 response.tab.raw: Brut
 response.tab.tests: Tests
 response.tab.tests_count: "Tests %{passed}/%{total}"
+runner.all: "Toutes"
+runner.bad_number: "Les itérations et le délai doivent être des nombres entiers."
+runner.bail: "S'arrêter au premier échec"
+runner.busy: "Une exécution est en cours ; arrêtez-la avant d'en lancer une autre."
+runner.choose_data: "Choisir un fichier CSV ou JSON…"
+runner.data: "Fichier de données"
+runner.data_empty: "Le fichier de données n'a aucune ligne."
+runner.data_error: "Impossible de lire le fichier de données : %{error}"
+runner.data_rows: "%{count} lignes · %{columns}"
+runner.delay: "Délai (ms)"
+runner.environment: "Environnement"
+runner.error: "Impossible de préparer l'exécution : %{error}"
+runner.finished: "Terminé en %{seconds} s"
+runner.idle: "Choisissez les requêtes, leur ordre et combien de fois les exécuter, puis appuyez sur Exécuter. Les versions enregistrées sont envoyées ; les résultats s'affichent ici."
+runner.iteration: "Itération %{iteration}/%{total}"
+runner.iterations: "Itérations"
+runner.iterations_hint: "Vide : une fois. Le délai est la pause entre deux requêtes."
+runner.iterations_rows: "Vide : une fois par ligne de données (%{count}). Le délai est la pause entre deux requêtes."
+runner.none: "Aucune"
+runner.not_sent: "non envoyée"
+runner.nothing_selected: "Choisissez au moins une requête."
+runner.pause: "Pause"
+runner.paused: "En pause"
+runner.requests: "Requêtes (%{count})"
+runner.resume: "Reprendre"
+runner.run: "Exécuter"
+runner.save_report: "Enregistrer le rapport :"
+runner.saved: "Rapport enregistré dans %{path}"
+runner.sending: "Envoi de %{name}…"
+runner.skipped: "ignorée"
+runner.stop: "Arrêter"
+runner.stopped: "Arrêté après %{seconds} s"
+runner.stopping: "Arrêt après cette requête…"
+runner.summary: "%{passed} réussies · %{failed} échouées · tests %{tests_passed}/%{tests}"
+runner.title: "Runner · %{name}"
+runner.waiting: "En attente…"
 scripts.around: "%{hint} %{count} scripts de dossier ou de collection s’exécutent avant celui-ci."
 scripts.asserts: Vérifications
 scripts.asserts_count: "Vérifications %{count}"
@@ -494,6 +531,7 @@ sidebar.open_folder: Ouvrir un dossier
 sidebar.recent: RÉCENTS
 sidebar.remove_encryption: Supprimer le chiffrement…
 sidebar.rename: Renommer…
+sidebar.run: "Exécuter…"
 sidebar.settings: Réglages de requête…
 sidebar.show_in_environment: Afficher dans l'environnement
 table.add: Ajouter

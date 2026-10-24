@@ -302,6 +302,7 @@ menu.project_settings: إعدادات طلبات المشروع…
 menu.quit: إنهاء
 menu.report_problem: الإبلاغ عن مشكلة
 menu.request: الطلب
+menu.runner: "Runner…"
 menu.save: حفظ
 menu.send: إرسال
 menu.settings: الإعدادات…
@@ -434,6 +435,42 @@ response.tab.pretty: منسّق
 response.tab.raw: خام
 response.tab.tests: الاختبارات
 response.tab.tests_count: "الاختبارات %{passed}/%{total}"
+runner.all: "الكل"
+runner.bad_number: "يجب أن تكون التكرارات والانتظار أعدادًا صحيحة."
+runner.bail: "التوقف عند أول فشل"
+runner.busy: "ما زال هناك تشغيل جارٍ؛ أوقفه قبل بدء تشغيل آخر."
+runner.choose_data: "اختر ملف CSV أو JSON…"
+runner.data: "ملف البيانات"
+runner.data_empty: "ملف البيانات لا يحتوي على صفوف."
+runner.data_error: "تعذّرت قراءة ملف البيانات: %{error}"
+runner.data_rows: "%{count} صفوف · %{columns}"
+runner.delay: "الانتظار (مللي ثانية)"
+runner.environment: "البيئة"
+runner.error: "تعذّر تجهيز التشغيل: %{error}"
+runner.finished: "اكتمل في %{seconds} ث"
+runner.idle: "اختر الطلبات وترتيبها وعدد مرات تشغيلها، ثم اضغط تشغيل. تُرسل النسخ المحفوظة، وتظهر النتائج هنا."
+runner.iteration: "التكرار %{iteration}/%{total}"
+runner.iterations: "التكرارات"
+runner.iterations_hint: "الفراغ يعني مرة واحدة. الانتظار هو الفاصل بين طلبين."
+runner.iterations_rows: "الفراغ يعني مرة لكل صف بيانات (%{count}). الانتظار هو الفاصل بين طلبين."
+runner.none: "لا شيء"
+runner.not_sent: "لم يُرسل"
+runner.nothing_selected: "اختر طلبًا واحدًا على الأقل."
+runner.pause: "إيقاف مؤقت"
+runner.paused: "متوقف مؤقتًا"
+runner.requests: "الطلبات (%{count})"
+runner.resume: "استئناف"
+runner.run: "تشغيل"
+runner.save_report: "حفظ التقرير:"
+runner.saved: "حُفظ التقرير في %{path}"
+runner.sending: "جارٍ إرسال %{name}…"
+runner.skipped: "تم تخطيه"
+runner.stop: "إيقاف"
+runner.stopped: "توقف بعد %{seconds} ث"
+runner.stopping: "سيتوقف بعد هذا الطلب…"
+runner.summary: "نجح %{passed} · فشل %{failed} · الاختبارات %{tests_passed}/%{tests}"
+runner.title: "Runner · %{name}"
+runner.waiting: "في الانتظار…"
 scripts.around: "%{hint} يعمل قبله %{count} من سكربتات المجلدات أو المجموعة."
 scripts.asserts: الفحوص
 scripts.asserts_count: "الفحوص %{count}"
@@ -494,6 +531,7 @@ sidebar.open_folder: فتح مجلد
 sidebar.recent: الأخيرة
 sidebar.remove_encryption: إزالة التشفير…
 sidebar.rename: إعادة تسمية…
+sidebar.run: "تشغيل…"
 sidebar.settings: إعدادات الطلب…
 sidebar.show_in_environment: العرض في البيئة
 table.add: إضافة

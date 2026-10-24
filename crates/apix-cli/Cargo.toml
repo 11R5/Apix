@@ -16,6 +16,7 @@ apix-codegen.workspace = true
 apix-core.workspace = true
 apix-http.workspace = true
 apix-import.workspace = true
+apix-runner.workspace = true
 apix-script.workspace = true
 clap.workspace = true
 rpassword = "7"
