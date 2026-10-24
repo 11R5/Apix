@@ -410,6 +410,7 @@ async fn run(cli: Cli) -> Result<bool> {
                 delay: std::time::Duration::from_millis(delay),
                 bail: stop_on_failure,
                 overrides: net.overrides(),
+                state: Default::default(),
             };
             let total = plan.iteration_count();
             let control = apix_runner::Control::default();
