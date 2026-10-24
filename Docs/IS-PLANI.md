@@ -22,7 +22,7 @@
 | M6 Protokoller | 🔜 · bitti: WebSocket (uygulamada bağlan/kes, Mesajlar sekmesi ve kayıtlı `[[message]]`'lar, iki yönlü canlı günlük; `apix send` ile `--message`/`--listen`), SSE (olaylar geldikçe uygulamada ve `apix send`'de, Esc gelenleri tutar) · sıradaki: GraphQL introspection ve otomatik tamamlama, gRPC, Socket.IO, MQTT, SOAP |
 | M7–M9 | ⬜ |
 
-Release ikili dosyası 38.0 MB (üst sınır 100 MB; QuickJS ve JavaScript renklendirmesi yaklaşık 3.6 MB, Runner 0.8 MB ekledi). Testler: core 58, script 10, runner 16, vault 11, desktop 16, codegen 24, import 26, http 27 (hepsi geçiyor, clippy uyarısız).
+Release ikili dosyası 38.0 MB (üst sınır 100 MB; QuickJS ve JavaScript renklendirmesi yaklaşık 3.6 MB, Runner 0.8 MB ekledi). Testler: core 58, script 10, runner 16, vault 11, desktop 16, codegen 24, import 26, http 28 (hepsi geçiyor, clippy uyarısız).
 
 ### Kullanıcı notları (17 Ekim 2026) ve plana nasıl işlendikleri
 | # | Not | Nereye işlendi |
