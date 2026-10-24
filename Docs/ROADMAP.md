@@ -94,24 +94,37 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [x] Light theme and "follow the system" (Daylight, Solarized Light; code colours follow)
 - [x] Custom themes from files (`<config>/Apix/themes/*.toml`, "Open the folder" writes an example)
 - [x] Transparency slider (0–90 %, frosted glass: acrylic on Windows, vibrancy on macOS), preset themes (Dracula, Nord, Solarized Dark)
-- [ ] Later: font size and density; code editor colours from the theme
 - [x] Discussed after M5: the CLI's CI side (secrets, GitHub Action, Docker) is done; git-aware runs, PR comments, `apix diff` and monitors wait
 
+## CI foundation (before M6)
+- [x] CI for the repository on every push and pull request: format and `docs-check`; clippy (`-D warnings`) and tests for the engine, CLI and desktop app on Windows, macOS and Linux
+- [x] The GitHub Action tests itself (`uses: ./` on the example collection, Linux and Windows); its `apix` cache follows a hash of the sources
+- [x] GitLab CI and Azure Pipelines examples
+- [x] Linux and macOS: the first run built and tested everything on all three systems with no fixes needed
+
 ## M6 — Protocols
-- [ ] WebSocket, SSE, GraphQL introspection, gRPC, Socket.IO, MQTT, SOAP
+- [ ] WebSocket and SSE first, then GraphQL introspection and autocomplete, gRPC, Socket.IO, MQTT, SOAP
 
 ## M7 — Advanced
 - [ ] Route (traceroute) and network map, with an offline IP-geolocation database
 - [ ] TLS details in the network inspector with our own connector: TLS version, cipher, ALPN, full chain, separate TCP and TLS times, compressed size
 - [ ] Local mock server, docs generation, monitors, visualizer, capture proxy
 - [ ] Git integration, auto-update (the light theme was done in the theme work after M5)
+- [ ] Everyday gaps: search in the response (Ctrl+F), JSONPath/jq filter, params ↔ URL sync, `/users/:id` path variables, header autocomplete, sidebar search, save examples
+- [ ] Git-aware CLI: `apix run --changed`, `apix diff`, a run summary as a PR comment
+- [ ] Monitors (scheduled runs), `apix run --parallel`
+- [ ] Theme leftovers: code editor colours from the theme, font size and density
 
 ## M8 — Beyond Postman
 - [ ] Load testing (`apix bench`), response diff, time-travel history
 - [ ] MCP server mode (`apix mcp`), optional AI assist, WASM plugins, Flows
 
 ## M9 — Release & distribution
-- [ ] GitHub Actions: test and build on Windows, macOS and Linux
+- [x] GitHub Actions: test on Windows, macOS and Linux (CI foundation); build on version tags
+- [ ] Prebuilt binaries on GitHub Releases, which the GitHub Action downloads instead of building
+- [ ] Build, try and publish the Docker image (ghcr.io)
+- [ ] A small `apix-action` repository for the GitHub Marketplace (it does not list repositories that have workflow files)
+- [ ] Meet the start-up (150 ms) and idle memory (60 MB) budgets
 - [ ] Installers: `.msi`/winget, `.dmg`/Homebrew cask, AppImage/Flatpak/`.deb`, using the M3 icons
 - [ ] Keep the release binary under 100 MB (33.1 MB today); speed and smoothness come first
 - [ ] Signed Windows builds (so Smart App Control allows them) and notarized macOS builds

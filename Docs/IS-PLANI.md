@@ -17,7 +17,8 @@
 | M4 Günlük kullanım | ✅ · bitti: menü çubuğu, şifreli koleksiyonlar (motor, uygulama, CLI), ağ denetçisi (Network sekmesi), multipart/binary/GraphQL gövdeleri, auth tipleri (Digest, OAuth 1.0, OAuth 2.0, AWS SigV4), ayarlar ekranı ve 9 dilli arayüz, Arapça için sağdan sola düzen, dokümantasyon yapısı (İngilizce, Türkçe), README karşılaştırması ve performans ölçümü, istek ayarları (zaman aşımı, yönlendirmeler, TLS doğrulama, proxy, istemci sertifikaları; klasör/koleksiyon/proje kalıtımıyla) ve çerez yöneticisi, 10 dilde kod üretimi, geçmiş, Postman otomatik tanıma, toplu içe aktarma ve Postman'a dışa aktarma, içerik tipleri (HTML gövde, XML/HTML renklendirme ve biçimlendirme, resim önizleme, Hex, yanıtı kaydetme), Insomnia/OpenAPI/HAR içe aktarma, şifreli koleksiyon parolasını ve ortam gizli değerlerini işletim sistemi anahtarlığında saklama, M3'ten kalan küçük işler (elle sıralama, sekmeleri hatırlama, proje renkleri, koleksiyonu projeye taşıma, prod onayı, fish/HTTPie/wget kopyalama, Params/Headers/form gövdesinde değişken çipleri) · gRPC (not 17) sonraki görevlere bırakıldı |
 | M5 Scriptler, testler, runner | ✅ `apix-script` (QuickJS, `pm.*` uyumlu API), istek öncesi ve test scriptleri (koleksiyon → klasör → istek), `pm.test` / `pm.expect` (Chai tarzı), eski `tests[...]` / `postman.*` API'si, konsol, uygulamada Scripts sekmesi ile Tests ve Console sekmeleri, `apix send` / `apix run` script çalıştırma, test sonuçları ve `setNextRequest`, `pm.sendRequest`, hazır kütüphaneler (`require`), kodsuz doğrulamalar, yanıttan değişken kaydetme, Runner penceresi (sıra, tekrar, bekleme, veri dosyası, ilk hatada dur, duraklat/devam/durdur), CSV/JSON veri dosyalı koşular, JUnit XML / JSON / HTML raporlar, `apix run --data/--iterations/--delay/--bail/--junit/--json/--html`, GitHub Actions örneği |
 | Tema paketi (M5 sonrası) | ✅ anında tema değişimi, açık tema ve "sistemi izle", vurgu rengi, saydamlık kaydırıcısı (%0–90, buzlu cam), Dracula/Nord/Solarized/Gün ışığı, `<config>/Apix/themes/*.toml` dosyalarından temalar |
-| CLI ve CI/CD | ✅ `APIX_VAR_<AD>` ve `--env-file` ile gizli değerler, GitHub Action (`uses: 11R5/Apix@…`), Docker imajı, ortam matrisli örnek · sıradaki: M6 (WebSocket ve SSE ile başlanması önerildi) |
+| CLI ve CI/CD | ✅ `APIX_VAR_<AD>` ve `--env-file` ile gizli değerler, GitHub Action (`uses: 11R5/Apix@…`), Docker imajı, ortam matrisli örnek  |
+| CI temeli | ✅ üç sistemde CI (biçim, docs-check, clippy, testler; motor ve masaüstü), action'ın kendini sınaması, GitLab ve Azure örnekleri; ilk koşu Windows, macOS ve Linux'ta yeşil · sıradaki: M6 (WebSocket ve SSE) |
 | M6–M9 | ⬜ |
 
 Release ikili dosyası 38.0 MB (üst sınır 100 MB; QuickJS ve JavaScript renklendirmesi yaklaşık 3.6 MB, Runner 0.8 MB ekledi). Testler: core 57, script 10, runner 16, vault 11, desktop 12, codegen 24, import 26, http 19 (hepsi geçiyor, clippy uyarısız).
@@ -568,20 +569,36 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 
 **CLI ve CI/CD (24 Ekim'de konuşuldu):** kullanıcı CI'da gizli değerleri, hazır GitHub Action'ı ve Docker imajını seçti; bunlar yapıldı (§G). Bekleyenler: yalnızca PR'da değişen istekleri koşan `--changed`, koşu özetini PR'a yorum yazan rapor, `apix diff`, zamanlanmış izleme koşuları.
 
+**Sıra (24 Ekim'de kararlaştırıldı):** kalan işler önem sırasına göre aşağıdaki aşamalara dağıtıldı: CI temeli → M6 → M7 → M8 → M9 → proje bitince Tailscale ve Docker imajı denemesi.
+
+### CI temeli (M6'dan önce, 24 Ekim)
+- [x] Deponun kendi CI'ı (`.github/workflows/ci.yml`): her push ve PR'da biçim ve `docs-check`; motor ve CLI için clippy (`-D warnings`) ve testler Windows, macOS ve Linux'ta; masaüstü uygulaması için aynısı üç sistemde (Linux pencere, yazı tipi ve anahtarlık kütüphanelerini kurar).
+- [x] Action'ın kendini sınaması: `uses: ./` ile `examples/jsonplaceholder`, Linux ve Windows'ta; raporların yazıldığı denetlenir. Action önbelleği artık kaynakların özetiyle anahtarlanır (`` eski `apix`'i kullanmaz).
+- [x] GitLab CI ve Azure Pipelines örnekleri (`examples/ci/`).
+- [x] Linux ve macOS: ilk koşuda (24 Ekim) CLI ve masaüstü uygulaması üç sistemde de hatasız derlendi, clippy ve testler geçti; düzeltme gerekmedi. 10 işin hepsi yeşil, en uzunu Windows masaüstü (~24 dk).
+
 ### M6 — Protokoller
-- WebSocket, SSE, GraphQL introspection, gRPC, Socket.IO, MQTT, SOAP
+- WebSocket, SSE (önce bunlar), GraphQL introspection ve otomatik tamamlama, gRPC, Socket.IO, MQTT, SOAP
 
 ### M7 — İleri özellikler
 - **Rota ve ağ haritası (§B2)** (not 9): traceroute, çevrimdışı IP konum veritabanı ile dünya haritası
 - **TLS ayrıntıları (§B2, not 12):** kendi bağlayıcımızla (hyper-util + rustls) TLS sürümü, şifre takımı, ALPN, tam sertifika zinciri, TCP ve TLS ayrı süreler, sıkıştırılmış boyut
 - Mock sunucu, dokümantasyon üretme, monitörler, visualizer, yakalama proxy'si
 - Git entegrasyonu, otomatik güncelleme (ayarlar ekranı ve diller M4'e, açık tema M5 sonrası tema paketine taşındı)
+- **Günlük kullanım eksikleri (24 Ekim'de buraya alındı):** yanıtta Ctrl+F arama, JSONPath/jq ile süzme, Params ↔ URL senkronu, `/users/:id` yol değişkenleri, header otomatik tamamlama, kenar çubuğunda arama, istek ve yanıtı örnek olarak kaydetme.
+- **Git'e duyarlı CLI:** kenar çubuğunda değişen dosyalar ve dal adı ile birlikte `apix run --changed`, `apix diff`, koşu özetini PR'a yorum yazan rapor.
+- **İzleme:** zamanlanmış koşular (monitörler), `apix run --parallel`.
+- **Tema kalanları:** kod editörü renklerinin temadan gelmesi, yazı boyutu ve satır yoğunluğu.
 
 ### M8 — Apix'e özel
 - Yük testi, yanıt karşılaştırma, zaman yolculuğu, MCP, AI, WASM eklentileri, Flows
 
 ### M9 — Yayın
-- GitHub Actions: Windows, macOS ve Linux'ta test ve derleme
+- GitHub Actions: Windows, macOS ve Linux'ta test ve derleme (CI temeli ile yapıldı), sürüm etiketinde derleme
+- **Hazır ikili dosyalar** (GitHub Releases); GitHub Action derlemek yerine onları indirir, saniyeler içinde çalışır.
+- **Docker imajı:** Linux'ta derleyip denemek ve ghcr.io'ya yayımlamak (kullanıcı notu: "proje bitince derleyip bakalım").
+- **Marketplace:** GitHub Marketplace iş akışı dosyası olan depoyu kabul etmediği için ayrı, küçük bir `apix-action` deposu.
+- **Performans hedefleri:** açılış 150 ms ve boşta 60 MB bütçesine inmek (şu an 274 ms ve 83 MB).
 - Kurulum paketleri: `.msi` ve winget, `.dmg` ve Homebrew, AppImage, Flatpak ve `.deb`
 - İkili boyutunu izlemek: üst sınır 100 MB (not 11). Şu an release 33.1 MB; içinde 2.2 MB font, simgeler ve tree-sitter var. CJK ve Arapça yazı tipleri eklenince büyür; sınır hız ve akıcılık için tanındı, boyut için ödün verilmez.
 - **Tüm dillerde dokümantasyon (§N, not 14, 15):** 9 dilde kullanım kılavuzu, mimari, teknik altyapı, iş akışları; her dilin kendi arayüzünden otomatik alınmış ekran görüntüleriyle görselli kılavuz; dokümantasyon sitesinde dil seçici
@@ -596,7 +613,7 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 - `cargo clippy` uyarısız olmalı, `cargo fmt` uygulanmış olmalı.
 - Performans bütçesi her sürümde ölçülür: açılış süresi, boşta bellek, ikili boyutu, 100 MB JSON testi.
 - Arayüz değişiklikleri ekran görüntüsüyle doğrulanır.
-- CI kurulunca her PR üç işletim sisteminde test edilir.
+- Her push ve PR üç işletim sisteminde test edilir (`.github/workflows/ci.yml`).
 
 ---
 

@@ -207,6 +207,11 @@ with `docker build -t apix .`):
 docker run --rm -v "$PWD:/work" -e APIX_VAR_TOKEN ghcr.io/11r5/apix run api --env staging --junit reports/apix.xml
 ```
 
+[examples/ci/gitlab-ci.yml](../../examples/ci/gitlab-ci.yml) and
+[examples/ci/azure-pipelines.yml](../../examples/ci/azure-pipelines.yml) do
+the same in GitLab CI (with the image) and Azure Pipelines (building `apix`
+once and caching it); both publish the JUnit results.
+
 The desktop app's **Runner** (Ctrl+Shift+R) does the same runs with a window;
 see the [user guide](user-guide.md#runner).
 

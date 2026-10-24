@@ -1,0 +1,39 @@
+# Runs an Apix collection in Azure Pipelines and publishes the test results.
+# Copy it to azure-pipelines.yml and change `api` and `staging`.
+#
+# Add API_TOKEN as a secret pipeline variable; secrets reach scripts only
+# when mapped, here to APIX_VAR_TOKEN, which fills {{token}}.
+
+trigger:
+  - main
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+  - task: Cache@2
+    displayName: Restore apix
+    inputs:
+      key: apix | "$(Agent.OS)" | v1
+      path: $(Pipeline.Workspace)/apix
+      cacheHitVar: APIX_CACHED
+
+  - script: cargo install --locked --root $(Pipeline.Workspace)/apix --git https://github.com/11R5/Apix apix-cli
+    displayName: Build apix
+    condition: ne(variables.APIX_CACHED, 'true')
+
+  - script: $(Pipeline.Workspace)/apix/bin/apix run api --env staging --junit reports/apix.xml --html reports/apix.html
+    displayName: Run the collection
+    env:
+      APIX_VAR_TOKEN: $(API_TOKEN)
+
+  - task: PublishTestResults@2
+    condition: succeededOrFailed()
+    inputs:
+      testResultsFormat: JUnit
+      testResultsFiles: reports/apix.xml
+      testRunTitle: API tests
+
+  - publish: reports
+    condition: succeededOrFailed()
+    artifact: apix-report
