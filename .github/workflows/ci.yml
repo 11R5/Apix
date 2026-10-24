@@ -1,0 +1,92 @@
+# Builds and tests Apix on Windows, macOS and Linux, and runs the GitHub
+# Action against the example collection, on every push and pull request.
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  format:
+    name: Format and docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - run: cargo fmt --all --check
+      # Turkish (and later) docs must follow the English ones.
+      - run: cargo run -p docs-check
+
+  engine:
+    name: Engine and CLI (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: engine
+      # Everything but the desktop app (the workspace's default members).
+      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo test
+
+  desktop:
+    name: Desktop app (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - name: Linux libraries for the window, fonts and keychain
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            pkg-config cmake clang libssl-dev libdbus-1-dev \
+            libxkbcommon-dev libxkbcommon-x11-dev libwayland-dev \
+            libx11-dev libx11-xcb-dev libxcb1-dev libvulkan-dev \
+            libfontconfig1-dev libfreetype-dev libzstd-dev libasound2-dev
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: desktop
+      - run: cargo clippy -p apix-desktop --all-targets -- -D warnings
+      - run: cargo test -p apix-desktop
+
+  action:
+    name: GitHub Action (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./
+        with:
+          path: examples/jsonplaceholder
+          junit: reports/apix.xml
+          html: reports/apix.html
+      - name: The reports were written
+        shell: bash
+        run: test -s reports/apix.xml && test -s reports/apix.html

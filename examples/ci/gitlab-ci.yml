@@ -1,0 +1,33 @@
+# Runs an Apix collection in GitLab CI and shows the JUnit results in merge
+# requests. Copy it to .gitlab-ci.yml and change `api` and `staging`.
+#
+# Set API_TOKEN as a masked CI/CD variable; APIX_VAR_TOKEN fills {{token}}.
+
+api-tests:
+  # The image holds just the `apix` command (published with Apix releases).
+  image:
+    name: ghcr.io/11r5/apix:latest
+    entrypoint: [""]
+  variables:
+    APIX_VAR_TOKEN: $API_TOKEN
+  script:
+    - apix run api --env staging --junit reports/apix.xml --html reports/apix.html
+  artifacts:
+    when: always
+    paths:
+      - reports/
+    reports:
+      junit: reports/apix.xml
+
+# Without the image, build `apix` once and cache it:
+#
+# api-tests:
+#   image: rust:1
+#   cache:
+#     key: apix
+#     paths: [.cargo/bin]
+#   variables:
+#     CARGO_HOME: $CI_PROJECT_DIR/.cargo
+#   script:
+#     - test -x .cargo/bin/apix || cargo install --locked --git https://github.com/11R5/Apix apix-cli
+#     - .cargo/bin/apix run api --env staging --junit reports/apix.xml

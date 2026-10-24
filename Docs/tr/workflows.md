@@ -1,4 +1,4 @@
-<!-- translated from en/workflows.md sha256:ea77eb84bb69baa5 -->
+<!-- translated from en/workflows.md sha256:8fbd35d5567a127f -->
 
 # İş akışları
 
@@ -213,6 +213,11 @@ kendin `docker build -t apix .` ile de derleyebilirsin):
 ```sh
 docker run --rm -v "$PWD:/work" -e APIX_VAR_TOKEN ghcr.io/11r5/apix run api --env staging --junit reports/apix.xml
 ```
+
+[examples/ci/gitlab-ci.yml](../../examples/ci/gitlab-ci.yml) ve
+[examples/ci/azure-pipelines.yml](../../examples/ci/azure-pipelines.yml) aynısını
+GitLab CI'da (imajla) ve Azure Pipelines'ta (`apix`'i bir kez derleyip
+önbelleğe alarak) yapar; ikisi de JUnit sonuçlarını yayımlar.
 
 Masaüstü uygulamasının **Runner**'ı (Ctrl+Shift+R) aynı koşuları bir
 pencereyle yapar; bkz. [kullanım kılavuzu](user-guide.md#runner).

@@ -54,6 +54,17 @@ inputs:
 runs:
   using: composite
   steps:
+    # The cache key is a hash of the sources, so `@main` (or `./`) rebuilds
+    # when Apix changes and reuses the build when it does not.
+    - name: Fingerprint the sources
+      id: source
+      shell: bash
+      run: |
+        cd "$GITHUB_ACTION_PATH"
+        hash=$(find Cargo.toml Cargo.lock crates vendor -type f \( -name '*.rs' -o -name '*.toml' -o -name '*.js' -o -name 'Cargo.lock' \) \
+          -not -path 'crates/apix-desktop/*' | LC_ALL=C sort | xargs cat | sha256sum | cut -c1-16)
+        echo "hash=$hash" >> "$GITHUB_OUTPUT"
+
     - name: Restore apix
       id: cache
       uses: actions/cache@v4
@@ -61,7 +72,7 @@ runs:
         path: |
           ~/.cargo/bin/apix
           ~/.cargo/bin/apix.exe
-        key: apix-${{ runner.os }}-${{ github.action_ref || 'local' }}-v1
+        key: apix-${{ runner.os }}-${{ steps.source.outputs.hash }}
 
     - name: Build apix
       if: steps.cache.outputs.cache-hit != 'true'

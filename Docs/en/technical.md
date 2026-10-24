@@ -26,10 +26,10 @@ scripts/
 └── measure.ps1     performance measurements for the README
 examples/
 ├── jsonplaceholder a small collection the app opens when run from the repo
-└── ci/             a GitHub Actions workflow that runs a collection
+└── ci/             GitHub Actions, GitLab CI and Azure Pipelines examples
 action.yml          the GitHub Action (`uses: 11R5/Apix@…`)
 Dockerfile          the `apix` command line as a container image
-.github/workflows/  publishes the image on version tags
+.github/workflows/  CI on three systems, and the image published on version tags
 Docs/
 ├── languages.toml  documentation languages
 ├── en/ tr/         user guide, architecture, technical notes, workflows
@@ -157,6 +157,21 @@ of glyphs left to right, so Arabic words appeared mirrored. `vendor/gpui-pre-win
 is that crate with `DrawGlyphRun` fixed (the change is marked "Apix patch"), and
 the workspace `Cargo.toml` patches it in. It can be removed once the upstream
 crate is fixed.
+
+## Continuous integration
+
+`.github/workflows/ci.yml` runs on every push and pull request:
+
+| Job | What it checks |
+|---|---|
+| Format and docs | `cargo fmt --check`; `docs-check` (translations follow the English docs) |
+| Engine and CLI | `cargo clippy -D warnings` and `cargo test` for everything but the desktop app, on Windows, macOS and Linux |
+| Desktop app | the same for `apix-desktop` on the three systems (Linux installs the window, font and keychain libraries first) |
+| GitHub Action | the repository's own action (`uses: ./`) against `examples/jsonplaceholder`, on Linux and Windows, and that it wrote its reports |
+
+`.github/workflows/docker.yml` publishes the container image on version tags.
+The action caches the `apix` it builds under a hash of the engine's sources,
+so a new commit rebuilds it and an unchanged one reuses it.
 
 ## Tests
 

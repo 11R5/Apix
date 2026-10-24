@@ -1,4 +1,4 @@
-<!-- translated from en/technical.md sha256:8f817dc92aacc671 -->
+<!-- translated from en/technical.md sha256:994f0e9186f61c6d -->
 
 # Teknik notlar
 
@@ -27,10 +27,10 @@ scripts/
 └── measure.ps1     README için performans ölçümleri
 examples/
 ├── jsonplaceholder repodan çalıştırıldığında uygulamanın açtığı küçük bir koleksiyon
-└── ci/             bir koleksiyonu çalıştıran GitHub Actions iş akışı
+└── ci/             GitHub Actions, GitLab CI ve Azure Pipelines örnekleri
 action.yml          GitHub Action (`uses: 11R5/Apix@…`)
 Dockerfile          konteyner imajı olarak `apix` komutu
-.github/workflows/  sürüm etiketlerinde imajı yayımlar
+.github/workflows/  üç sistemde CI ve sürüm etiketlerinde imaj yayımı
 Docs/
 ├── languages.toml  belge dilleri
 ├── en/ tr/         kullanıcı kılavuzu, mimari, teknik notlar, iş akışları
@@ -159,6 +159,21 @@ run'ı soldan sağa yerleştiriyordu; bu yüzden Arapça sözcükler ters görü
 `vendor/gpui-pre-windows`, `DrawGlyphRun`'ı düzeltilmiş hâliyle aynı crate'tir
 (değişiklik "Apix patch" olarak işaretlenmiştir) ve workspace `Cargo.toml`'u onu
 patch ile devreye alır. Upstream crate düzeltildiğinde kaldırılabilir.
+
+## Sürekli entegrasyon
+
+`.github/workflows/ci.yml` her push ve pull request'te çalışır:
+
+| İş | Neyi denetler |
+|---|---|
+| Biçim ve belgeler | `cargo fmt --check`; `docs-check` (çeviriler İngilizce belgeleri izliyor mu) |
+| Motor ve CLI | masaüstü uygulaması dışındaki her şey için `cargo clippy -D warnings` ve `cargo test`; Windows, macOS ve Linux'ta |
+| Masaüstü uygulaması | aynısı `apix-desktop` için üç sistemde (Linux önce pencere, yazı tipi ve anahtarlık kütüphanelerini kurar) |
+| GitHub Action | deponun kendi action'ı (`uses: ./`) `examples/jsonplaceholder` ile, Linux ve Windows'ta; raporların yazıldığı da denetlenir |
+
+`.github/workflows/docker.yml` sürüm etiketlerinde konteyner imajını
+yayımlar. Action derlediği `apix`'i motor kaynaklarının özetiyle önbelleğe
+alır; yeni bir commit yeniden derler, değişmeyen kaynak öncekini kullanır.
 
 ## Testler
 
