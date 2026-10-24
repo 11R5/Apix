@@ -518,8 +518,12 @@ restart:
   orange, yellow or green, for buttons, selections, focus rings and the
   variable chips. Light themes get a deeper shade, and the text on the accent
   is dark or white, whichever reads better.
-- **Glass:** a translucent window with the desktop blurred behind it, or a
-  solid one.
+- **Transparency:** a slider from 0 (a solid window) to 90%: how much of the
+  desktop shows through, blurred like frosted glass (acrylic on Windows,
+  vibrancy on macOS). The window background clears with it, panels at a
+  slower rate so text keeps a backing, and borders brighten like the edge of
+  glass; menus and dialogs stay solid. Light themes clear more gently, as dark
+  text needs a light backing. The default is 20%.
 - **Your own themes:** **Open the folder** opens `<config>/Apix/themes` and,
   the first time, writes `my-theme.toml` there to start from. Every `.toml`
   file in that folder is a theme in the lists; a file named like a built-in

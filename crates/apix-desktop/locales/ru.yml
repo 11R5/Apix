@@ -508,8 +508,6 @@ settings.confirm_prod: Подтверждение в продакшене
 settings.confirm_prod_description: Спрашивать перед отправкой DELETE, PUT или PATCH, когда выбрано окружение, в названии которого есть «prod».
 settings.dark_theme: "Тёмная тема"
 settings.dark_theme_description: "Используется при тёмном оформлении."
-settings.glass: "Стекло"
-settings.glass_description: "Полупрозрачное окно с размытым рабочим столом позади. Выключено — непрозрачное."
 settings.history: История
 settings.history_description: Сохранять каждый отправленный запрос с ответом на этом компьютере (Ctrl+H).
 settings.language: Язык
@@ -530,6 +528,9 @@ settings.theme_files_description: "Темы — это файлы .toml в %{fol
 settings.theme_files_open: "Открыть папку"
 settings.theme_obsidian: Обсидиан
 settings.title: Настройки
+settings.transparency: "Прозрачность"
+settings.transparency_description: "Насколько рабочий стол просвечивает сквозь окно, размытый, как матовое стекло. 0 — непрозрачно."
+settings.transparency_value: "%{value}%"
 sidebar.auth: Авторизация…
 sidebar.change_password: Сменить пароль…
 sidebar.color: Цвет

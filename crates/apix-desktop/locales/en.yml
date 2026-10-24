@@ -510,8 +510,6 @@ settings.confirm_prod: Confirm in production
 settings.confirm_prod_description: Ask before sending DELETE, PUT or PATCH while an environment whose name contains “prod” is active.
 settings.dark_theme: "Dark theme"
 settings.dark_theme_description: "Used when the appearance is dark."
-settings.glass: "Glass"
-settings.glass_description: "A translucent window with the desktop blurred behind it. Off paints it solid."
 settings.history: History
 settings.history_description: Keep every sent request with its response on this computer (Ctrl+H).
 settings.language: Language
@@ -532,6 +530,9 @@ settings.theme_files_description: "Themes are .toml files in %{folder}. The firs
 settings.theme_files_open: "Open the folder"
 settings.theme_obsidian: Obsidian
 settings.title: Settings
+settings.transparency: "Transparency"
+settings.transparency_description: "How much of the desktop shows through the window, blurred like frosted glass. 0 is solid."
+settings.transparency_value: "%{value}%"
 sidebar.auth: Auth…
 sidebar.change_password: Change password…
 sidebar.color: Colour

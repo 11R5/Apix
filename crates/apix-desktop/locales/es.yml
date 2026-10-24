@@ -508,8 +508,6 @@ settings.confirm_prod: Confirmar en producción
 settings.confirm_prod_description: Preguntar antes de enviar DELETE, PUT o PATCH cuando está activo un entorno cuyo nombre contiene «prod».
 settings.dark_theme: "Tema oscuro"
 settings.dark_theme_description: "Se usa con la apariencia oscura."
-settings.glass: "Cristal"
-settings.glass_description: "Una ventana translúcida con el escritorio desenfocado detrás. Desactivado: opaca."
 settings.history: Historial
 settings.history_description: Guardar cada petición enviada con su respuesta en este equipo (Ctrl+H).
 settings.language: Idioma
@@ -530,6 +528,9 @@ settings.theme_files_description: "Los temas son archivos .toml en %{folder}. La
 settings.theme_files_open: "Abrir la carpeta"
 settings.theme_obsidian: Obsidian
 settings.title: Configuración
+settings.transparency: "Transparencia"
+settings.transparency_description: "Cuánto del escritorio se ve a través de la ventana, desenfocado como vidrio esmerilado. 0 es opaca."
+settings.transparency_value: "%{value} %"
 sidebar.auth: Autenticación…
 sidebar.change_password: Cambiar contraseña…
 sidebar.color: Color

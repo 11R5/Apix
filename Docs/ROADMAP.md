@@ -92,7 +92,7 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [x] Choose the accent colour (the theme's own or 8 colours, with deeper shades on light themes)
 - [x] Light theme and "follow the system" (Daylight, Solarized Light; code colours follow)
 - [x] Custom themes from files (`<config>/Apix/themes/*.toml`, "Open the folder" writes an example)
-- [x] Glass effect on/off, preset themes (Dracula, Nord, Solarized Dark)
+- [x] Transparency slider (0–90 %, frosted glass: acrylic on Windows, vibrancy on macOS), preset themes (Dracula, Nord, Solarized Dark)
 - [ ] Later: font size and density; code editor colours from the theme
 - To discuss after M5: growing the CLI with git and CI/CD integration
 

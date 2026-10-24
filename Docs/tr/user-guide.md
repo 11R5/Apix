@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:bd0ba3e3d656765b -->
+<!-- translated from en/user-guide.md sha256:d46c44b0008afbe9 -->
 
 # Apix kullanım kılavuzu
 
@@ -544,8 +544,12 @@ değiştirir:
   kırmızı, turuncu, sarı veya yeşil; düğmeler, seçimler, odak çerçeveleri ve
   değişken çipleri için. Açık temalarda daha koyu tonu kullanılır; vurgu
   üzerindeki yazı, hangisi daha iyi okunuyorsa koyu ya da beyazdır.
-- **Cam efekti:** arkasındaki masaüstü bulanık görünen yarı saydam bir pencere
-  ya da düz renk bir pencere.
+- **Saydamlık:** 0'dan (düz renk pencere) %90'a bir kaydırıcı: masaüstünün
+  pencereden ne kadar, buzlu cam gibi bulanık (Windows'ta akrilik, macOS'ta
+  vibrancy) görüneceği. Pencere arka planı onunla açılır, paneller yazının
+  arkası boş kalmasın diye daha yavaş açılır, kenarlar camın kenarı gibi
+  parlaklaşır; menüler ve pencereler düz kalır. Koyu yazı açık bir zemine
+  ihtiyaç duyduğundan açık temalar daha az açılır. Varsayılan %20'dir.
 - **Kendi temaların:** **Klasörü aç** `<config>/Apix/themes` klasörünü açar ve
   ilk seferde oraya başlangıç için `my-theme.toml` yazar. O klasördeki her
   `.toml` dosyası listelerde bir temadır; yerleşik bir temayla aynı adı taşıyan

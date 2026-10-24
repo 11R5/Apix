@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:ea0b0f01fe725cd2 -->
+<!-- translated from en/architecture.md sha256:e99e402a27f8abe5 -->
 
 # Apix mimarisi
 
@@ -356,9 +356,18 @@ Obsidyen'den ya da Gün ışığı'ndan gelir); `Colors` ve koyu/açık bilgisin
 taşır. `Palette::build` onu görünümlerin boyadığı renklere çevirir: vurgu
 ayarı (koyu ve daha koyu bir açık tonu olan adlı bir renk ya da `#RRGGBB`),
 göreli parlaklığa göre seçilen vurgu üzerindeki yazı rengi, koyu ya da açık
-temaya göre üzerine gelme ve giriş alanı tonları, cam efekti kapalıyken opak
-arka planlar. `from_settings` görünüm ayarına göre koyu ya da açık temayı,
+temaya göre üzerine gelme ve giriş alanı tonları ve saydamlık ayarı:
+pencere arka planının alfası `1 - t`'dir, paneller bu hızın %60'ıyla açılır,
+`t` büyüdükçe kenarlar beyaza doğru parlar, açık temalar `t`'nin %70'ini
+kullanır. `from_settings` görünüm ayarına göre koyu ya da açık temayı,
 "sistemi izle" için `App::window_appearance` ile seçer.
+
+gpui-kit'in kök görünümü bütün pencerenin altına `Theme::background` boyar;
+bu sistem bulanıklığını örterdi. Bu yüzden saydamlık sıfırdan büyükken o renk
+saydam yapılır ve pencereler (dialog) kendi arka planlarını her dialogun
+kullandığı `bidi::DialogBidi` üzerinden alır. Bulanıklığı işletim sistemi
+yapar: `WindowBackgroundAppearance::Blurred` Windows'ta akrilik
+(`SetWindowCompositionAttribute`), macOS'ta vibrancy'dir.
 
 Görünümler paletin bir kopyasını tutmaz: boyarken `theme::current()` çağırır.
 `theme::set` yeni paleti saklar, gpui-kit'in bileşen temasını ona yöneltir

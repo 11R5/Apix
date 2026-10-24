@@ -177,17 +177,28 @@ pub trait DialogBidi {
     fn bidi_heading(self, title: impl Into<SharedString>) -> Self;
 }
 
+/// Dialogs paint their own background: with a see-through window, the one
+/// gpui-kit puts under everything is transparent, and text behind a dialog
+/// must not show through it.
+fn solid(dialog: Dialog) -> Dialog {
+    dialog.bg(crate::theme::current().surface_raised)
+}
+
 impl DialogBidi for Dialog {
     fn bidi_heading(self, title: impl Into<SharedString>) -> Self {
-        self.text_start().close_button(false).title(title.into())
+        solid(self)
+            .text_start()
+            .close_button(false)
+            .title(title.into())
     }
 
     fn bidi_title(self, title: impl Into<SharedString>) -> Self {
         let title = title.into();
+        let this = solid(self);
         if !rtl() {
-            return self.title(title);
+            return this.title(title);
         }
-        self.text_right().close_button(false).title(
+        this.text_right().close_button(false).title(
             h_flex()
                 .w_full()
                 .flex_row_reverse()

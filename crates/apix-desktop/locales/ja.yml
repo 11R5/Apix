@@ -508,8 +508,6 @@ settings.confirm_prod: 本番環境で確認する
 settings.confirm_prod_description: 名前に「prod」を含む環境が選択されているとき、DELETE・PUT・PATCH を送信する前に確認します。
 settings.dark_theme: "ダークテーマ"
 settings.dark_theme_description: "ダークモードで使われます。"
-settings.glass: "ガラス効果"
-settings.glass_description: "背後のデスクトップがぼやけて見える半透明のウィンドウ。オフにすると不透明になります。"
 settings.history: 履歴
 settings.history_description: 送信したリクエストをレスポンスと一緒にこのコンピューターに保存します（Ctrl+H）。
 settings.language: 言語
@@ -530,6 +528,9 @@ settings.theme_files_description: "テーマは %{folder} 内の .toml ファイ
 settings.theme_files_open: "フォルダーを開く"
 settings.theme_obsidian: オブシディアン
 settings.title: 設定
+settings.transparency: "透明度"
+settings.transparency_description: "ウィンドウ越しにデスクトップがすりガラスのようにぼやけて見える度合い。0 は不透明です。"
+settings.transparency_value: "%{value}%"
 sidebar.auth: 認証…
 sidebar.change_password: パスワードを変更…
 sidebar.color: 色
