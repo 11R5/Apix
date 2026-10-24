@@ -7,7 +7,7 @@
 **İşaretler:** ✅ yapıldı · 🔜 sıradaki · ⬜ planlandı · 💭 sonra karar verilecek
 **Boyut:** S = birkaç saat · M = 1–3 gün · L = 1 hafta ve üstü
 
-### Durum özeti (23 Ekim 2026)
+### Durum özeti (24 Ekim 2026)
 | Aşama | Durum |
 |---|---|
 | M0 Temel | ✅ |
@@ -15,7 +15,8 @@
 | M2 Koleksiyonlar, Postman içe aktarma | ✅ (sekmeler ve sürükle-bırak M3'te tamamlandı) |
 | M3 Simge, projeler, ortamlar, kopyalama, auth | ✅ 9/9 · bitti: simge, ortam seçici ve editörü, dinamik değişkenler, projeler, kabuk komutu olarak kopyalama, metotla yeni istek, değişken çipleri, Auth sekmesi ve miras, komut paleti, sekmeler, sürükle-bırak ile taşıma · küçük kalanlar M4'te yapıldı (yalnız ham gövde editöründe değişken çipi kaldı) |
 | M4 Günlük kullanım | ✅ · bitti: menü çubuğu, şifreli koleksiyonlar (motor, uygulama, CLI), ağ denetçisi (Network sekmesi), multipart/binary/GraphQL gövdeleri, auth tipleri (Digest, OAuth 1.0, OAuth 2.0, AWS SigV4), ayarlar ekranı ve 9 dilli arayüz, Arapça için sağdan sola düzen, dokümantasyon yapısı (İngilizce, Türkçe), README karşılaştırması ve performans ölçümü, istek ayarları (zaman aşımı, yönlendirmeler, TLS doğrulama, proxy, istemci sertifikaları; klasör/koleksiyon/proje kalıtımıyla) ve çerez yöneticisi, 10 dilde kod üretimi, geçmiş, Postman otomatik tanıma, toplu içe aktarma ve Postman'a dışa aktarma, içerik tipleri (HTML gövde, XML/HTML renklendirme ve biçimlendirme, resim önizleme, Hex, yanıtı kaydetme), Insomnia/OpenAPI/HAR içe aktarma, şifreli koleksiyon parolasını ve ortam gizli değerlerini işletim sistemi anahtarlığında saklama, M3'ten kalan küçük işler (elle sıralama, sekmeleri hatırlama, proje renkleri, koleksiyonu projeye taşıma, prod onayı, fish/HTTPie/wget kopyalama, Params/Headers/form gövdesinde değişken çipleri) · gRPC (not 17) sonraki görevlere bırakıldı |
-| M5 Scriptler, testler, runner | ✅ `apix-script` (QuickJS, `pm.*` uyumlu API), istek öncesi ve test scriptleri (koleksiyon → klasör → istek), `pm.test` / `pm.expect` (Chai tarzı), eski `tests[...]` / `postman.*` API'si, konsol, uygulamada Scripts sekmesi ile Tests ve Console sekmeleri, `apix send` / `apix run` script çalıştırma, test sonuçları ve `setNextRequest`, `pm.sendRequest`, hazır kütüphaneler (`require`), kodsuz doğrulamalar, yanıttan değişken kaydetme, Runner penceresi (sıra, tekrar, bekleme, veri dosyası, ilk hatada dur, duraklat/devam/durdur), CSV/JSON veri dosyalı koşular, JUnit XML / JSON / HTML raporlar, `apix run --data/--iterations/--delay/--bail/--junit/--json/--html`, GitHub Actions örneği · sıradaki: tema paketi |
+| M5 Scriptler, testler, runner | ✅ `apix-script` (QuickJS, `pm.*` uyumlu API), istek öncesi ve test scriptleri (koleksiyon → klasör → istek), `pm.test` / `pm.expect` (Chai tarzı), eski `tests[...]` / `postman.*` API'si, konsol, uygulamada Scripts sekmesi ile Tests ve Console sekmeleri, `apix send` / `apix run` script çalıştırma, test sonuçları ve `setNextRequest`, `pm.sendRequest`, hazır kütüphaneler (`require`), kodsuz doğrulamalar, yanıttan değişken kaydetme, Runner penceresi (sıra, tekrar, bekleme, veri dosyası, ilk hatada dur, duraklat/devam/durdur), CSV/JSON veri dosyalı koşular, JUnit XML / JSON / HTML raporlar, `apix run --data/--iterations/--delay/--bail/--junit/--json/--html`, GitHub Actions örneği |
+| Tema paketi (M5 sonrası) | ✅ anında tema değişimi, açık tema ve "sistemi izle", vurgu rengi, cam efekti aç/kapa, Dracula/Nord/Solarized/Gün ışığı, `<config>/Apix/themes/*.toml` dosyalarından temalar · sıradaki: CLI'ın git ve CI/CD ile büyütülmesini konuşmak |
 | M6–M9 | ⬜ |
 
 Release ikili dosyası 38.0 MB (üst sınır 100 MB; QuickJS ve JavaScript renklendirmesi yaklaşık 3.6 MB, Runner 0.8 MB ekledi). Testler: core 57, script 10, runner 13, vault 11, desktop 12, codegen 24, import 26, http 19 (hepsi geçiyor, clippy uyarısız).
@@ -126,8 +127,10 @@ Apix, Postman'in yaptığı her şeyi yapan bir API istemcisi olacak. Postman'de
 **Temalar:**
 - **Obsidian:** koyu ve sade. Varsayılan tema.
 - **Cyber:** mockup'taki camgöbeği gradyan.
-- **Light:** açık tema, M7'de gelecek.
-- **Cam slider'ı:** saydamlığı %0 (tamamen opak) ile %40 arasında ayarlar.
+- **Dracula, Nord, Solarized Dark:** hazır koyu temalar.
+- **Gün ışığı (Daylight), Solarized Light:** açık temalar; görünüm koyu, açık ya da "sistemi izle".
+- **Kendi temaların:** `<config>/Apix/themes/*.toml`.
+- **Cam efekti:** açık (yarı saydam, arkası bulanık) ya da kapalı (düz renk). Kademeli saydamlık ayarı yapılmadı.
 
 ### 1.4 Ekran anatomisi
 ```
@@ -552,12 +555,14 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 2. [x] **Script'ten istek ve kütüphaneler** (M): `pm.sendRequest` (geri çağırma ve `await`), `require('crypto-js' | 'uuid' | 'lodash' | 'moment' | 'ajv' | 'tv4' | 'chai')` (Apix için yazılmış alt kümeler), kodsuz doğrulamalar (`[[assert]]`), yanıttan değişken kaydetme (**{x}**).
 3. [x] **Runner** (M): yeni `apix-runner` crate'i CLI ile uygulamanın ortak koşu döngüsü (sıra, tekrar, veri satırları, bekleme, `bail`, `setNextRequest`, duraklat/durdur, raporlar); Runner penceresi (Ctrl+Shift+R, Görünüm menüsü, komut paleti, koleksiyon/klasör › Çalıştır…); CSV/JSON veri dosyalı koşular; JUnit XML / JSON / HTML raporlar; `apix run` için `--data`, `--iterations`, `--delay`, `--bail`, `--junit`, `--json`, `--html`, `--timeout`/`-k`/`--proxy` ve klasör ya da tek istek koşusu; `examples/ci/github-actions.yml`. Koşu artık kenar çubuğu sırasını izliyor (elle sıralama dahil). `--parallel` ve Docker imajı sonraya kaldı.
 
-### M5 sonrası — Tema paketi (23 Ekim'de kararlaştırıldı)
-1. Temayı yeniden başlatmadan değiştirme (görünümler paleti kopyalamak yerine ortak bir yerden okur); diğerlerinin temeli.
-2. Vurgu rengi seçimi (camgöbeği yerine mor, yeşil, turuncu …).
-3. Açık tema ve "sistemi izle" (Windows/macOS koyu-açık moduna göre); kod renklendirmesi de uyarlanır. M7'deki "açık tema" maddesi buraya alındı.
-4. Dosyadan özel tema (`<config>/Apix/themes/*.toml`), ekipçe paylaşılabilir.
-- Olası ekler: cam efektini (saydamlık/bulanıklık) açıp kapatma, hazır temalar (Dracula, Nord, Solarized …), yazı boyutu ve satır yoğunluğu.
+### M5 sonrası — Tema paketi (23 Ekim'de kararlaştırıldı) ✅
+1. [x] Temayı yeniden başlatmadan değiştirme (görünümler paleti kopyalamak yerine ortak bir yerden okur); diğerlerinin temeli.
+2. [x] Vurgu rengi seçimi (camgöbeği yerine mor, yeşil, turuncu …).
+3. [x] Açık tema ve "sistemi izle" (Windows/macOS koyu-açık moduna göre); kod renklendirmesi de uyarlanır. M7'deki "açık tema" maddesi buraya alındı.
+4. [x] Dosyadan özel tema (`<config>/Apix/themes/*.toml`), ekipçe paylaşılabilir.
+- [x] Ekler: cam efektini açıp kapatma, hazır temalar (Dracula, Nord, Solarized Dark/Light, Gün ışığı).
+- Yapılanlar (24 Ekim): görünümler paleti kopyalamak yerine `theme::current()` ile okur, `theme::set` her şeyi hemen yeniden boyar; Ayarlar'da "Tema" bölümü (görünüm: koyu/açık/sistemi izle, koyu tema, açık tema, vurgu rengi: temanın kendi + 8 renk, cam efekti, "Klasörü aç" ile tema dosyaları ve örnek dosya); açık temada kod renklendirmesi gpui-kit'in açık temasına geçer, metot/koleksiyon renkleri koyulaşır; okunamayan tema dosyası nedeniyle gösterilir. "Sistemi izle" Windows'ta modu değiştirerek denenmedi (sistem ayarı).
+- ⬜ Kalan: yazı boyutu ve satır yoğunluğu; kod editörü renklerinin temadan gelmesi (şimdilik gpui-kit'in koyu/açık renkleri).
 
 **Not (konuşulacak):** CLI'ın git ve CI/CD entegrasyonuyla büyütülmesi (GitHub Actions adımı, raporlar, pipeline'lar). M5 bitince yeniden ele alınacak.
 

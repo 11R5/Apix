@@ -1,4 +1,4 @@
-<!-- translated from en/technical.md sha256:a0d0500936246f18 -->
+<!-- translated from en/technical.md sha256:dfa153f337314b56 -->
 
 # Teknik notlar
 
@@ -76,9 +76,10 @@ Masaüstü uygulamasının tam bir release derlemesi birkaç dakika sürer.
 
 | Dosya | İçerik |
 |---|---|
-| `<config>/Apix/settings.toml` | dil, tema, otomatik kilit süresi, geçmişin açık ya da kapalı olması, ortam gizli değerlerinin nereye yazılacağı |
+| `<config>/Apix/settings.toml` | dil, görünüm, koyu ve açık tema, vurgu rengi, cam efekti, otomatik kilit süresi, geçmişin açık ya da kapalı olması, ortam gizli değerlerinin nereye yazılacağı |
 | `<config>/Apix/state.toml` | son açılan koleksiyonlar, koleksiyon ya da proje başına seçilen ortam ve açık sekmeler (şifreli koleksiyonlar hariç) |
 | `<config>/Apix/cookies.json` | çerez kavanozu (oturum çerezleri kalıcı değildir) |
+| `<config>/Apix/themes/*.toml` | kendi temaların (yalnızca Ayarlar'da **Klasörü aç**'a basıldığında ve klasör boşsa yazılır: bir örnek) |
 | İşletim sistemi kimlik bilgisi deposu, `Apix` servisi | yalnızca istenirse: şifreli koleksiyonların hatırlanan parolaları (`vault:<klasör>`) ve ortam gizli değerleri (`env:<kimlik>`, uzun değerler için ayrıca `env:<kimlik>#1`, …) |
 | `<config>/Apix/history/` | gönderilen istekler (`{{değişkenler}}` çözülmeden) ve yanıtları: `index.jsonl`, her kayıt için bir `<id>.json` ve `<id>.body`; son 300 kayıt, gövdeler 256 KB'ta kesilir |
 
@@ -91,7 +92,7 @@ parolaları asla diske yazılmaz.
 | Değişken | Etkisi |
 |---|---|
 | `APIX_PASSWORD` | CLI için şifreli bir koleksiyonun parolası (`--password-env` başka bir değişken seçer). |
-| `APIX_THEME` | `obsidian` veya `cyber`; tema ayarını geçersiz kılar. |
+| `APIX_THEME` | bir tema kimliği (`obsidian`, `cyber`, `dracula`, `nord`, `solarized-dark`, `daylight`, `solarized-light` ya da bir tema dosyasının adı); ayarlar ne derse desin o temayı gösterir. |
 | `APIX_BENCH` | `startup` veya `json:<url>`: ölç ve çık (aşağıya bakın). |
 | `APIX_BENCH_OUT` | Ölçümlerin sonuna ekleneceği dosya. |
 
@@ -166,5 +167,5 @@ patch ile devreye alır. Upstream crate düzeltildiğinde kaldırılabilir.
 | apix-script | istek öncesi scriptlerden değişken ve istek değişiklikleri, `pm.test` / `pm.expect` sonuçları ve mesajları, eski `tests[...]` API'si, dosyayı adlandıran hatalar, sonsuz scriptlerin durdurulması, `setNextRequest`, `atob`/`btoa`, `pm.sendRequest` (geri çağırma ve `await`, bekleme sayılmaz), bilinen özet değerlerine karşı hazır kütüphaneler, kodsuz doğrulamalar, yanıt hedefleri için değer ve ifade üretimi |
 | apix-runner | CSV (tırnaklar, satır sonları, `;`, BOM) ve JSON veri dosyaları, tekrar sayıları ve veri satırları, duraklatma/durdurma zamanlaması, JUnit/JSON/HTML çıktısı ve kaçışlar, tarihler; yerel bir sunucuya karşı bütün koşular (veri satırları, kenar çubuğu sırası, `bail`, `setNextRequest`) |
 | apix-vault | şifreleme formatı, kurcalama (tampering), parola değişikliği, kurtarma anahtarı, anahtarlık kayıtları (gerçek kimlik bilgisi deposunda, test servis adıyla; depo yoksa atlanır) |
-| apix-desktop | çevirilerin eksiksizliği, dil yardımcıları, dosya yolları, vurgulama sorgusu |
+| apix-desktop | çevirilerin eksiksizliği, dil yardımcıları, dosya yolları, vurgulama sorgusu, tema dosyaları (okuma, hatalar, gidiş-dönüş), vurgu ve cam renkleri |
 | docs-check | belge yapısı ve damgalar |

@@ -330,6 +330,24 @@ JSON arrays. The CLI prints progress as it comes; the desktop Runner
 out of a shared `Live` struct a few times a second; the view stays in the
 workspace, so a run outlives its dialog.
 
+## Themes
+
+`theme.rs` holds the colours. A `ThemeDef` is a theme (built in, or read from
+`<config>/Apix/themes/*.toml`; colours a file leaves out come from Obsidian or
+Daylight) with `Colors` and a dark/light flag. `Palette::build` turns one into
+what views paint with: the accent setting (a named colour with a dark and a
+deeper light shade, or `#RRGGBB`), the text on the accent picked by relative
+luminance, hover and input tints for dark or light, and opaque backgrounds
+when glass is off. `from_settings` picks the dark or light theme by the
+appearance setting and, for "follow the system", `App::window_appearance`.
+
+Views never keep a copy of the palette: they call `theme::current()` when they
+paint. `theme::set` stores the new palette, points gpui-kit's component theme
+at it (switching its mode, so the code editor's colours follow), sets every
+window's background to blurred or opaque and refreshes the windows, so a
+change shows at once. The workspace observes the window appearance and calls
+it again when the system switches between light and dark.
+
 ## Languages (M4)
 
 Every text in the desktop UI goes through a key: `tr!("menu.file")` (a thin

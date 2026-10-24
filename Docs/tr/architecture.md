@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:3f3c97f17faf7f4a -->
+<!-- translated from en/architecture.md sha256:ea0b0f01fe725cd2 -->
 
 # Apix mimarisi
 
@@ -347,6 +347,25 @@ BOM, `;` başlıklar) ve JSON dizilerini okur. CLI ilerlemeyi geldikçe yazar;
 masaüstü Runner'ı (`workspace/runner_ui.rs`) koşuyu ağ çalışma zamanında
 yürütür ve ilerlemeyi paylaşılan bir `Live` yapısından saniyede birkaç kez
 okur; görünüm workspace'te kaldığı için koşu penceresinden uzun yaşar.
+
+## Temalar
+
+Renkler `theme.rs` içindedir. Bir `ThemeDef` bir temadır (yerleşik ya da
+`<config>/Apix/themes/*.toml` dosyasından okunmuş; dosyanın vermediği renkler
+Obsidyen'den ya da Gün ışığı'ndan gelir); `Colors` ve koyu/açık bilgisini
+taşır. `Palette::build` onu görünümlerin boyadığı renklere çevirir: vurgu
+ayarı (koyu ve daha koyu bir açık tonu olan adlı bir renk ya da `#RRGGBB`),
+göreli parlaklığa göre seçilen vurgu üzerindeki yazı rengi, koyu ya da açık
+temaya göre üzerine gelme ve giriş alanı tonları, cam efekti kapalıyken opak
+arka planlar. `from_settings` görünüm ayarına göre koyu ya da açık temayı,
+"sistemi izle" için `App::window_appearance` ile seçer.
+
+Görünümler paletin bir kopyasını tutmaz: boyarken `theme::current()` çağırır.
+`theme::set` yeni paleti saklar, gpui-kit'in bileşen temasını ona yöneltir
+(kipini de değiştirir, böylece kod editörünün renkleri de uyar), her
+pencerenin arka planını bulanık ya da opak yapar ve pencereleri yeniler; bu
+yüzden değişiklik hemen görünür. Workspace pencere görünümünü izler ve sistem
+açık ile koyu arasında geçtiğinde onu yeniden çağırır.
 
 ## Diller (M4)
 

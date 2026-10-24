@@ -457,6 +457,21 @@ impl SettingsView {
     }
 }
 
+/// The themes folder as people write it: `%APPDATA%\Apix\themes` on
+/// Windows, `~/…` elsewhere.
+fn themes_folder_label() -> String {
+    let Some(dir) = theme::themes_dir() else {
+        return String::new();
+    };
+    if cfg!(windows) {
+        return r"%APPDATA%\Apix\themes".into();
+    }
+    match dirs::home_dir().and_then(|home| dir.strip_prefix(home).ok().map(|p| p.to_owned())) {
+        Some(rest) => format!("~/{}", rest.display()),
+        None => dir.display().to_string(),
+    }
+}
+
 fn log_save_error(e: &std::io::Error) {
     eprintln!("apix: could not save settings: {e}");
 }
@@ -470,9 +485,7 @@ impl Render for SettingsView {
         }
         let p = crate::theme::current();
         let line = || div().w_full().flex_none().h_px().bg(p.hairline);
-        let folder = theme::themes_dir()
-            .map(|d| d.display().to_string())
-            .unwrap_or_default();
+        let folder = themes_folder_label();
         v_flex()
             .id("settings-rows")
             .max_h(px(560.))

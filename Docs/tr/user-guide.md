@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:fa5e88283d280d7c -->
+<!-- translated from en/user-guide.md sha256:bd0ba3e3d656765b -->
 
 # Apix kullanım kılavuzu
 
@@ -524,7 +524,6 @@ bulunabilir.
   dilini izler. Arapçada pencere aynalanır: kenar çubuğu sağdadır, menüler,
   sekmeler ve formlar sağdan başlar; URL'ler, kod ve anahtar–değer tabloları
   soldan sağa kalır.
-- **Tema:** Obsidyen veya Siber cam; Apix'in bir sonraki açılışında uygulanır.
 - **Şifreli koleksiyonları kilitle:** 5, 15 veya 30 dakika sonra, 1 saat sonra
   ya da hiçbir zaman.
 - **Ortam gizli değerleri:** `.local.toml` dosyasında ya da sistem
@@ -533,7 +532,55 @@ bulunabilir.
   öncesi sor (varsayılan olarak açık).
 - **Geçmiş:** açık veya kapalı (bkz. [Geçmiş](#geçmiş)).
 
+Ayarların **Tema** bölümü Apix'in görünüşünü yeniden başlatmadan, hemen
+değiştirir:
+
+- **Görünüm:** koyu, açık ya da **Sistemi izle**; sonuncusu Windows veya macOS
+  açık ve koyu mod arasında geçtiğinde değişir.
+- **Koyu tema:** Obsidyen (varsayılan), Siber cam, Dracula, Nord veya
+  Solarized Dark. **Açık tema:** Gün ışığı veya Solarized Light. Diğer türden
+  bir tema seçmek görünümü de ona geçirir.
+- **Vurgu rengi:** temanın kendi rengi ya da camgöbeği, mavi, mor, pembe,
+  kırmızı, turuncu, sarı veya yeşil; düğmeler, seçimler, odak çerçeveleri ve
+  değişken çipleri için. Açık temalarda daha koyu tonu kullanılır; vurgu
+  üzerindeki yazı, hangisi daha iyi okunuyorsa koyu ya da beyazdır.
+- **Cam efekti:** arkasındaki masaüstü bulanık görünen yarı saydam bir pencere
+  ya da düz renk bir pencere.
+- **Kendi temaların:** **Klasörü aç** `<config>/Apix/themes` klasörünü açar ve
+  ilk seferde oraya başlangıç için `my-theme.toml` yazar. O klasördeki her
+  `.toml` dosyası listelerde bir temadır; yerleşik bir temayla aynı adı taşıyan
+  dosya (`nord.toml`) onun yerine geçer. Okunamayan dosya nedeniyle birlikte
+  kırmızı yazılır.
+
 ![Ayarlar](images/settings.png)
+
+Bir tema dosyası bir ad, açık olup olmadığı ve şu renklerden istediklerini
+verir (`#RRGGBB` ya da saydamlıkla `#RRGGBBAA`); vermedikleri Obsidyen'den, açık
+temada Gün ışığı'ndan gelir:
+
+```toml
+name = "Deep sea"
+light = false
+
+[colors]
+background = "#03141FEE"      # pencere, background_end'e doğru bir geçiş
+background_end = "#062A3AEE"
+surface = "#05202DB3"         # paneller
+raised = "#0A2B3BF7"          # menüler ve pencereler
+border = "#FFFFFF14"
+accent = "#FF9F43"
+text = "#E8F6FF"
+muted = "#7FA3B8"
+ok = "#34D399"                # 2xx, geçen testler
+warning = "#FBBF24"
+error = "#F87171"
+string = "#86EFAC"            # büyük gövde görüntüleyicisinde JSON
+number = "#FDBA74"
+keyword = "#C4B5FD"
+```
+
+Tema dosyaları düz metindir, ekipçe paylaşılabilir; Apix onları açılışta ve
+Ayarlar açıldığında okur.
 
 Ayarlar, sisteminizin yapılandırma dizinindeki Apix klasöründe `settings.toml`
 dosyasına kaydedilir (Windows'ta `%APPDATA%\Apix`, macOS'ta
