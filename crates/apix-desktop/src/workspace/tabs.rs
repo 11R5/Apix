@@ -394,7 +394,7 @@ impl Workspace {
         if self.tabs.is_empty() {
             return None;
         }
-        let p = self.palette;
+        let p = crate::theme::current();
         let front_method = self.current_method(cx);
         let tabs = self.tabs.iter().enumerate().map(|(ix, tab)| {
             let front = tab.parked.is_none();
@@ -430,7 +430,7 @@ impl Workspace {
                     gpui_kit::transparent_black()
                 })
                 .when(front, |t| t.bg(p.surface))
-                .hover(|t| t.bg(hsla(0., 0., 1., 0.04)))
+                .hover(|t| t.bg(crate::theme::current().hover))
                 .cursor_pointer()
                 .on_click(cx.listener(move |this, _: &ClickEvent, window, cx| {
                     this.open_tab(open.clone(), window, cx)
@@ -478,7 +478,7 @@ impl Workspace {
                         .rounded_sm()
                         .text_xs()
                         .text_color(if dirty { p.warn } else { p.text_muted })
-                        .hover(|c| c.bg(hsla(0., 0., 1., 0.08)).text_color(p.text))
+                        .hover(|c| c.bg(crate::theme::current().hover).text_color(p.text))
                         .child(if dirty { "●" } else { "✕" })
                         .on_click(cx.listener(move |this, _: &ClickEvent, window, cx| {
                             cx.stop_propagation();

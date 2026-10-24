@@ -9,12 +9,9 @@ use gpui_kit::*;
 
 use crate::bidi::{self, Bidi as _, DialogBidi as _};
 use crate::net;
-use crate::theme::Palette;
 use crate::tr;
 
-struct CookiesView {
-    palette: Palette,
-}
+struct CookiesView {}
 
 /// `expires` as "in 3 d" style text, or "session".
 fn expiry(cookie: &CookieInfo) -> SharedString {
@@ -36,7 +33,7 @@ fn expiry(cookie: &CookieInfo) -> SharedString {
 
 impl Render for CookiesView {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let p = self.palette;
+        let p = crate::theme::current();
         let cookies = net::client().cookies();
         let count = cookies.len();
 
@@ -145,9 +142,8 @@ impl Render for CookiesView {
 
 impl super::Workspace {
     pub(super) fn open_cookies(&mut self, window: &mut Window, cx: &mut Context<Self>) {
-        let palette = self.palette;
         let view = cx.entity().downgrade();
-        let cookies = cx.new(|_| CookiesView { palette });
+        let cookies = cx.new(|_| CookiesView {});
         window.open_dialog(cx, move |dialog, _, _| {
             dialog
                 .on_close(super::collections::refocus(view.clone()))

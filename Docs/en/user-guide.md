@@ -499,7 +499,6 @@ in every language.
   the system language. In Arabic the window mirrors: the sidebar is on the
   right and menus, tabs and forms run from the right, while URLs, code and
   key–value tables stay left to right.
-- **Theme:** Obsidian or Cyber glass; applies the next time Apix starts.
 - **Lock encrypted collections:** after 5, 15 or 30 minutes, 1 hour, or never.
 - **Environment secrets:** in a `.local.toml` file or in the system keychain
   (see [Variables and environments](#variables-and-environments)).
@@ -507,7 +506,55 @@ in every language.
   environment is active (on by default).
 - **History:** on or off (see [History](#history)).
 
+The **Theme** part of Settings changes how Apix looks, at once, without a
+restart:
+
+- **Appearance:** dark, light, or **Follow the system**, which switches when
+  Windows or macOS switches between light and dark mode.
+- **Dark theme:** Obsidian (the default), Cyber glass, Dracula, Nord or
+  Solarized Dark. **Light theme:** Daylight or Solarized Light. Picking a
+  theme of the other kind switches the appearance to it.
+- **Accent colour:** the theme's own, or cyan, blue, purple, pink, red,
+  orange, yellow or green, for buttons, selections, focus rings and the
+  variable chips. Light themes get a deeper shade, and the text on the accent
+  is dark or white, whichever reads better.
+- **Glass:** a translucent window with the desktop blurred behind it, or a
+  solid one.
+- **Your own themes:** **Open the folder** opens `<config>/Apix/themes` and,
+  the first time, writes `my-theme.toml` there to start from. Every `.toml`
+  file in that folder is a theme in the lists; a file named like a built-in
+  theme (`nord.toml`) replaces it. A file that cannot be read is named in red
+  with the reason.
+
 ![Settings](images/settings.png)
+
+A theme file sets a name, whether it is light, and any of these colours
+(`#RRGGBB`, or `#RRGGBBAA` with opacity); the ones it leaves out come from
+Obsidian, or from Daylight for a light theme:
+
+```toml
+name = "Deep sea"
+light = false
+
+[colors]
+background = "#03141FEE"      # the window, a gradient to background_end
+background_end = "#062A3AEE"
+surface = "#05202DB3"         # panels
+raised = "#0A2B3BF7"          # menus and dialogs
+border = "#FFFFFF14"
+accent = "#FF9F43"
+text = "#E8F6FF"
+muted = "#7FA3B8"
+ok = "#34D399"                # 2xx, passed tests
+warning = "#FBBF24"
+error = "#F87171"
+string = "#86EFAC"            # JSON in the large-body viewer
+number = "#FDBA74"
+keyword = "#C4B5FD"
+```
+
+Theme files are plain text, so a team can share them; Apix reads them when it
+starts and when Settings opens.
 
 Settings are saved in `settings.toml` in the Apix folder of your system's
 configuration directory (`%APPDATA%\Apix` on Windows,

@@ -14,7 +14,7 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [x] `apix-desktop`: blurred, transparent window with its own title bar and window controls
 
 ## M1 — Send a request from the UI ✅
-- [x] Design tokens (Obsidian and Cyber themes; `APIX_THEME=cyber`)
+- [x] Design tokens (Obsidian and Cyber themes; `APIX_THEME=cyber`; more themes after M5)
 - [x] Embedded Inter 4.1 and JetBrains Mono 2.304 fonts (OFL 1.1)
 - [x] tokio runtime bridged into GPUI, with cancellable requests (Esc)
 - [x] Editable URL bar, method picker, Send button, Enter / Ctrl+Enter
@@ -88,11 +88,12 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [ ] Later: `--parallel`, an official Docker image for `apix`
 
 ## After M5 — Themes
-- [ ] Switch themes without restarting
-- [ ] Choose the accent colour
-- [ ] Light theme and "follow the system"
-- [ ] Custom themes from files (`<config>/Apix/themes/*.toml`)
-- [ ] Maybe: glass effect on/off, preset themes (Dracula, Nord, Solarized…), font size and density
+- [x] Switch themes without restarting (views read the current palette)
+- [x] Choose the accent colour (the theme's own or 8 colours, with deeper shades on light themes)
+- [x] Light theme and "follow the system" (Daylight, Solarized Light; code colours follow)
+- [x] Custom themes from files (`<config>/Apix/themes/*.toml`, "Open the folder" writes an example)
+- [x] Glass effect on/off, preset themes (Dracula, Nord, Solarized Dark)
+- [ ] Later: font size and density; code editor colours from the theme
 - To discuss after M5: growing the CLI with git and CI/CD integration
 
 ## M6 — Protocols
@@ -102,7 +103,7 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [ ] Route (traceroute) and network map, with an offline IP-geolocation database
 - [ ] TLS details in the network inspector with our own connector: TLS version, cipher, ALPN, full chain, separate TCP and TLS times, compressed size
 - [ ] Local mock server, docs generation, monitors, visualizer, capture proxy
-- [ ] Git integration, auto-update (the light theme moved to the theme work after M5)
+- [ ] Git integration, auto-update (the light theme was done in the theme work after M5)
 
 ## M8 — Beyond Postman
 - [ ] Load testing (`apix bench`), response diff, time-travel history

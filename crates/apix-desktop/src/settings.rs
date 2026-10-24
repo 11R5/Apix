@@ -10,8 +10,17 @@ use serde::{Deserialize, Serialize};
 pub struct Settings {
     /// Interface language code; empty follows the system language.
     pub language: String,
-    /// `obsidian` or `cyber`. Read at start.
+    /// The dark theme: a built-in id (`obsidian`, `cyber`, `dracula`, `nord`,
+    /// `solarized-dark`) or a file name from the themes folder.
     pub theme: String,
+    /// The light theme (`daylight`, `solarized-light`, or a file).
+    pub light_theme: String,
+    /// `dark`, `light` or `system` (follow the OS).
+    pub appearance: String,
+    /// An accent name (`cyan`, `purple`, …), `#RRGGBB`, or empty for the theme's own.
+    pub accent: String,
+    /// A translucent window with the OS blur behind it; off paints it solid.
+    pub glass: bool,
     /// Encrypted collections lock after this many idle minutes; 0 never.
     pub auto_lock_minutes: u32,
     /// Keep sent requests and their responses in the history.
@@ -27,6 +36,10 @@ impl Default for Settings {
         Self {
             language: String::new(),
             theme: "obsidian".into(),
+            light_theme: "daylight".into(),
+            appearance: "dark".into(),
+            accent: String::new(),
+            glass: true,
             auto_lock_minutes: 15,
             history: true,
             secrets_in_keychain: false,

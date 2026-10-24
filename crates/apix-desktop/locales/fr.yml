@@ -483,6 +483,22 @@ scripts.skipped: Le script avant la requête a sauté cette requête (pm.executi
 scripts.tab_set: "%{name} ●"
 scripts.test: Tests
 scripts.test_hint: S’exécute à l’arrivée de la réponse. Vérifiez-la avec pm.test("nom", () => pm.expect(…)) ; elle est dans pm.response.
+settings.accent: "Couleur d'accent"
+settings.accent_blue: "Bleu"
+settings.accent_cyan: "Cyan"
+settings.accent_description: "Boutons, sélections, contours de focus et liens."
+settings.accent_green: "Vert"
+settings.accent_orange: "Orange"
+settings.accent_pink: "Rose"
+settings.accent_purple: "Violet"
+settings.accent_red: "Rouge"
+settings.accent_theme: "Celle du thème"
+settings.accent_yellow: "Jaune"
+settings.appearance: "Apparence"
+settings.appearance_dark: "Sombre"
+settings.appearance_description: "Sombre, clair, ou suivre le réglage clair/sombre du système."
+settings.appearance_light: "Clair"
+settings.appearance_system: "Suivre le système"
 settings.auto_lock: Verrouiller les collections chiffrées
 settings.auto_lock_description: Après ce délai d'inactivité, les collections chiffrées se verrouillent et redemandent le mot de passe.
 settings.auto_lock_hour: Après 1 heure
@@ -490,19 +506,29 @@ settings.auto_lock_minutes: Après %{count} minutes
 settings.auto_lock_never: Jamais
 settings.confirm_prod: Confirmer en production
 settings.confirm_prod_description: Demander avant d’envoyer DELETE, PUT ou PATCH quand un environnement dont le nom contient « prod » est actif.
+settings.dark_theme: "Thème sombre"
+settings.dark_theme_description: "Utilisé quand l'apparence est sombre."
+settings.glass: "Verre"
+settings.glass_description: "Une fenêtre translucide avec le bureau flouté derrière. Désactivé : opaque."
 settings.history: Historique
 settings.history_description: Conserver chaque requête envoyée avec sa réponse sur cet ordinateur (Ctrl+H).
 settings.language: Langue
 settings.language_description: La langue des menus, boutons et messages. S'applique immédiatement.
+settings.light_theme: "Thème clair"
+settings.light_theme_description: "Utilisé quand l'apparence est claire."
 settings.secrets: Valeurs secrètes des environnements
 settings.secrets_description: Où les valeurs secrètes des environnements sont conservées sur cet ordinateur. Les deux restent hors de git ; le trousseau évite en plus de les garder en clair sur le disque.
 settings.secrets_file: Fichier .local.toml
 settings.secrets_keychain: Trousseau du système
-settings.theme: Thème
+settings.section_general: "Général"
+settings.section_look: "Thème"
 settings.theme_cyber: Cyber glass
-settings.theme_description: Les couleurs de la fenêtre.
+settings.theme_daylight: "Lumière du jour"
+settings.theme_file_error: "Fichier de thème non lu : %{error}"
+settings.theme_files: "Vos thèmes"
+settings.theme_files_description: "Les thèmes sont des fichiers .toml dans %{folder}. La première fois, un exemple à copier y est écrit."
+settings.theme_files_open: "Ouvrir le dossier"
 settings.theme_obsidian: Obsidian
-settings.theme_restart: S'applique au prochain démarrage d'Apix.
 settings.title: Paramètres
 sidebar.auth: Authentification…
 sidebar.change_password: Changer le mot de passe…

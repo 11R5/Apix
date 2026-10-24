@@ -148,9 +148,9 @@ impl Workspace {
 
     fn chip_color(&self, kind: Kind) -> Hsla {
         match kind {
-            Kind::Defined => self.palette.accent,
-            Kind::Dynamic => hsla(0.75, 0.75, 0.75, 1.),
-            Kind::Missing => self.palette.err,
+            Kind::Defined => crate::theme::current().accent,
+            Kind::Dynamic => crate::theme::current().keyword,
+            Kind::Missing => crate::theme::current().err,
         }
     }
 
@@ -239,7 +239,7 @@ impl Workspace {
     /// The card under a hovered chip: value, scope, or why it is missing.
     pub(super) fn render_var_card(&self, cx: &mut Context<Self>) -> Option<AnyElement> {
         let hovered = self.hovered_var.as_ref()?;
-        let p = self.palette;
+        let p = crate::theme::current();
         let name = hovered.name.as_str();
         let kind = self.kind(name);
         let mono = cx.theme().mono_font_family.clone();

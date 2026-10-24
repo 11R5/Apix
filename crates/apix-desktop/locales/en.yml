@@ -485,6 +485,22 @@ scripts.skipped: The pre-request script skipped this request (pm.execution.skipR
 scripts.tab_set: "%{name} ●"
 scripts.test: Tests
 scripts.test_hint: Runs after the response arrives. Check it with pm.test("name", () => pm.expect(…)); pm.response holds it.
+settings.accent: "Accent colour"
+settings.accent_blue: "Blue"
+settings.accent_cyan: "Cyan"
+settings.accent_description: "Buttons, selections, focus rings and links."
+settings.accent_green: "Green"
+settings.accent_orange: "Orange"
+settings.accent_pink: "Pink"
+settings.accent_purple: "Purple"
+settings.accent_red: "Red"
+settings.accent_theme: "The theme's own"
+settings.accent_yellow: "Yellow"
+settings.appearance: "Appearance"
+settings.appearance_dark: "Dark"
+settings.appearance_description: "Dark, light, or follow the system's light/dark setting."
+settings.appearance_light: "Light"
+settings.appearance_system: "Follow the system"
 settings.auto_lock: Lock encrypted collections
 settings.auto_lock_description: After this much idle time, encrypted collections lock and need the password again.
 settings.auto_lock_hour: After 1 hour
@@ -492,19 +508,29 @@ settings.auto_lock_minutes: After %{count} minutes
 settings.auto_lock_never: Never
 settings.confirm_prod: Confirm in production
 settings.confirm_prod_description: Ask before sending DELETE, PUT or PATCH while an environment whose name contains “prod” is active.
+settings.dark_theme: "Dark theme"
+settings.dark_theme_description: "Used when the appearance is dark."
+settings.glass: "Glass"
+settings.glass_description: "A translucent window with the desktop blurred behind it. Off paints it solid."
 settings.history: History
 settings.history_description: Keep every sent request with its response on this computer (Ctrl+H).
 settings.language: Language
 settings.language_description: The language of menus, buttons and messages. Changes at once.
+settings.light_theme: "Light theme"
+settings.light_theme_description: "Used when the appearance is light."
 settings.secrets: Environment secrets
 settings.secrets_description: Where secret environment values are kept on this computer. Both stay out of git; the keychain also keeps them off disk in plain text.
 settings.secrets_file: .local.toml file
 settings.secrets_keychain: System keychain
-settings.theme: Theme
+settings.section_general: "General"
+settings.section_look: "Theme"
 settings.theme_cyber: Cyber glass
-settings.theme_description: The colours of the window.
+settings.theme_daylight: "Daylight"
+settings.theme_file_error: "Theme file not read: %{error}"
+settings.theme_files: "Your own themes"
+settings.theme_files_description: "Themes are .toml files in %{folder}. The first time, an example to copy is written there."
+settings.theme_files_open: "Open the folder"
 settings.theme_obsidian: Obsidian
-settings.theme_restart: Applies the next time Apix starts.
 settings.title: Settings
 sidebar.auth: Auth…
 sidebar.change_password: Change password…

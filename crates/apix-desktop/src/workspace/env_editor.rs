@@ -20,7 +20,6 @@ use gpui_kit::*;
 
 use super::{Workspace, describe};
 use crate::bidi::{self, Bidi as _, DialogBidi as _};
-use crate::theme::Palette;
 use crate::tr;
 
 /// What one page of the dialog edits.
@@ -117,7 +116,6 @@ fn sorted(mut rows: Vec<EnvVar>) -> Vec<EnvVar> {
 
 pub(super) struct EnvEditor {
     workspace: WeakEntity<Workspace>,
-    palette: Palette,
     pages: Vec<Page>,
     current: usize,
     /// Where "New environment" puts the file: the project or collection root.
@@ -132,7 +130,6 @@ pub(super) struct EnvEditor {
 impl EnvEditor {
     pub(super) fn new(
         workspace: WeakEntity<Workspace>,
-        palette: Palette,
         specs: Vec<PageSpec>,
         start: usize,
         new_root: PathBuf,
@@ -153,7 +150,6 @@ impl EnvEditor {
         );
         let mut editor = Self {
             workspace,
-            palette,
             pages: Vec::new(),
             current: 0,
             new_root,
@@ -366,7 +362,7 @@ impl EnvEditor {
     // -----------------------------------------------------------------------
 
     fn render_list(&self, cx: &mut Context<Self>) -> impl IntoElement {
-        let p = self.palette;
+        let p = crate::theme::current();
         let mut items: Vec<AnyElement> = Vec::new();
         let mut section: Option<&str> = None;
         for (ix, page) in self.pages.iter().enumerate() {
@@ -400,7 +396,7 @@ impl EnvEditor {
                     .rounded_md()
                     .text_sm()
                     .cursor_pointer()
-                    .hover(|s| s.bg(hsla(0., 0., 1., 0.05)))
+                    .hover(|s| s.bg(crate::theme::current().hover))
                     .when(active, |row| row.bg(p.accent.opacity(0.12)))
                     .when(page.deleted, |row| {
                         row.line_through().text_color(p.text_muted)
@@ -458,7 +454,7 @@ impl EnvEditor {
     }
 
     fn render_header(&self, page: &Page, cx: &mut Context<Self>) -> impl IntoElement {
-        let p = self.palette;
+        let p = crate::theme::current();
         let title = match &page.target {
             Target::ProjectVars(_) => tr!("env.title.project"),
             Target::CollectionVars(_) => tr!("env.title.collection", name = page.label),
@@ -508,7 +504,7 @@ impl EnvEditor {
     }
 
     fn render_rows(&self, page: &Page, cx: &mut Context<Self>) -> impl IntoElement {
-        let p = self.palette;
+        let p = crate::theme::current();
         let can_be_secret = page.name.is_some();
         let rows = page.rows.iter().flatten().enumerate().map(|(ix, row)| {
             h_flex()
@@ -608,7 +604,7 @@ impl EnvEditor {
     }
 
     fn render_dynamic(&self, cx: &mut Context<Self>) -> impl IntoElement {
-        let p = self.palette;
+        let p = crate::theme::current();
         let mono = cx.theme().mono_font_family.clone();
         let rows = DYNAMIC_VARIABLES.iter().zip(&self.samples).enumerate().map(
             |(ix, ((name, about), sample))| {
@@ -622,7 +618,7 @@ impl EnvEditor {
                     .rounded_md()
                     .text_sm()
                     .cursor_pointer()
-                    .hover(|s| s.bg(hsla(0., 0., 1., 0.05)))
+                    .hover(|s| s.bg(crate::theme::current().hover))
                     .on_click(move |_, _, cx| {
                         cx.write_to_clipboard(ClipboardItem::new_string(copy.clone()))
                     })
@@ -679,7 +675,7 @@ impl EnvEditor {
 
 impl Render for EnvEditor {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let p = self.palette;
+        let p = crate::theme::current();
         let Some(page) = self.pages.get(self.current) else {
             return div().into_any_element();
         };
@@ -770,9 +766,7 @@ impl Workspace {
             })
             .unwrap_or(0);
         let view = cx.entity().downgrade();
-        let palette = self.palette;
-        let editor =
-            cx.new(|cx| EnvEditor::new(view.clone(), palette, specs, start, root, window, cx));
+        let editor = cx.new(|cx| EnvEditor::new(view.clone(), specs, start, root, window, cx));
         window.open_dialog(cx, move |dialog, _, _| {
             let save = editor.clone();
             let cancel_view = view.clone();

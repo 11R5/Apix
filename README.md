@@ -33,6 +33,9 @@
 - **In your language.** English, Türkçe, العربية, Deutsch, Français, Русский,
   日本語, 简体中文 and Español, switched at once in Settings; in Arabic the
   window mirrors to right to left.
+- **Your colours.** Dark and light themes (Obsidian, Cyber glass, Dracula,
+  Nord, Solarized, Daylight) or follow the system, an accent colour, glass or
+  solid window, and your own themes as small TOML files. Changes apply at once.
 
 ### Compared with similar tools
 

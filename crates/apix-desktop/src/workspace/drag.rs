@@ -100,7 +100,7 @@ impl Workspace {
         dir: PathBuf,
         cx: &mut Context<Self>,
     ) -> Stateful<Div> {
-        let accent = self.palette.accent;
+        let accent = crate::theme::current().accent;
         let view = cx.entity().downgrade();
         let hovered = cx.has_active_drag()
             && self
@@ -137,7 +137,7 @@ impl Workspace {
         row_kind: Kind,
         cx: &mut Context<Self>,
     ) -> Stateful<Div> {
-        let accent = self.palette.accent;
+        let accent = crate::theme::current().accent;
         let view = cx.entity().downgrade();
         let hint = self
             .drop_hint

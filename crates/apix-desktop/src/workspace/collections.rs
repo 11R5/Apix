@@ -1235,7 +1235,7 @@ impl Workspace {
     // -----------------------------------------------------------------------
 
     pub(super) fn render_sidebar(&self, cx: &mut Context<Self>) -> impl IntoElement {
-        let p = self.palette;
+        let p = crate::theme::current();
         let open = !self.collections.is_empty() || self.project.is_some();
         let by_environment = self
             .project
@@ -1416,7 +1416,7 @@ impl Workspace {
 
     /// Green for an active environment, red for production, grey for none.
     fn environment_dot(&self, name: Option<&str>) -> Hsla {
-        let p = self.palette;
+        let p = crate::theme::current();
         match name {
             Some(n) if n.to_lowercase().contains("prod") => p.err,
             Some(_) => p.ok,
@@ -1432,7 +1432,7 @@ impl Workspace {
         out: &mut Vec<AnyElement>,
         cx: &mut Context<Self>,
     ) {
-        let p = self.palette;
+        let p = crate::theme::current();
         let collapsed = self.collapsed.contains(&collection.root);
         let active = self
             .collection
@@ -1550,7 +1550,7 @@ impl Workspace {
     /// Project → Environment → Collections. Clicking an environment makes it
     /// active and lists the collections shown in it.
     fn render_environment_groups(&self, out: &mut Vec<AnyElement>, cx: &mut Context<Self>) {
-        let p = self.palette;
+        let p = crate::theme::current();
         let Some(project) = &self.project else {
             return;
         };
@@ -1592,7 +1592,7 @@ impl Workspace {
                     .text_sm()
                     .font_weight(FontWeight::SEMIBOLD)
                     .cursor_pointer()
-                    .hover(|s| s.bg(hsla(0., 0., 1., 0.05)))
+                    .hover(|s| s.bg(crate::theme::current().hover))
                     .when(active, |row| row.bg(p.accent.opacity(0.10)))
                     .on_click(cx.listener(move |this, _: &ClickEvent, window, cx| {
                         this.set_environment(Some(pick.clone()), window, cx)
@@ -1634,7 +1634,7 @@ impl Workspace {
         }
     }
     fn render_empty_state(&self, cx: &mut Context<Self>) -> impl IntoElement {
-        let p = self.palette;
+        let p = crate::theme::current();
         v_flex()
             .px_4()
             .pt_4()
@@ -1669,7 +1669,7 @@ impl Workspace {
 
     /// Recently opened collections, shown when nothing is open.
     fn render_recent(&self, cx: &mut Context<Self>) -> Option<impl IntoElement> {
-        let p = self.palette;
+        let p = crate::theme::current();
         let recent: Vec<PathBuf> = self.app_state.recent_collections().cloned().collect();
         if recent.is_empty() {
             return None;
@@ -1690,7 +1690,7 @@ impl Workspace {
                 .py_1()
                 .rounded_md()
                 .cursor_pointer()
-                .hover(|s| s.bg(hsla(0., 0., 1., 0.05)))
+                .hover(|s| s.bg(crate::theme::current().hover))
                 .on_click(cx.listener(move |this, _: &ClickEvent, window, cx| {
                     this.open_or_create(open.clone(), window, cx)
                 }))
@@ -1762,7 +1762,7 @@ impl Workspace {
         collapsed: bool,
         cx: &mut Context<Self>,
     ) -> impl IntoElement {
-        let p = self.palette;
+        let p = crate::theme::current();
         let view = cx.entity().downgrade();
         let toggle_path = path.to_path_buf();
         let menu_path = path.to_path_buf();
@@ -1799,7 +1799,7 @@ impl Workspace {
         depth: usize,
         cx: &mut Context<Self>,
     ) -> impl IntoElement {
-        let p = self.palette;
+        let p = crate::theme::current();
         let selected = self.selected.as_deref() == Some(path);
         let dirty = self.path_dirty(path, cx);
         // The open request shows the editor's method, so the badge follows edits.
@@ -1876,7 +1876,7 @@ fn row_base(path: &Path, depth: usize) -> Stateful<Div> {
         .rounded_md()
         .text_sm()
         .cursor_pointer()
-        .hover(|s| s.bg(hsla(0., 0., 1., 0.05)))
+        .hover(|s| s.bg(crate::theme::current().hover))
 }
 
 fn request_menu(

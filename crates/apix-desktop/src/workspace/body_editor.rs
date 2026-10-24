@@ -14,7 +14,6 @@ use gpui_kit::*;
 use super::var_chips::chipped_input;
 use super::{KvRow, Workspace};
 use crate::bidi::{self, Bidi as _};
-use crate::theme::Palette;
 use crate::tr;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -151,7 +150,6 @@ impl PartRow {
 }
 
 pub(super) struct BodyEditor {
-    palette: Palette,
     workspace: WeakEntity<Workspace>,
     kind: BodyKind,
     /// JSON, Text and XML share one editor.
@@ -168,7 +166,6 @@ impl EventEmitter<SendRequested> for BodyEditor {}
 
 impl BodyEditor {
     pub(super) fn new(
-        palette: Palette,
         workspace: WeakEntity<Workspace>,
         window: &mut Window,
         cx: &mut Context<Self>,
@@ -198,7 +195,6 @@ impl BodyEditor {
         }));
 
         Self {
-            palette,
             workspace,
             kind: BodyKind::None,
             text,
@@ -385,7 +381,7 @@ impl BodyEditor {
         div()
             .pt_2()
             .text_xs()
-            .text_color(self.palette.text_muted)
+            .text_color(crate::theme::current().text_muted)
             .child(bidi::para(text))
     }
 
@@ -534,9 +530,9 @@ impl BodyEditor {
                         "body.binary_size",
                         size = apix_http::human_size(meta.len() as usize)
                     ),
-                    self.palette.text_muted,
+                    crate::theme::current().text_muted,
                 ),
-                _ => (tr!("body.file_not_found"), self.palette.err),
+                _ => (tr!("body.file_not_found"), crate::theme::current().err),
             })
         };
         let target = self.binary.clone();
@@ -570,7 +566,7 @@ impl BodyEditor {
     }
 
     fn render_graphql(&self, cx: &mut Context<Self>) -> AnyElement {
-        let p = self.palette;
+        let p = crate::theme::current();
         let variables = self.variables.read(cx).value().to_string();
         let invalid = !variables.trim().is_empty()
             && !variables.contains("{{")

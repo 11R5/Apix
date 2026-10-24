@@ -43,7 +43,7 @@ impl Workspace {
         let keep = std::rc::Rc::new(Cell::new(false));
         let view = cx.entity().downgrade();
         let first = Cell::new(true);
-        let palette = self.palette;
+        let palette = crate::theme::current();
         let where_to = match &self.environment {
             Some(env) => tr!("extract.into_env", env = env),
             None => tr!("extract.into_collection"),

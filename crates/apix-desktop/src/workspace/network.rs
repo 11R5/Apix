@@ -14,7 +14,7 @@ use crate::tr;
 
 impl Workspace {
     pub(super) fn render_network(&self, done: &Finished) -> impl IntoElement {
-        let p = self.palette;
+        let p = crate::theme::current();
         let response = &done.response;
         let trace = &response.trace;
         let local = &done.local;

@@ -327,7 +327,7 @@ impl Workspace {
     pub(super) fn open_history(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         let entries = store().map(|s| s.list()).unwrap_or_default();
         let workspace = cx.entity().downgrade();
-        let colors = self.palette;
+        let colors = crate::theme::current();
         let enabled = self.settings.history;
         let view = cx.new(|cx| HistoryView {
             state: cx.new(|cx| CommandState::new(window, cx)),

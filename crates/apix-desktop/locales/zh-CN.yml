@@ -483,6 +483,22 @@ scripts.skipped: 请求前脚本跳过了此请求（pm.execution.skipRequest）
 scripts.tab_set: "%{name} ●"
 scripts.test: 测试
 scripts.test_hint: 在收到响应后运行。用 pm.test("名称", () => pm.expect(…)) 检查；响应在 pm.response 中。
+settings.accent: "强调色"
+settings.accent_blue: "蓝色"
+settings.accent_cyan: "青色"
+settings.accent_description: "按钮、选中项、焦点框和链接。"
+settings.accent_green: "绿色"
+settings.accent_orange: "橙色"
+settings.accent_pink: "粉色"
+settings.accent_purple: "紫色"
+settings.accent_red: "红色"
+settings.accent_theme: "主题自带"
+settings.accent_yellow: "黄色"
+settings.appearance: "外观模式"
+settings.appearance_dark: "深色"
+settings.appearance_description: "深色、浅色，或跟随系统的深浅设置。"
+settings.appearance_light: "浅色"
+settings.appearance_system: "跟随系统"
 settings.auto_lock: 自动锁定加密集合
 settings.auto_lock_description: 空闲达到此时长后，加密集合将被锁定，需要重新输入密码。
 settings.auto_lock_hour: 1 小时后
@@ -490,19 +506,29 @@ settings.auto_lock_minutes: "%{count} 分钟后"
 settings.auto_lock_never: 从不
 settings.confirm_prod: 生产环境确认
 settings.confirm_prod_description: 当名称包含“prod”的环境处于活动状态时，发送 DELETE、PUT 或 PATCH 之前先确认。
+settings.dark_theme: "深色主题"
+settings.dark_theme_description: "在深色外观下使用。"
+settings.glass: "玻璃效果"
+settings.glass_description: "半透明窗口，背后的桌面呈模糊效果。关闭后窗口为不透明。"
 settings.history: 历史
 settings.history_description: 在这台电脑上保存每个已发送的请求及其响应（Ctrl+H）。
 settings.language: 语言
 settings.language_description: 菜单、按钮和消息的语言。立即生效。
+settings.light_theme: "浅色主题"
+settings.light_theme_description: "在浅色外观下使用。"
 settings.secrets: 环境机密值
 settings.secrets_description: 环境的机密值在这台电脑上的存放位置。两者都不会进入 git；钥匙串还能避免它们以明文留在磁盘上。
 settings.secrets_file: .local.toml 文件
 settings.secrets_keychain: 系统钥匙串
-settings.theme: 主题
+settings.section_general: "常规"
+settings.section_look: "外观"
 settings.theme_cyber: 赛博玻璃
-settings.theme_description: 窗口的配色。
+settings.theme_daylight: "日光"
+settings.theme_file_error: "未能读取主题文件：%{error}"
+settings.theme_files: "自定义主题"
+settings.theme_files_description: "主题是 %{folder} 中的 .toml 文件。首次会在那里写入一个可复制的示例。"
+settings.theme_files_open: "打开文件夹"
 settings.theme_obsidian: 黑曜石
-settings.theme_restart: 下次启动 Apix 时生效。
 settings.title: 设置
 sidebar.auth: 认证…
 sidebar.change_password: 更改密码…

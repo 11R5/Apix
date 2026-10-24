@@ -24,7 +24,6 @@ use gpui_kit::*;
 use super::collections::{Then, close_dialog, refocus};
 use super::{Workspace, describe};
 use crate::bidi::{self, Bidi as _, DialogBidi as _};
-use crate::theme::Palette;
 use crate::tr;
 
 /// New passwords are at least this long.
@@ -72,7 +71,6 @@ struct Secret {
 }
 
 pub(super) struct PasswordForm {
-    palette: Palette,
     ask: Ask,
     name: Option<Entity<InputState>>,
     password: Entity<InputState>,
@@ -87,13 +85,7 @@ pub(super) struct PasswordForm {
 }
 
 impl PasswordForm {
-    fn new(
-        palette: Palette,
-        ask: Ask,
-        note: SharedString,
-        window: &mut Window,
-        cx: &mut Context<Self>,
-    ) -> Self {
+    fn new(ask: Ask, note: SharedString, window: &mut Window, cx: &mut Context<Self>) -> Self {
         let masked = |placeholder: SharedString, window: &mut Window, cx: &mut Context<Self>| {
             cx.new(|cx| {
                 InputState::new(window, cx)
@@ -131,7 +123,6 @@ impl PasswordForm {
             ));
         }
         Self {
-            palette,
             ask,
             name,
             password,
@@ -201,7 +192,7 @@ impl PasswordForm {
 
 impl Render for PasswordForm {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let p = self.palette;
+        let p = crate::theme::current();
         let password = if self.recovery {
             Input::new(&self.password)
         } else {
@@ -284,7 +275,6 @@ impl Workspace {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
-        let palette = self.palette;
         let Dialog {
             title,
             ok,
@@ -292,7 +282,7 @@ impl Workspace {
             note,
         } = spec;
         let ok_label = ok;
-        let form = cx.new(|cx| PasswordForm::new(palette, ask, note, window, cx));
+        let form = cx.new(|cx| PasswordForm::new(ask, note, window, cx));
         let view = cx.entity().downgrade();
         let submit: Submit = {
             let (form, view) = (form.downgrade(), view.clone());
@@ -672,7 +662,7 @@ impl Workspace {
         let text: SharedString = key.as_str().to_owned().into();
         let stored = Rc::new(Cell::new(false));
         let view = cx.entity().downgrade();
-        let p = self.palette;
+        let p = crate::theme::current();
         window.open_dialog(cx, move |dialog, _, cx| {
             let mono = cx.theme().mono_font_family.clone();
             let (copy, tick, done_view) = (text.clone(), stored.clone(), view.clone());
@@ -822,7 +812,7 @@ impl Workspace {
         root: PathBuf,
         cx: &mut Context<Self>,
     ) -> AnyElement {
-        let p = self.palette;
+        let p = crate::theme::current();
         let name = folder_name(&root);
         h_flex()
             .dir_row()
@@ -835,7 +825,7 @@ impl Workspace {
             .text_sm()
             .text_color(p.text_muted)
             .cursor_pointer()
-            .hover(|s| s.bg(hsla(0., 0., 1., 0.05)))
+            .hover(|s| s.bg(crate::theme::current().hover))
             .on_click(cx.listener(move |this, _: &ClickEvent, window, cx| {
                 this.prompt_unlock(
                     root.clone(),
