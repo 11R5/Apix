@@ -456,7 +456,7 @@ Docs/
 | **Yeni dil ekleme** | `languages.toml`'a bir satır, yeni klasör, arayüz için `locales/<kod>.yml`. Kod değişikliği gerekmez. | ✅ |
 | **Görselli kullanım kılavuzu** (not 15) | Her dilde, o dilin arayüzünden alınmış ekran görüntüleri. Görüntüler bir betikle otomatik alınır (uygulama örnek projeyle, ilgili dilde açılır), böylece arayüz değişince kılavuz bir komutla yenilenir. | ✅ İngilizce ve Türkçe, 7 ekran görüntüsü (elle alındı) · ⬜ betikle otomatik çekim ve diğer diller (M9) |
 | **README: neden Apix** (not 16) | Postman, Insomnia, Bruno, Hoppscotch ve HTTPie ile karşılaştırma: yerel GPU arayüzü (Electron yok), dosya tabanlı koleksiyonlar, hesap zorunluluğu yok, şifreli koleksiyonlar, ağ denetçisi, CLI ile birebir aynı motor. Sadece doğrulanabilir iddialar. | ✅ (Postman, Insomnia, Bruno, Hoppscotch; HTTPie notu) |
-| **Performans ölçümleri** (not 16) | Açılış süresi, boşta bellek, ikili boyutu, 100 MB JSON açma ve kaydırma; ölçüm betiği repoda, sonuçlar README'de ve her sürümde güncellenir. Rakip uygulamalar aynı makinede, aynı betikle ölçülür. | ✅ Apix: `scripts/measure.ps1` (ikili 33.1 MB, ilk kare 274 ms, boşta 83 MB, 100 MB JSON 325 ms) · ⬜ karşılaştırmalı (M9) |
+| **Performans ölçümleri** (not 16) | Açılış süresi, boşta bellek, ikili boyutu, 100 MB JSON açma ve kaydırma; ölçüm betiği repoda, sonuçlar README'de ve her sürümde güncellenir. Rakip uygulamalar aynı makinede, aynı betikle ölçülür. | ✅ Apix: `scripts/measure.ps1` (24 Ekim: ikili 38.9 MB, ilk kare 278 ms, boşta 84 MB, 100 MB JSON 306 ms) · ⬜ karşılaştırmalı (M9) |
 
 ## 3. Postman → Apix karşılık tablosu
 | Postman | Apix | Aşama |
