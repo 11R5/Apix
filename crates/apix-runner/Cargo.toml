@@ -1,0 +1,17 @@
+[package]
+name = "apix-runner"
+description = "Runs Apix collections: order, iterations, data files, delays and JUnit/JSON/HTML reports"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+apix-core.workspace = true
+apix-http.workspace = true
+apix-script.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+# Waiting between requests.
+tokio = { workspace = true, features = ["time"] }

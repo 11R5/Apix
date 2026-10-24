@@ -522,11 +522,10 @@ impl Collection {
         environment_names_at(&self.root)
     }
 
-    /// Every request file in the collection, in a stable (sorted) order.
+    /// Every request file in the collection, in the order the sidebar shows
+    /// them (and a run sends them).
     pub fn request_paths(&self) -> Vec<PathBuf> {
-        let mut out = Vec::new();
-        collect_requests(&self.root, &mut out);
-        out
+        TreeNode::request_paths(&self.tree())
     }
 }
 
@@ -556,27 +555,6 @@ pub fn environment_vars_at(root: &Path, name: &str) -> Result<Option<VarMap>, St
     Ok(Some(parts.vars))
 }
 
-fn collect_requests(dir: &Path, out: &mut Vec<PathBuf>) {
-    let Ok(entries) = vfs::read_dir(dir) else {
-        return;
-    };
-    let mut paths: Vec<PathBuf> = entries;
-    paths.sort();
-    for path in paths {
-        let hidden = path
-            .file_name()
-            .is_some_and(|name| name.to_string_lossy().starts_with('.'));
-        if hidden {
-            continue;
-        }
-        if vfs::is_dir(&path) {
-            collect_requests(&path, out);
-        } else if is_request_file(&path) {
-            out.push(path);
-        }
-    }
-}
-
 /// The collection as the sidebar shows it: in the order saved in `apix.toml`
 /// and `folder.toml` files, otherwise folders first, then requests, each
 /// sorted by name. Paths are absolute. Empty folders are included so a
@@ -596,6 +574,20 @@ pub enum TreeNode {
 impl Collection {
     pub fn tree(&self) -> Vec<TreeNode> {
         tree_of(&self.root, true)
+    }
+}
+
+impl TreeNode {
+    /// The requests under `nodes`, depth first, in order.
+    pub fn request_paths(nodes: &[TreeNode]) -> Vec<PathBuf> {
+        let mut out = Vec::new();
+        for node in nodes {
+            match node {
+                TreeNode::Request { path } => out.push(path.clone()),
+                TreeNode::Folder { children, .. } => out.extend(Self::request_paths(children)),
+            }
+        }
+        out
     }
 }
 
@@ -995,7 +987,7 @@ mod tests {
         assert_eq!(collection.meta.name, "Demo");
         assert_eq!(
             collection.request_paths(),
-            [root.join("health.apix"), path.clone()]
+            [path.clone(), root.join("health.apix")]
         );
         assert_eq!(
             Collection::find_root(&path).as_deref(),

@@ -360,6 +360,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "apix-runner"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "apix-core",
+ "apix-http",
+ "apix-script",
+ "serde",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
 name = "apix-script"
 version = "0.1.0"
 dependencies = [
