@@ -116,6 +116,9 @@ Measurements of the other tools on the same machine are planned.
   or saved messages and log both directions live; `text/event-stream`
   responses show their events as they arrive. `apix send` does both in a
   terminal.
+- **GraphQL schemas:** fetch a schema with the request's own auth, then get
+  completion for fields, arguments, enum values and fragments, docs on hover,
+  and the whole schema as SDL beside the query; `apix schema` prints it.
 - **History** of sent requests with their responses (Ctrl+H): search it and
   send any of them again.
 - **Command palette** (Ctrl+K) and a menu bar that holds every command.
@@ -143,6 +146,7 @@ apix run my-api --data users.csv --junit report.xml --html report.html --bail
 APIX_VAR_TOKEN=… apix run my-api --env staging --env-file .env.ci
 apix send chat/socket.apix --message '{"join":"room-1"}' --listen 10   # a ws:// request
 apix send events/live.apix                   # server-sent events, printed as they arrive
+apix schema graphql/users.apix               # a GraphQL endpoint's schema, as SDL
 apix shell examples/jsonplaceholder/users/create-user.apix --as powershell
 apix import "My API.postman_collection.json"
 APIX_PASSWORD=… apix run my-api-encrypted --env staging

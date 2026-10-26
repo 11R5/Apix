@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:2c89555102b3ea7b -->
+<!-- translated from en/user-guide.md sha256:aad47a6a7b1bfdcb -->
 
 # Apix kullanım kılavuzu
 
@@ -108,6 +108,32 @@ Gövde sekmesi şunları sunar:
 
 Koleksiyon içindeki dosya yolları istek dosyasına göre göreli kaydedilir;
 böylece koleksiyon başka bir makinede de çalışmaya devam eder.
+
+### GraphQL şeması ve otomatik tamamlama
+
+Sorgunun üstündeki **Şemayı getir**, sunucudan şemasını ister (standart
+introspection sorgusu); bunu isteğin adresi, başlıkları, yetkilendirmesi ve
+ortamıyla yapar, yani token arkasındaki bir şema da gelir. Sonra:
+
+- Sorguya yazarken imlecin olduğu yere uyanlar önerilir: seçilen türün
+  alanları (türleriyle), `(` sonrasında alanın argümanları, `:` sonrasında
+  enum değerleri ve `true`/`false`, girdi nesnelerinin alanları, birleşim ve
+  arayüzler için `... on Tür` parçaları, `on` sonrasında ya da
+  `$değişken: Tür` içinde tür adları. Kullanımdan kalkmış alanlar en sonda
+  gelir. Ctrl+Space önerileri yazmadan açar.
+- Bir alanın, argümanın ya da enum değerinin üzerine gelince türü ve
+  açıklaması görünür.
+- **Şemayı göster** tüm şemayı SDL olarak sorgunun yanına koyar.
+
+![Şemadan otomatik tamamlama](images/graphql.png)
+
+Apix her uç noktanın şemasını saklar (ayar klasöründe, `graphql/` altında)
+ve o adrese giden bir isteği açınca yeniden yükler; **Şemayı yenile** yalnızca
+API değişince gerekir. Introspection'ı kapalı bir sunucu hata döner; hata,
+şema durumunun yerinde gösterilir.
+
+Komut satırında `apix schema istek.apix` şemayı SDL olarak yazar (`--json`
+sunucunun cevabını geldiği gibi yazar).
 
 ## Yetkilendirme
 
@@ -643,5 +669,6 @@ dosyasına kaydedilir (Windows'ta `%APPDATA%\Apix`, macOS'ta
 | Alt+1…7 | Metodu değiştir |
 | Ctrl+W | Sekmeyi kapat |
 | Ctrl+Tab / Ctrl+Shift+Tab | Sonraki / önceki sekme |
+| Ctrl+Space | GraphQL sorgusunda öneriler (şema getirildikten sonra) |
 
-macOS'ta Ctrl yerine ⌘ kullanın (Ctrl+Tab, Ctrl olarak kalır).
+macOS'ta Ctrl yerine ⌘ kullanın (Ctrl+Tab ve Ctrl+Space, Ctrl olarak kalır).

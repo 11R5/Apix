@@ -1,6 +1,7 @@
 //! Turns a resolved [`apix_core::Request`] into a real HTTP call and captures
 //! everything the UI needs to show: status, headers, raw body and timings.
 
+pub mod graphql;
 mod local;
 pub mod oauth2;
 pub mod sse;

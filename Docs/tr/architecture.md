@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:b4b355db5d4c1496 -->
+<!-- translated from en/architecture.md sha256:2227c8e28d90e583 -->
 
 # Apix mimarisi
 
@@ -29,16 +29,17 @@ Apix, Rust ile yazılmış native bir API istemcisidir. Arayüz,
 ```
 crates/
 ├── apix-core     istek modeli, {{variables}} ve {{$dynamic}} değerleri, disk formatı,
-│                 projeler, ortamlar ve gizli değerler, ağaç ve dosya işlemleri
+│                 projeler, ortamlar ve gizli değerler, ağaç ve dosya işlemleri,
+│                 GraphQL şemaları (introspection, SDL) ve sorgu tamamlama
 ├── apix-http     HTTP motoru: reqwest + rustls, zamanlamalar, yanıt yakalama, ağ izi,
-│                 sunucu olayları (SSE), WebSocket (tokio-tungstenite)
+│                 sunucu olayları (SSE), WebSocket (tokio-tungstenite), GraphQL şeması çekme
 │                 (DNS, bağlantı kurulumu, yönlendirmeler, sertifika, yerel ağ arayüzü)
 ├── apix-import   Postman v2.0/v2.1 koleksiyonları ve ortamları → Apix koleksiyonları
 ├── apix-codegen  istekler ↔ kabuk komutları: curl (bash), curl.exe (cmd), PowerShell; yapıştırılan curl'ü ayrıştırır; 10 dilde kod
 ├── apix-vault    şifreli koleksiyonlar: dosya başına XChaCha20-Poly1305, Argon2id, kurtarma anahtarı
 ├── apix-script   istek öncesi ve test scriptleri: pm.* uyumlu API ile QuickJS
 ├── apix-runner   koleksiyon koşuları: sıra, tekrar, veri dosyaları, bekleme, bail, raporlar
-├── apix-cli      `apix` binary'si: terminalden ve CI'dan send / run / import / shell
+├── apix-cli      `apix` binary'si: terminalden ve CI'dan send / run / schema / import / shell
 └── apix-desktop  GPUI masaüstü uygulaması (tek crate'ten Windows, macOS ve Linux)
 tools/
 └── icongen       tüm uygulama ikonlarını (ico, icns, hicolor PNG'ler) Logo/LogoFirst.jpg'den üretir
@@ -60,6 +61,7 @@ widget'larında yaşar, diğerleri kendi taslağını, yanıtını ve süren gö
 tutar), `workspace/drag.rs` (istekleri ve klasörleri taşımak için sürükleme),
 `workspace/shell_copy.rs` (farklı kopyala / curl yapıştır), `workspace/var_chips.rs`
 (URL çubuğundaki `{{variable}}` çipleri ve üzerine gelince açılan kartları),
+`workspace/graphql_ui.rs` (GraphQL şemasını çekme, saklama, tamamlama ve açıklama),
 `large_view.rs` (devasa gövdeler için satır tabanlı görüntüleyici), `net.rs`
 (tokio köprüsü), `bidi.rs` (sağdan sola yerleşim yardımcıları, bkz. Diller), `state.rs` (kullanıcının yapılandırma klasöründe son kullanılan
 öğeler ve klasör başına ortam), `theme.rs` ve `fonts.rs`.
@@ -68,7 +70,7 @@ Planlanan crate'ler:
 
 | Crate          | Amaç                                                               |
 |----------------|--------------------------------------------------------------------|
-| `apix-proto`   | GraphQL, WebSocket (`tokio-tungstenite`), gRPC (`tonic` + reflection), SSE |
+| `apix-proto`   | gRPC (`tonic` + reflection), Socket.IO, MQTT, SOAP                 |
 | `apix-mock`    | Kaydedilmiş örnekleri sunan yerel bir mock sunucu (`hyper`)        |
 
 ### Üç işletim sistemi için tek masaüstü crate'i
@@ -376,6 +378,38 @@ bir yanıta çevirir. `ws://` adresi istek alanını Mesajlar sekmesine
 (`workspace/socket_ui.rs`) geçirir. İki durum da bitmiş bir yanıt gibi kendi
 sekmesine yönlendirilir; bu yüzden akış ya da soket arkadaki bir sekmede de
 sürer. CLI olayları ve mesajları aynı geri çağırmalardan yazar.
+
+## GraphQL şemaları (M6)
+
+`apix_core::graphql` standart `INTROSPECTION_QUERY`'yi, onun cevabından
+okunan bir `Schema`'yı (alanları, argümanları, girdi alanları, enum
+değerleri, arayüzleri ve olası türleriyle türler; `TypeRef` listeleri ve
+`!`'i tutar) ve kök türleri başa yazan, yerleşik skalerleri ve `__` türlerini
+dışarıda bırakan `to_sdl`'i tutar. Düzenleyici için bir sorguyu yalnızca
+imlece kadar okur: `spot_at` metni parçalara ayırır (yorumlar, metinler ve
+`$değişkenler` atılır) ve seçimler, argüman listeleri, girdi nesneleri ve
+listelerden oluşan bir yığında ilerler; takma adları, `... on Tür`'ü,
+fragment'leri ve değişken tanımlarını izleyerek oraya neyin uyduğunu söyler
+(`Spot`). `suggestions` bunu türleri ve açıklamalarıyla etiketlere çevirir;
+önce önekle, sonra içerikle eşleşenler, kullanımdan kalkmışlar en sonda.
+`describe_at` üzerine gelme için Markdown'u verir. Hiçbir şey doğrulanmaz:
+bozuk bir sorgu da elinden geldiğince tamamlanır.
+
+`apix_http::graphql::fetch_schema` introspection sorgusunu isteğin adresi,
+başlıkları, yetkilendirmesi ve ayarlarıyla POST olarak gönderir (istek önce
+çözülür) ve şemayı okur ya da neden olmadığını söyler (2xx olmayan durum ve
+gövdenin başı, ya da sunucunun `errors[0].message`'ı).
+
+Uygulamada `workspace/graphql_ui.rs`, sorgu düzenleyicisinin tuttuğu ortak
+bir `Rc<RefCell<Option<Rc<Schema>>>>` üzerinde gpui-kit'in
+`CompletionProvider` ve `HoverProvider`'ını uygular; tamamlamalar yazılan
+kelimeyi bir LSP metin düzenlemesiyle değiştirir. Gövde düzenleyicisinin
+**Şemayı getir** düğmesi `FetchSchema` yayar; çalışma alanı isteği bir
+gönderimdeki gibi kurar (devralınan yetkilendirme ve ayarlar, değişkenler) ve
+ağ çalışma zamanında çeker. Her uç noktanın cevabı
+`<config>/Apix/graphql/<adresin FNV-1a'sı>.json` içinde saklanır ve bir
+GraphQL isteği açılınca yüklenir. SDL görünümü salt okunur bir
+düzenleyicidir; yalnızca gösterildiğinde, çizim sırasında doldurulur.
 
 ## Temalar
 

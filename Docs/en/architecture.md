@@ -27,16 +27,17 @@ no WebView and no Electron.
 ```
 crates/
 ├── apix-core     request model, {{variables}} and {{$dynamic}} values, on-disk format,
-│                 projects, environments and secrets, tree and file operations
+│                 projects, environments and secrets, tree and file operations,
+│                 GraphQL schemas (introspection, SDL) and query completion
 ├── apix-http     HTTP engine: reqwest + rustls, timings, response capture, network trace,
-│                 server-sent events, WebSocket (tokio-tungstenite)
+│                 server-sent events, WebSocket (tokio-tungstenite), GraphQL schema fetch
 │                 (DNS, connection setup, redirects, certificate, local interface)
 ├── apix-import   Postman v2.0/v2.1 collections and environments → Apix collections
 ├── apix-codegen  requests ↔ shell commands: curl (bash), curl.exe (cmd), PowerShell; parses pasted curl; code in 10 languages
 ├── apix-vault    encrypted collections: per-file XChaCha20-Poly1305, Argon2id, recovery key
 ├── apix-script   pre-request and test scripts: QuickJS with a pm.*-compatible API
 ├── apix-runner   runs collections: order, iterations, data files, delay, bail, reports
-├── apix-cli      `apix` binary: send / run / import / shell from terminal & CI
+├── apix-cli      `apix` binary: send / run / schema / import / shell from terminal & CI
 └── apix-desktop  GPUI desktop app (Windows, macOS and Linux from one crate)
 tools/
 └── icongen       builds every app icon (ico, icns, hicolor PNGs) from Logo/LogoFirst.jpg
@@ -54,7 +55,8 @@ the buttons `occlude()` the title bar's drag area so Windows hands them the
 click), `workspace/tabs.rs` (open requests; the front tab lives in the editor widgets,
 the others keep their draft, response and in-flight task), `workspace/drag.rs`
 (drag requests and folders to move them), `workspace/shell_copy.rs` (copy as / paste curl), `workspace/var_chips.rs`
-(`{{variable}}` chips in the URL bar and their hover card),
+(`{{variable}}` chips in the URL bar and their hover card), `workspace/graphql_ui.rs`
+(GraphQL schema fetch, cache, completion and hover),
 `large_view.rs` (row-based viewer for huge bodies), `net.rs` (tokio bridge),
 `bidi.rs` (right-to-left layout helpers, see Languages),
 `state.rs` (recent items and per-folder environment in the user's config
@@ -64,7 +66,7 @@ Planned crates:
 
 | Crate          | Purpose                                                            |
 |----------------|--------------------------------------------------------------------|
-| `apix-proto`   | GraphQL, WebSocket (`tokio-tungstenite`), gRPC (`tonic` + reflection), SSE |
+| `apix-proto`   | gRPC (`tonic` + reflection), Socket.IO, MQTT, SOAP                 |
 | `apix-mock`    | A local mock server that serves saved examples (`hyper`)           |
 
 ### One desktop crate for three operating systems
@@ -357,6 +359,36 @@ tab (`workspace/ws_editor.rs`) and the response pane to
 `ResponseState::Socket` (`workspace/socket_ui.rs`). Both states are routed to
 their tab like a finished response, so a stream or socket keeps running in a
 tab in the back. The CLI prints events and messages from the same callbacks.
+
+## GraphQL schemas (M6)
+
+`apix_core::graphql` holds the standard `INTROSPECTION_QUERY`, a `Schema`
+read from its answer (types with fields, arguments, input fields, enum
+values, interfaces and possible types; `TypeRef` keeps lists and `!`) and
+`to_sdl`, which writes the root types first and leaves out built-in scalars
+and `__` types. For the editor it reads a query only as far as the cursor:
+`spot_at` tokenises the text (comments, strings and `$variables` dropped)
+and walks a stack of selections, argument lists, input objects and lists,
+following aliases, `... on Type`, fragments and variable definitions, to say
+what fits there (`Spot`). `suggestions` turns that into labels with their
+types and descriptions, ranked by prefix, then substring, deprecated last;
+`describe_at` gives the Markdown for hover. Nothing is validated: a broken
+query still completes as well as it can.
+
+`apix_http::graphql::fetch_schema` sends the introspection query as a POST
+with the request's URL, headers, auth and settings (the request is resolved
+first) and reads the schema, or says why there is none (a non-2xx status with
+the start of the body, or the server's `errors[0].message`).
+
+In the app, `workspace/graphql_ui.rs` implements gpui-kit's
+`CompletionProvider` and `HoverProvider` over a shared
+`Rc<RefCell<Option<Rc<Schema>>>>` that the query editor holds; completions
+replace the word being typed through an LSP text edit. The Body editor's
+**Fetch schema** emits `FetchSchema`; the workspace builds the request as for
+a send (inherited auth and settings, variables) and fetches it on the network
+runtime. Each endpoint's answer is kept in `<config>/Apix/graphql/<FNV-1a of
+the URL>.json` and loaded when a GraphQL request opens. The SDL view is a
+read-only editor filled while drawing, only once it is shown.
 
 ## Themes
 

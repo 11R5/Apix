@@ -114,7 +114,16 @@ body.choose_files: ファイルを選択（複数可）
 body.file_not_found: ファイルが見つかりません
 body.file_path: ファイルパス
 body.form_hint: HTML フォームと同様に application/x-www-form-urlencoded として送信します。
+body.graphql_fetch_schema: スキーマを取得
+body.graphql_fetching: スキーマを取得中…
+body.graphql_hide_schema: スキーマを隠す
+body.graphql_no_schema: 補完とフィールドの説明にはスキーマを取得してください
 body.graphql_query: クエリ
+body.graphql_refresh_schema: スキーマを更新
+body.graphql_schema: スキーマ
+body.graphql_schema_failed: "スキーマなし: %{reason}"
+body.graphql_schema_ready: "スキーマ: %{count} 型 · %{when}"
+body.graphql_show_schema: スキーマを表示
 body.graphql_variables: 変数 (JSON)
 body.invalid_json: 有効な JSON ではありません
 body.kind.binary: バイナリ

@@ -91,7 +91,7 @@ pub fn fetch_token(
 
 /// reqwest's top-level message ("error sending request") hides the cause,
 /// such as "connection refused", so the whole chain is shown.
-fn error_chain(err: &dyn std::error::Error) -> String {
+pub fn error_chain(err: &dyn std::error::Error) -> String {
     let mut message = err.to_string();
     let mut source = err.source();
     while let Some(cause) = source {

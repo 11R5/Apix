@@ -93,6 +93,18 @@ enum Command {
         #[command(flatten)]
         vars: VarArgs,
     },
+    /// Fetch a GraphQL request's schema from its server (with the request's
+    /// URL, headers and auth) and print it as SDL
+    Schema {
+        file: PathBuf,
+        /// Print the server's introspection JSON instead of SDL
+        #[arg(long)]
+        json: bool,
+        #[command(flatten)]
+        vars: VarArgs,
+        #[command(flatten)]
+        net: NetArgs,
+    },
     /// Import a Postman collection or environment, an Insomnia v4 export, an
     /// OpenAPI 3 / Swagger 2 spec (JSON or YAML) or a HAR file; or a whole
     /// folder / "Export data" zip of them as a project
@@ -625,6 +637,29 @@ async fn run(cli: Cli) -> Result<bool> {
                 println!("{}Wrote {}{}", style.dim, path.display(), style.reset);
             }
             Ok(summary.failed == 0)
+        }
+        Command::Schema {
+            file,
+            json,
+            vars,
+            net,
+        } => {
+            unlock_around(&file, &var)?;
+            let scope = Scope::find(&file)?;
+            let mut request = scope.load(&file)?;
+            request.settings = net.overrides().or_inherit(&request.settings);
+            let resolved = request.resolve(&vars.resolve(&scope)?.vars);
+            if !resolved.missing.is_empty() {
+                let names: Vec<_> = resolved.missing.into_iter().collect();
+                bail!("undefined variable(s): {}", names.join(", "));
+            }
+            let fetched = apix_http::graphql::fetch_schema(&client, &resolved.request).await?;
+            if json {
+                println!("{}", fetched.json);
+            } else {
+                print!("{}", fetched.schema.to_sdl());
+            }
+            Ok(true)
         }
         Command::Import { file, out, into } => import(&style, &file, out, into),
         Command::Export { dir, out } => {

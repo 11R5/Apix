@@ -7,6 +7,7 @@ mod cookies_ui;
 mod drag;
 mod env_editor;
 mod extract_ui;
+mod graphql_ui;
 mod history_ui;
 mod menu_bar;
 mod network;
@@ -35,7 +36,7 @@ use apix_http::{BodyKind, ImageKind, Response, group_digits, human_duration, hum
 use gpui_kit::component::button::{Button, ButtonVariants};
 use gpui_kit::component::checkbox::Checkbox;
 use gpui_kit::component::dialog::AlertDialog;
-use gpui_kit::component::input::{Editor, EditorState, InputEvent, InputState};
+use gpui_kit::component::input::{Editor, EditorState, InputEvent, InputState, ShowCompletions};
 use gpui_kit::component::menu::DropdownMenu as _;
 use gpui_kit::component::select::{Select, SelectEvent, SelectState};
 use gpui_kit::component::spinner::Spinner;
@@ -109,6 +110,8 @@ pub fn bind_keys(cx: &mut App) {
         KeyBinding::new("alt-5", MethodDelete, Some(CONTEXT)),
         KeyBinding::new("alt-6", MethodHead, Some(CONTEXT)),
         KeyBinding::new("alt-7", MethodOptions, Some(CONTEXT)),
+        // Suggestions in a code editor that has them (the GraphQL query), without typing.
+        KeyBinding::new("ctrl-space", ShowCompletions, Some("Input")),
     ]);
 }
 
@@ -410,6 +413,8 @@ pub struct Workspace {
     _auto_lock: Option<Task<()>>,
     /// The in-flight request. Dropping it cancels the request.
     task: Option<Task<()>>,
+    /// Fetching the GraphQL schema of the open request.
+    schema_task: Option<Task<()>>,
     /// The open tabs as last written to the app state.
     remembered_tabs: Option<(PathBuf, crate::state::OpenTabs)>,
     /// The sidebar row and zone a drag would drop into.
@@ -489,6 +494,11 @@ impl Workspace {
                 |this, _, _: &body_editor::SendRequested, window, cx| this.send(window, cx),
             ),
             cx.subscribe_in(
+                &body_editor,
+                window,
+                |this, _, _: &body_editor::FetchSchema, window, cx| this.fetch_schema(window, cx),
+            ),
+            cx.subscribe_in(
                 &method,
                 window,
                 |_, _, _: &SelectEvent<Vec<&'static str>>, _, cx| cx.notify(),
@@ -551,6 +561,7 @@ impl Workspace {
             hex_doc: None,
             hex_task: None,
             task: None,
+            schema_task: None,
             last_input: std::cell::Cell::new(std::time::Instant::now()),
             bench_sent: None,
             _auto_lock: None,
@@ -678,6 +689,15 @@ impl Workspace {
         let messages = request.messages.clone();
         self.ws_editor
             .update(cx, |editor, cx| editor.set_messages(&messages, cx));
+        // A GraphQL endpoint's schema, if it was fetched before.
+        self.schema_task = None;
+        if matches!(request.body, apix_core::Body::GraphQl(_)) {
+            self.load_cached_schema(cx);
+        } else {
+            self.body_editor.update(cx, |editor, cx| {
+                editor.set_schema(None, body_editor::SchemaState::None, cx)
+            });
+        }
         cx.notify();
     }
 

@@ -19,10 +19,10 @@
 | Tema paketi (M5 sonrası) | ✅ anında tema değişimi, açık tema ve "sistemi izle", vurgu rengi, saydamlık kaydırıcısı (%0–90, buzlu cam), Dracula/Nord/Solarized/Gün ışığı, `<config>/Apix/themes/*.toml` dosyalarından temalar |
 | CLI ve CI/CD | ✅ `APIX_VAR_<AD>` ve `--env-file` ile gizli değerler, GitHub Action (`uses: 11R5/Apix@…`), Docker imajı, ortam matrisli örnek  |
 | CI temeli | ✅ üç sistemde CI (biçim, docs-check, clippy, testler; motor ve masaüstü), action'ın kendini sınaması, GitLab ve Azure örnekleri; ilk koşu Windows, macOS ve Linux'ta yeşil |
-| M6 Protokoller | 🔜 · bitti: WebSocket (uygulamada bağlan/kes, Mesajlar sekmesi ve kayıtlı `[[message]]`'lar, iki yönlü canlı günlük; `apix send` ile `--message`/`--listen`), SSE (olaylar geldikçe uygulamada ve `apix send`'de, Esc gelenleri tutar) · sıradaki: GraphQL introspection ve otomatik tamamlama, gRPC, Socket.IO, MQTT, SOAP |
+| M6 Protokoller | 🔜 · bitti: WebSocket (uygulamada bağlan/kes, Mesajlar sekmesi ve kayıtlı `[[message]]`'lar, iki yönlü canlı günlük; `apix send` ile `--message`/`--listen`), SSE (olaylar geldikçe uygulamada ve `apix send`'de, Esc gelenleri tutar), GraphQL (şemayı isteğin kendi auth'uyla çekme ve uç nokta başına saklama, alan/argüman/enum/girdi alanı/fragment tamamlama, üzerine gelince açıklama, SDL görünümü, `apix schema`) · sıradaki: gRPC, Socket.IO, MQTT, SOAP |
 | M7–M9 | ⬜ |
 
-Release ikili dosyası 38.9 MB (üst sınır 100 MB; QuickJS ve JavaScript renklendirmesi yaklaşık 3.6 MB, Runner 0.8 MB, tema paketi ile WebSocket ve SSE 0.9 MB ekledi). 24 Ekim ölçümü: açılış 278 ms, boşta 84 MB, 100 MB JSON 306 ms. Testler: core 58, script 10, runner 16, vault 11, desktop 16, codegen 24, import 26, http 28 (hepsi geçiyor, clippy uyarısız).
+Release ikili dosyası 38.9 MB (üst sınır 100 MB; QuickJS ve JavaScript renklendirmesi yaklaşık 3.6 MB, Runner 0.8 MB, tema paketi ile WebSocket ve SSE 0.9 MB ekledi). 24 Ekim ölçümü: açılış 278 ms, boşta 84 MB, 100 MB JSON 306 ms. Testler: core 64, script 10, runner 16, vault 11, desktop 17, codegen 24, import 26, http 30 (hepsi geçiyor, clippy uyarısız).
 
 ### Kullanıcı notları (17 Ekim 2026) ve plana nasıl işlendikleri
 | # | Not | Nereye işlendi |
@@ -198,7 +198,7 @@ Apix, Postman'in yaptığı her şeyi yapan bir API istemcisi olacak. Postman'de
 | x-www-form-urlencoded | Anahtar–değer tablosu | ✅ |
 | multipart/form-data | Metin ve dosya alanları (alan başına Text/File), çoklu dosya seçimi, alan başına içerik tipi. Koleksiyon içindeki dosyalar isteğe göre göreli yolla kaydedilir. | ✅ · ⬜ içerik tipini arayüzde düzenleme |
 | binary | Dosya seçip ham olarak gönderme; boyut ve "dosya yok" uyarısı | ✅ |
-| GraphQL | Sorgu (renkli) ve değişkenler (JSON, anlık doğrulama) editörü · şemadan otomatik tamamlama (§H1) | ✅ editörler · ⬜ otomatik tamamlama (M6) |
+| GraphQL | Sorgu (renkli) ve değişkenler (JSON, anlık doğrulama) editörü · şemadan otomatik tamamlama (§H1) | ✅ editörler · ✅ şemadan otomatik tamamlama ve açıklama (M6, §H) |
 
 #### A5. Kimlik doğrulama (Auth)
 | Tip | Durum |
@@ -373,7 +373,7 @@ Bir koleksiyon (veya proje) parola ile şifrelenir. Parolayı bilmeyen hiçbir a
 ### H. Diğer protokoller
 | Protokol | Ayrıntı | Durum |
 |---|---|---|
-| **GraphQL** | Şema introspection, otomatik tamamlama, değişkenler, şema gezgini | ⬜ L |
+| **GraphQL** | Şema introspection, otomatik tamamlama, değişkenler, şema gezgini | ✅ Gövde'de **Şemayı getir**: introspection sorgusu isteğin adresi, başlıkları, auth'u ve ortamıyla gider; şema `<config>/Apix/graphql/` altında uç nokta başına saklanır ve istek açılınca yüklenir; sorgu editöründe imlecin yerine göre alanlar (türleriyle), argümanlar, enum değerleri ve `true`/`false`, girdi nesnesi alanları, birleşim/arayüz için `... on Tür`, `on` ve `$değişken:` sonrasında tür adları; kullanımdan kalkmışlar sonda; üzerine gelince tür ve açıklama; Ctrl+Space önerileri elle açar; **Şemayı göster** ile SDL yan panelde; `apix schema` (SDL ya da `--json`); örnek sunucu `graphql_server` · ⬜ sorgu doğrulama (hatalı alanların altını çizme), değişkenler editöründe tamamlama, tıklanabilir şema ağacı |
 | **WebSocket** | Bağlan ve bağlantıyı kes, mesaj gönder, mesajları zaman damgasıyla listele, kayıtlı mesaj şablonları | ✅ `ws://`/`wss://` adresi isteği WebSocket yapar; el sıkışmada parametre, başlık ve auth (OAuth 2.0 dahil); Mesajlar sekmesi (Ctrl+Enter gönderir, `{{değişkenler}}` doldurulur, bağlantı yoksa önce bağlanır), dosyada `[[message]]` şablonları; ↑/↓ zaman damgalı günlük, kapanış kodu ve nedeni; sekme arkadayken de sürer; `apix send` (`--message`, `--listen`), `apix run` atlar · ⬜ ikili mesaj gönderme, ping aralığı, alt protokol seçimi, TLS doğrulamasını kapatma |
 | **Server-Sent Events** | Canlı olay akışı | ✅ `text/event-stream` yanıtında olaylar geldikçe (zaman, tür, id, veri); Durdur/Esc gelenleri tutar; biten akış Biçimli sekmesinde liste; `apix send` olayları geldikçe yazar; motor `send_with` ile gövdeyi parça parça bildirir · ⬜ olay türüne göre süzme, kopan bağlantıda `retry` ile yeniden bağlanma |
 | **gRPC** | Unary ve streaming çağrılar, `.proto` dosyası veya sunucu yansıması (reflection), metadata | ⬜ L · kullanıcı isteği (not 17): M4 içe aktarıcılarından sonra öne alınabilir |
@@ -580,7 +580,7 @@ Her aşamanın sonunda kullanılabilir bir sürüm çıkar.
 
 ### M6 — Protokoller
 1. [x] **WebSocket ve SSE** (24 Ekim): motor `send_with` (yanıt parça parça), `apix_http::sse` (SSE ayrıştırıcı), `apix_http::ws` (tokio-tungstenite, aynı rustls); uygulamada canlı olay listesi, WebSocket Mesajlar sekmesi ve günlüğü; CLI'da olaylar ve mesajlar geldikçe; örnek sunucular `sse_server` ve `ws_server`. Ayrıntı §H.
-2. [ ] GraphQL introspection ve otomatik tamamlama
+2. [x] **GraphQL introspection ve otomatik tamamlama** (26 Ekim): `apix_core::graphql` (introspection sorgusu, şema modeli, SDL, imlece kadar okuyan sorgu çözümleyici, öneriler ve açıklamalar), `apix_http::graphql::fetch_schema`; uygulamada gpui-kit'in `CompletionProvider` ve `HoverProvider`'ı, uç nokta başına şema önbelleği, SDL paneli; CLI'da `apix schema`. Ayrıntı §H.
 3. [ ] gRPC, Socket.IO, MQTT, SOAP
 
 ### M7 — İleri özellikler

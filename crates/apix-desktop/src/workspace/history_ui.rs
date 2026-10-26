@@ -89,7 +89,7 @@ impl PendingRecord {
 }
 
 /// "just now", "5 min ago", "3 h ago", "2 days ago".
-fn ago(at_ms: u64) -> SharedString {
+pub(super) fn ago(at_ms: u64) -> SharedString {
     let secs = history::now_ms().saturating_sub(at_ms) / 1000;
     match secs {
         0..60 => tr!("history.ago_now"),
