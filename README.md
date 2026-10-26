@@ -119,6 +119,10 @@ Measurements of the other tools on the same machine are planned.
 - **GraphQL schemas:** fetch a schema with the request's own auth, then get
   completion for fields, arguments, enum values and fragments, docs on hover,
   and the whole schema as SDL beside the query; `apix schema` prints it.
+- **gRPC:** `grpc://` requests call unary and streaming methods, described by
+  server reflection or `.proto` files (no `protoc` needed), with messages as
+  JSON, an example message for any method, and a live log of what goes both
+  ways; `apix send` and `apix schema` work on them too.
 - **History** of sent requests with their responses (Ctrl+H): search it and
   send any of them again.
 - **Command palette** (Ctrl+K) and a menu bar that holds every command.
@@ -147,6 +151,7 @@ APIX_VAR_TOKEN=… apix run my-api --env staging --env-file .env.ci
 apix send chat/socket.apix --message '{"join":"room-1"}' --listen 10   # a ws:// request
 apix send events/live.apix                   # server-sent events, printed as they arrive
 apix schema graphql/users.apix               # a GraphQL endpoint's schema, as SDL
+apix send grpc/say-hello.apix                # a grpc:// request; streams print as they arrive
 apix shell examples/jsonplaceholder/users/create-user.apix --as powershell
 apix import "My API.postman_collection.json"
 APIX_PASSWORD=… apix run my-api-encrypted --env staging

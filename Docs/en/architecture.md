@@ -37,6 +37,8 @@ crates/
 ├── apix-vault    encrypted collections: per-file XChaCha20-Poly1305, Argon2id, recovery key
 ├── apix-script   pre-request and test scripts: QuickJS with a pm.*-compatible API
 ├── apix-runner   runs collections: order, iterations, data files, delay, bail, reports
+├── apix-grpc     gRPC calls: tonic, messages as JSON (prost-reflect), .proto files (protox)
+│                 or server reflection
 ├── apix-cli      `apix` binary: send / run / schema / import / shell from terminal & CI
 └── apix-desktop  GPUI desktop app (Windows, macOS and Linux from one crate)
 tools/
@@ -56,7 +58,8 @@ click), `workspace/tabs.rs` (open requests; the front tab lives in the editor wi
 the others keep their draft, response and in-flight task), `workspace/drag.rs`
 (drag requests and folders to move them), `workspace/shell_copy.rs` (copy as / paste curl), `workspace/var_chips.rs`
 (`{{variable}}` chips in the URL bar and their hover card), `workspace/graphql_ui.rs`
-(GraphQL schema fetch, cache, completion and hover),
+(GraphQL schema fetch, cache, completion and hover), `workspace/grpc_editor.rs` and
+`workspace/grpc_ui.rs` (a gRPC request's Message tab, and the call in the response pane),
 `large_view.rs` (row-based viewer for huge bodies), `net.rs` (tokio bridge),
 `bidi.rs` (right-to-left layout helpers, see Languages),
 `state.rs` (recent items and per-folder environment in the user's config
@@ -66,7 +69,7 @@ Planned crates:
 
 | Crate          | Purpose                                                            |
 |----------------|--------------------------------------------------------------------|
-| `apix-proto`   | gRPC (`tonic` + reflection), Socket.IO, MQTT, SOAP                 |
+| `apix-proto`   | Socket.IO, MQTT, SOAP                                              |
 | `apix-mock`    | A local mock server that serves saved examples (`hyper`)           |
 
 ### One desktop crate for three operating systems
@@ -189,6 +192,24 @@ sends, so a missing file is a send error, not a load error. A GraphQL body is
 sent as `{"query", "variables"}` JSON; invalid variables stop the send. With a
 multipart body, a `Content-Type: multipart/…` header without the engine's
 boundary (common in Postman exports) is dropped so the body stays readable.
+
+**gRPC.** A request whose URL is `grpc://host:port` (or `grpcs://` for TLS)
+names its method in `[grpc]`; the JSON body is the message, and a JSON list is
+a stream of messages for a method that takes one. Without `protos` the server
+is asked (reflection). Paths are relative to the request file.
+
+```toml
+name = "Say hello"
+url = "grpc://localhost:50051"
+
+[body]
+json = '{"name": "Ada"}'
+
+[grpc]
+method = "helloworld.Greeter/SayHello"
+protos = ["../protos/helloworld.proto"]   # optional
+import_paths = ["../protos"]              # optional
+```
 
 Open questions:
 - **Secrets.** Environment values such as tokens should not be committed.
@@ -389,6 +410,40 @@ a send (inherited auth and settings, variables) and fetches it on the network
 runtime. Each endpoint's answer is kept in `<config>/Apix/graphql/<FNV-1a of
 the URL>.json` and loaded when a GraphQL request opens. The SDL view is a
 read-only editor filled while drawing, only once it is shown.
+
+## gRPC (M6)
+
+`apix-grpc` makes calls without generated code. The service description is a
+`prost_reflect::DescriptorPool`: from the request's `.proto` files through
+protox (Rust, no `protoc`; imports are looked up in `import_paths` and next to
+each file, Google's well-known types are built in), or from the server through
+gRPC reflection (v1, then v1alpha; files the server leaves out are asked for
+by name, then added in dependency order). Messages are `DynamicMessage`s:
+JSON in through prost-reflect's serde support, JSON out with the `.proto`
+field names and default values shown. `DynamicCodec` plugs them into tonic,
+so `tonic::client::Grpc` runs all four kinds of method (unary, server
+streaming, client streaming, bidirectional) over one `Channel` (HTTP/2 on the
+hyper and rustls the HTTP engine already uses).
+
+The request's headers and auth become metadata (Bearer, Basic, an API key
+header, OAuth 2.0 through `apix_http::oauth2`; `-bin` keys are base64);
+auth types that sign HTTP requests are refused with a reason. The timeout and
+client certificate come from the request settings. `call` reports `Sent`,
+`Headers` and `Received` events as they happen and ends with a `CallOutcome`:
+the status code and message, response metadata, trailers and every message.
+A status other than OK is an outcome, not an error; errors are things that
+stop a call from happening (no connection, no description, a message that
+does not fit its type).
+
+In the app, a `grpc://` URL turns the Body tab into the Message tab
+(`workspace/grpc_editor.rs`): a searchable method picker filled by
+**Load methods**, the `.proto` files, and the message with an example built
+from the input type. The call runs on the network runtime and fills a shared
+struct the UI reads every 60 ms; the response pane is a log
+(`ResponseState::Grpc`, `workspace/grpc_ui.rs`) like a WebSocket's, and Esc
+drops the call. The CLI prints a unary answer whole and streams line by line,
+and `apix schema` writes the service as `.proto`-like text. `apix run` skips
+gRPC requests for now.
 
 ## Themes
 

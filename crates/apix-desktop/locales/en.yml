@@ -247,6 +247,31 @@ extract.path: "Value (same as in Checks: body.data.token, header.X-Token, status
 extract.saved_collection: "%{name} = %{value} saved in the collection’s variables."
 extract.saved_env: "%{name} = %{value} saved in “%{env}”."
 extract.title: Save a value as a variable
+grpc.add_protos: Add .proto
+grpc.calling: Calling…
+grpc.choose_protos: Choose .proto files
+grpc.example: Example message
+grpc.headers: Response metadata
+grpc.hint_protos: Load the methods from the .proto files.
+grpc.hint_reflection: Load the methods from the server (reflection), or add the service's .proto files.
+grpc.kind_bidi: bidirectional
+grpc.kind_client: client streaming
+grpc.kind_server: server streaming
+grpc.kind_unary: unary
+grpc.load_methods: Load methods
+grpc.loaded_protos: "%{count} methods, from the .proto files"
+grpc.loaded_reflection: "%{count} methods, from the server (reflection)"
+grpc.loading: Loading the methods…
+grpc.message: Message (JSON)
+grpc.method: Method
+grpc.pick_method: Pick a method
+grpc.protos: Proto files
+grpc.protos_none: none, the server is asked
+grpc.reload_methods: Reload methods
+grpc.search_methods: Search methods
+grpc.stopped: Stopped
+grpc.stream_hint: a JSON list sends several messages
+grpc.trailers: Trailers
 history.ago_days: "%{count} d ago"
 history.ago_hours: "%{count} h ago"
 history.ago_minutes: "%{count} min ago"
@@ -418,6 +443,7 @@ request.tab.body: Body
 request.tab.body_kind: Body · %{kind}
 request.tab.headers: Headers
 request.tab.headers_count: Headers %{count}
+request.tab.message: Message
 request.tab.messages: "Messages"
 request.tab.messages_count: "Messages %{count}"
 request.tab.params: Params

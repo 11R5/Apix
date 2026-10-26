@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:2227c8e28d90e583 -->
+<!-- translated from en/architecture.md sha256:2e870b2c1f05ad2b -->
 
 # Apix mimarisi
 
@@ -39,6 +39,8 @@ crates/
 ├── apix-vault    şifreli koleksiyonlar: dosya başına XChaCha20-Poly1305, Argon2id, kurtarma anahtarı
 ├── apix-script   istek öncesi ve test scriptleri: pm.* uyumlu API ile QuickJS
 ├── apix-runner   koleksiyon koşuları: sıra, tekrar, veri dosyaları, bekleme, bail, raporlar
+├── apix-grpc     gRPC çağrıları: tonic, JSON mesajlar (prost-reflect), .proto dosyaları (protox)
+│                 ya da sunucu reflection'ı
 ├── apix-cli      `apix` binary'si: terminalden ve CI'dan send / run / schema / import / shell
 └── apix-desktop  GPUI masaüstü uygulaması (tek crate'ten Windows, macOS ve Linux)
 tools/
@@ -62,6 +64,8 @@ tutar), `workspace/drag.rs` (istekleri ve klasörleri taşımak için sürüklem
 `workspace/shell_copy.rs` (farklı kopyala / curl yapıştır), `workspace/var_chips.rs`
 (URL çubuğundaki `{{variable}}` çipleri ve üzerine gelince açılan kartları),
 `workspace/graphql_ui.rs` (GraphQL şemasını çekme, saklama, tamamlama ve açıklama),
+`workspace/grpc_editor.rs` ve `workspace/grpc_ui.rs` (gRPC isteğinin Mesaj sekmesi ve
+yanıt alanındaki çağrı),
 `large_view.rs` (devasa gövdeler için satır tabanlı görüntüleyici), `net.rs`
 (tokio köprüsü), `bidi.rs` (sağdan sola yerleşim yardımcıları, bkz. Diller), `state.rs` (kullanıcının yapılandırma klasöründe son kullanılan
 öğeler ve klasör başına ortam), `theme.rs` ve `fonts.rs`.
@@ -70,7 +74,7 @@ Planlanan crate'ler:
 
 | Crate          | Amaç                                                               |
 |----------------|--------------------------------------------------------------------|
-| `apix-proto`   | gRPC (`tonic` + reflection), Socket.IO, MQTT, SOAP                 |
+| `apix-proto`   | Socket.IO, MQTT, SOAP                                              |
 | `apix-mock`    | Kaydedilmiş örnekleri sunan yerel bir mock sunucu (`hyper`)        |
 
 ### Üç işletim sistemi için tek masaüstü crate'i
@@ -199,6 +203,24 @@ değil, gönderim hatasıdır. GraphQL gövdesi `{"query", "variables"}` JSON'u 
 gönderilir; geçersiz değişkenler gönderimi durdurur. Multipart gövdede, motorun
 boundary'sini içermeyen bir `Content-Type: multipart/…` başlığı (Postman dışa
 aktarımlarında yaygındır) atılır, böylece gövde okunabilir kalır.
+
+**gRPC.** Adresi `grpc://host:port` (TLS için `grpcs://`) olan bir istek,
+çağıracağı metodu `[grpc]` içinde adlandırır; JSON gövde mesajdır, akış alan
+bir metotta JSON listesi bir mesaj akışıdır. `protos` yoksa sunucuya sorulur
+(reflection). Yollar istek dosyasına göre görelidir.
+
+```toml
+name = "Say hello"
+url = "grpc://localhost:50051"
+
+[body]
+json = '{"name": "Ada"}'
+
+[grpc]
+method = "helloworld.Greeter/SayHello"
+protos = ["../protos/helloworld.proto"]   # isteğe bağlı
+import_paths = ["../protos"]              # isteğe bağlı
+```
 
 Açık sorular:
 - **Gizli değerler.** Token gibi ortam değerleri commit'lenmemelidir.
@@ -410,6 +432,40 @@ ağ çalışma zamanında çeker. Her uç noktanın cevabı
 `<config>/Apix/graphql/<adresin FNV-1a'sı>.json` içinde saklanır ve bir
 GraphQL isteği açılınca yüklenir. SDL görünümü salt okunur bir
 düzenleyicidir; yalnızca gösterildiğinde, çizim sırasında doldurulur.
+
+## gRPC (M6)
+
+`apix-grpc` çağrıları üretilmiş kod olmadan yapar. Servis tanımı bir
+`prost_reflect::DescriptorPool`'dur: ya isteğin `.proto` dosyalarından protox
+ile (Rust; `protoc` gerekmez; import'lar `import_paths` içinde ve her dosyanın
+yanında aranır, Google'ın bilinen türleri yerleşiktir), ya da sunucudan gRPC
+reflection ile (önce v1, sonra v1alpha; sunucunun atladığı dosyalar adıyla
+istenir, sonra bağımlılık sırasına göre eklenir). Mesajlar `DynamicMessage`
+olur: JSON, prost-reflect'in serde desteğiyle girer; `.proto` alan adlarıyla
+ve varsayılan değerler de gösterilerek JSON olarak çıkar. `DynamicCodec`
+bunları tonic'e bağlar; böylece `tonic::client::Grpc` dört metot türünü de
+(tekli, sunucu akışı, istemci akışı, çift yönlü) tek bir `Channel` üzerinde
+çalıştırır (HTTP motorunun zaten kullandığı hyper ve rustls üzerinde HTTP/2).
+
+İsteğin başlıkları ve yetkilendirmesi metadata olur (Bearer, Basic, başlıkta
+API anahtarı, `apix_http::oauth2` ile OAuth 2.0; `-bin` anahtarları
+base64'tür); HTTP isteğini imzalayan yetkilendirme türleri gerekçesiyle
+reddedilir. Zaman aşımı ve istemci sertifikası istek ayarlarından gelir.
+`call`, `Sent`, `Headers` ve `Received` olaylarını oldukları anda bildirir ve
+bir `CallOutcome` ile biter: durum kodu ve mesajı, yanıt metadata'sı,
+trailer'lar ve gelen her mesaj. OK dışındaki bir durum hata değil, sonuçtur;
+hatalar çağrının olmasını engelleyen şeylerdir (bağlantı yok, tanım yok,
+türüne uymayan mesaj).
+
+Uygulamada `grpc://` adresi Gövde sekmesini Mesaj sekmesine çevirir
+(`workspace/grpc_editor.rs`): **Metotları yükle** ile dolan aranabilir bir
+metot seçici, `.proto` dosyaları ve girdi türünden üretilen bir örnekle mesaj.
+Çağrı ağ çalışma zamanında koşar ve arayüzün 60 ms'de bir okuduğu ortak bir
+yapıyı doldurur; yanıt alanı WebSocket'inki gibi bir günlüktür
+(`ResponseState::Grpc`, `workspace/grpc_ui.rs`), Esc çağrıyı bırakır. CLI
+tekli cevabı bütün olarak, akışları satır satır yazar; `apix schema` servisi
+`.proto` benzeri metin olarak yazar. `apix run` gRPC isteklerini şimdilik
+atlar.
 
 ## Temalar
 

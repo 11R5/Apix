@@ -106,7 +106,8 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [x] WebSocket: `ws://`/`wss://` requests connect with the request's params, headers and auth; a Messages tab with saved `[[message]]`s; a live log of both directions; `apix send --message/--listen`
 - [x] Server-sent events: `text/event-stream` responses show their events as they arrive, in the app and in `apix send`; Esc keeps what came
 - [x] GraphQL: the schema fetched with the request's own URL, headers and auth (introspection) and kept per endpoint; completion of fields, arguments, enum values, input fields, fragments and variable types; docs on hover; the schema as SDL beside the query; `apix schema`
-- [ ] gRPC, Socket.IO, MQTT, SOAP
+- [x] gRPC: `grpc://`/`grpcs://` requests; services from server reflection or `.proto` files (protox, no `protoc`); unary, server, client and bidirectional streaming with messages as JSON; metadata from headers and auth; an example message per method; a live log with status, metadata and trailers; `apix send` and `apix schema`
+- [ ] Socket.IO, MQTT, SOAP
 
 ## M7 — Advanced
 - [ ] Route (traceroute) and network map, with an offline IP-geolocation database

@@ -245,6 +245,31 @@ extract.path: "القيمة (كما في الفحوص: body.data.token و header
 extract.saved_collection: "حُفظ %{name} = %{value} في متغيرات المجموعة."
 extract.saved_env: "حُفظ %{name} = %{value} في «%{env}»."
 extract.title: حفظ قيمة كمتغير
+grpc.add_protos: إضافة .proto
+grpc.calling: جارٍ الاستدعاء…
+grpc.choose_protos: اختر ملفات .proto
+grpc.example: رسالة مثال
+grpc.headers: بيانات الاستجابة الوصفية
+grpc.hint_protos: حمّل الطرق من ملفات .proto.
+grpc.hint_reflection: حمّل الطرق من الخادم (reflection)، أو أضف ملفات .proto الخاصة بالخدمة.
+grpc.kind_bidi: ثنائي الاتجاه
+grpc.kind_client: تدفق من العميل
+grpc.kind_server: تدفق من الخادم
+grpc.kind_unary: أحادي
+grpc.load_methods: تحميل الطرق
+grpc.loaded_protos: "%{count} طريقة، من ملفات .proto"
+grpc.loaded_reflection: "%{count} طريقة، من الخادم (reflection)"
+grpc.loading: جارٍ تحميل الطرق…
+grpc.message: الرسالة (JSON)
+grpc.method: الطريقة
+grpc.pick_method: اختر طريقة
+grpc.protos: ملفات Proto
+grpc.protos_none: لا شيء، يُسأل الخادم
+grpc.reload_methods: إعادة تحميل الطرق
+grpc.search_methods: ابحث في الطرق
+grpc.stopped: أُوقف
+grpc.stream_hint: قائمة JSON ترسل عدة رسائل
+grpc.trailers: المقطورات
 history.ago_days: منذ %{count} يوم
 history.ago_hours: منذ %{count} ساعة
 history.ago_minutes: منذ %{count} دقيقة
@@ -416,6 +441,7 @@ request.tab.body: المتن
 request.tab.body_kind: المتن · %{kind}
 request.tab.headers: الترويسات
 request.tab.headers_count: الترويسات %{count}
+request.tab.message: الرسالة
 request.tab.messages: "الرسائل"
 request.tab.messages_count: "الرسائل %{count}"
 request.tab.params: المعاملات

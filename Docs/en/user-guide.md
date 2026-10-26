@@ -22,6 +22,7 @@ command line runs the same requests in a terminal or CI.
 - [The response](#the-response)
 - [The Network tab](#the-network-tab)
 - [WebSocket and server-sent events](#websocket-and-server-sent-events)
+- [gRPC](#grpc)
 - [Scripts and tests](#scripts-and-tests)
 - [Runner](#runner)
 - [Tabs](#tabs)
@@ -301,6 +302,38 @@ From the command line, `apix send` prints events as they come, and for a
 WebSocket it connects, sends the saved messages (or `--message` texts),
 prints both directions and closes after `--listen` seconds (3 by default,
 `0` waits for the server). `apix run` skips WebSocket requests.
+
+## gRPC
+
+A request whose URL starts with `grpc://` (or `grpcs://` for TLS) calls a
+gRPC method: the URL bar shows **gRPC**, and the Body tab becomes
+**Message**.
+
+![A gRPC call](images/grpc.png)
+
+1. Write the address, such as `grpc://localhost:50051`.
+2. **Load methods** asks the server what it offers (gRPC server reflection).
+   If the server has no reflection, **Add .proto** picks the service's
+   `.proto` files; imports are looked up next to them, and Google's
+   well-known types are built in. Nothing needs `protoc`.
+3. Pick the method. Its kind is shown beside it: unary, server streaming,
+   client streaming or bidirectional.
+4. Write the message as JSON, or press **Example message** for one with every
+   field. For a method that takes a stream, a JSON list sends one message
+   per item.
+5. **Send** (Ctrl+Enter). The response pane lists what went out (↑) and what
+   came back (↓) with times, then the status (`0 OK`, or a code such as
+   `5 NOT_FOUND` with its message), the response metadata and the trailers.
+   A stream shows its messages as they arrive; Esc stops it.
+
+Headers are sent as metadata, and Auth works as for HTTP with Bearer, Basic,
+an API key in a header and OAuth 2.0. The request settings' timeout and client
+certificate apply. A `-bin` header is read as base64.
+
+From the command line, `apix send` calls the method (streams are printed one
+message per line as they come; the exit code is non-zero unless the status is
+OK), and `apix schema` prints the service and its messages. `apix run` skips
+gRPC requests for now.
 
 ## Scripts and tests
 

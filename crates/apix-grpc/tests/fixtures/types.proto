@@ -1,0 +1,10 @@
+// Imported by greeter.proto, to test imports.
+syntax = "proto3";
+
+package apix.test;
+
+enum Mood {
+  MOOD_UNSPECIFIED = 0;
+  HAPPY = 1;
+  GRUMPY = 2;
+}

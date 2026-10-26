@@ -403,6 +403,14 @@ async fn run(cli: Cli) -> Result<bool> {
             let mut request = scope.load(&file)?;
             request.settings = net.overrides().or_inherit(&request.settings);
             let resolved = request.resolve(&vars);
+            if resolved.request.is_grpc() {
+                if !resolved.missing.is_empty() {
+                    let names: Vec<_> = resolved.missing.into_iter().collect();
+                    bail!("undefined variable(s): {}", names.join(", "));
+                }
+                let request = relative_to_file(resolved.request, &file);
+                return grpc(&style, &request, include_headers).await;
+            }
             if apix_http::ws::is_websocket_url(&resolved.request.url) {
                 if !resolved.missing.is_empty() {
                     let names: Vec<_> = resolved.missing.into_iter().collect();
@@ -652,6 +660,17 @@ async fn run(cli: Cli) -> Result<bool> {
             if !resolved.missing.is_empty() {
                 let names: Vec<_> = resolved.missing.into_iter().collect();
                 bail!("undefined variable(s): {}", names.join(", "));
+            }
+            if resolved.request.is_grpc() {
+                if json {
+                    bail!("--json is for GraphQL; a gRPC service is printed as .proto text");
+                }
+                let request = relative_to_file(resolved.request, &file);
+                let metadata = apix_grpc::metadata(&request).await?;
+                let channel = apix_grpc::connect(&request).await?;
+                let pool = apix_grpc::descriptors(&request, &channel, &metadata).await?;
+                print!("{}", apix_grpc::describe(&pool));
+                return Ok(true);
             }
             let fetched = apix_http::graphql::fetch_schema(&client, &resolved.request).await?;
             if json {
@@ -1026,6 +1045,106 @@ async fn websocket(
         .await;
     drop(tx);
     Ok(ok)
+}
+
+/// `.proto` files and other paths in the request, made absolute against the
+/// request file's folder.
+fn relative_to_file(request: apix_core::Request, file: &Path) -> apix_core::Request {
+    match file.parent() {
+        Some(dir) => request.with_files_relative_to(dir),
+        None => request,
+    }
+}
+
+/// `apix send` for a `grpc://` request: a unary answer is printed whole,
+/// streams message by message as they come; the exit code follows the status.
+async fn grpc(style: &Style, request: &apix_core::Request, include_headers: bool) -> Result<bool> {
+    use apix_grpc::CallEvent;
+
+    let name = request
+        .grpc
+        .as_ref()
+        .map(|g| g.method.trim().to_owned())
+        .filter(|m| !m.is_empty())
+        .ok_or(apix_grpc::GrpcError::NoMethod)?;
+    let metadata = apix_grpc::metadata(request).await?;
+    let channel = apix_grpc::connect(request).await?;
+    let pool = apix_grpc::descriptors(request, &channel, &metadata).await?;
+    let method =
+        apix_grpc::find_method(&pool, &name).ok_or(apix_grpc::GrpcError::UnknownMethod(name))?;
+    let messages = apix_grpc::messages(request, &method)?;
+    let streaming = method.is_client_streaming() || method.is_server_streaming();
+    let started = std::time::Instant::now();
+    // One line per message in a stream.
+    let compact = |json: &str| {
+        serde_json::from_str::<serde_json::Value>(json)
+            .map(|v| v.to_string())
+            .unwrap_or_else(|_| json.to_owned())
+    };
+    let outcome = apix_grpc::call(channel, &method, messages, metadata, |event| {
+        let at = format!("{:>8.2}s", started.elapsed().as_secs_f64());
+        match event {
+            CallEvent::Sent(json) if streaming => println!(
+                "{}{at}{} {}↑{} {}",
+                style.dim,
+                style.reset,
+                style.yellow,
+                style.reset,
+                compact(&json)
+            ),
+            CallEvent::Received(json) if streaming => println!(
+                "{}{at}{} {}↓{} {}",
+                style.dim,
+                style.reset,
+                style.green,
+                style.reset,
+                compact(&json)
+            ),
+            CallEvent::Headers(headers) if include_headers => {
+                for (k, v) in headers {
+                    println!("{}{k}{}: {v}", style.dim, style.reset);
+                }
+                println!();
+            }
+            _ => {}
+        }
+    })
+    .await?;
+    let color = if outcome.is_ok() {
+        style.green
+    } else {
+        style.red
+    };
+    let detail = if outcome.status_message.is_empty() {
+        String::new()
+    } else {
+        format!(": {}", outcome.status_message)
+    };
+    let count = match outcome.received.len() {
+        1 => "1 message".to_owned(),
+        n => format!("{n} messages"),
+    };
+    println!(
+        "{color}{} ({}){detail}{}  {}{:.1} ms · {count} · {}/{}{}",
+        outcome.code_name(),
+        outcome.code,
+        style.reset,
+        style.dim,
+        outcome.elapsed.as_secs_f64() * 1000.0,
+        method.parent_service().full_name(),
+        method.name(),
+        style.reset
+    );
+    if !streaming && let Some(message) = outcome.received.first() {
+        println!("{message}");
+    }
+    if include_headers && !outcome.trailers.is_empty() {
+        println!();
+        for (k, v) in &outcome.trailers {
+            println!("{}{k}{}: {v}", style.dim, style.reset);
+        }
+    }
+    Ok(outcome.is_ok())
 }
 
 /// One server-sent event: when it came, its type and id, then its data.

@@ -205,6 +205,8 @@ fn count(n: usize, one: &str, many: &str) -> String {
 }
 
 /// A file the importer wants to create, relative to the collection root.
+// Nearly every planned file is a request, so boxing it would gain nothing.
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone, PartialEq)]
 pub enum PlannedFile {
     Request {

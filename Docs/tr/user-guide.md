@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:aad47a6a7b1bfdcb -->
+<!-- translated from en/user-guide.md sha256:370b0c3e16a4c70f -->
 
 # Apix kullanım kılavuzu
 
@@ -25,6 +25,7 @@ veya CI'da çalıştırır.
 - [Yanıt](#yanıt)
 - [Ağ sekmesi](#ağ-sekmesi)
 - [WebSocket ve sunucu olayları (SSE)](#websocket-ve-sunucu-olayları-sse)
+- [gRPC](#grpc)
 - [Scriptler ve testler](#scriptler-ve-testler)
 - [Runner](#runner)
 - [Sekmeler](#sekmeler)
@@ -314,6 +315,36 @@ Komut satırında `apix send` olayları geldikçe yazar; bir WebSocket'te
 bağlanır, kayıtlı mesajları (ya da `--message` metinlerini) gönderir, iki
 yöndekileri yazar ve `--listen` saniye sonra kapatır (varsayılan 3, `0`
 sunucuyu bekler). `apix run` WebSocket isteklerini atlar.
+
+## gRPC
+
+Adresi `grpc://` (TLS için `grpcs://`) ile başlayan istek bir gRPC metodunu
+çağırır: adres çubuğunda **gRPC** yazar, Gövde sekmesi de **Mesaj** olur.
+
+![Bir gRPC çağrısı](images/grpc.png)
+
+1. Adresi yaz, örneğin `grpc://localhost:50051`.
+2. **Metotları yükle** sunucuya neler sunduğunu sorar (gRPC sunucu
+   reflection'ı). Sunucuda reflection yoksa **.proto ekle** ile servisin
+   `.proto` dosyalarını seç; import'lar onların yanında aranır, Google'ın
+   bilinen türleri yerleşiktir. Hiçbir şey için `protoc` gerekmez.
+3. Metodu seç. Türü yanında görünür: tekli, sunucu akışı, istemci akışı ya da
+   çift yönlü.
+4. Mesajı JSON olarak yaz ya da her alanı dolu bir örnek için **Örnek mesaj**'a
+   bas. Akış alan bir metotta JSON listesi, her öğe için bir mesaj gönderir.
+5. **Gönder** (Ctrl+Enter). Yanıt alanı gidenleri (↑) ve gelenleri (↓)
+   zamanlarıyla listeler; sonra durumu (`0 OK` ya da mesajıyla birlikte
+   `5 NOT_FOUND` gibi bir kod), yanıt metadata'sını ve trailer'ları gösterir.
+   Bir akış mesajlarını geldikçe gösterir; Esc durdurur.
+
+Başlıklar metadata olarak gider; yetkilendirme HTTP'deki gibi çalışır:
+Bearer, Basic, başlıkta API anahtarı ve OAuth 2.0. İstek ayarlarındaki zaman
+aşımı ve istemci sertifikası geçerlidir. `-bin` ile biten bir başlık base64
+olarak okunur.
+
+Komut satırında `apix send` metodu çağırır (akışlar geldikçe her mesaj bir
+satıra yazılır; durum OK değilse çıkış kodu sıfırdan farklıdır), `apix schema`
+servisi ve mesajlarını yazar. `apix run` gRPC isteklerini şimdilik atlar.
 
 ## Scriptler ve testler
 

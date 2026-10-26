@@ -852,7 +852,7 @@ fn add_button(
 /// How a picked file is saved: relative to the request's folder when it is
 /// inside the collection, so the collection works on other machines;
 /// otherwise as picked. Forward slashes, so the file is the same on every OS.
-fn stored_path(path: &Path, dir: Option<&Path>, root: Option<&Path>) -> String {
+pub(super) fn stored_path(path: &Path, dir: Option<&Path>, root: Option<&Path>) -> String {
     if let (Some(dir), Some(root)) = (dir, root)
         && path.starts_with(root)
         && let Some(relative) = relative_to(path, dir)

@@ -14,10 +14,13 @@ path = "src/main.rs"
 anyhow.workspace = true
 apix-codegen.workspace = true
 apix-core.workspace = true
+apix-grpc.workspace = true
 apix-http.workspace = true
 apix-import.workspace = true
 apix-runner.workspace = true
 apix-script.workspace = true
 clap.workspace = true
 rpassword = "7"
+# Puts each streamed gRPC message on one line.
+serde_json.workspace = true
 tokio = { workspace = true, features = ["sync", "time"] }

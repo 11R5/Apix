@@ -245,6 +245,31 @@ extract.path: "Valor (como en Comprobaciones: body.data.token, header.X-Token, s
 extract.saved_collection: "%{name} = %{value} guardada en las variables de la colección."
 extract.saved_env: "%{name} = %{value} guardada en «%{env}»."
 extract.title: Guardar un valor como variable
+grpc.add_protos: Añadir .proto
+grpc.calling: Llamando…
+grpc.choose_protos: Elegir archivos .proto
+grpc.example: Mensaje de ejemplo
+grpc.headers: Metadatos de respuesta
+grpc.hint_protos: Carga los métodos de los archivos .proto.
+grpc.hint_reflection: Carga los métodos del servidor (reflexión) o añade los archivos .proto del servicio.
+grpc.kind_bidi: bidireccional
+grpc.kind_client: flujo del cliente
+grpc.kind_server: flujo del servidor
+grpc.kind_unary: unario
+grpc.load_methods: Cargar métodos
+grpc.loaded_protos: "%{count} métodos, de los archivos .proto"
+grpc.loaded_reflection: "%{count} métodos, del servidor (reflexión)"
+grpc.loading: Cargando los métodos…
+grpc.message: Mensaje (JSON)
+grpc.method: Método
+grpc.pick_method: Elige un método
+grpc.protos: Archivos .proto
+grpc.protos_none: ninguno, se pregunta al servidor
+grpc.reload_methods: Recargar métodos
+grpc.search_methods: Buscar métodos
+grpc.stopped: Detenido
+grpc.stream_hint: una lista JSON envía varios mensajes
+grpc.trailers: Trailers
 history.ago_days: hace %{count} d
 history.ago_hours: hace %{count} h
 history.ago_minutes: hace %{count} min
@@ -416,6 +441,7 @@ request.tab.body: Cuerpo
 request.tab.body_kind: Cuerpo · %{kind}
 request.tab.headers: Encabezados
 request.tab.headers_count: Encabezados %{count}
+request.tab.message: Mensaje
 request.tab.messages: "Mensajes"
 request.tab.messages_count: "Mensajes %{count}"
 request.tab.params: Parámetros

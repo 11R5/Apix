@@ -8,6 +8,8 @@ mod drag;
 mod env_editor;
 mod extract_ui;
 mod graphql_ui;
+mod grpc_editor;
+mod grpc_ui;
 mod history_ui;
 mod menu_bar;
 mod network;
@@ -338,6 +340,8 @@ enum ResponseState {
     Streaming(Rc<std::cell::RefCell<stream_ui::LiveStream>>),
     /// A WebSocket connection: opening, open, or over (its log stays).
     Socket(Rc<std::cell::RefCell<socket_ui::SocketSession>>),
+    /// A gRPC call: running, or over (its log stays).
+    Grpc(Rc<std::cell::RefCell<grpc_ui::GrpcSession>>),
     Done(Rc<Finished>),
     Failed(String),
     Cancelled,
@@ -379,6 +383,7 @@ pub struct Workspace {
     script_editor: Entity<script_editor::ScriptEditor>,
     /// The Messages tab of a WebSocket request.
     ws_editor: Entity<ws_editor::WsEditor>,
+    grpc_editor: Entity<grpc_editor::GrpcEditor>,
     /// The request's scripts as last loaded or saved.
     base_scripts: script_editor::Scripts,
     /// What scripts set or unset since the app started; never written to disk.
@@ -415,6 +420,8 @@ pub struct Workspace {
     task: Option<Task<()>>,
     /// Fetching the GraphQL schema of the open request.
     schema_task: Option<Task<()>>,
+    /// Loading the methods of the open gRPC request.
+    grpc_task: Option<Task<()>>,
     /// The open tabs as last written to the app state.
     remembered_tabs: Option<(PathBuf, crate::state::OpenTabs)>,
     /// The sidebar row and zone a drag would drop into.
@@ -447,6 +454,8 @@ impl Workspace {
         let settings_editor = cx.new(|cx| settings_editor::SettingsEditor::new(window, cx));
         let script_editor = cx.new(|cx| script_editor::ScriptEditor::new(window, cx));
         let ws_editor = cx.new(|cx| ws_editor::WsEditor::new(window, cx));
+        let grpc_weak = cx.weak_entity();
+        let grpc_editor = cx.new(|cx| grpc_editor::GrpcEditor::new(grpc_weak, window, cx));
         let subscriptions = vec![
             cx.observe_self(|this, _| this.remember_tabs()),
             // "Follow the system": repaint when the OS switches between light and dark.
@@ -462,6 +471,19 @@ impl Workspace {
             cx.observe(&settings_editor, |_, _, cx| cx.notify()),
             cx.observe(&script_editor, |_, _, cx| cx.notify()),
             cx.observe(&ws_editor, |_, _, cx| cx.notify()),
+            cx.observe(&grpc_editor, |_, _, cx| cx.notify()),
+            cx.subscribe_in(
+                &grpc_editor,
+                window,
+                |this, _, _: &grpc_editor::LoadMethods, window, cx| {
+                    this.load_grpc_methods(window, cx)
+                },
+            ),
+            cx.subscribe_in(
+                &grpc_editor,
+                window,
+                |this, _, _: &body_editor::SendRequested, window, cx| this.send(window, cx),
+            ),
             cx.subscribe_in(
                 &ws_editor,
                 window,
@@ -541,6 +563,7 @@ impl Workspace {
             settings_editor,
             script_editor,
             ws_editor,
+            grpc_editor,
             base_scripts: Default::default(),
             script_vars: Default::default(),
             last_url_len: 0,
@@ -562,6 +585,7 @@ impl Workspace {
             hex_task: None,
             task: None,
             schema_task: None,
+            grpc_task: None,
             last_input: std::cell::Cell::new(std::time::Instant::now()),
             bench_sent: None,
             _auto_lock: None,
@@ -689,6 +713,15 @@ impl Workspace {
         let messages = request.messages.clone();
         self.ws_editor
             .update(cx, |editor, cx| editor.set_messages(&messages, cx));
+        let grpc = request.grpc.clone();
+        let body = request.body.clone();
+        self.grpc_task = None;
+        self.grpc_editor.update(cx, |editor, cx| {
+            editor.set_call(grpc.as_ref(), &body, window, cx)
+        });
+        if request.is_grpc() {
+            self.request_tab = 3;
+        }
         // A GraphQL endpoint's schema, if it was fetched before.
         self.schema_task = None;
         if matches!(request.body, apix_core::Body::GraphQl(_)) {
@@ -740,6 +773,19 @@ impl Workspace {
         request.settings = self.settings_editor.read(cx).settings(cx);
         request.asserts = self.script_editor.read(cx).asserts(cx);
         request.messages = self.ws_editor.read(cx).messages();
+        // A gRPC request's message is its body.
+        if self.grpc_mode(cx) {
+            let grpc = self.grpc_editor.read(cx);
+            let message = grpc.message(cx);
+            request.grpc = Some(grpc.call(cx));
+            request.body = if message.trim().is_empty() {
+                apix_core::Body::None
+            } else {
+                apix_core::Body::Json(message)
+            };
+        } else {
+            request.grpc = None;
+        }
         request
     }
 
@@ -753,6 +799,7 @@ impl Workspace {
         let method = self.build_request(cx).method;
         if self.settings.confirm_prod
             && self.is_prod()
+            && !self.grpc_mode(cx)
             && matches!(method, Method::Delete | Method::Put | Method::Patch)
         {
             self.confirm_prod_send(method, window, cx);
@@ -798,6 +845,19 @@ impl Workspace {
         }
         // ws:// and wss:// open a connection; there is no single response.
         let resolved = request.resolve(&self.vars);
+        // grpc:// and grpcs:// call a method (scripts do not run for them yet).
+        if resolved.request.is_grpc() {
+            if !resolved.missing.is_empty() {
+                self.fail(undefined_message(resolved.missing), cx);
+                return;
+            }
+            let request = match self.body_location().0 {
+                Some(dir) => resolved.request.with_files_relative_to(&dir),
+                None => resolved.request,
+            };
+            self.call_grpc(request, window, cx);
+            return;
+        }
         if apix_http::ws::is_websocket_url(&resolved.request.url) {
             if !resolved.missing.is_empty() {
                 self.fail(undefined_message(resolved.missing), cx);
@@ -826,6 +886,9 @@ impl Workspace {
     }
 
     fn cancel(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        if self.stop_grpc(cx) {
+            return;
+        }
         if self.disconnect_socket(cx) {
             return;
         }
@@ -1094,7 +1157,7 @@ impl Workspace {
 
     fn render_url_bar(&self, cx: &mut Context<Self>) -> impl IntoElement {
         let method = self.current_method(cx);
-        let busy = matches!(self.response, ResponseState::Loading);
+        let busy = matches!(self.response, ResponseState::Loading) || self.live_grpc().is_some();
         let websocket = self.websocket_mode(cx);
         let action = if self.live_socket().is_some() {
             Button::new("disconnect")
@@ -1124,22 +1187,27 @@ impl Workspace {
                 .on_click(cx.listener(|this, _: &ClickEvent, window, cx| this.send(window, cx)))
         };
 
+        // A gRPC request has no HTTP method: the method is in the Message tab.
+        let grpc = self.grpc_mode(cx);
         h_flex()
             .gap_2()
             .items_center()
-            .child(
+            .child(div().w(px(4.)).h(px(20.)).rounded_full().bg(if grpc {
+                theme::grpc_color()
+            } else {
+                theme::method_color(method)
+            }))
+            .child(div().w(px(112.)).flex_none().child(if grpc {
                 div()
-                    .w(px(4.))
-                    .h(px(20.))
-                    .rounded_full()
-                    .bg(theme::method_color(method)),
-            )
-            .child(
-                div()
-                    .w(px(112.))
-                    .flex_none()
-                    .child(Select::new(&self.method).small()),
-            )
+                    .px_2()
+                    .text_sm()
+                    .font_weight(FontWeight::BOLD)
+                    .text_color(theme::grpc_color())
+                    .child("gRPC")
+                    .into_any_element()
+            } else {
+                Select::new(&self.method).small().into_any_element()
+            }))
             .child(div().flex_1().min_w_0().child(self.url_input(cx)))
             .child(
                 Button::new("copy-as")
@@ -1171,7 +1239,10 @@ impl Workspace {
         };
         // A WebSocket request has messages where an HTTP one has a body.
         let websocket = self.websocket_mode(cx);
-        let body_label = if websocket {
+        let grpc = self.grpc_mode(cx);
+        let body_label = if grpc {
+            tr!("request.tab.message")
+        } else if websocket {
             match self.ws_editor.read(cx).messages().len() {
                 0 => tr!("request.tab.messages"),
                 n => tr!("request.tab.messages_count", count = n),
@@ -1226,6 +1297,7 @@ impl Workspace {
                 .overflow_y_scroll()
                 .child(self.settings_editor.clone())
                 .into_any_element(),
+            _ if grpc => self.grpc_editor.clone().into_any_element(),
             _ if websocket => self.ws_editor.clone().into_any_element(),
             _ => self.body_editor.clone().into_any_element(),
         };
@@ -1359,6 +1431,7 @@ impl Workspace {
                 shell.child(self.render_stream(&stream.borrow(), cx))
             }
             ResponseState::Socket(session) => shell.child(self.render_socket(session, cx)),
+            ResponseState::Grpc(session) => shell.child(self.render_grpc(session, cx)),
             ResponseState::Cancelled => shell.child(centered(
                 div()
                     .text_sm()
