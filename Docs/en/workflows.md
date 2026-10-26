@@ -13,6 +13,7 @@ measuring Apix.
 - [Sign in with OAuth 2.0](#sign-in-with-oauth-20)
 - [Call an AWS API](#call-an-aws-api)
 - [Upload a file, send GraphQL](#upload-a-file-send-graphql)
+- [Call a gRPC service](#call-a-grpc-service)
 - [Reproduce a request from the browser](#reproduce-a-request-from-the-browser)
 - [Find out why a request is slow or failing](#find-out-why-a-request-is-slow-or-failing)
 
@@ -269,6 +270,24 @@ docs. The schema is kept per URL, so the next time you open the request it is
 already there. To check a schema change in a pull request, save
 `apix schema api/graphql.apix > schema.graphql` in the repository and let
 the diff show what changed.
+
+## Call a gRPC service
+
+1. **Request › New request**, then type the address with `grpc://` (or
+   `grpcs://` behind TLS), for example `grpc://localhost:50051`.
+2. In the **Message** tab press **Load methods**. With server reflection
+   turned off, add the `.proto` files first (**Add .proto**); keep them in the
+   collection so the paths work on every machine.
+3. Pick the method, press **Example message**, fill in the values.
+4. Set the token in **Auth** (Bearer) or add metadata in **Headers**, then
+   **Send**.
+
+In a pipeline, the same file works with the command line:
+
+```sh
+apix send api/say-hello.apix --env staging   # exit code 1 unless the status is OK
+apix schema api/say-hello.apix > greeter.txt   # what the service offers, to diff in reviews
+```
 
 ## Reproduce a request from the browser
 

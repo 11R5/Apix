@@ -245,6 +245,31 @@ extract.path: "値（チェックと同じ: body.data.token、header.X-Token、s
 extract.saved_collection: "%{name} = %{value} をコレクションの変数に保存しました。"
 extract.saved_env: "%{name} = %{value} を「%{env}」に保存しました。"
 extract.title: 値を変数として保存
+grpc.add_protos: .proto を追加
+grpc.calling: 呼び出し中…
+grpc.choose_protos: .proto ファイルを選択
+grpc.example: サンプルメッセージ
+grpc.headers: レスポンスメタデータ
+grpc.hint_protos: .proto ファイルからメソッドを読み込んでください。
+grpc.hint_reflection: サーバーからメソッドを読み込むか (リフレクション)、サービスの .proto ファイルを追加してください。
+grpc.kind_bidi: 双方向
+grpc.kind_client: クライアントストリーミング
+grpc.kind_server: サーバーストリーミング
+grpc.kind_unary: 単項
+grpc.load_methods: メソッドを読み込む
+grpc.loaded_protos: "%{count} 個のメソッド (.proto ファイル)"
+grpc.loaded_reflection: "%{count} 個のメソッド (サーバーのリフレクション)"
+grpc.loading: メソッドを読み込み中…
+grpc.message: メッセージ (JSON)
+grpc.method: メソッド
+grpc.pick_method: メソッドを選択
+grpc.protos: Proto ファイル
+grpc.protos_none: なし (サーバーに問い合わせ)
+grpc.reload_methods: メソッドを再読み込み
+grpc.search_methods: メソッドを検索
+grpc.stopped: 停止しました
+grpc.stream_hint: JSON の配列で複数のメッセージを送信
+grpc.trailers: トレーラー
 history.ago_days: "%{count}日前"
 history.ago_hours: "%{count}時間前"
 history.ago_minutes: "%{count}分前"
@@ -416,6 +441,7 @@ request.tab.body: ボディ
 request.tab.body_kind: ボディ · %{kind}
 request.tab.headers: ヘッダー
 request.tab.headers_count: ヘッダー %{count}
+request.tab.message: メッセージ
 request.tab.messages: "メッセージ"
 request.tab.messages_count: "メッセージ %{count}"
 request.tab.params: パラメーター

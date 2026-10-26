@@ -245,6 +245,31 @@ extract.path: 值（与检查相同：body.data.token、header.X-Token、status�
 extract.saved_collection: "%{name} = %{value} 已保存到集合的变量中。"
 extract.saved_env: "%{name} = %{value} 已保存到“%{env}”。"
 extract.title: 将值保存为变量
+grpc.add_protos: 添加 .proto
+grpc.calling: 调用中…
+grpc.choose_protos: 选择 .proto 文件
+grpc.example: 示例消息
+grpc.headers: 响应元数据
+grpc.hint_protos: 从 .proto 文件加载方法。
+grpc.hint_reflection: 从服务器加载方法（反射），或添加服务的 .proto 文件。
+grpc.kind_bidi: 双向流
+grpc.kind_client: 客户端流
+grpc.kind_server: 服务器流
+grpc.kind_unary: 一元
+grpc.load_methods: 加载方法
+grpc.loaded_protos: "%{count} 个方法，来自 .proto 文件"
+grpc.loaded_reflection: "%{count} 个方法，来自服务器（反射）"
+grpc.loading: 正在加载方法…
+grpc.message: 消息 (JSON)
+grpc.method: 方法
+grpc.pick_method: 选择方法
+grpc.protos: Proto 文件
+grpc.protos_none: 无，将询问服务器
+grpc.reload_methods: 重新加载方法
+grpc.search_methods: 搜索方法
+grpc.stopped: 已停止
+grpc.stream_hint: JSON 数组会发送多条消息
+grpc.trailers: 尾部元数据
 history.ago_days: "%{count} 天前"
 history.ago_hours: "%{count} 小时前"
 history.ago_minutes: "%{count} 分钟前"
@@ -416,6 +441,7 @@ request.tab.body: 请求体
 request.tab.body_kind: 请求体 · %{kind}
 request.tab.headers: 请求头
 request.tab.headers_count: 请求头 %{count}
+request.tab.message: 消息
 request.tab.messages: "消息"
 request.tab.messages_count: "消息 %{count}"
 request.tab.params: 参数

@@ -1,0 +1,56 @@
+// A small service for Apix's gRPC tests and the example server.
+syntax = "proto3";
+
+package apix.test;
+
+import "google/protobuf/timestamp.proto";
+import "types.proto";
+
+service Greeter {
+  // Says hello; fails without a name.
+  rpc SayHello(HelloRequest) returns (HelloReply);
+  // Counts down from a number, one tick at a time.
+  rpc CountDown(CountRequest) returns (stream Tick);
+  // Adds the numbers it is sent.
+  rpc Sum(stream Number) returns (Total);
+  // Answers every message.
+  rpc Chat(stream ChatMessage) returns (stream ChatMessage);
+}
+
+message HelloRequest {
+  string name = 1;
+  Mood mood = 2;
+  repeated string tags = 3;
+  map<string, int32> counts = 4;
+  Inner inner = 5;
+}
+
+message Inner {
+  bool flag = 1;
+}
+
+message HelloReply {
+  string message = 1;
+  google.protobuf.Timestamp at = 2;
+}
+
+message CountRequest {
+  int32 from = 1;
+}
+
+message Tick {
+  int32 n = 1;
+}
+
+message Number {
+  int64 value = 1;
+}
+
+message Total {
+  int64 sum = 1;
+  int32 count = 2;
+}
+
+message ChatMessage {
+  string text = 1;
+}

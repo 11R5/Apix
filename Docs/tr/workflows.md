@@ -1,4 +1,4 @@
-<!-- translated from en/workflows.md sha256:0146f532c9aa7a1c -->
+<!-- translated from en/workflows.md sha256:159f7874d4ac16f8 -->
 
 # İş akışları
 
@@ -15,6 +15,7 @@ ve ölçülmesini ele alır.
 - [OAuth 2.0 ile oturum açma](#oauth-20-ile-oturum-açma)
 - [Bir AWS API'sini çağırma](#bir-aws-apisini-çağırma)
 - [Dosya yükleme, GraphQL gönderme](#dosya-yükleme-graphql-gönderme)
+- [Bir gRPC servisini çağırma](#bir-grpc-servisini-çağırma)
 - [Tarayıcıdaki bir isteği yeniden oluşturma](#tarayıcıdaki-bir-isteği-yeniden-oluşturma)
 - [Bir istek neden yavaş ya da başarısız?](#bir-istek-neden-yavaş-ya-da-başarısız)
 
@@ -281,6 +282,24 @@ gösterir. Şema adres başına saklanır; isteği bir dahaki açışınızda ha
 Bir pull request'te şema değişikliğini görmek için
 `apix schema api/graphql.apix > schema.graphql` çıktısını depoda tutun, farkı
 diff göstersin.
+
+## Bir gRPC servisini çağırma
+
+1. **İstek › Yeni istek**, sonra adresi `grpc://` (TLS arkasındaysa
+   `grpcs://`) ile yazın, örneğin `grpc://localhost:50051`.
+2. **Mesaj** sekmesinde **Metotları yükle**'ye basın. Sunucu reflection'ı
+   kapalıysa önce `.proto` dosyalarını ekleyin (**.proto ekle**); yolların her
+   makinede çalışması için onları koleksiyonun içinde tutun.
+3. Metodu seçin, **Örnek mesaj**'a basın, değerleri doldurun.
+4. Token'ı **Yetkilendirme**'de (Bearer) verin ya da **Başlıklar**'a metadata
+   ekleyin, sonra **Gönder**.
+
+Bir pipeline'da aynı dosya komut satırıyla çalışır:
+
+```sh
+apix send api/say-hello.apix --env staging   # durum OK değilse çıkış kodu 1
+apix schema api/say-hello.apix > greeter.txt   # servisin sundukları, incelemede diff için
+```
 
 ## Tarayıcıdaki bir isteği yeniden oluşturma
 

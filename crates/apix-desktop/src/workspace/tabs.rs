@@ -396,11 +396,16 @@ impl Workspace {
         }
         let p = crate::theme::current();
         let front_method = self.current_method(cx);
+        let front_grpc = self.grpc_mode(cx);
         let tabs = self.tabs.iter().enumerate().map(|(ix, tab)| {
             let front = tab.parked.is_none();
-            let (name, method) = match &tab.parked {
-                Some(parked) => (parked.draft.name.clone(), parked.draft.method),
-                None => (self.base.name.clone(), front_method),
+            let (name, method, grpc) = match &tab.parked {
+                Some(parked) => (
+                    parked.draft.name.clone(),
+                    parked.draft.method,
+                    parked.draft.is_grpc(),
+                ),
+                None => (self.base.name.clone(), front_method, front_grpc),
             };
             let name = if name.is_empty() {
                 tab.path
@@ -456,8 +461,12 @@ impl Workspace {
                     div()
                         .text_xs()
                         .font_weight(FontWeight::BOLD)
-                        .text_color(theme::method_color(method))
-                        .child(short(method)),
+                        .text_color(if grpc {
+                            theme::grpc_color()
+                        } else {
+                            theme::method_color(method)
+                        })
+                        .child(if grpc { "gRPC" } else { short(method) }),
                 )
                 .child(
                     div()

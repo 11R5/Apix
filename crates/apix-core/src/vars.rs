@@ -238,6 +238,7 @@ impl Request {
             asserts: self.asserts.clone(),
             // Filled in one by one when each is sent.
             messages: self.messages.clone(),
+            grpc: self.grpc.clone(),
         };
         Resolved { request, missing }
     }

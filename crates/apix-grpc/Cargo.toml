@@ -1,0 +1,35 @@
+[package]
+name = "apix-grpc"
+description = "gRPC calls for Apix: services described by .proto files or server reflection, messages as JSON"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+apix-core.workspace = true
+# OAuth 2.0 tokens for the call's metadata.
+apix-http.workspace = true
+base64 = "0.22"
+# The channel (HTTP/2 over the hyper and rustls reqwest already brings) and the client.
+tonic = { version = "0.14", default-features = false, features = ["transport", "tls-ring", "tls-webpki-roots", "codegen"] }
+# Only the generated reflection client; the server half stays off.
+tonic-reflection = { version = "0.14", default-features = false }
+prost = "0.14"
+prost-types = "0.14"
+# Messages known only at run time, to and from JSON.
+prost-reflect = { version = "0.16", features = ["serde"] }
+# Reads .proto files in Rust; no protoc needed.
+protox = "0.10"
+serde_json.workspace = true
+tokio = { workspace = true, features = ["time"] }
+tokio-stream = "0.1"
+thiserror.workspace = true
+
+[dev-dependencies]
+# A test server built from the same dynamic messages, with reflection.
+tonic = { version = "0.14", default-features = false, features = ["transport", "router", "server", "codegen"] }
+tonic-reflection = { version = "0.14", features = ["server"] }
+tokio = { workspace = true, features = ["net", "macros", "rt-multi-thread", "time", "sync"] }
+tokio-stream = { version = "0.1", features = ["net"] }
+serde_json.workspace = true

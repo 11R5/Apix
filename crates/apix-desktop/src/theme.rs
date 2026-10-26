@@ -781,6 +781,11 @@ pub fn collection_color(name: &str) -> Option<Hsla> {
     })
 }
 
+/// gRPC requests (indigo) in the sidebar and the URL bar.
+pub fn grpc_color() -> Hsla {
+    hex(if current().light { 0x4F46E5 } else { 0x818CF8 }, 1.0)
+}
+
 /// Method colours; deeper shades on light themes so they stay readable.
 pub fn method_color(method: Method) -> Hsla {
     let light = current().light;

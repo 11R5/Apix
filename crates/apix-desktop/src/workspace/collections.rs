@@ -1808,6 +1808,16 @@ impl Workspace {
         } else {
             request.method
         };
+        let grpc = if selected {
+            self.grpc_mode(cx)
+        } else {
+            request.is_grpc()
+        };
+        let (badge, badge_color): (SharedString, Hsla) = if grpc {
+            ("gRPC".into(), theme::grpc_color())
+        } else {
+            (method.as_str().into(), theme::method_color(method))
+        };
         let view = cx.entity().downgrade();
         let open_path = path.to_path_buf();
         let menu_path = path.to_path_buf();
@@ -1826,8 +1836,8 @@ impl Workspace {
                     .flex_none()
                     .text_xs()
                     .font_weight(FontWeight::BOLD)
-                    .text_color(theme::method_color(method))
-                    .child(method.as_str()),
+                    .text_color(badge_color)
+                    .child(badge),
             )
             .child(
                 div()

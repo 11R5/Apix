@@ -1,4 +1,4 @@
-<!-- translated from en/technical.md sha256:27767251ee75536e -->
+<!-- translated from en/technical.md sha256:7004ea95d725122f -->
 
 # Teknik notlar
 
@@ -16,6 +16,7 @@ crates/
 ├── apix-vault      şifreli koleksiyonlar
 ├── apix-script     istek öncesi ve test scriptleri (QuickJS)
 ├── apix-runner     koleksiyon koşuları, veri dosyaları, JUnit/JSON/HTML raporlar
+├── apix-grpc       gRPC çağrıları: .proto dosyaları ya da sunucu reflection'ı, JSON mesajlar
 ├── apix-cli        `apix` komutu
 └── apix-desktop    masaüstü uygulaması (GPUI); arayüz metinleri locales/ içinde
 tools/
@@ -68,6 +69,7 @@ Masaüstü uygulamasının tam bir release derlemesi birkaç dakika sürer.
 |---|---|
 | Arayüz | `gpui-kit` 0.7 (GPUI ve bileşen kütüphanesi), JSON ve GraphQL için tree-sitter gramerleri |
 | HTTP | rustls ile `reqwest` 0.12, `tokio`, `hyper-util`, zamanlama için `tower` katmanları |
+| gRPC | `tonic` 0.14 (istemci, aynı hyper ve rustls üzerinde), `prost-reflect` (çalışma anında bilinen mesajlar, JSON), `protox` (.proto dosyalarını `protoc` olmadan okur), `tonic-reflection` (reflection istemcisi) |
 | Ağ ayrıntıları | `x509-parser` (sertifikalar), `netdev` (ağ arayüzleri, ağ geçidi, DNS sunucuları) |
 | İmzalama | `sha2`, `sha1`, `hmac`, `md-5`, `base64`, `rand_core` (AWS SigV4, OAuth 1.0, Digest, PKCE) |
 | Şifreleme | `chacha20poly1305` (XChaCha20-Poly1305), `argon2`, `zeroize`, `keyring` (işletim sistemi kimlik bilgisi deposu) |
@@ -131,6 +133,7 @@ cargo run -p apix-http --example oauth_server                       # :8766 üze
 cargo run -p apix-http --example sse_server                         # :8767 üzerinde sunucu olayları (SSE)
 cargo run -p apix-http --example ws_server                          # :8768 üzerinde WebSocket yankı ve ticker
 cargo run -p apix-http --example graphql_server                     # :8769 üzerinde bir GraphQL uç noktası (şema ve birkaç kullanıcı)
+cargo run -p apix-grpc --example grpc_server                        # :8770 üzerinde reflection'lı bir gRPC Greeter
 ```
 
 ## Arayüz dilleri
@@ -185,6 +188,7 @@ alır; yeni bir commit yeniden derler, değişmeyen kaynak öncekini kullanır.
 |---|---|
 | apix-core | model ve dosya formatı için gidiş-dönüş (round trip) testleri, değişkenler, anahtarlıktaki ortam gizli değerleri (kimlik bilgisi deposu yoksa atlanır), AWS test paketine, RFC 7616'ya (Digest), RFC 7636'ya (PKCE) ve OAuth 1.0 örneğine karşı imzalama; GraphQL şemaları (introspection okuma, SDL) ve bir sorgunun her yerinde neyin önerilip açıklandığı (alanlar, takma adlar, argümanlar, enum değerleri, girdi nesneleri, listeler, fragment'ler, değişken türleri, yorumlar ve metinler) |
 | apix-http | istek oluşturma, her gövde türü, OAuth 2.0, Digest, AWS ve OAuth 1.0 için yerel bir sunucu, ağ izi; SSE ayrıştırıcı (parçaların her yerden bölünmesi dahil), yavaş gönderen bir sunucuya karşı akış, WebSocket (yankı, el sıkışmada auth ve parametreler, iki taraftan kapanış, reddedilen el sıkışma), isteğin yetkilendirmesiyle GraphQL şeması çekme ve şema yokken verilen hatalar |
+| apix-grpc | adresler, durum kodları, metadata olarak başlıklar ve yetkilendirme; yerel bir Greeter'a karşı (dinamik mesajlarla kurulmuş, reflection'lı ve reflection'sız): servisi listeleme ve tanımlama, dört metot türünün hepsi, yetkilendirmenin sunucuya ulaşması, başarısız bir durum, import'lu .proto dosyaları ve tanım yokken, bilinmeyen metotta, türüne uymayan mesajda, tekli metoda liste verilince, eksik dosyada ve sunucu yokken verilen hatalar; örnek mesajlar |
 | apix-codegen | bash, cmd ve PowerShell için kabuk tırnaklama; curl yapıştırma; gidiş-dönüş testleri; her dilde URL, başlıklar, gövdeler, dize kaçışları ve ayarlar |
 | apix-import | Postman v2.0/v2.1 fixture'ları |
 | apix-script | istek öncesi scriptlerden değişken ve istek değişiklikleri, `pm.test` / `pm.expect` sonuçları ve mesajları, eski `tests[...]` API'si, dosyayı adlandıran hatalar, sonsuz scriptlerin durdurulması, `setNextRequest`, `atob`/`btoa`, `pm.sendRequest` (geri çağırma ve `await`, bekleme sayılmaz), bilinen özet değerlerine karşı hazır kütüphaneler, kodsuz doğrulamalar, yanıt hedefleri için değer ve ifade üretimi |

@@ -366,7 +366,7 @@ fn closed_note(code: Option<u16>, reason: &str) -> SharedString {
 }
 
 /// Whether the log shows its end (so new entries should keep it there).
-fn at_bottom(scroll: &ScrollHandle) -> bool {
+pub(super) fn at_bottom(scroll: &ScrollHandle) -> bool {
     let max = scroll.max_offset().y;
     max <= px(1.) || -scroll.offset().y >= max - px(24.)
 }

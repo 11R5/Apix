@@ -245,6 +245,31 @@ extract.path: "Değer (Doğrulamalar'daki gibi: body.data.token, header.X-Token,
 extract.saved_collection: "%{name} = %{value}, koleksiyon değişkenlerine kaydedildi."
 extract.saved_env: "%{name} = %{value}, “%{env}” ortamına kaydedildi."
 extract.title: Bir değeri değişken olarak kaydet
+grpc.add_protos: .proto ekle
+grpc.calling: Çağrılıyor…
+grpc.choose_protos: .proto dosyalarını seçin
+grpc.example: Örnek mesaj
+grpc.headers: Yanıt metadata'sı
+grpc.hint_protos: Metotları .proto dosyalarından yükleyin.
+grpc.hint_reflection: Metotları sunucudan yükleyin (reflection) ya da servisin .proto dosyalarını ekleyin.
+grpc.kind_bidi: çift yönlü
+grpc.kind_client: istemci akışı
+grpc.kind_server: sunucu akışı
+grpc.kind_unary: tekli
+grpc.load_methods: Metotları yükle
+grpc.loaded_protos: "%{count} metot, .proto dosyalarından"
+grpc.loaded_reflection: "%{count} metot, sunucudan (reflection)"
+grpc.loading: Metotlar yükleniyor…
+grpc.message: Mesaj (JSON)
+grpc.method: Metot
+grpc.pick_method: Bir metot seçin
+grpc.protos: Proto dosyaları
+grpc.protos_none: yok, sunucuya sorulur
+grpc.reload_methods: Metotları yenile
+grpc.search_methods: Metot ara
+grpc.stopped: Durduruldu
+grpc.stream_hint: bir JSON listesi birden çok mesaj gönderir
+grpc.trailers: Trailer'lar
 history.ago_days: "%{count} gün önce"
 history.ago_hours: "%{count} sa önce"
 history.ago_minutes: "%{count} dk önce"
@@ -416,6 +441,7 @@ request.tab.body: Gövde
 request.tab.body_kind: Gövde · %{kind}
 request.tab.headers: Başlıklar
 request.tab.headers_count: Başlıklar %{count}
+request.tab.message: Mesaj
 request.tab.messages: "Mesajlar"
 request.tab.messages_count: "Mesajlar %{count}"
 request.tab.params: Parametreler

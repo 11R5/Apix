@@ -550,6 +550,25 @@ pub struct Request {
     /// when asked; stored as `[[message]]`.
     #[serde(default, rename = "message", skip_serializing_if = "Vec::is_empty")]
     pub messages: Vec<WsMessage>,
+    /// What to call when the URL is `grpc://` or `grpcs://`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub grpc: Option<GrpcCall>,
+}
+
+/// What a gRPC request calls, stored as `[grpc]`. The body (JSON) is the
+/// request message; a JSON array is a stream of messages.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct GrpcCall {
+    /// `package.Service/Method`.
+    #[serde(default)]
+    pub method: String,
+    /// `.proto` files that describe the service, relative to the request
+    /// file. Without them the server is asked (reflection).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub protos: Vec<String>,
+    /// Folders their `import`s are looked up in, relative to the request file.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub import_paths: Vec<String>,
 }
 
 /// A message saved with a WebSocket request. `{{variables}}` in the body
@@ -698,7 +717,22 @@ impl Request {
     pub fn with_files_relative_to(mut self, dir: &std::path::Path) -> Self {
         self.body = self.body.with_files_relative_to(dir);
         self.settings = self.settings.with_files_relative_to(dir);
+        if let Some(grpc) = &mut self.grpc {
+            let absolute = |p: &mut String| {
+                if !p.is_empty() && std::path::Path::new(p.as_str()).is_relative() {
+                    *p = dir.join(p.as_str()).to_string_lossy().into_owned();
+                }
+            };
+            grpc.protos.iter_mut().for_each(absolute);
+            grpc.import_paths.iter_mut().for_each(absolute);
+        }
         self
+    }
+
+    /// A `grpc://` or `grpcs://` request.
+    pub fn is_grpc(&self) -> bool {
+        let url = self.url.trim_start().to_ascii_lowercase();
+        url.starts_with("grpc://") || url.starts_with("grpcs://")
     }
 
     pub fn has_header(&self, name: &str) -> bool {
@@ -786,6 +820,42 @@ proxy = ""
         let text = toml::to_string_pretty(&req).unwrap();
         let back: Request = toml::from_str(&text).unwrap();
         assert_eq!(req, back);
+    }
+
+    #[test]
+    fn grpc_calls_round_trip() {
+        let text = r#"
+name = "Say hello"
+url = "grpcs://api.example.com"
+
+[body]
+json = '{"name": "Ada"}'
+
+[grpc]
+method = "helloworld.Greeter/SayHello"
+protos = ["../protos/hello.proto", "/abs/other.proto"]
+import_paths = ["../protos"]
+"#;
+        let req: Request = toml::from_str(text).unwrap();
+        assert!(req.is_grpc());
+        let call = req.grpc.clone().unwrap();
+        assert_eq!(call.method, "helloworld.Greeter/SayHello");
+        let back: Request = toml::from_str(&toml::to_string_pretty(&req).unwrap()).unwrap();
+        assert_eq!(req, back);
+        // Paths are relative to the request file; absolute ones stay.
+        let dir = std::path::Path::new("/collection/api");
+        let moved = req.with_files_relative_to(dir).grpc.unwrap();
+        assert_eq!(
+            moved.protos[0],
+            dir.join("../protos/hello.proto").to_string_lossy()
+        );
+        assert_eq!(moved.protos[1], "/abs/other.proto");
+        assert_eq!(
+            moved.import_paths[0],
+            dir.join("../protos").to_string_lossy()
+        );
+        assert!(!Request::new(Method::Get, "https://x").is_grpc());
+        assert!(Request::new(Method::Get, "GRPC://x:1").is_grpc());
     }
 
     #[test]

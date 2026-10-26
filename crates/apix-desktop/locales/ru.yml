@@ -245,6 +245,31 @@ extract.path: "Значение (как в проверках: body.data.token, 
 extract.saved_collection: "%{name} = %{value} сохранено в переменных коллекции."
 extract.saved_env: "%{name} = %{value} сохранено в «%{env}»."
 extract.title: Сохранить значение как переменную
+grpc.add_protos: Добавить .proto
+grpc.calling: Вызов…
+grpc.choose_protos: Выберите файлы .proto
+grpc.example: Пример сообщения
+grpc.headers: Метаданные ответа
+grpc.hint_protos: Загрузите методы из файлов .proto.
+grpc.hint_reflection: Загрузите методы с сервера (reflection) или добавьте .proto-файлы сервиса.
+grpc.kind_bidi: двунаправленный
+grpc.kind_client: поток клиента
+grpc.kind_server: поток сервера
+grpc.kind_unary: унарный
+grpc.load_methods: Загрузить методы
+grpc.loaded_protos: "%{count} методов, из файлов .proto"
+grpc.loaded_reflection: "%{count} методов, с сервера (reflection)"
+grpc.loading: Загрузка методов…
+grpc.message: Сообщение (JSON)
+grpc.method: Метод
+grpc.pick_method: Выберите метод
+grpc.protos: Файлы .proto
+grpc.protos_none: нет, спрашиваем сервер
+grpc.reload_methods: Обновить методы
+grpc.search_methods: Поиск методов
+grpc.stopped: Остановлено
+grpc.stream_hint: JSON-список отправляет несколько сообщений
+grpc.trailers: Трейлеры
 history.ago_days: "%{count} дн. назад"
 history.ago_hours: "%{count} ч назад"
 history.ago_minutes: "%{count} мин назад"
@@ -416,6 +441,7 @@ request.tab.body: Тело
 request.tab.body_kind: Тело · %{kind}
 request.tab.headers: Заголовки
 request.tab.headers_count: Заголовки %{count}
+request.tab.message: Сообщение
 request.tab.messages: "Сообщения"
 request.tab.messages_count: "Сообщения %{count}"
 request.tab.params: Параметры

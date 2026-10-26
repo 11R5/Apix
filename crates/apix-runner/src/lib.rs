@@ -179,6 +179,14 @@ pub async fn exchange(
         });
         return Ok(done);
     }
+    if resolved.request.is_grpc() {
+        done.pre.skip_request = true;
+        done.pre.logs.push(LogLine {
+            level: "info".into(),
+            text: "gRPC request: not part of runs yet (use apix send)".into(),
+        });
+        return Ok(done);
+    }
     done.sent = Some(resolved.request.clone());
     // Body files are relative to the request file.
     let sent = match path.parent() {
