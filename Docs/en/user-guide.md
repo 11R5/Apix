@@ -101,6 +101,33 @@ The Body tab offers:
 File paths inside the collection are saved relative to the request file, so the
 collection keeps working on another machine.
 
+### GraphQL schema and completion
+
+**Fetch schema** above the query asks the server for its schema (the
+standard introspection query), with the request's URL, headers, auth and
+environment, so a schema behind a token works. Then:
+
+- Typing in the query suggests what fits where the cursor is: the fields of
+  the type being selected (with their types), a field's arguments after `(`,
+  enum values and `true`/`false` after `:`, the fields of an input object,
+  `... on Type` fragments for unions and interfaces, and type names after
+  `on` or in `$variable: Type`. Deprecated fields come last. Ctrl+Space
+  opens the suggestions without typing.
+- Hovering over a field, argument or enum value shows its type and
+  description.
+- **Show schema** puts the whole schema beside the query, as SDL.
+
+![Completion from the schema](images/graphql.png)
+
+Apix keeps the schema of each endpoint (under the config folder, in
+`graphql/`) and loads it again when you open a request to that URL, so
+**Refresh schema** is only needed when the API changes. A server with
+introspection turned off answers with an error, which is shown in place of
+the schema status.
+
+From the command line, `apix schema request.apix` prints the schema as SDL
+(`--json` prints the server's answer as it came).
+
 ## Auth
 
 The Auth tab sets how the request proves who it is:
@@ -615,5 +642,6 @@ configuration directory (`%APPDATA%\Apix` on Windows,
 | Alt+1…7 | Switch the method |
 | Ctrl+W | Close the tab |
 | Ctrl+Tab / Ctrl+Shift+Tab | Next / previous tab |
+| Ctrl+Space | Suggestions in the GraphQL query (after fetching the schema) |
 
-On macOS, use ⌘ instead of Ctrl (Ctrl+Tab stays Ctrl).
+On macOS, use ⌘ instead of Ctrl (Ctrl+Tab and Ctrl+Space stay Ctrl).

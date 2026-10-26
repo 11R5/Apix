@@ -114,7 +114,16 @@ body.choose_files: اختيار ملفات
 body.file_not_found: الملف غير موجود
 body.file_path: مسار الملف
 body.form_hint: يُرسل بصيغة application/x-www-form-urlencoded، مثل نموذج HTML.
+body.graphql_fetch_schema: جلب المخطط
+body.graphql_fetching: جارٍ جلب المخطط…
+body.graphql_hide_schema: إخفاء المخطط
+body.graphql_no_schema: اجلب المخطط للإكمال التلقائي ووصف الحقول
 body.graphql_query: الاستعلام
+body.graphql_refresh_schema: تحديث المخطط
+body.graphql_schema: المخطط
+body.graphql_schema_failed: "لا يوجد مخطط: %{reason}"
+body.graphql_schema_ready: "المخطط: %{count} نوعًا · %{when}"
+body.graphql_show_schema: إظهار المخطط
 body.graphql_variables: المتغيرات (JSON)
 body.invalid_json: ليس JSON صالحًا
 body.kind.binary: ثنائي

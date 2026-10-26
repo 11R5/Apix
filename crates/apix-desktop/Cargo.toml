@@ -19,6 +19,8 @@ apix-runner.workspace = true
 apix-script.workspace = true
 # The OS config folder for recent collections and chosen environments.
 dirs = "6"
+# Completion and hover items for the GraphQL query editor; the version gpui-kit uses.
+lsp-types = "0.97.0"
 # `tree-sitter` turns on syntax highlighting in the code editor (JSON is included).
 # HTML colours both HTML and XML bodies and responses.
 gpui-kit = { workspace = true, features = ["tree-sitter", "tree-sitter-html", "tree-sitter-javascript"] }

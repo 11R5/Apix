@@ -116,7 +116,16 @@ body.choose_files: Choose files
 body.file_not_found: File not found
 body.file_path: File path
 body.form_hint: Sent as application/x-www-form-urlencoded, like an HTML form.
+body.graphql_fetch_schema: Fetch schema
+body.graphql_fetching: Fetching schema…
+body.graphql_hide_schema: Hide schema
+body.graphql_no_schema: Fetch the schema for completion and field docs
 body.graphql_query: Query
+body.graphql_refresh_schema: Refresh schema
+body.graphql_schema: Schema
+body.graphql_schema_failed: "No schema: %{reason}"
+body.graphql_schema_ready: "Schema: %{count} types · %{when}"
+body.graphql_show_schema: Show schema
 body.graphql_variables: Variables (JSON)
 body.invalid_json: not valid JSON
 body.kind.binary: Binary

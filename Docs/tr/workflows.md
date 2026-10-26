@@ -1,4 +1,4 @@
-<!-- translated from en/workflows.md sha256:8fbd35d5567a127f -->
+<!-- translated from en/workflows.md sha256:0146f532c9aa7a1c -->
 
 # İş akışları
 
@@ -274,7 +274,13 @@ her makinede çalışır.
 
 **GraphQL:** Gövde › **GraphQL**, sorguyu yazın, değişkenleri altına JSON olarak
 girin. Apix `{"query": …, "variables": …}` içeriğini
-`Content-Type: application/json` ile gönderir.
+`Content-Type: application/json` ile gönderir. Önce yetkilendirmeyi ayarlayın,
+sonra **Şemayı getir**'e basın: sorgu düzenleyicisi bundan sonra alanları,
+argümanları ve enum değerlerini önerir, üzerine gelince açıklamalarını
+gösterir. Şema adres başına saklanır; isteği bir dahaki açışınızda hazırdır.
+Bir pull request'te şema değişikliğini görmek için
+`apix schema api/graphql.apix > schema.graphql` çıktısını depoda tutun, farkı
+diff göstersin.
 
 ## Tarayıcıdaki bir isteği yeniden oluşturma
 

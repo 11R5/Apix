@@ -114,7 +114,16 @@ body.choose_files: Dosyaları seç
 body.file_not_found: Dosya bulunamadı
 body.file_path: Dosya yolu
 body.form_hint: Bir HTML formu gibi application/x-www-form-urlencoded olarak gönderilir.
+body.graphql_fetch_schema: Şemayı getir
+body.graphql_fetching: Şema getiriliyor…
+body.graphql_hide_schema: Şemayı gizle
+body.graphql_no_schema: Otomatik tamamlama ve alan açıklamaları için şemayı getirin
 body.graphql_query: Sorgu
+body.graphql_refresh_schema: Şemayı yenile
+body.graphql_schema: Şema
+body.graphql_schema_failed: "Şema alınamadı: %{reason}"
+body.graphql_schema_ready: "Şema: %{count} tür · %{when}"
+body.graphql_show_schema: Şemayı göster
 body.graphql_variables: Değişkenler (JSON)
 body.invalid_json: geçerli JSON değil
 body.kind.binary: İkili

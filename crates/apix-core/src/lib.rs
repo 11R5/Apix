@@ -3,6 +3,7 @@
 //! frontend (desktop, CLI, future TUI) shares exactly the same behaviour.
 
 pub mod dynamic;
+pub mod graphql;
 pub mod history;
 pub mod model;
 pub mod project;

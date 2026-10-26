@@ -114,7 +114,16 @@ body.choose_files: Выбрать файлы
 body.file_not_found: Файл не найден
 body.file_path: Путь к файлу
 body.form_hint: Отправляется как application/x-www-form-urlencoded, как HTML-форма.
+body.graphql_fetch_schema: Получить схему
+body.graphql_fetching: Получение схемы…
+body.graphql_hide_schema: Скрыть схему
+body.graphql_no_schema: Получите схему для автодополнения и описаний полей
 body.graphql_query: Query
+body.graphql_refresh_schema: Обновить схему
+body.graphql_schema: Схема
+body.graphql_schema_failed: "Нет схемы: %{reason}"
+body.graphql_schema_ready: "Схема: %{count} типов · %{when}"
+body.graphql_show_schema: Показать схему
 body.graphql_variables: Переменные (JSON)
 body.invalid_json: некорректный JSON
 body.kind.binary: Двоичные данные

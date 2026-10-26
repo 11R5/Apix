@@ -263,6 +263,12 @@ path is saved relative to the request, so it works on every machine.
 
 **GraphQL:** Body › **GraphQL**, write the query, put variables as JSON below.
 Apix sends `{"query": …, "variables": …}` with `Content-Type: application/json`.
+Set the auth first, then press **Fetch schema**: the query editor suggests
+fields, arguments and enum values from then on, and hovering shows their
+docs. The schema is kept per URL, so the next time you open the request it is
+already there. To check a schema change in a pull request, save
+`apix schema api/graphql.apix > schema.graphql` in the repository and let
+the diff show what changed.
 
 ## Reproduce a request from the browser
 

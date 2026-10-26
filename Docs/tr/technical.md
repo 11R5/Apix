@@ -1,4 +1,4 @@
-<!-- translated from en/technical.md sha256:2c44ed8deb6d7959 -->
+<!-- translated from en/technical.md sha256:27767251ee75536e -->
 
 # Teknik notlar
 
@@ -9,8 +9,8 @@ Apix'in nasıl derlendiği, nelere bağımlı olduğu ve nasıl ölçüleceği.
 
 ```
 crates/
-├── apix-core       istek modeli, değişkenler, disk formatı, projeler, imzalama (sign.rs)
-├── apix-http       HTTP motoru (reqwest), ağ izi, OAuth 2.0 token'ları, SSE, WebSocket
+├── apix-core       istek modeli, değişkenler, disk formatı, projeler, imzalama (sign.rs), GraphQL şemaları
+├── apix-http       HTTP motoru (reqwest), ağ izi, OAuth 2.0 token'ları, SSE, WebSocket, GraphQL şeması çekme
 ├── apix-import     Postman koleksiyonu ve ortamı içe aktarma
 ├── apix-codegen    "Komut veya kod olarak kopyala" (curl, curl.exe, PowerShell, 10 dilde kod) ve curl yapıştırma
 ├── apix-vault      şifreli koleksiyonlar
@@ -82,6 +82,7 @@ Masaüstü uygulamasının tam bir release derlemesi birkaç dakika sürer.
 | `<config>/Apix/settings.toml` | dil, görünüm, koyu ve açık tema, vurgu rengi, saydamlık, otomatik kilit süresi, geçmişin açık ya da kapalı olması, ortam gizli değerlerinin nereye yazılacağı |
 | `<config>/Apix/state.toml` | son açılan koleksiyonlar, koleksiyon ya da proje başına seçilen ortam ve açık sekmeler (şifreli koleksiyonlar hariç) |
 | `<config>/Apix/cookies.json` | çerez kavanozu (oturum çerezleri kalıcı değildir) |
+| `<config>/Apix/graphql/*.json` | her uç noktadan en son çekilen GraphQL şeması (sunucunun introspection cevabı), adresin özetiyle adlandırılır |
 | `<config>/Apix/themes/*.toml` | kendi temaların (yalnızca Ayarlar'da **Klasörü aç**'a basıldığında ve klasör boşsa yazılır: bir örnek) |
 | İşletim sistemi kimlik bilgisi deposu, `Apix` servisi | yalnızca istenirse: şifreli koleksiyonların hatırlanan parolaları (`vault:<klasör>`) ve ortam gizli değerleri (`env:<kimlik>`, uzun değerler için ayrıca `env:<kimlik>#1`, …) |
 | `<config>/Apix/history/` | gönderilen istekler (`{{değişkenler}}` çözülmeden) ve yanıtları: `index.jsonl`, her kayıt için bir `<id>.json` ve `<id>.body`; son 300 kayıt, gövdeler 256 KB'ta kesilir |
@@ -129,6 +130,7 @@ cargo run -p apix-http --release --example big_json_server -- 100   # :8765 üze
 cargo run -p apix-http --example oauth_server                       # :8766 üzerinde OAuth 2.0 test sunucusu
 cargo run -p apix-http --example sse_server                         # :8767 üzerinde sunucu olayları (SSE)
 cargo run -p apix-http --example ws_server                          # :8768 üzerinde WebSocket yankı ve ticker
+cargo run -p apix-http --example graphql_server                     # :8769 üzerinde bir GraphQL uç noktası (şema ve birkaç kullanıcı)
 ```
 
 ## Arayüz dilleri
@@ -181,12 +183,12 @@ alır; yeni bir commit yeniden derler, değişmeyen kaynak öncekini kullanır.
 
 | Crate | Kapsananlar |
 |---|---|
-| apix-core | model ve dosya formatı için gidiş-dönüş (round trip) testleri, değişkenler, anahtarlıktaki ortam gizli değerleri (kimlik bilgisi deposu yoksa atlanır), AWS test paketine, RFC 7616'ya (Digest), RFC 7636'ya (PKCE) ve OAuth 1.0 örneğine karşı imzalama |
-| apix-http | istek oluşturma, her gövde türü, OAuth 2.0, Digest, AWS ve OAuth 1.0 için yerel bir sunucu, ağ izi; SSE ayrıştırıcı (parçaların her yerden bölünmesi dahil), yavaş gönderen bir sunucuya karşı akış, WebSocket (yankı, el sıkışmada auth ve parametreler, iki taraftan kapanış, reddedilen el sıkışma) |
+| apix-core | model ve dosya formatı için gidiş-dönüş (round trip) testleri, değişkenler, anahtarlıktaki ortam gizli değerleri (kimlik bilgisi deposu yoksa atlanır), AWS test paketine, RFC 7616'ya (Digest), RFC 7636'ya (PKCE) ve OAuth 1.0 örneğine karşı imzalama; GraphQL şemaları (introspection okuma, SDL) ve bir sorgunun her yerinde neyin önerilip açıklandığı (alanlar, takma adlar, argümanlar, enum değerleri, girdi nesneleri, listeler, fragment'ler, değişken türleri, yorumlar ve metinler) |
+| apix-http | istek oluşturma, her gövde türü, OAuth 2.0, Digest, AWS ve OAuth 1.0 için yerel bir sunucu, ağ izi; SSE ayrıştırıcı (parçaların her yerden bölünmesi dahil), yavaş gönderen bir sunucuya karşı akış, WebSocket (yankı, el sıkışmada auth ve parametreler, iki taraftan kapanış, reddedilen el sıkışma), isteğin yetkilendirmesiyle GraphQL şeması çekme ve şema yokken verilen hatalar |
 | apix-codegen | bash, cmd ve PowerShell için kabuk tırnaklama; curl yapıştırma; gidiş-dönüş testleri; her dilde URL, başlıklar, gövdeler, dize kaçışları ve ayarlar |
 | apix-import | Postman v2.0/v2.1 fixture'ları |
 | apix-script | istek öncesi scriptlerden değişken ve istek değişiklikleri, `pm.test` / `pm.expect` sonuçları ve mesajları, eski `tests[...]` API'si, dosyayı adlandıran hatalar, sonsuz scriptlerin durdurulması, `setNextRequest`, `atob`/`btoa`, `pm.sendRequest` (geri çağırma ve `await`, bekleme sayılmaz), bilinen özet değerlerine karşı hazır kütüphaneler, kodsuz doğrulamalar, yanıt hedefleri için değer ve ifade üretimi |
 | apix-runner | CSV (tırnaklar, satır sonları, `;`, BOM) ve JSON veri dosyaları, dotenv dosyaları ve `APIX_VAR_*` adları, tekrar sayıları ve veri satırları, duraklatma/durdurma zamanlaması, JUnit/JSON/HTML çıktısı ve kaçışlar, tarihler; yerel bir sunucuya karşı bütün koşular (veri satırları, kenar çubuğu sırası, `bail`, `setNextRequest`) |
 | apix-vault | şifreleme formatı, kurcalama (tampering), parola değişikliği, kurtarma anahtarı, anahtarlık kayıtları (gerçek kimlik bilgisi deposunda, test servis adıyla; depo yoksa atlanır) |
-| apix-desktop | çevirilerin eksiksizliği, dil yardımcıları, dosya yolları, vurgulama sorgusu, tema dosyaları (okuma, hatalar, gidiş-dönüş), vurgu ve saydamlık renkleri |
+| apix-desktop | çevirilerin eksiksizliği, dil yardımcıları, dosya yolları, vurgulama sorgusu, tema dosyaları (okuma, hatalar, gidiş-dönüş), vurgu ve saydamlık renkleri, GraphQL şema dosyası adları |
 | docs-check | belge yapısı ve damgalar |

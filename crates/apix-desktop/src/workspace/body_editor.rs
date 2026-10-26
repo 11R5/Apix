@@ -1,16 +1,19 @@
 //! The Body tab: the body type picker and an editor for each type.
 
 use std::path::{Component, Path, PathBuf};
+use std::rc::Rc;
 
 use apix_core::{Body, FormPart, GraphQl, KeyValue};
 use gpui_kit::component::button::{Button, ButtonVariants as _};
 use gpui_kit::component::checkbox::Checkbox;
 use gpui_kit::component::input::{Editor, EditorState, Input, InputEvent, InputState};
+use gpui_kit::component::spinner::Spinner;
 use gpui_kit::component::tab::{Tab, TabBar};
 use gpui_kit::component::{IconName, Sizable, h_flex, v_flex};
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
+use super::graphql_ui::{GraphQlLsp, SharedSchema};
 use super::var_chips::chipped_input;
 use super::{KvRow, Workspace};
 use crate::bidi::{self, Bidi as _};
@@ -98,6 +101,21 @@ pub fn register_graphql() {
 /// Ctrl+Enter in one of the body editors, which keep the key for themselves.
 pub(super) struct SendRequested;
 
+/// The "Fetch schema" button: the workspace builds the request and asks.
+pub(super) struct FetchSchema;
+
+/// Where the GraphQL schema of the open request stands.
+#[derive(Debug, Clone, PartialEq)]
+pub(super) enum SchemaState {
+    None,
+    Fetching,
+    /// Fetched (or kept from before) at this time, in ms since 1970.
+    Ready {
+        at: u64,
+    },
+    Failed(SharedString),
+}
+
 /// One multipart field. Text and file keep their own input, so switching
 /// between them loses nothing.
 struct PartRow {
@@ -159,10 +177,19 @@ pub(super) struct BodyEditor {
     binary: Entity<InputState>,
     query: Entity<EditorState>,
     variables: Entity<EditorState>,
+    /// The schema the query editor completes from.
+    schema: SharedSchema,
+    schema_state: SchemaState,
+    /// The schema as SDL, beside the query when shown.
+    sdl: Entity<EditorState>,
+    show_schema: bool,
+    /// The SDL editor still shows an older schema (it is filled while drawing).
+    sdl_stale: bool,
     _subscriptions: Vec<Subscription>,
 }
 
 impl EventEmitter<SendRequested> for BodyEditor {}
+impl EventEmitter<FetchSchema> for BodyEditor {}
 
 impl BodyEditor {
     pub(super) fn new(
@@ -171,7 +198,20 @@ impl BodyEditor {
         cx: &mut Context<Self>,
     ) -> Self {
         let text = cx.new(|cx| EditorState::new(window, cx).language("json"));
-        let query = cx.new(|cx| EditorState::new(window, cx).language("graphql"));
+        let schema = SharedSchema::default();
+        let query = cx.new(|cx| {
+            let mut state = EditorState::new(window, cx).language("graphql");
+            let lsp = Rc::new(GraphQlLsp(schema.clone()));
+            state.lsp_mut().completion_provider = Some(lsp.clone());
+            state.lsp_mut().hover_provider = Some(lsp);
+            state
+        });
+        let sdl = cx.new(|cx| {
+            let mut state = EditorState::new(window, cx).language("graphql");
+            state.set_readonly(true, cx);
+            state.set_soft_wrap(false, window, cx);
+            state
+        });
         let variables = cx.new(|cx| EditorState::new(window, cx).language("json"));
         let binary =
             cx.new(|cx| InputState::new(window, cx).placeholder(tr!("body.binary_placeholder")));
@@ -203,6 +243,11 @@ impl BodyEditor {
             binary,
             query,
             variables,
+            schema,
+            schema_state: SchemaState::None,
+            sdl,
+            show_schema: false,
+            sdl_stale: false,
             _subscriptions: subscriptions,
         }
     }
@@ -229,6 +274,28 @@ impl BodyEditor {
 
     pub(super) fn kind(&self) -> BodyKind {
         self.kind
+    }
+
+    /// Puts in the schema the query editor completes from (or none).
+    pub(super) fn set_schema(
+        &mut self,
+        schema: Option<apix_core::graphql::Schema>,
+        state: SchemaState,
+        cx: &mut Context<Self>,
+    ) {
+        let none = schema.is_none();
+        *self.schema.borrow_mut() = schema.map(Rc::new);
+        if none {
+            self.show_schema = false;
+        }
+        self.sdl_stale = true;
+        self.set_schema_state(state, cx);
+    }
+
+    /// A failed fetch keeps the schema there was.
+    pub(super) fn set_schema_state(&mut self, state: SchemaState, cx: &mut Context<Self>) {
+        self.schema_state = state;
+        cx.notify();
     }
 
     /// Shows `body`; the editors of other types are cleared.
@@ -578,10 +645,50 @@ impl BodyEditor {
                 .text_color(p.text_muted)
                 .child(text)
         };
-        v_flex()
-            .size_full()
-            .gap_1()
+        let has_schema = self.schema.borrow().is_some();
+        let header = h_flex()
+            .dir_row()
+            .w_full()
+            .min_w_0()
+            .gap_2()
             .child(label(tr!("body.graphql_query")))
+            .child(div().flex_1().min_w_0().child(self.schema_status()))
+            .when(has_schema, |d| {
+                d.child(
+                    Button::new("graphql-show-schema")
+                        .ghost()
+                        .xsmall()
+                        .label(if self.show_schema {
+                            tr!("body.graphql_hide_schema")
+                        } else {
+                            tr!("body.graphql_show_schema")
+                        })
+                        .on_click(cx.listener(|this, _: &ClickEvent, _, cx| {
+                            this.show_schema = !this.show_schema;
+                            cx.notify();
+                        })),
+                )
+            })
+            .child(
+                Button::new("graphql-fetch-schema")
+                    .ghost()
+                    .xsmall()
+                    .label(if has_schema {
+                        tr!("body.graphql_refresh_schema")
+                    } else {
+                        tr!("body.graphql_fetch_schema")
+                    })
+                    .on_click(cx.listener(|this, _: &ClickEvent, _, cx| {
+                        if this.schema_state != SchemaState::Fetching {
+                            cx.emit(FetchSchema);
+                        }
+                    })),
+            );
+        let editors = v_flex()
+            .size_full()
+            .min_w_0()
+            .gap_1()
+            .child(header)
             .child(
                 div()
                     .flex_grow(1.)
@@ -610,13 +717,87 @@ impl BodyEditor {
                     .flex_basis(relative(0.35))
                     .min_h_0()
                     .child(Editor::new(&self.variables).h_full()),
+            );
+        if !self.show_schema {
+            return editors.into_any_element();
+        }
+        h_flex()
+            .dir_row()
+            .size_full()
+            .gap_3()
+            .child(div().flex_1().min_w_0().h_full().child(editors))
+            .child(
+                v_flex()
+                    .w(relative(0.42))
+                    .h_full()
+                    .gap_1()
+                    .child(label(tr!("body.graphql_schema")))
+                    .child(
+                        div()
+                            .flex_1()
+                            .min_h_0()
+                            .child(Editor::new(&self.sdl).h_full()),
+                    ),
             )
             .into_any_element()
+    }
+
+    /// "12 types · 5 min ago", "Fetching schema…" or why it failed.
+    fn schema_status(&self) -> AnyElement {
+        let p = crate::theme::current();
+        let text = |text: SharedString, color: Hsla| {
+            div()
+                .text_xs()
+                .text_color(color)
+                .truncate()
+                .child(text)
+                .into_any_element()
+        };
+        match &self.schema_state {
+            SchemaState::None => text(tr!("body.graphql_no_schema"), p.text_muted),
+            SchemaState::Fetching => h_flex()
+                .dir_row()
+                .gap_1()
+                .child(Spinner::new().xsmall().color(p.accent))
+                .child(text(tr!("body.graphql_fetching"), p.text_muted))
+                .into_any_element(),
+            SchemaState::Ready { at } => {
+                let types = self
+                    .schema
+                    .borrow()
+                    .as_ref()
+                    .map_or(0, |s| s.own_types().count());
+                text(
+                    tr!(
+                        "body.graphql_schema_ready",
+                        count = types,
+                        when = super::history_ui::ago(*at)
+                    ),
+                    p.text_muted,
+                )
+            }
+            SchemaState::Failed(message) => text(
+                tr!("body.graphql_schema_failed", reason = message.clone()),
+                p.err,
+            ),
+        }
     }
 }
 
 impl Render for BodyEditor {
-    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        // The SDL beside the query follows the schema once it is shown.
+        if self.sdl_stale && self.show_schema {
+            self.sdl_stale = false;
+            let sdl = self
+                .schema
+                .borrow()
+                .as_ref()
+                .map(|s| s.to_sdl())
+                .unwrap_or_default();
+            self.sdl
+                .update(cx, |state, cx| state.set_value(sdl, window, cx));
+        }
         let content = match self.kind {
             BodyKind::None => self.hint(tr!("body.none_hint")).into_any_element(),
             BodyKind::Json | BodyKind::Text | BodyKind::Xml | BodyKind::Html => {

@@ -114,7 +114,16 @@ body.choose_files: Dateien auswählen
 body.file_not_found: Datei nicht gefunden
 body.file_path: Dateipfad
 body.form_hint: Gesendet als application/x-www-form-urlencoded, wie ein HTML-Formular.
+body.graphql_fetch_schema: Schema abrufen
+body.graphql_fetching: Schema wird abgerufen…
+body.graphql_hide_schema: Schema ausblenden
+body.graphql_no_schema: Schema abrufen für Vervollständigung und Feldbeschreibungen
 body.graphql_query: Query
+body.graphql_refresh_schema: Schema aktualisieren
+body.graphql_schema: Schema
+body.graphql_schema_failed: "Kein Schema: %{reason}"
+body.graphql_schema_ready: "Schema: %{count} Typen · %{when}"
+body.graphql_show_schema: Schema anzeigen
 body.graphql_variables: Variablen (JSON)
 body.invalid_json: kein gültiges JSON
 body.kind.binary: Binär

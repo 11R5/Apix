@@ -114,7 +114,16 @@ body.choose_files: Elegir archivos
 body.file_not_found: Archivo no encontrado
 body.file_path: Ruta del archivo
 body.form_hint: Se envía como application/x-www-form-urlencoded, como un formulario HTML.
+body.graphql_fetch_schema: Obtener esquema
+body.graphql_fetching: Obteniendo el esquema…
+body.graphql_hide_schema: Ocultar esquema
+body.graphql_no_schema: Obtén el esquema para autocompletar y ver la descripción de los campos
 body.graphql_query: Consulta
+body.graphql_refresh_schema: Actualizar esquema
+body.graphql_schema: Esquema
+body.graphql_schema_failed: "Sin esquema: %{reason}"
+body.graphql_schema_ready: "Esquema: %{count} tipos · %{when}"
+body.graphql_show_schema: Mostrar esquema
 body.graphql_variables: Variables (JSON)
 body.invalid_json: JSON no válido
 body.kind.binary: Binario

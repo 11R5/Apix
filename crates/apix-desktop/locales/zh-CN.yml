@@ -114,7 +114,16 @@ body.choose_files: 选择多个文件
 body.file_not_found: 找不到文件
 body.file_path: 文件路径
 body.form_hint: 以 application/x-www-form-urlencoded 发送，与 HTML 表单相同。
+body.graphql_fetch_schema: 获取架构
+body.graphql_fetching: 正在获取架构…
+body.graphql_hide_schema: 隐藏架构
+body.graphql_no_schema: 获取架构以启用补全和字段说明
 body.graphql_query: 查询
+body.graphql_refresh_schema: 刷新架构
+body.graphql_schema: 架构
+body.graphql_schema_failed: "无架构: %{reason}"
+body.graphql_schema_ready: "架构: %{count} 个类型 · %{when}"
+body.graphql_show_schema: 显示架构
 body.graphql_variables: 变量（JSON）
 body.invalid_json: 不是有效的 JSON
 body.kind.binary: 二进制

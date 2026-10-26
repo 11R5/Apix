@@ -8,8 +8,8 @@ side.
 
 ```
 crates/
-├── apix-core       request model, variables, on-disk format, projects, signing (sign.rs)
-├── apix-http       the HTTP engine (reqwest), network trace, OAuth 2.0 tokens, SSE, WebSocket
+├── apix-core       request model, variables, on-disk format, projects, signing (sign.rs), GraphQL schemas
+├── apix-http       the HTTP engine (reqwest), network trace, OAuth 2.0 tokens, SSE, WebSocket, GraphQL schema fetch
 ├── apix-import     Postman collection and environment import
 ├── apix-codegen    "Copy as" (curl, curl.exe, PowerShell, code in 10 languages) and curl paste
 ├── apix-vault      encrypted collections
@@ -81,6 +81,7 @@ release build of the desktop app takes a few minutes.
 | `<config>/Apix/settings.toml` | language, appearance, dark and light theme, accent colour, transparency, auto-lock time, history on or off, where environment secrets go |
 | `<config>/Apix/state.toml` | recently opened collections, the chosen environment and the open tabs per collection or project (not for encrypted collections) |
 | `<config>/Apix/cookies.json` | the cookie jar (session cookies are not persisted) |
+| `<config>/Apix/graphql/*.json` | the GraphQL schema last fetched from each endpoint (the server's introspection answer), named by a hash of the URL |
 | `<config>/Apix/themes/*.toml` | your own themes (written only when you press **Open the folder** in Settings and the folder is empty: one example) |
 | OS credential store, service `Apix` | only when asked for: remembered passwords of encrypted collections (`vault:<folder>`) and environment secrets (`env:<id>`, plus `env:<id>#1`, … for long values) |
 | `<config>/Apix/history/` | sent requests (`{{variables}}` unresolved) and their responses: `index.jsonl`, one `<id>.json` and `<id>.body` per entry; the last 300, bodies cut at 256 KB |
@@ -128,6 +129,7 @@ cargo run -p apix-http --release --example big_json_server -- 100   # 100 MB of 
 cargo run -p apix-http --example oauth_server                       # OAuth 2.0 test server on :8766
 cargo run -p apix-http --example sse_server                         # server-sent events on :8767
 cargo run -p apix-http --example ws_server                          # WebSocket echo and ticker on :8768
+cargo run -p apix-http --example graphql_server                     # a GraphQL endpoint (schema and a few users) on :8769
 ```
 
 ## Interface languages
@@ -179,12 +181,12 @@ so a new commit rebuilds it and an unchanged one reuses it.
 
 | Crate | What is covered |
 |---|---|
-| apix-core | model and file format round trips, variables, environment secrets in the keychain (skipped without a credential store), signing against the AWS test suite, RFC 7616 (Digest), RFC 7636 (PKCE) and the OAuth 1.0 example |
-| apix-http | request building, every body type, a local server for OAuth 2.0, Digest, AWS and OAuth 1.0, the network trace; the SSE parser (pieces split anywhere), streaming against a server that sends slowly, WebSocket (echo, auth and params in the handshake, closing from either side, a refused handshake) |
+| apix-core | model and file format round trips, variables, environment secrets in the keychain (skipped without a credential store), signing against the AWS test suite, RFC 7616 (Digest), RFC 7636 (PKCE) and the OAuth 1.0 example; GraphQL schemas (reading introspection, SDL) and what is suggested and described at each place in a query (fields, aliases, arguments, enum values, input objects, lists, fragments, variable types, comments and strings) |
+| apix-http | request building, every body type, a local server for OAuth 2.0, Digest, AWS and OAuth 1.0, the network trace; the SSE parser (pieces split anywhere), streaming against a server that sends slowly, WebSocket (echo, auth and params in the handshake, closing from either side, a refused handshake), fetching a GraphQL schema with the request's auth and the errors when there is none |
 | apix-codegen | shell quoting for bash, cmd and PowerShell; curl paste; round trips; every language's URL, headers, bodies, string escaping and settings |
 | apix-import | Postman v2.0/v2.1 fixtures |
 | apix-script | variables and request changes from pre-request scripts, `pm.test` / `pm.expect` results and messages, the older `tests[...]` API, errors naming the file, endless scripts stopped, `setNextRequest`, `atob`/`btoa`, `pm.sendRequest` (callback and `await`, waiting not counted), the built-in libraries against known digests, checks without code, values and expressions for response targets |
 | apix-runner | CSV (quotes, line breaks, `;`, BOM) and JSON data files, dotenv files and `APIX_VAR_*` names, iteration counts and data rows, pause/stop timing, JUnit/JSON/HTML output and escaping, dates; whole runs against a local server (data rows, sidebar order, `bail`, `setNextRequest`) |
 | apix-vault | encryption format, tampering, password change, recovery key, keychain entries (against the real credential store under a test service name; skipped where none exists) |
-| apix-desktop | translations complete, language helpers, file paths, highlighting query, theme files (reading, errors, round trip), accent and transparency colours |
+| apix-desktop | translations complete, language helpers, file paths, highlighting query, theme files (reading, errors, round trip), accent and transparency colours, GraphQL schema file names |
 | docs-check | documentation structure and stamps |
