@@ -25,6 +25,75 @@ pub(super) type SharedSchema = Rc<RefCell<Option<Rc<Schema>>>>;
 
 pub(super) struct GraphQlLsp(pub SharedSchema);
 
+/// A suggestion as the editor's completion item, replacing `from..to`.
+fn completion_item(s: graphql::Suggestion, text: &Rope, from: usize, to: usize) -> CompletionItem {
+    CompletionItem {
+        label: s.label,
+        kind: Some(match s.kind {
+            SuggestionKind::Keyword => CompletionItemKind::KEYWORD,
+            SuggestionKind::Field => CompletionItemKind::FIELD,
+            SuggestionKind::Argument => CompletionItemKind::PROPERTY,
+            SuggestionKind::Value => CompletionItemKind::ENUM_MEMBER,
+            SuggestionKind::Type => CompletionItemKind::CLASS,
+        }),
+        detail: Some(s.detail),
+        documentation: (!s.documentation.is_empty()).then_some(Documentation::MarkupContent(
+            MarkupContent {
+                kind: MarkupKind::Markdown,
+                value: s.documentation,
+            },
+        )),
+        tags: s.deprecated.then(|| vec![CompletionItemTag::DEPRECATED]),
+        text_edit: Some(CompletionTextEdit::Edit(TextEdit {
+            range: Range::new(text.offset_to_position(from), text.offset_to_position(to)),
+            new_text: s.insert,
+        })),
+        ..Default::default()
+    }
+}
+
+/// Completion in the variables editor (JSON): the variables the query
+/// declares, input fields and enum values, read against the query in its
+/// own editor.
+pub(super) struct VariablesLsp {
+    pub schema: SharedSchema,
+    pub query: WeakEntity<gpui_kit::component::input::EditorState>,
+}
+
+impl CompletionProvider for VariablesLsp {
+    fn completions(
+        &self,
+        text: &Rope,
+        offset: usize,
+        _: CompletionContext,
+        _: &mut Window,
+        cx: &mut App,
+    ) -> Task<Result<CompletionResponse>> {
+        let schema = self.schema.borrow().clone();
+        let query = self.query.upgrade().map(|q| q.read(cx).value().to_string());
+        let (Some(schema), Some(query)) = (schema, query) else {
+            return Task::ready(Ok(CompletionResponse::Array(Vec::new())));
+        };
+        let json = text.to_string();
+        let (from, to, suggestions) = graphql::variable_suggestions(&schema, &query, &json, offset);
+        let items = suggestions
+            .into_iter()
+            .map(|s| completion_item(s, text, from, to))
+            .collect();
+        Task::ready(Ok(CompletionResponse::Array(items)))
+    }
+
+    fn is_completion_trigger(&self, _: usize, new_text: &str, _: &mut App) -> bool {
+        self.schema.borrow().is_some()
+            && !new_text.is_empty()
+            && (matches!(new_text, "{" | "[" | ":")
+                || new_text.chars().all(|c| c == '"')
+                || new_text
+                    .chars()
+                    .all(|c| c.is_ascii_alphanumeric() || c == '_'))
+    }
+}
+
 impl CompletionProvider for GraphQlLsp {
     fn completions(
         &self,
@@ -49,32 +118,7 @@ impl CompletionProvider for GraphQlLsp {
                 } else {
                     start
                 };
-                CompletionItem {
-                    label: s.label,
-                    kind: Some(match s.kind {
-                        SuggestionKind::Keyword => CompletionItemKind::KEYWORD,
-                        SuggestionKind::Field => CompletionItemKind::FIELD,
-                        SuggestionKind::Argument => CompletionItemKind::PROPERTY,
-                        SuggestionKind::Value => CompletionItemKind::ENUM_MEMBER,
-                        SuggestionKind::Type => CompletionItemKind::CLASS,
-                    }),
-                    detail: Some(s.detail),
-                    documentation: (!s.documentation.is_empty()).then_some(
-                        Documentation::MarkupContent(MarkupContent {
-                            kind: MarkupKind::Markdown,
-                            value: s.documentation,
-                        }),
-                    ),
-                    tags: s.deprecated.then(|| vec![CompletionItemTag::DEPRECATED]),
-                    text_edit: Some(CompletionTextEdit::Edit(TextEdit {
-                        range: Range::new(
-                            text.offset_to_position(from),
-                            text.offset_to_position(offset),
-                        ),
-                        new_text: s.insert,
-                    })),
-                    ..Default::default()
-                }
+                completion_item(s, text, from, offset)
             })
             .collect();
         Task::ready(Ok(CompletionResponse::Array(items)))

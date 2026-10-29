@@ -13,7 +13,7 @@ use gpui_kit::component::{IconName, Sizable, h_flex, v_flex};
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
-use super::graphql_ui::{GraphQlLsp, SharedSchema};
+use super::graphql_ui::{GraphQlLsp, SharedSchema, VariablesLsp};
 use super::var_chips::chipped_input;
 use super::{KvRow, Workspace};
 use crate::bidi::{self, Bidi as _};
@@ -219,7 +219,14 @@ impl BodyEditor {
             state.set_soft_wrap(false, window, cx);
             state
         });
-        let variables = cx.new(|cx| EditorState::new(window, cx).language("json"));
+        let variables = cx.new(|cx| {
+            let mut state = EditorState::new(window, cx).language("json");
+            state.lsp_mut().completion_provider = Some(Rc::new(VariablesLsp {
+                schema: schema.clone(),
+                query: query.downgrade(),
+            }));
+            state
+        });
         let binary =
             cx.new(|cx| InputState::new(window, cx).placeholder(tr!("body.binary_placeholder")));
 
