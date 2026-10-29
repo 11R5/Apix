@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:08584e249dcf6a37 -->
+<!-- translated from en/architecture.md sha256:4c233d2dbe597f94 -->
 
 # Apix mimarisi
 
@@ -137,12 +137,14 @@ hiçbiri yoksa hiçbir şey gönderilmez. Bir istekte (veya klasörde)
 "Komut olarak kopyala" için aynı şekilde `apix_core::project::inherited_auth` yapar.
 
 **İstek ayarları.** Aynı dört düzeyde bir `[settings]` tablosu bulunur (zaman
-aşımı, yönlendirmeler, TLS doğrulama, proxy, istemci sertifikası, çerezler).
+aşımı, yönlendirmeler, TLS doğrulama, proxy, istemci sertifikası, güvenilen
+CA, çerezler).
 Her alan bir `Option`'dır: `None`, aynı zincir üzerinden alan alan devralır
 (`apix_core::project::inherited_settings`); yine boş kalanlar
 `RequestSettings::effective` içindeki varsayılanlara düşer — zaman aşımı yok,
 en çok 10 yönlendirme izlenir, TLS doğrulanır, proxy ortamdan, çerezler açık.
-Motor sonucu her gönderimin `reqwest::Client`'ını kurarken uygular; paylaşılan
+Motor sonucu her gönderimin `reqwest::Client`'ını kurarken uygular (güvenilen
+CA dosyası sertifikalarını kök olarak ekler); paylaşılan
 çerez kavanozu (çerez yöneticisinin listeleyip düzenleyebildiği bir
 `cookie_store`) istek çerezleri kapatmadıkça o istemciye verilir.
 
@@ -415,7 +417,14 @@ fragment'leri ve değişken tanımlarını izleyerek oraya neyin uyduğunu söyl
 (`Spot`). `suggestions` bunu türleri ve açıklamalarıyla etiketlere çevirir;
 önce önekle, sonra içerikle eşleşenler, kullanımdan kalkmışlar en sonda.
 `describe_at` üzerine gelme için Markdown'u verir. Hiçbir şey doğrulanmaz:
-bozuk bir sorgu da elinden geldiğince tamamlanır.
+bozuk bir sorgu da elinden geldiğince tamamlanır. Değişkenler düzenleyicisi
+de tamamlanır: `variable_types` `$ad: Tür` tanımlarını okur, küçük bir JSON
+tarayıcısı imlece kadar olan anahtar ve liste öğesi yolunu ve oraya anahtar
+mı değer mi geleceğini bulur, `variable_suggestions` da bu yolu girdi
+alanları ve liste öğeleri üzerinden izleyerek henüz verilmemiş değişkenleri,
+girdi alanlarını, enum değerlerini (JSON metni olarak) ve `true`/`false`'u
+önerir; yazılmakta olan bir metin, düzenleyicinin kapattığı tırnak dahil
+tırnaklarıyla değiştirilir.
 
 `apix_http::graphql::fetch_schema` introspection sorgusunu isteğin adresi,
 başlıkları, yetkilendirmesi ve ayarlarıyla POST olarak gönderir (istek önce
@@ -450,7 +459,12 @@ bunları tonic'e bağlar; böylece `tonic::client::Grpc` dört metot türünü d
 İsteğin başlıkları ve yetkilendirmesi metadata olur (Bearer, Basic, başlıkta
 API anahtarı, `apix_http::oauth2` ile OAuth 2.0; `-bin` anahtarları
 base64'tür); HTTP isteğini imzalayan yetkilendirme türleri gerekçesiyle
-reddedilir. Zaman aşımı ve istemci sertifikası istek ayarlarından gelir.
+reddedilir. Zaman aşımı, istemci sertifikası ve güvenilen CA istek
+ayarlarından gelir. TLS doğrulaması kapalıyken tonic'e (böyle bir anahtarı
+yoktur) düz bir `http://` adresi ve gerçek `https` kaynağı verilir; TLS'i
+kendi bağlayıcımız (`insecure.rs`) yapar: ALPN h2 ile rustls ve her
+sertifikayı kabul eden ama el sıkışma imzalarını yine denetleyen bir
+doğrulayıcı.
 `call`, `Sent`, `Headers` ve `Received` olaylarını oldukları anda bildirir ve
 bir `CallOutcome` ile biter: durum kodu ve mesajı, yanıt metadata'sı,
 trailer'lar ve gelen her mesaj. OK dışındaki bir durum hata değil, sonuçtur;

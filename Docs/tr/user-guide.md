@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:f664b10a61bf4614 -->
+<!-- translated from en/user-guide.md sha256:cf54dabb66759a8b -->
 
 # Apix kullanım kılavuzu
 
@@ -101,7 +101,7 @@ Gövde sekmesi şunları sunar:
 | Yok | Gövde yok. |
 | JSON, Metin, XML, HTML | Metin, yazıldığı gibi; söz dizimi vurgulamasıyla (bir başlık aksini belirtmedikçe `application/json`, `text/plain`, `application/xml`, `text/html`). |
 | Form | `application/x-www-form-urlencoded` anahtar–değer satırları. |
-| Multipart | `multipart/form-data`. Her alan **Metin** veya **Dosya** olur; klasör düğmesi bir veya birden fazla dosya seçer. |
+| Multipart | `multipart/form-data`. Her alan **Metin** veya **Dosya** olur; klasör düğmesi bir veya birden fazla dosya seçer. Yanındaki tür alanı, alanın kendi Content-Type'ını belirler (`application/json` ya da `image/png` gibi); boşsa Apix seçer. |
 | İkili | Tek bir dosyanın baytları; bir başlık aksini belirtmedikçe `application/octet-stream` olarak. Apix dosya boyutunu ya da “Dosya bulunamadı” uyarısını gösterir. |
 | GraphQL | Bir sorgu düzenleyicisi ve bir JSON değişken düzenleyicisi; `{"query", "variables"}` JSON'u olarak gönderilir. |
 
@@ -124,6 +124,9 @@ ortamıyla yapar, yani token arkasındaki bir şema da gelir. Sonra:
   gelir. Ctrl+Space önerileri yazmadan açar.
 - Bir alanın, argümanın ya da enum değerinin üzerine gelince türü ve
   açıklaması görünür.
+- Değişkenler editöründe sorgunun tanımladığı değişkenler (`$role: Role`)
+  anahtar olarak önerilir; değerleri için girdi nesnelerinin alanları, enum
+  değerleri (JSON metni olarak) ve `true`/`false` gelir.
 - **Şemayı göster** tüm şemayı SDL olarak sorgunun yanına koyar.
 
 ![Şemadan otomatik tamamlama](images/graphql.png)
@@ -178,6 +181,7 @@ Ayarlar sekmesi isteğin nasıl yol alacağını belirler:
 | TLS sertifikasını doğrula | açık — yalnızca güvendiğiniz test sunucuları için kapatın |
 | Proxy | ortamdan (`HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY`); *Kapalı* bunları da yok sayar; bir URL proxy'yi açıkça belirtir |
 | İstemci sertifikası | yok — PEM dosyası; anahtar aynı dosyada ya da ayrı bir dosyada |
+| Güvenilen CA | yalnızca bilinen kök sertifikalar — bir PEM dosyası kendi sertifika yetkililerinizi ekler (şirket ya da kendinden imzalı CA); sunucu yine de doğrulanır |
 | Çerez gönder | açık |
 
 Boş bırakılan (ya da *Miras*ta kalan) her alan, onu ayarlayan en yakın
@@ -198,12 +202,14 @@ timeout_ms = 5000
 tls_verify = false
 proxy = ""          # "" = proxy yok, ortam ayarlasa bile
 client_cert = "certs/client.pem"
+ca_cert = "certs/company-ca.pem"
 ```
 
 **Komut olarak kopyala** karşılık gelen curl bayraklarını yazar (`-m`,
-`-L --max-redirs`, `-k`, `-x`, `--cert`, `--key`); bu bayrakları taşıyan bir
-curl komutu yapıştırıldığında sekme dolar. `apix send` komutunda dosyayı ezen
-`--timeout`, `--insecure` ve `--proxy` bayrakları vardır. Postman'ın istek
+`-L --max-redirs`, `-k`, `-x`, `--cert`, `--key`, `--cacert`); bu bayrakları
+taşıyan bir curl komutu yapıştırıldığında sekme dolar. `apix send` ve
+`apix run` komutlarında dosyayı ezen `--timeout`, `--insecure`, `--proxy` ve
+`--cacert` bayrakları vardır. Bu ayarlar gRPC isteklerinde de geçerlidir. Postman'ın istek
 başına seçenekleri (`protocolProfileBehavior`) içe aktarılır.
 
 ## Çerezler
@@ -339,8 +345,9 @@ Adresi `grpc://` (TLS için `grpcs://`) ile başlayan istek bir gRPC metodunu
 
 Başlıklar metadata olarak gider; yetkilendirme HTTP'deki gibi çalışır:
 Bearer, Basic, başlıkta API anahtarı ve OAuth 2.0. İstek ayarlarındaki zaman
-aşımı ve istemci sertifikası geçerlidir. `-bin` ile biten bir başlık base64
-olarak okunur.
+aşımı, istemci sertifikası, güvenilen CA ve "TLS sertifikasını doğrula"
+geçerlidir (kapatılırsa `grpcs://` sunucusunun sertifikası denetlenmez).
+`-bin` ile biten bir başlık base64 olarak okunur.
 
 Komut satırında `apix send` metodu çağırır (akışlar geldikçe her mesaj bir
 satıra yazılır; durum OK değilse çıkış kodu sıfırdan farklıdır), `apix schema`

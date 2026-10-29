@@ -1,4 +1,4 @@
-<!-- translated from en/technical.md sha256:5ccbe651bf78cf36 -->
+<!-- translated from en/technical.md sha256:c12de989d13b941b -->
 
 # Teknik notlar
 
@@ -69,7 +69,7 @@ Masaüstü uygulamasının tam bir release derlemesi birkaç dakika sürer.
 |---|---|
 | Arayüz | `gpui-kit` 0.7 (GPUI ve bileşen kütüphanesi), JSON ve GraphQL için tree-sitter gramerleri |
 | HTTP | rustls ile `reqwest` 0.12, `tokio`, `hyper-util`, zamanlama için `tower` katmanları |
-| gRPC | `tonic` 0.14 (istemci, aynı hyper ve rustls üzerinde), `prost-reflect` (çalışma anında bilinen mesajlar, JSON), `protox` (.proto dosyalarını `protoc` olmadan okur), `tonic-reflection` (reflection istemcisi) |
+| gRPC | `tonic` 0.14 (istemci, aynı hyper ve rustls üzerinde), `prost-reflect` (çalışma anında bilinen mesajlar, JSON), `protox` (.proto dosyalarını `protoc` olmadan okur), `tonic-reflection` (reflection istemcisi), sertifika denetimi kapalı gRPC için `rustls` ve `tokio-rustls`; `rcgen` test sertifikaları üretir (yalnızca testlerde) |
 | Ağ ayrıntıları | `x509-parser` (sertifikalar), `netdev` (ağ arayüzleri, ağ geçidi, DNS sunucuları) |
 | İmzalama | `sha2`, `sha1`, `hmac`, `md-5`, `base64`, `rand_core` (AWS SigV4, OAuth 1.0, Digest, PKCE) |
 | Şifreleme | `chacha20poly1305` (XChaCha20-Poly1305), `argon2`, `zeroize`, `keyring` (işletim sistemi kimlik bilgisi deposu) |
@@ -186,9 +186,9 @@ alır; yeni bir commit yeniden derler, değişmeyen kaynak öncekini kullanır.
 
 | Crate | Kapsananlar |
 |---|---|
-| apix-core | model ve dosya formatı için gidiş-dönüş (round trip) testleri, değişkenler, anahtarlıktaki ortam gizli değerleri (kimlik bilgisi deposu yoksa atlanır), AWS test paketine, RFC 7616'ya (Digest), RFC 7636'ya (PKCE) ve OAuth 1.0 örneğine karşı imzalama; GraphQL şemaları (introspection okuma, SDL) ve bir sorgunun her yerinde neyin önerilip açıklandığı (alanlar, takma adlar, argümanlar, enum değerleri, girdi nesneleri, listeler, fragment'ler, değişken türleri, yorumlar ve metinler); `[grpc]` tablosu; gRPC çağrıları dahil geçmiş kayıtları |
-| apix-http | istek oluşturma, her gövde türü, OAuth 2.0, Digest, AWS ve OAuth 1.0 için yerel bir sunucu, ağ izi; SSE ayrıştırıcı (parçaların her yerden bölünmesi dahil), yavaş gönderen bir sunucuya karşı akış, WebSocket (yankı, el sıkışmada auth ve parametreler, iki taraftan kapanış, reddedilen el sıkışma), isteğin yetkilendirmesiyle GraphQL şeması çekme ve şema yokken verilen hatalar |
-| apix-grpc | adresler, durum kodları, metadata olarak başlıklar ve yetkilendirme; yerel bir Greeter'a karşı (dinamik mesajlarla kurulmuş, reflection'lı ve reflection'sız): servisi listeleme ve tanımlama, dört metot türünün hepsi, yetkilendirmenin sunucuya ulaşması, başarısız bir durum, import'lu .proto dosyaları ve tanım yokken, bilinmeyen metotta, türüne uymayan mesajda, tekli metoda liste verilince, eksik dosyada ve sunucu yokken verilen hatalar; örnek mesajlar; koşular için HTTP yanıtı olarak çağrı (durum eşlemesi, `grpc-status`, liste olarak akış) |
+| apix-core | model ve dosya formatı için gidiş-dönüş (round trip) testleri, değişkenler, anahtarlıktaki ortam gizli değerleri (kimlik bilgisi deposu yoksa atlanır), AWS test paketine, RFC 7616'ya (Digest), RFC 7636'ya (PKCE) ve OAuth 1.0 örneğine karşı imzalama; GraphQL şemaları (introspection okuma, SDL) ve bir sorgunun her yerinde neyin önerilip açıklandığı (alanlar, takma adlar, argümanlar, enum değerleri, girdi nesneleri, listeler, fragment'ler, değişken türleri, yorumlar ve metinler); `[grpc]` tablosu; gRPC çağrıları dahil geçmiş kayıtları; GraphQL değişken tanımları ve değişkenler (JSON) içinde tamamlama; güvenilen CA ayarı |
+| apix-http | istek oluşturma, her gövde türü, OAuth 2.0, Digest, AWS ve OAuth 1.0 için yerel bir sunucu, ağ izi; SSE ayrıştırıcı (parçaların her yerden bölünmesi dahil), yavaş gönderen bir sunucuya karşı akış, WebSocket (yankı, el sıkışmada auth ve parametreler, iki taraftan kapanış, reddedilen el sıkışma), isteğin yetkilendirmesiyle GraphQL şeması çekme ve şema yokken verilen hatalar, kendi sertifika yetkilisiyle HTTPS |
+| apix-grpc | adresler, durum kodları, metadata olarak başlıklar ve yetkilendirme; yerel bir Greeter'a karşı (dinamik mesajlarla kurulmuş, reflection'lı ve reflection'sız): servisi listeleme ve tanımlama, dört metot türünün hepsi, yetkilendirmenin sunucuya ulaşması, başarısız bir durum, import'lu .proto dosyaları ve tanım yokken, bilinmeyen metotta, türüne uymayan mesajda, tekli metoda liste verilince, eksik dosyada ve sunucu yokken verilen hatalar; örnek mesajlar; koşular için HTTP yanıtı olarak çağrı (durum eşlemesi, `grpc-status`, liste olarak akış); kendi sertifika yetkilisinden sertifikalı bir sunucuya karşı TLS (reddedilir, CA ile güvenilir, denetlenmeden kabul edilir) |
 | apix-codegen | bash, cmd ve PowerShell için kabuk tırnaklama; curl yapıştırma; gidiş-dönüş testleri; her dilde URL, başlıklar, gövdeler, dize kaçışları ve ayarlar |
 | apix-import | Postman v2.0/v2.1 fixture'ları |
 | apix-script | istek öncesi scriptlerden değişken ve istek değişiklikleri, `pm.test` / `pm.expect` sonuçları ve mesajları, eski `tests[...]` API'si, dosyayı adlandıran hatalar, sonsuz scriptlerin durdurulması, `setNextRequest`, `atob`/`btoa`, `pm.sendRequest` (geri çağırma ve `await`, bekleme sayılmaz), bilinen özet değerlerine karşı hazır kütüphaneler, kodsuz doğrulamalar, yanıt hedefleri için değer ve ifade üretimi |

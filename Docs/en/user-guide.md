@@ -93,7 +93,7 @@ The Body tab offers:
 | None | No body. |
 | JSON, Text, XML, HTML | The text as written, with syntax highlighting (`application/json`, `text/plain`, `application/xml`, `text/html` unless a header says otherwise). |
 | Form | `application/x-www-form-urlencoded` key–value rows. |
-| Multipart | `multipart/form-data`. Each field is **Text** or **File**; the folder button picks one or more files. |
+| Multipart | `multipart/form-data`. Each field is **Text** or **File**; the folder button picks one or more files. The type field beside it sets the field's own Content-Type (such as `application/json` or `image/png`); empty lets Apix choose. |
 | Binary | The bytes of one file, as `application/octet-stream` unless a header says otherwise. Apix shows the file size, or "File not found". |
 | GraphQL | A query editor and a JSON variables editor; sent as `{"query", "variables"}` JSON. |
 
@@ -116,6 +116,9 @@ environment, so a schema behind a token works. Then:
   opens the suggestions without typing.
 - Hovering over a field, argument or enum value shows its type and
   description.
+- In the variables editor, the variables the query declares
+  (`$role: Role`) are suggested as keys, then the fields of input objects,
+  enum values (as JSON strings) and `true`/`false` for their values.
 - **Show schema** puts the whole schema beside the query, as SDL.
 
 ![Completion from the schema](images/graphql.png)
@@ -170,6 +173,7 @@ The Settings tab controls how the request travels:
 | Verify TLS certificate | on — turn it off only for test servers you trust |
 | Proxy | from the environment (`HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY`); *Off* ignores those; a URL names one explicitly |
 | Client certificate | none — a PEM file, with the key in the same file or a separate one |
+| Trusted CA | only the usual root certificates — a PEM file adds certificate authorities of your own (a company or self-signed CA), so the server is still checked |
 | Send cookies | on |
 
 Every field left empty (or on *Inherit*) falls back to the nearest folder,
@@ -190,12 +194,14 @@ timeout_ms = 5000
 tls_verify = false
 proxy = ""          # "" = no proxy, even when the environment sets one
 client_cert = "certs/client.pem"
+ca_cert = "certs/company-ca.pem"
 ```
 
 **Copy as** writes the matching curl flags (`-m`, `-L --max-redirs`, `-k`,
-`-x`, `--cert`, `--key`) and pasting a curl command with those flags fills the
-tab. `apix send` has `--timeout`, `--insecure` and `--proxy`, which override
-the file. Postman's per-request options (`protocolProfileBehavior`) are
+`-x`, `--cert`, `--key`, `--cacert`) and pasting a curl command with those
+flags fills the tab. `apix send` and `apix run` have `--timeout`,
+`--insecure`, `--proxy` and `--cacert`, which override the file. These
+settings apply to gRPC requests too. Postman's per-request options (`protocolProfileBehavior`) are
 imported.
 
 ## Cookies
@@ -327,8 +333,10 @@ gRPC method: the URL bar shows **gRPC**, and the Body tab becomes
    A stream shows its messages as they arrive; Esc stops it.
 
 Headers are sent as metadata, and Auth works as for HTTP with Bearer, Basic,
-an API key in a header and OAuth 2.0. The request settings' timeout and client
-certificate apply. A `-bin` header is read as base64.
+an API key in a header and OAuth 2.0. The request settings' timeout, client
+certificate, trusted CA and "Verify TLS certificate" apply (turned off, a
+`grpcs://` server's certificate is not checked). A `-bin` header is read as
+base64.
 
 From the command line, `apix send` calls the method (streams are printed one
 message per line as they come; the exit code is non-zero unless the status is
