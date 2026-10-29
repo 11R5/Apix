@@ -123,7 +123,9 @@ pub async fn connect(req: &Request) -> Result<Channel, GrpcError> {
     }
     if insecure {
         let origin = uri.parse().map_err(|_| GrpcError::Url(req.url.clone()))?;
-        let connector = insecure::Connector::new(insecure::config(identity)?);
+        let config = apix_http::tls::client_config(&settings, &[b"h2"])
+            .map_err(|e| GrpcError::Tls(e.to_string()))?;
+        let connector = insecure::Connector::new(config);
         return endpoint
             .origin(origin)
             .connect_with_connector(connector)

@@ -134,11 +134,19 @@ impl Workspace {
                 {
                     let mut s = session.borrow_mut();
                     let follow = at_bottom(&s.scroll);
-                    if let Some((at, status, _)) = opened {
+                    if let Some((at, status, headers)) = opened {
                         s.status = Some(status);
                         s.state = SocketState::Open;
                         let note = tr!("ws.connected", url = s.url.clone());
                         s.push(at, Entry::Note(note));
+                        // The subprotocol the server picked, when it picked one.
+                        if let Some((_, protocol)) = headers
+                            .iter()
+                            .find(|(k, _)| k.eq_ignore_ascii_case("sec-websocket-protocol"))
+                        {
+                            let note = tr!("ws.subprotocol", protocol = protocol.clone());
+                            s.push(at, Entry::Note(note));
+                        }
                     }
                     for (at, event) in events {
                         match event {
@@ -199,6 +207,7 @@ impl Workspace {
     pub(super) fn send_socket_message(
         &mut self,
         text: String,
+        format: apix_core::MessageFormat,
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
@@ -209,14 +218,19 @@ impl Workspace {
             self.notify_error(message, window, cx);
             return;
         }
+        // Base64 and hex become bytes here, after the variables.
+        let data = match WsData::from_text(text, format) {
+            Ok(data) => data,
+            Err(e) => {
+                self.notify_error(tr!("ws.bad_message", reason = e), window, cx);
+                return;
+            }
+        };
         if self.live_socket().is_none() {
             self.send(window, cx);
         }
         if let Some(session) = self.live_socket() {
-            let _ = session
-                .borrow()
-                .commands
-                .send(WsCommand::Send(WsData::Text(text)));
+            let _ = session.borrow().commands.send(WsCommand::Send(data));
         }
     }
 
@@ -353,7 +367,11 @@ impl Workspace {
 fn show(data: &WsData) -> SharedString {
     match data {
         WsData::Text(text) => text.clone().into(),
-        WsData::Binary(bytes) => tr!("ws.binary", count = bytes.len()),
+        WsData::Binary(bytes) => tr!(
+            "ws.bytes",
+            count = bytes.len(),
+            hex = apix_http::ws::hex_bytes(bytes)
+        ),
     }
 }
 

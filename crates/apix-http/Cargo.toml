@@ -32,6 +32,10 @@ tokio-tungstenite = { version = "0.28", features = ["rustls-tls-webpki-roots"] }
 # Splits a WebSocket into its sending and receiving halves.
 futures-util = { version = "0.3", default-features = false, features = ["sink", "std"] }
 thiserror.workspace = true
+# TLS for WebSocket (and gRPC without verification): a trusted CA, a client
+# certificate or no verification (tls.rs). The rustls and roots reqwest builds.
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
+webpki-roots = "1"
 
 [dev-dependencies]
 serde_json.workspace = true

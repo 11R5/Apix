@@ -362,14 +362,24 @@ as they are in and then every body `Progress::Chunk`; `send` is `send_with`
 with nothing listening, and the response still holds the whole body.
 `apix_http::sse` reads `text/event-stream` bodies piece by piece (`SseParser`:
 any line ending, a piece may split anywhere, `id` carries over, an unfinished
-last event is dropped).
+last event is dropped). The parser also keeps the last id and the last
+`retry:` for reconnecting: `reconnected()` starts a parser for the next
+connection with both, and `reconnect_request` adds `Last-Event-ID`. The app
+and the CLI do the waiting and sending again themselves, so Esc or Ctrl+C
+always stops it.
 
 `apix_http::ws::connect` builds the handshake from the request as the HTTP
 side would send it (`prepare`: params, headers, auth; OAuth 2.0 becomes a
-bearer token first) and connects with tokio-tungstenite over the same
-rustls. `WsConnection::run` sends what a channel of `WsCommand`s asks and
-reports `WsEvent`s (sent, received, closed with code and reason, error)
-until either side closes; ping and pong are answered by tungstenite.
+bearer token first), adds `Sec-WebSocket-Protocol` from `[websocket]
+subprotocols`, and connects with tokio-tungstenite. `wss://` gets a rustls
+configuration from `apix_http::tls::client_config` (the usual roots plus a
+trusted CA, a client certificate, or a verifier that accepts any
+certificate), the same module gRPC uses without verification.
+`WsConnection::run` sends what a channel of `WsCommand`s asks and reports
+`WsEvent`s (sent, received, closed with code and reason, error) until either
+side closes; ping and pong are answered by tungstenite. A message's
+`MessageFormat` (text, base64, hex) turns its text into `WsData` after the
+variables are filled in.
 
 In the desktop app the network runtime fills shared structs
 (`net::Incoming` for a send, `net::SocketIncoming` for a socket) and a UI

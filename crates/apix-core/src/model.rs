@@ -564,6 +564,9 @@ pub struct Request {
     /// What to call when the URL is `grpc://` or `grpcs://`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub grpc: Option<GrpcCall>,
+    /// Options of a `ws://` or `wss://` request.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub websocket: Option<WebSocketOptions>,
 }
 
 /// What a gRPC request calls, stored as `[grpc]`. The body (JSON) is the
@@ -589,6 +592,92 @@ pub struct WsMessage {
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub name: String,
     pub body: String,
+    /// How `body` is read: as text, or as bytes written in base64 or hex.
+    #[serde(default, skip_serializing_if = "MessageFormat::is_text")]
+    pub format: MessageFormat,
+}
+
+/// How a WebSocket message's text stands for what is sent.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum MessageFormat {
+    /// A text message, as written.
+    #[default]
+    Text,
+    /// A binary message, its bytes in base64.
+    Base64,
+    /// A binary message, its bytes in hex (spaces and `0x` allowed).
+    Hex,
+}
+
+impl MessageFormat {
+    pub const ALL: [MessageFormat; 3] = [
+        MessageFormat::Text,
+        MessageFormat::Base64,
+        MessageFormat::Hex,
+    ];
+
+    pub fn is_text(&self) -> bool {
+        *self == MessageFormat::Text
+    }
+
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            MessageFormat::Text => "text",
+            MessageFormat::Base64 => "base64",
+            MessageFormat::Hex => "hex",
+        }
+    }
+
+    /// The bytes a binary message's text stands for (`None` for text).
+    pub fn decode(&self, text: &str) -> Option<Result<Vec<u8>, String>> {
+        use base64::Engine as _;
+        match self {
+            MessageFormat::Text => None,
+            MessageFormat::Base64 => Some(
+                base64::engine::general_purpose::STANDARD
+                    .decode(text.split_whitespace().collect::<String>())
+                    .map_err(|e| format!("not valid base64: {e}")),
+            ),
+            MessageFormat::Hex => {
+                let digits: String = text
+                    .split_whitespace()
+                    .map(|w| w.trim_start_matches("0x").trim_start_matches("0X"))
+                    .collect();
+                Some(if !digits.len().is_multiple_of(2) {
+                    Err("hex needs two digits per byte".into())
+                } else {
+                    (0..digits.len())
+                        .step_by(2)
+                        .map(|i| {
+                            u8::from_str_radix(&digits[i..i + 2], 16)
+                                .map_err(|_| format!("`{}` is not a hex byte", &digits[i..i + 2]))
+                        })
+                        .collect()
+                })
+            }
+        }
+    }
+}
+
+impl std::str::FromStr for MessageFormat {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, String> {
+        Self::ALL
+            .into_iter()
+            .find(|f| f.as_str().eq_ignore_ascii_case(s))
+            .ok_or_else(|| format!("`{s}` is not a message format (text, base64, hex)"))
+    }
+}
+
+/// WebSocket options, stored as `[websocket]`.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct WebSocketOptions {
+    /// Subprotocols offered in the handshake (`Sec-WebSocket-Protocol`), in
+    /// order of preference; the server picks one.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub subprotocols: Vec<String>,
 }
 
 impl WsMessage {
@@ -892,9 +981,28 @@ body = '{"join": "{{room}}"}'
 
 [[message]]
 body = "ping"
+
+[[message]]
+name = "Raw"
+body = "01 02 ff"
+format = "hex"
+
+[websocket]
+subprotocols = ["graphql-transport-ws", "graphql-ws"]
 "#;
         let req: Request = toml::from_str(text).unwrap();
-        assert_eq!(req.messages.len(), 2);
+        assert_eq!(req.messages.len(), 3);
+        assert_eq!(req.messages[2].format, MessageFormat::Hex);
+        assert_eq!(
+            req.websocket.as_ref().unwrap().subprotocols,
+            ["graphql-transport-ws", "graphql-ws"]
+        );
+        // Text messages do not write a format.
+        assert!(
+            !toml::to_string(&req.messages[0])
+                .unwrap()
+                .contains("format")
+        );
         assert_eq!(req.messages[0].label(), "Join");
         assert_eq!(req.messages[1].label(), "ping");
         let back: Request = toml::from_str(&toml::to_string_pretty(&req).unwrap()).unwrap();
@@ -909,9 +1017,28 @@ body = "ping"
         let long = WsMessage {
             name: String::new(),
             body: "a much longer first line that goes on and on and on\nsecond".into(),
+            format: MessageFormat::Text,
         };
         assert_eq!(long.label().chars().count(), 41);
         assert!(long.label().ends_with('…'));
+    }
+
+    #[test]
+    fn binary_message_formats() {
+        assert_eq!(MessageFormat::Text.decode("hi"), None);
+        assert_eq!(
+            MessageFormat::Hex.decode("0x01 02\nFF").unwrap().unwrap(),
+            [1, 2, 255]
+        );
+        assert!(MessageFormat::Hex.decode("abc").unwrap().is_err());
+        assert!(MessageFormat::Hex.decode("zz").unwrap().is_err());
+        assert_eq!(
+            MessageFormat::Base64.decode("AQL/").unwrap().unwrap(),
+            [1, 2, 255]
+        );
+        assert!(MessageFormat::Base64.decode("***").unwrap().is_err());
+        assert_eq!("HEX".parse::<MessageFormat>(), Ok(MessageFormat::Hex));
+        assert!("bin".parse::<MessageFormat>().is_err());
     }
 
     #[test]

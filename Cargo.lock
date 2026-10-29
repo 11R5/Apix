@@ -378,6 +378,7 @@ dependencies = [
  "tokio-tungstenite",
  "tower-layer",
  "tower-service",
+ "webpki-roots 1.0.9",
  "x509-parser",
 ]
 

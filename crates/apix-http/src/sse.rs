@@ -28,13 +28,40 @@ pub struct SseParser {
     has_data: bool,
     retry: Option<u64>,
     last_id: Option<String>,
+    /// The last `retry:` seen, which outlives the event it came with.
+    reconnection_ms: Option<u64>,
     /// The stream's first line may start with a byte order mark.
     started: bool,
 }
 
+/// How long to wait before reconnecting when the server never said.
+pub const DEFAULT_RETRY_MS: u64 = 3000;
+
 impl SseParser {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// The last event id, to send back as `Last-Event-ID` when reconnecting.
+    pub fn last_id(&self) -> Option<&str> {
+        self.last_id.as_deref().filter(|id| !id.is_empty())
+    }
+
+    /// How long to wait before reconnecting: the server's last `retry:`, or
+    /// [`DEFAULT_RETRY_MS`].
+    pub fn reconnection_time(&self) -> std::time::Duration {
+        std::time::Duration::from_millis(self.reconnection_ms.unwrap_or(DEFAULT_RETRY_MS))
+    }
+
+    /// A parser for the next connection of the same stream: the id and
+    /// reconnection time carry over, a half-read event does not.
+    pub fn reconnected(&self) -> Self {
+        Self {
+            last_id: self.last_id.clone(),
+            reconnection_ms: self.reconnection_ms,
+            started: false,
+            ..Self::default()
+        }
     }
 
     /// The events completed by `chunk`.
@@ -89,6 +116,7 @@ impl SseParser {
             "id" if !value.contains('\0') => self.last_id = Some(value.to_owned()),
             "retry" if !value.is_empty() && value.bytes().all(|b| b.is_ascii_digit()) => {
                 self.retry = value.parse().ok();
+                self.reconnection_ms = self.retry;
             }
             _ => {}
         }
@@ -120,6 +148,19 @@ impl SseParser {
 /// line that ends it is dropped, as browsers do.
 pub fn parse_all(body: &[u8]) -> Vec<SseEvent> {
     SseParser::new().feed(body)
+}
+
+/// `req` for reconnecting to a stream: with `Last-Event-ID` when an id was
+/// seen (replacing one already there).
+pub fn reconnect_request(req: &apix_core::Request, last_id: Option<&str>) -> apix_core::Request {
+    let mut req = req.clone();
+    if let Some(id) = last_id {
+        req.headers
+            .retain(|h| !h.key.eq_ignore_ascii_case("last-event-id"));
+        req.headers
+            .push(apix_core::KeyValue::new("Last-Event-ID", id));
+    }
+    req
 }
 
 /// Whether a `Content-Type` value is an event stream.
@@ -174,6 +215,35 @@ mod tests {
         assert_eq!(whole[0].retry, Some(3000));
         assert_eq!(whole[1].data, "x");
         assert_eq!(whole[2].data, "y");
+    }
+
+    #[test]
+    fn what_carries_over_to_a_reconnection() {
+        let mut parser = SseParser::new();
+        assert_eq!(parser.reconnection_time().as_millis(), 3000);
+        assert_eq!(parser.last_id(), None);
+        // `retry:` without data still counts; the id carries over.
+        parser.feed(b"retry: 500\n\nid: 41\ndata: a\n\ndata: half");
+        assert_eq!(parser.reconnection_time().as_millis(), 500);
+        assert_eq!(parser.last_id(), Some("41"));
+        let mut next = parser.reconnected();
+        assert_eq!(next.last_id(), Some("41"));
+        assert_eq!(next.reconnection_time().as_millis(), 500);
+        // The half-read event from before is gone.
+        assert_eq!(next.feed(b"data: b\n\n")[0].data, "b");
+
+        let mut req = apix_core::Request::new(apix_core::Method::Get, "http://x/");
+        req.headers
+            .push(apix_core::KeyValue::new("last-event-id", "old"));
+        let again = reconnect_request(&req, Some("41"));
+        let ids: Vec<_> = again
+            .headers
+            .iter()
+            .filter(|h| h.key.eq_ignore_ascii_case("last-event-id"))
+            .map(|h| h.value.as_str())
+            .collect();
+        assert_eq!(ids, ["41"]);
+        assert_eq!(reconnect_request(&req, None), req);
     }
 
     #[test]

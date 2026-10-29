@@ -603,9 +603,15 @@ sidebar.rename: Rename…
 sidebar.run: "Run…"
 sidebar.settings: Request settings…
 sidebar.show_in_environment: Show in environment
+stream.all_types: All %{count}
 stream.count: "%{count} events"
+stream.dropped_reconnecting: The connection dropped (%{error}); reconnecting in %{seconds} s
+stream.ended_reconnecting: The stream ended; reconnecting in %{seconds} s
 stream.live: "Live"
+stream.not_a_stream: The server answered %{status}, not an event stream; stopped
 stream.older_hidden: "%{count} older events are not shown"
+stream.reconnect: Reconnect
+stream.reconnected: Reconnected
 stream.stop: "Stop"
 stream.stopped: "stopped"
 stream.waiting: "Connected. Waiting for the first event…"
@@ -668,7 +674,8 @@ vault.unlock_title: Unlock “%{name}”
 vault.use_password: Use the password instead
 vault.use_recovery: Forgot the password? Use the recovery key
 vault.working: Working… deriving the key takes a moment on purpose.
-ws.binary: "<%{count} bytes of binary>"
+ws.bad_message: "The message cannot be sent: %{reason}"
+ws.bytes: "%{count} bytes: %{hex}"
 ws.closed: "Closed"
 ws.closed_code: "Closed (%{code})"
 ws.closed_reason: "Closed (%{code}): %{reason}"
@@ -678,9 +685,13 @@ ws.connecting: "Connecting…"
 ws.disconnect: "Disconnect"
 ws.error: "Error: %{error}"
 ws.failed: "Connection lost"
+ws.format_text: Text
 ws.open: "Connected"
 ws.save: "Save message"
 ws.saved: "Saved messages (%{count})"
 ws.saved_empty: "Messages you save here are kept in the request file. Click one to edit it."
 ws.send: "Send"
 ws.send_hint: "Ctrl+Enter sends; {{variables}} are filled in"
+ws.subprotocol: "Subprotocol: %{protocol}"
+ws.subprotocols: Subprotocols
+ws.subprotocols_placeholder: Offered in the handshake, comma-separated, e.g. graphql-transport-ws

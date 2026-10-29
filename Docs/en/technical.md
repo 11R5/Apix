@@ -129,8 +129,8 @@ Other helpers:
 ```sh
 cargo run -p apix-http --release --example big_json_server -- 100   # 100 MB of JSON on :8765
 cargo run -p apix-http --example oauth_server                       # OAuth 2.0 test server on :8766
-cargo run -p apix-http --example sse_server                         # server-sent events on :8767
-cargo run -p apix-http --example ws_server                          # WebSocket echo and ticker on :8768
+cargo run -p apix-http --example sse_server                         # server-sent events on :8767 (resumes after Last-Event-ID)
+cargo run -p apix-http --example ws_server                          # WebSocket echo (binary too) and ticker on :8768
 cargo run -p apix-http --example graphql_server                     # a GraphQL endpoint (schema and a few users) on :8769
 cargo run -p apix-grpc --example grpc_server                        # a gRPC Greeter with reflection on :8770
 ```
@@ -185,7 +185,7 @@ so a new commit rebuilds it and an unchanged one reuses it.
 | Crate | What is covered |
 |---|---|
 | apix-core | model and file format round trips, variables, environment secrets in the keychain (skipped without a credential store), signing against the AWS test suite, RFC 7616 (Digest), RFC 7636 (PKCE) and the OAuth 1.0 example; GraphQL schemas (reading introspection, SDL) and what is suggested and described at each place in a query (fields, aliases, arguments, enum values, input objects, lists, fragments, variable types, comments and strings); the `[grpc]` table; history entries, gRPC calls included; GraphQL variable declarations and completion in the variables (JSON); the trusted CA setting |
-| apix-http | request building, every body type, a local server for OAuth 2.0, Digest, AWS and OAuth 1.0, the network trace; the SSE parser (pieces split anywhere), streaming against a server that sends slowly, WebSocket (echo, auth and params in the handshake, closing from either side, a refused handshake), fetching a GraphQL schema with the request's auth and the errors when there is none, HTTPS with an own certificate authority |
+| apix-http | request building, every body type, a local server for OAuth 2.0, Digest, AWS and OAuth 1.0, the network trace; the SSE parser (pieces split anywhere), streaming against a server that sends slowly, WebSocket (echo, auth and params in the handshake, closing from either side, a refused handshake), fetching a GraphQL schema with the request's auth and the errors when there is none, HTTPS with an own certificate authority; WebSocket subprotocols and binary messages, `wss://` with an own CA or unchecked; what an event stream carries over to a reconnection |
 | apix-grpc | addresses, status codes, headers and auth as metadata; against a local Greeter (built from dynamic messages, with and without reflection): listing and describing the service, all four kinds of method, auth reaching the server, a failed status, .proto files with imports, and the errors for no description, an unknown method, a message that does not fit, a list for a unary method, a missing file and no server; example messages; a call as an HTTP response for runs (status mapping, `grpc-status`, a stream as a list); TLS against a server with a certificate from its own authority (refused, trusted with the CA, accepted unchecked) |
 | apix-codegen | shell quoting for bash, cmd and PowerShell; curl paste; round trips; every language's URL, headers, bodies, string escaping and settings |
 | apix-import | Postman v2.0/v2.1 fixtures |

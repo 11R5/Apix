@@ -295,6 +295,15 @@ WebSocket: **Send** becomes **Connect**, and the Body tab becomes
   It follows new messages unless you scroll up.
 - **Disconnect** (or Esc) closes the connection; the log stays until you
   connect again. A connection keeps running while its tab is in the back.
+- **Binary messages:** pick **Base64** or **Hex** beside the buttons and
+  write the bytes that way (`01 02 ff`, spaces and `0x` allowed); a message
+  that does not read as bytes cannot be sent. Saved messages keep their
+  format. Binary messages show in the log as their size and first bytes.
+- **Subprotocols** (top of the Messages tab, comma-separated) are offered in
+  the handshake; the log names the one the server picked. A server that
+  picks none of them is refused, as browsers do.
+- `wss://` follows the request settings: a trusted CA, a client certificate,
+  or "Verify TLS certificate" turned off.
 
 **Server-sent events.** When a response is `text/event-stream`, its events
 show up as they arrive, with the time, the event type and id, and the data.
@@ -304,10 +313,20 @@ Hex as for any response. Send `Accept: text/event-stream` if the server
 needs it. A request timeout in Settings ends a stream too, so leave it empty
 for streams that stay open.
 
-From the command line, `apix send` prints events as they come, and for a
-WebSocket it connects, sends the saved messages (or `--message` texts),
-prints both directions and closes after `--listen` seconds (3 by default,
-`0` waits for the server). `apix run` skips WebSocket requests.
+- With more than one event type, the types appear above the list with how
+  many came of each; click one to show only those, **All** for every event.
+- **Reconnect** (in the live view) picks the stream up again when it ends or
+  the connection drops: after the server's `retry:` time (3 s when it gave
+  none), with `Last-Event-ID` set to the last id seen, as a browser does.
+  The list notes each reconnection. An answer that is not an event stream
+  stops it, and so does Esc.
+
+From the command line, `apix send` prints events as they come (`--event
+TYPE`, repeatable, prints only those; `--reconnect` keeps reconnecting until
+Ctrl+C). For a WebSocket it connects, sends the saved messages (or
+`--message` texts, read as `--format text|base64|hex`), prints both
+directions and closes after `--listen` seconds (3 by default, `0` waits for
+the server). `apix run` skips WebSocket requests.
 
 ## gRPC
 

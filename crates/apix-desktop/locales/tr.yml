@@ -601,9 +601,15 @@ sidebar.rename: Yeniden adlandır…
 sidebar.run: "Çalıştır…"
 sidebar.settings: İstek ayarları…
 sidebar.show_in_environment: Ortamda göster
+stream.all_types: Tümü %{count}
 stream.count: "%{count} olay"
+stream.dropped_reconnecting: Bağlantı koptu (%{error}); %{seconds} sn sonra yeniden bağlanılıyor
+stream.ended_reconnecting: Akış bitti; %{seconds} sn sonra yeniden bağlanılıyor
 stream.live: "Canlı"
+stream.not_a_stream: Sunucu %{status} döndü, olay akışı değil; durduruldu
 stream.older_hidden: "%{count} eski olay gösterilmiyor"
+stream.reconnect: Yeniden bağlan
+stream.reconnected: Yeniden bağlandı
 stream.stop: "Durdur"
 stream.stopped: "durduruldu"
 stream.waiting: "Bağlandı. İlk olay bekleniyor…"
@@ -666,7 +672,8 @@ vault.unlock_title: “%{name}” koleksiyonunun kilidini aç
 vault.use_password: Bunun yerine parolayı kullan
 vault.use_recovery: Parolayı mı unuttunuz? Kurtarma anahtarını kullanın
 vault.working: Çalışıyor… anahtar türetme bilerek biraz zaman alır.
-ws.binary: "<%{count} bayt ikili veri>"
+ws.bad_message: "Mesaj gönderilemez: %{reason}"
+ws.bytes: "%{count} bayt: %{hex}"
 ws.closed: "Kapandı"
 ws.closed_code: "Kapandı (%{code})"
 ws.closed_reason: "Kapandı (%{code}): %{reason}"
@@ -676,9 +683,13 @@ ws.connecting: "Bağlanıyor…"
 ws.disconnect: "Bağlantıyı kes"
 ws.error: "Hata: %{error}"
 ws.failed: "Bağlantı koptu"
+ws.format_text: Metin
 ws.open: "Bağlı"
 ws.save: "Mesajı kaydet"
 ws.saved: "Kayıtlı mesajlar (%{count})"
 ws.saved_empty: "Buraya kaydettiğin mesajlar istek dosyasında saklanır. Düzenlemek için birine tıkla."
 ws.send: "Gönder"
 ws.send_hint: "Ctrl+Enter gönderir; {{değişkenler}} doldurulur"
+ws.subprotocol: "Alt protokol: %{protocol}"
+ws.subprotocols: Alt protokoller
+ws.subprotocols_placeholder: El sıkışmada önerilir, virgülle ayrılır, örn. graphql-transport-ws

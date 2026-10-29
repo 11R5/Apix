@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:4c233d2dbe597f94 -->
+<!-- translated from en/architecture.md sha256:ce606028a0adfb9e -->
 
 # Apix mimarisi
 
@@ -382,15 +382,25 @@ sonra gövdenin her parçasını `Progress::Chunk` olarak bildirir; `send` hiçb
 şey dinlemeyen bir `send_with`'tir ve yanıt yine bütün gövdeyi tutar.
 `apix_http::sse`, `text/event-stream` gövdelerini parça parça okur
 (`SseParser`: her satır sonu biçimi, parça her yerden bölünebilir, `id`
-sonraki olaylara taşınır, bitmemiş son olay atılır).
+sonraki olaylara taşınır, bitmemiş son olay atılır). Ayrıştırıcı yeniden
+bağlanmak için son kimliği ve son `retry:` değerini de tutar:
+`reconnected()` bir sonraki bağlantı için ikisini de taşıyan bir ayrıştırıcı
+başlatır, `reconnect_request` de `Last-Event-ID` ekler. Beklemeyi ve yeniden
+göndermeyi uygulama ve CLI kendileri yapar; böylece Esc ya da Ctrl+C her
+zaman durdurur.
 
 `apix_http::ws::connect`, el sıkışmayı isteğin HTTP tarafının göndereceği
 biçimden kurar (`prepare`: parametreler, başlıklar, yetkilendirme; OAuth 2.0
-önce bearer token'a döner) ve aynı rustls üzerinde tokio-tungstenite ile
-bağlanır. `WsConnection::run` bir `WsCommand` kanalının istediklerini
-gönderir ve iki taraftan biri kapatana kadar `WsEvent`'leri (gönderildi,
-geldi, kod ve nedenle kapandı, hata) bildirir; ping ve pong'u tungstenite
-yanıtlar.
+önce bearer token'a döner), `[websocket] subprotocols`'tan
+`Sec-WebSocket-Protocol` ekler ve tokio-tungstenite ile bağlanır. `wss://`
+rustls ayarını `apix_http::tls::client_config`'ten alır (bilinen kökler ve
+güvenilen CA, istemci sertifikası ya da her sertifikayı kabul eden bir
+doğrulayıcı); gRPC de doğrulamasız bağlantıda aynı modülü kullanır.
+`WsConnection::run` bir `WsCommand` kanalının istediklerini gönderir ve iki
+taraftan biri kapatana kadar `WsEvent`'leri (gönderildi, geldi, kod ve
+nedenle kapandı, hata) bildirir; ping ve pong'u tungstenite yanıtlar. Bir
+mesajın `MessageFormat`'ı (metin, base64, hex), değişkenler doldurulduktan
+sonra metnini `WsData`'ya çevirir.
 
 Masaüstü uygulamasında ağ çalışma zamanı paylaşılan yapıları doldurur (bir
 gönderim için `net::Incoming`, bir soket için `net::SocketIncoming`) ve bir
