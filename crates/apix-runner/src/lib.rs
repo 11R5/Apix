@@ -170,12 +170,15 @@ pub async fn exchange(
         let names: Vec<_> = resolved.missing.into_iter().collect();
         bail!("undefined variable(s): {}", names.join(", "));
     }
-    // A WebSocket conversation has no single response to test; runs skip it.
-    if apix_http::ws::is_websocket_url(&resolved.request.url) {
+    // A WebSocket or Socket.IO conversation has no single response to test;
+    // runs skip it.
+    let socketio = resolved.request.is_socketio();
+    if socketio || apix_http::ws::is_websocket_url(&resolved.request.url) {
+        let kind = if socketio { "Socket.IO" } else { "WebSocket" };
         done.pre.skip_request = true;
         done.pre.logs.push(LogLine {
             level: "info".into(),
-            text: "WebSocket request: not part of runs (use apix send)".into(),
+            text: format!("{kind} request: not part of runs (use apix send)"),
         });
         return Ok(done);
     }

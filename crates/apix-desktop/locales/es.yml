@@ -601,6 +601,19 @@ sidebar.rename: Cambiar nombre…
 sidebar.run: "Ejecutar…"
 sidebar.settings: Ajustes de petición…
 sidebar.show_in_environment: Mostrar en el entorno
+sio.ack: Pedir confirmación (ack)
+sio.ack_id: "ack %{id}"
+sio.auth: Autenticación
+sio.auth_placeholder: "JSON enviado al unirse, p. ej. {\"token\": \"{{token}}\"}"
+sio.event: Evento
+sio.joined: "Unido a %{namespace} (id de socket %{sid})"
+sio.left: El servidor nos sacó del espacio de nombres
+sio.namespace: Espacio de nombres
+sio.namespace_placeholder: ruta de la URL
+sio.path: Ruta
+sio.send_hint: "Ctrl+Intro emite; el JSON es un argumento, otro texto una cadena"
+sio.unreadable: "Trama ilegible: %{text}"
+sio.wants_ack: "espera ack %{id}"
 stream.all_types: Todos %{count}
 stream.count: "%{count} eventos"
 stream.dropped_reconnecting: Se cortó la conexión (%{error}); reconectando en %{seconds} s

@@ -601,6 +601,19 @@ sidebar.rename: إعادة تسمية…
 sidebar.run: "تشغيل…"
 sidebar.settings: إعدادات الطلب…
 sidebar.show_in_environment: العرض في البيئة
+sio.ack: طلب تأكيد (ack)
+sio.ack_id: "ack %{id}"
+sio.auth: المصادقة
+sio.auth_placeholder: "JSON يُرسل عند الانضمام، مثل {\"token\": \"{{token}}\"}"
+sio.event: الحدث
+sio.joined: "تم الانضمام إلى %{namespace} (معرّف المقبس %{sid})"
+sio.left: أخرجنا الخادم من مساحة الاسم
+sio.namespace: مساحة الاسم
+sio.namespace_placeholder: مسار عنوان URL
+sio.path: المسار
+sio.send_hint: "Ctrl+Enter للإرسال؛ JSON وسيط واحد، وأي نص آخر سلسلة"
+sio.unreadable: "إطار غير مقروء: %{text}"
+sio.wants_ack: "ينتظر ack %{id}"
 stream.all_types: الكل %{count}
 stream.count: "%{count} أحداث"
 stream.dropped_reconnecting: انقطع الاتصال (%{error})؛ إعادة الاتصال بعد %{seconds} ث

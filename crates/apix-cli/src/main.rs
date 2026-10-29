@@ -38,20 +38,21 @@ enum Command {
         /// Print what happened on the network: DNS, connection, redirects, TLS, local side
         #[arg(short = 'n', long)]
         network: bool,
-        /// WebSocket: send this text instead of the saved messages (repeatable)
+        /// WebSocket and Socket.IO: send this text instead of the saved messages (repeatable)
         #[arg(short = 'm', long = "message", value_name = "TEXT")]
         messages: Vec<String>,
         /// WebSocket: how --message texts are read: text, or bytes as base64 or hex
         #[arg(long = "format", value_name = "FORMAT", default_value = "text")]
         message_format: apix_core::MessageFormat,
-        /// Server-sent events: print only events of this type (repeatable)
+        /// Server-sent events: print only events of this type (repeatable). Socket.IO: the
+        /// event --message texts are emitted as (default `message`)
         #[arg(long = "event", value_name = "TYPE")]
         event_types: Vec<String>,
         /// Server-sent events: when the stream ends or drops, connect again after the
         /// server's retry time, sending Last-Event-ID (Ctrl+C stops)
         #[arg(long)]
         reconnect: bool,
-        /// WebSocket: how long to keep listening after sending, in seconds (0: until the server closes)
+        /// WebSocket and Socket.IO: how long to keep listening after sending, in seconds (0: until the server closes)
         #[arg(long, value_name = "SECONDS", default_value_t = 3.0)]
         listen: f64,
         #[command(flatten)]
@@ -432,6 +433,22 @@ async fn run(cli: Cli) -> Result<bool> {
                 }
                 let request = relative_to_file(resolved.request, &file);
                 return grpc(&style, &request, include_headers).await;
+            }
+            if resolved.request.is_socketio() {
+                if !resolved.missing.is_empty() {
+                    let names: Vec<_> = resolved.missing.into_iter().collect();
+                    bail!("undefined variable(s): {}", names.join(", "));
+                }
+                let event = event_types.first().cloned();
+                return socketio(
+                    &style,
+                    resolved.request,
+                    &vars,
+                    (messages, message_format, event),
+                    listen,
+                    include_headers,
+                )
+                .await;
             }
             if apix_http::ws::is_websocket_url(&resolved.request.url) {
                 if !resolved.missing.is_empty() {
@@ -1092,6 +1109,151 @@ async fn websocket(
                     println!("{}closed{code}{reason}{}", style.dim, style.reset);
                 }
                 WsEvent::Error(message) => {
+                    ok = false;
+                    println!("{}error: {message}{}", style.red, style.reset);
+                }
+            }
+        })
+        .await;
+    drop(tx);
+    Ok(ok)
+}
+
+/// `apix send` on a Socket.IO request: join the namespace, emit the saved
+/// messages (or `--message` texts as one event), print the events both ways
+/// and the acknowledgements, and close after `listen` seconds (0 waits for
+/// the server). Fails on errors.
+async fn socketio(
+    style: &Style,
+    request: apix_core::Request,
+    vars: &Variables,
+    (extra, extra_format, extra_event): (Vec<String>, apix_core::MessageFormat, Option<String>),
+    listen: f64,
+    include_headers: bool,
+) -> Result<bool> {
+    use apix_http::socketio::{SioCommand, SioEvent, args_from_text, show_args};
+
+    let event_or_default = |event: &str| match event.trim() {
+        "" => "message".to_owned(),
+        event => event.to_owned(),
+    };
+    let outgoing: Vec<(String, String, apix_core::MessageFormat, bool)> = if extra.is_empty() {
+        let mut missing = std::collections::BTreeSet::new();
+        let messages = request
+            .messages
+            .iter()
+            .map(|m| {
+                (
+                    event_or_default(&vars.interpolate(&m.event, &mut missing)),
+                    vars.interpolate(&m.body, &mut missing),
+                    m.format,
+                    m.ack,
+                )
+            })
+            .collect();
+        if !missing.is_empty() {
+            let names: Vec<_> = missing.into_iter().collect();
+            bail!(
+                "undefined variable(s) in the messages: {}",
+                names.join(", ")
+            );
+        }
+        messages
+    } else {
+        let event = event_or_default(extra_event.as_deref().unwrap_or_default());
+        extra
+            .into_iter()
+            .map(|text| (event.clone(), text, extra_format, false))
+            .collect()
+    };
+    let commands = outgoing
+        .into_iter()
+        .map(|(event, text, format, ack)| {
+            args_from_text(&text, format).map(|args| SioCommand::Emit { event, args, ack })
+        })
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| anyhow::anyhow!("cannot send a message: {e}"))?;
+    let started = std::time::Instant::now();
+    let connection = apix_http::socketio::connect(&request).await?;
+    println!(
+        "{}{} Switching Protocols{}  {}connected to {}, namespace {} (sid {}){}",
+        style.green,
+        connection.status,
+        style.reset,
+        style.dim,
+        connection.url,
+        connection.namespace,
+        connection.sid,
+        style.reset
+    );
+    if include_headers {
+        for (k, v) in &connection.headers {
+            println!("{}{k}{}: {v}", style.dim, style.reset);
+        }
+        println!();
+    }
+    let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+    for command in commands {
+        let _ = tx.send(command);
+    }
+    if listen > 0.0 {
+        let closer = tx.clone();
+        tokio::spawn(async move {
+            tokio::time::sleep(std::time::Duration::from_secs_f64(listen)).await;
+            let _ = closer.send(SioCommand::Close);
+        });
+    }
+    let mut ok = true;
+    connection
+        .run(rx, |event| {
+            let at = format!("{:>8.2}s", started.elapsed().as_secs_f64());
+            let line = |arrow: &str, color: &str, text: String| {
+                let text = text.trim_end();
+                println!(
+                    "{}{at}{} {color}{arrow}{} {text}",
+                    style.dim, style.reset, style.reset
+                )
+            };
+            match event {
+                SioEvent::Sent(m) => {
+                    let ack = m.ack.map(|id| format!("  (ack {id})")).unwrap_or_default();
+                    line(
+                        "↑",
+                        style.yellow,
+                        format!("{} {}{ack}", m.event, show_args(&m.args)),
+                    )
+                }
+                SioEvent::Received(m) => {
+                    let ack = m
+                        .ack
+                        .map(|id| format!("  (wants ack {id})"))
+                        .unwrap_or_default();
+                    line(
+                        "↓",
+                        style.green,
+                        format!("{} {}{ack}", m.event, show_args(&m.args)),
+                    )
+                }
+                SioEvent::Acked { id, args } => {
+                    line("✓", style.green, format!("ack {id} {}", show_args(&args)))
+                }
+                SioEvent::Disconnected => {
+                    println!(
+                        "{}the server made us leave the namespace{}",
+                        style.dim, style.reset
+                    )
+                }
+                SioEvent::Unreadable(text) => line("?", style.dim, text),
+                SioEvent::Closed { code, reason } => {
+                    let code = code.map(|c| format!(" {c}")).unwrap_or_default();
+                    let reason = if reason.is_empty() {
+                        String::new()
+                    } else {
+                        format!(": {reason}")
+                    };
+                    println!("{}closed{code}{reason}{}", style.dim, style.reset);
+                }
+                SioEvent::Error(message) => {
                     ok = false;
                     println!("{}error: {message}{}", style.red, style.reset);
                 }

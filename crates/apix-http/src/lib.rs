@@ -4,6 +4,7 @@
 pub mod graphql;
 mod local;
 pub mod oauth2;
+pub mod socketio;
 pub mod sse;
 pub mod tls;
 mod trace;

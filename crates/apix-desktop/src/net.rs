@@ -187,17 +187,70 @@ pub fn send_streaming(
 /// When a WebSocket handshake finished, with its status and headers.
 pub type Opened = (std::time::Instant, u16, Vec<(String, String)>);
 
-/// What an open WebSocket has to report; the UI takes it as it comes.
-#[derive(Default)]
-pub struct SocketIncoming {
+/// What an open WebSocket (or Socket.IO connection) has to report; the UI
+/// takes it as it comes.
+pub struct SocketIncoming<E = apix_http::ws::WsEvent> {
     /// When the handshake finished, its status and headers.
     pub opened: Option<Opened>,
+    /// Socket.IO: the namespace joined and the socket id.
+    pub joined: Option<(String, String)>,
     /// Messages and the closing, each with when it happened.
-    pub events: Vec<(std::time::Instant, apix_http::ws::WsEvent)>,
+    pub events: Vec<(std::time::Instant, E)>,
     /// Why the connection could not be opened.
     pub failed: Option<String>,
     /// The connection is over (closed or failed).
     pub done: bool,
+}
+
+impl<E> Default for SocketIncoming<E> {
+    fn default() -> Self {
+        Self {
+            opened: None,
+            joined: None,
+            events: Vec::new(),
+            failed: None,
+            done: false,
+        }
+    }
+}
+
+/// Connects a resolved Socket.IO request and joins its namespace on the
+/// network runtime, like [`ws_connect`].
+pub fn sio_connect(
+    request: Request,
+) -> (
+    std::sync::Arc<std::sync::Mutex<SocketIncoming<apix_http::socketio::SioEvent>>>,
+    tokio::sync::mpsc::UnboundedSender<apix_http::socketio::SioCommand>,
+    impl Drop + Send + 'static,
+) {
+    let incoming = std::sync::Arc::new(std::sync::Mutex::new(SocketIncoming::default()));
+    let shared = incoming.clone();
+    let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+    let handle = net().runtime.spawn(async move {
+        let lock = || shared.lock().unwrap_or_else(|e| e.into_inner());
+        match apix_http::socketio::connect(&request).await {
+            Err(e) => lock().failed = Some(error_chain(&e)),
+            Ok(connection) => {
+                {
+                    let mut incoming = lock();
+                    incoming.opened = Some((
+                        std::time::Instant::now(),
+                        connection.status,
+                        connection.headers.clone(),
+                    ));
+                    incoming.joined = Some((connection.namespace.clone(), connection.sid.clone()));
+                }
+                connection
+                    .run(rx, |event| {
+                        lock().events.push((std::time::Instant::now(), event));
+                    })
+                    .await;
+            }
+        }
+        lock().done = true;
+        Ok(())
+    });
+    (incoming, tx, AbortOnDrop(handle))
 }
 
 /// Opens a WebSocket for an already-resolved request on the network

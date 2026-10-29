@@ -601,6 +601,19 @@ sidebar.rename: Yeniden adlandır…
 sidebar.run: "Çalıştır…"
 sidebar.settings: İstek ayarları…
 sidebar.show_in_environment: Ortamda göster
+sio.ack: Onay (ack) iste
+sio.ack_id: "ack %{id}"
+sio.auth: Kimlik
+sio.auth_placeholder: "Katılırken gönderilen JSON, ör. {\"token\": \"{{token}}\"}"
+sio.event: Olay
+sio.joined: "%{namespace} ad alanına katılındı (soket kimliği %{sid})"
+sio.left: Sunucu bizi ad alanından çıkardı
+sio.namespace: Ad alanı
+sio.namespace_placeholder: "URL'nin yolu"
+sio.path: Yol
+sio.send_hint: "Ctrl+Enter yayınlar; JSON tek argümandır, başka metin bir dize"
+sio.unreadable: "Okunamayan çerçeve: %{text}"
+sio.wants_ack: "ack %{id} bekliyor"
 stream.all_types: Tümü %{count}
 stream.count: "%{count} olay"
 stream.dropped_reconnecting: Bağlantı koptu (%{error}); %{seconds} sn sonra yeniden bağlanılıyor

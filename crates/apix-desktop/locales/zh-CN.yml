@@ -601,6 +601,19 @@ sidebar.rename: 重命名…
 sidebar.run: "运行…"
 sidebar.settings: 请求设置…
 sidebar.show_in_environment: 在环境中显示
+sio.ack: 请求确认（ack）
+sio.ack_id: "ack %{id}"
+sio.auth: 认证
+sio.auth_placeholder: "加入时发送的 JSON，例如 {\"token\": \"{{token}}\"}"
+sio.event: 事件
+sio.joined: "已加入 %{namespace}（套接字 ID %{sid}）"
+sio.left: 服务器让我们离开了命名空间
+sio.namespace: 命名空间
+sio.namespace_placeholder: URL 的路径
+sio.path: 路径
+sio.send_hint: "Ctrl+Enter 发送；JSON 为一个参数，其他文本为字符串"
+sio.unreadable: "无法读取的帧：%{text}"
+sio.wants_ack: "等待 ack %{id}"
 stream.all_types: 全部 %{count}
 stream.count: "%{count} 个事件"
 stream.dropped_reconnecting: 连接已断开（%{error}）；%{seconds} 秒后重新连接

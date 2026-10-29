@@ -362,6 +362,7 @@ name = "apix-http"
 version = "0.1.0"
 dependencies = [
  "apix-core",
+ "base64 0.22.1",
  "bytes",
  "cookie_store 0.21.1",
  "futures-util",

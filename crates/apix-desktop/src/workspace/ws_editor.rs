@@ -1,26 +1,37 @@
-//! The Messages tab of a WebSocket request (`ws://` or `wss://`): the
-//! subprotocols offered in the handshake, a message to send (Ctrl+Enter) as
-//! text or as bytes written in base64 or hex, and the request's saved
-//! messages, kept in the `.apix` file as `[[message]]`.
+//! The Messages tab of a WebSocket request (`ws://` or `wss://`) or a
+//! Socket.IO one: the subprotocols offered in the handshake (WebSocket) or
+//! the namespace, path and auth (Socket.IO), a message to send (Ctrl+Enter)
+//! as text or as bytes written in base64 or hex, with its event name and
+//! whether to ask for an ack (Socket.IO), and the request's saved messages,
+//! kept in the `.apix` file as `[[message]]`.
 
-use apix_core::{MessageFormat, WebSocketOptions, WsMessage};
+use apix_core::{MessageFormat, SocketIoOptions, WebSocketOptions, WsMessage};
 use gpui_kit::component::button::{Button, ButtonVariants as _};
+use gpui_kit::component::checkbox::Checkbox;
 use gpui_kit::component::input::{Editor, EditorState, Input, InputEvent, InputState};
 use gpui_kit::component::tab::{Tab, TabBar};
 use gpui_kit::component::{Disableable as _, IconName, Sizable, h_flex, v_flex};
+use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
 use crate::bidi::{self, Bidi as _};
 use crate::tr;
 
-/// Send this text over the connection (connecting first when needed), read
-/// as the format says.
-pub(super) struct SendMessage(pub String, pub MessageFormat);
+/// Send this message over the connection (connecting first when needed):
+/// its text read as the format says, and for Socket.IO its event and ack.
+pub(super) struct SendMessage(pub WsMessage);
 
 pub(super) struct WsEditor {
     composer: Entity<EditorState>,
     format: MessageFormat,
     subprotocols: Entity<InputState>,
+    /// Socket.IO instead of plain WebSocket messages.
+    socketio: bool,
+    namespace: Entity<InputState>,
+    path: Entity<InputState>,
+    auth: Entity<InputState>,
+    event: Entity<InputState>,
+    ack: bool,
     messages: Vec<WsMessage>,
     _subscriptions: Vec<Subscription>,
 }
@@ -35,36 +46,53 @@ fn format_label(format: MessageFormat) -> SharedString {
     }
 }
 
+fn input(
+    placeholder: SharedString,
+    window: &mut Window,
+    cx: &mut Context<WsEditor>,
+) -> Entity<InputState> {
+    cx.new(|cx| InputState::new(window, cx).placeholder(placeholder))
+}
+
 impl WsEditor {
     pub(super) fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
         let composer = cx.new(|cx| EditorState::new(window, cx).language("json"));
-        let subprotocols = cx
-            .new(|cx| InputState::new(window, cx).placeholder(tr!("ws.subprotocols_placeholder")));
-        let subscriptions = vec![
-            cx.subscribe_in(
-                &composer,
-                window,
-                |this, _, event: &InputEvent, window, cx| match event {
-                    InputEvent::PressEnter {
-                        secondary: true, ..
-                    } => {
-                        this.take_back_newline(window, cx);
-                        this.send_composer(cx);
-                    }
-                    InputEvent::Change => cx.notify(),
-                    _ => {}
-                },
-            ),
-            cx.subscribe(&subprotocols, |_, _, event: &InputEvent, cx| {
+        let subprotocols = input(tr!("ws.subprotocols_placeholder"), window, cx);
+        let namespace = input(tr!("sio.namespace_placeholder"), window, cx);
+        let path = input("/socket.io/".into(), window, cx);
+        let auth = input(tr!("sio.auth_placeholder"), window, cx);
+        let event = input("message".into(), window, cx);
+        let mut subscriptions = vec![cx.subscribe_in(
+            &composer,
+            window,
+            |this, _, event: &InputEvent, window, cx| match event {
+                InputEvent::PressEnter {
+                    secondary: true, ..
+                } => {
+                    this.take_back_newline(window, cx);
+                    this.send_composer(cx);
+                }
+                InputEvent::Change => cx.notify(),
+                _ => {}
+            },
+        )];
+        for state in [&subprotocols, &namespace, &path, &auth, &event] {
+            subscriptions.push(cx.subscribe(state, |_, _, event: &InputEvent, cx| {
                 if matches!(event, InputEvent::Change) {
                     cx.notify();
                 }
-            }),
-        ];
+            }));
+        }
         Self {
             composer,
             format: MessageFormat::Text,
             subprotocols,
+            socketio: false,
+            namespace,
+            path,
+            auth,
+            event,
+            ack: false,
             messages: Vec::new(),
             _subscriptions: subscriptions,
         }
@@ -72,9 +100,13 @@ impl WsEditor {
 
     /// Placeholders are kept inside the inputs; set them again after a language change.
     pub(super) fn retranslate(&mut self, window: &mut Window, cx: &mut Context<Self>) {
-        self.subprotocols.update(cx, |state, cx| {
-            state.set_placeholder(tr!("ws.subprotocols_placeholder"), window, cx)
-        });
+        for (state, text) in [
+            (&self.subprotocols, tr!("ws.subprotocols_placeholder")),
+            (&self.namespace, tr!("sio.namespace_placeholder")),
+            (&self.auth, tr!("sio.auth_placeholder")),
+        ] {
+            state.update(cx, |state, cx| state.set_placeholder(text, window, cx));
+        }
         cx.notify();
     }
 
@@ -82,6 +114,7 @@ impl WsEditor {
         &mut self,
         messages: &[WsMessage],
         options: Option<&WebSocketOptions>,
+        socketio: Option<&SocketIoOptions>,
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
@@ -91,6 +124,17 @@ impl WsEditor {
             .unwrap_or_default();
         self.subprotocols
             .update(cx, |state, cx| state.set_value(protocols, window, cx));
+        self.socketio = socketio.is_some();
+        let sio = socketio.cloned().unwrap_or_default();
+        for (state, value) in [
+            (&self.namespace, sio.namespace),
+            (&self.path, sio.path),
+            (&self.auth, sio.auth),
+            (&self.event, String::new()),
+        ] {
+            state.update(cx, |state, cx| state.set_value(value, window, cx));
+        }
+        self.ack = false;
         cx.notify();
     }
 
@@ -98,8 +142,16 @@ impl WsEditor {
         self.messages.clone()
     }
 
+    /// Whether messages are Socket.IO events.
+    pub(super) fn is_socketio(&self) -> bool {
+        self.socketio
+    }
+
     /// The `[websocket]` options, or `None` when nothing is set.
     pub(super) fn options(&self, cx: &App) -> Option<WebSocketOptions> {
+        if self.socketio {
+            return None;
+        }
         let subprotocols: Vec<String> = self
             .subprotocols
             .read(cx)
@@ -111,8 +163,33 @@ impl WsEditor {
         (!subprotocols.is_empty()).then_some(WebSocketOptions { subprotocols })
     }
 
+    /// The `[socketio]` options of a Socket.IO request.
+    pub(super) fn socketio_options(&self, cx: &App) -> Option<SocketIoOptions> {
+        let value = |state: &Entity<InputState>| state.read(cx).value().trim().to_owned();
+        self.socketio.then(|| SocketIoOptions {
+            namespace: value(&self.namespace),
+            path: value(&self.path),
+            auth: value(&self.auth),
+        })
+    }
+
     fn composer_text(&self, cx: &App) -> String {
         self.composer.read(cx).value().to_string()
+    }
+
+    /// The composer as a message (event and ack only for Socket.IO).
+    fn composed(&self, cx: &App) -> WsMessage {
+        WsMessage {
+            body: self.composer_text(cx),
+            format: self.format,
+            event: if self.socketio {
+                self.event.read(cx).value().trim().to_owned()
+            } else {
+                String::new()
+            },
+            ack: self.socketio && self.ack,
+            ..Default::default()
+        }
     }
 
     /// The editor has already put a line break (and indent) at the cursor
@@ -135,34 +212,62 @@ impl WsEditor {
         }
     }
 
+    /// An empty text is a message only for Socket.IO (an event without arguments).
+    fn can_send(&self, cx: &App) -> bool {
+        self.socketio || !self.composer_text(cx).trim().is_empty()
+    }
+
     fn send_composer(&mut self, cx: &mut Context<Self>) {
-        let text = self.composer_text(cx);
-        if !text.trim().is_empty() {
-            cx.emit(SendMessage(text, self.format));
+        if self.can_send(cx) {
+            cx.emit(SendMessage(self.composed(cx)));
         }
     }
 
     fn save_composer(&mut self, cx: &mut Context<Self>) {
-        let body = self.composer_text(cx);
-        if body.trim().is_empty() {
+        if !self.can_send(cx) {
             return;
         }
-        self.messages.push(WsMessage {
-            name: String::new(),
-            body,
-            format: self.format,
-        });
+        self.messages.push(self.composed(cx));
         cx.notify();
     }
 
     fn load(&mut self, ix: usize, window: &mut Window, cx: &mut Context<Self>) {
         if let Some(message) = self.messages.get(ix) {
-            let body = message.body.clone();
+            let (body, event) = (message.body.clone(), message.event.clone());
             self.format = message.format;
+            self.ack = message.ack;
             self.composer
                 .update(cx, |state, cx| state.set_value(body, window, cx));
+            self.event
+                .update(cx, |state, cx| state.set_value(event, window, cx));
             cx.notify();
         }
+    }
+
+    /// A label and its input, side by side.
+    fn field(&self, label: SharedString, state: &Entity<InputState>) -> impl IntoElement + use<> {
+        let p = crate::theme::current();
+        h_flex()
+            .dir_row()
+            .flex_1()
+            .min_w_0()
+            .gap_2()
+            .items_center()
+            .child(
+                div()
+                    .flex_none()
+                    .text_xs()
+                    .font_weight(FontWeight::MEDIUM)
+                    .text_color(p.text_muted)
+                    .child(label),
+            )
+            .child(
+                div()
+                    .flex_1()
+                    .min_w_0()
+                    .ltr()
+                    .child(Input::new(state).small()),
+            )
     }
 }
 
@@ -175,7 +280,22 @@ impl Render for WsEditor {
             Some(Err(e)) if !empty => Some(e),
             _ => None,
         };
+        let chip = |text: SharedString, color: Hsla| {
+            div()
+                .flex_none()
+                .px_1p5()
+                .rounded_sm()
+                .bg(color.opacity(0.14))
+                .text_xs()
+                .text_color(color)
+                .child(text)
+        };
+        let socketio = self.socketio;
         let rows = self.messages.iter().enumerate().map(|(ix, message)| {
+            let event = match message.event.as_str() {
+                "" => "message".to_owned(),
+                event => event.to_owned(),
+            };
             h_flex()
                 .id(("ws-saved", ix))
                 .dir_row()
@@ -189,16 +309,14 @@ impl Render for WsEditor {
                 .on_click(
                     cx.listener(move |this, _: &ClickEvent, window, cx| this.load(ix, window, cx)),
                 )
-                .children((!message.format.is_text()).then(|| {
-                    div()
-                        .flex_none()
-                        .px_1p5()
-                        .rounded_sm()
-                        .bg(p.accent.opacity(0.14))
-                        .text_xs()
-                        .text_color(p.accent)
-                        .child(format_label(message.format))
-                }))
+                .when(socketio, |row| row.child(chip(event.into(), p.ok)))
+                .when(socketio && message.ack, |row| {
+                    row.child(chip("ack".into(), p.text_muted))
+                })
+                .children(
+                    (!message.format.is_text())
+                        .then(|| chip(format_label(message.format), p.accent)),
+                )
                 .child(
                     div()
                         .flex_1()
@@ -216,7 +334,7 @@ impl Render for WsEditor {
                         .tooltip(tr!("ws.send"))
                         .on_click(cx.listener(move |this, _: &ClickEvent, _, cx| {
                             if let Some(message) = this.messages.get(ix) {
-                                cx.emit(SendMessage(message.body.clone(), message.format));
+                                cx.emit(SendMessage(message.clone()));
                             }
                             cx.stop_propagation();
                         })),
@@ -236,33 +354,68 @@ impl Render for WsEditor {
                 )
         });
         let selected = MessageFormat::ALL.iter().position(|f| *f == self.format);
+        let protocol = bidi::fill_tabs(
+            TabBar::new("ws-protocol").segmented().xsmall(),
+            Some(usize::from(socketio)),
+            vec![Tab::new().label("WebSocket"), Tab::new().label("Socket.IO")],
+            cx.listener(|this, ix: &usize, _, cx| {
+                this.socketio = *ix == 1;
+                cx.notify();
+            }),
+        );
+        // What the connection is set up with: subprotocols, or Socket.IO's options.
+        let setup = if socketio {
+            v_flex()
+                .gap_2()
+                .child(
+                    h_flex()
+                        .dir_row()
+                        .gap_3()
+                        .child(protocol)
+                        .child(self.field(tr!("sio.namespace"), &self.namespace))
+                        .child(self.field(tr!("sio.path"), &self.path)),
+                )
+                .child(self.field(tr!("sio.auth"), &self.auth))
+                .into_any_element()
+        } else {
+            h_flex()
+                .dir_row()
+                .gap_3()
+                .child(protocol)
+                .child(self.field(tr!("ws.subprotocols"), &self.subprotocols))
+                .into_any_element()
+        };
+        let hint = if socketio {
+            tr!("sio.send_hint")
+        } else {
+            tr!("ws.send_hint")
+        };
         v_flex()
             .size_full()
             .gap_2()
-            .child(
-                h_flex()
-                    .dir_row()
-                    .gap_2()
-                    .items_center()
-                    .child(
-                        div()
-                            .flex_none()
-                            .text_xs()
-                            .font_weight(FontWeight::MEDIUM)
-                            .text_color(p.text_muted)
-                            .child(tr!("ws.subprotocols")),
-                    )
-                    .child(
-                        div()
-                            .flex_1()
-                            .min_w_0()
-                            .ltr()
-                            .child(Input::new(&self.subprotocols).small()),
-                    ),
-            )
+            .child(setup)
+            .when(socketio, |d| {
+                d.child(
+                    h_flex()
+                        .dir_row()
+                        .gap_3()
+                        .items_center()
+                        .child(self.field(tr!("sio.event"), &self.event))
+                        .child(
+                            Checkbox::new("sio-ack")
+                                .dir_row()
+                                .checked(self.ack)
+                                .label(tr!("sio.ack"))
+                                .on_click(cx.listener(|this, checked: &bool, _, cx| {
+                                    this.ack = *checked;
+                                    cx.notify();
+                                })),
+                        ),
+                )
+            })
             .child(
                 div()
-                    .h(px(160.))
+                    .h(px(if socketio { 120. } else { 160. }))
                     .flex_none()
                     .child(Editor::new(&self.composer).h_full()),
             )
@@ -277,7 +430,7 @@ impl Render for WsEditor {
                             .small()
                             .icon(IconName::Play)
                             .label(tr!("ws.send"))
-                            .disabled(empty || problem.is_some())
+                            .disabled(!self.can_send(cx) || problem.is_some())
                             .on_click(
                                 cx.listener(|this, _: &ClickEvent, _, cx| this.send_composer(cx)),
                             ),
@@ -288,7 +441,7 @@ impl Render for WsEditor {
                             .small()
                             .icon(IconName::Plus)
                             .label(tr!("ws.save"))
-                            .disabled(empty)
+                            .disabled(!self.can_send(cx))
                             .on_click(
                                 cx.listener(|this, _: &ClickEvent, _, cx| this.save_composer(cx)),
                             ),
@@ -304,21 +457,13 @@ impl Render for WsEditor {
                             this.format = MessageFormat::ALL[*ix];
                             cx.notify();
                         }),
-                    ))
-                    .child(div().flex_1())
-                    .child(match &problem {
-                        Some(e) => div()
-                            .text_xs()
-                            .text_color(p.err)
-                            .child(e.clone())
-                            .into_any_element(),
-                        None => div()
-                            .text_xs()
-                            .text_color(p.text_muted)
-                            .child(tr!("ws.send_hint"))
-                            .into_any_element(),
-                    }),
+                    )),
             )
+            // On its own line, so it has the tab's width.
+            .child(div().text_xs().map(|d| match &problem {
+                Some(e) => d.text_color(p.err).child(e.clone()),
+                None => d.text_color(p.text_muted).child(hint),
+            }))
             .child(
                 div()
                     .pt_1()

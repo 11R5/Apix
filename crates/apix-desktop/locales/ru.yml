@@ -601,6 +601,19 @@ sidebar.rename: Переименовать…
 sidebar.run: "Запустить…"
 sidebar.settings: Настройки запросов…
 sidebar.show_in_environment: Показать в окружении
+sio.ack: Запросить подтверждение (ack)
+sio.ack_id: "ack %{id}"
+sio.auth: Авторизация
+sio.auth_placeholder: "JSON при подключении, напр. {\"token\": \"{{token}}\"}"
+sio.event: Событие
+sio.joined: "Подключено к %{namespace} (id сокета %{sid})"
+sio.left: Сервер отключил нас от пространства имён
+sio.namespace: Пространство имён
+sio.namespace_placeholder: путь из URL
+sio.path: Путь
+sio.send_hint: "Ctrl+Enter отправляет; JSON — один аргумент, другой текст — строка"
+sio.unreadable: "Нечитаемый кадр: %{text}"
+sio.wants_ack: "ждёт ack %{id}"
 stream.all_types: Все %{count}
 stream.count: "Событий: %{count}"
 stream.dropped_reconnecting: Соединение оборвалось (%{error}); переподключение через %{seconds} с

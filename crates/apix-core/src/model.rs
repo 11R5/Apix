@@ -567,6 +567,10 @@ pub struct Request {
     /// Options of a `ws://` or `wss://` request.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub websocket: Option<WebSocketOptions>,
+    /// A Socket.IO request: its namespace, path and auth. The URL may be
+    /// `ws(s)://` or `http(s)://`; `[[message]]` then holds events.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub socketio: Option<SocketIoOptions>,
 }
 
 /// What a gRPC request calls, stored as `[grpc]`. The body (JSON) is the
@@ -595,6 +599,12 @@ pub struct WsMessage {
     /// How `body` is read: as text, or as bytes written in base64 or hex.
     #[serde(default, skip_serializing_if = "MessageFormat::is_text")]
     pub format: MessageFormat,
+    /// Socket.IO: the event the body is sent as (`message` when empty).
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub event: String,
+    /// Socket.IO: ask the server to acknowledge the event.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub ack: bool,
 }
 
 /// How a WebSocket message's text stands for what is sent.
@@ -678,6 +688,20 @@ pub struct WebSocketOptions {
     /// order of preference; the server picks one.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub subprotocols: Vec<String>,
+}
+
+/// Socket.IO options, stored as `[socketio]`.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SocketIoOptions {
+    /// The namespace to join, like `/admin`; empty takes the URL's path, or `/`.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub namespace: String,
+    /// Where the server listens; empty is `/socket.io/`.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub path: String,
+    /// JSON sent when joining the namespace (the client's `auth`).
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub auth: String,
 }
 
 impl WsMessage {
@@ -827,6 +851,11 @@ impl Request {
             grpc.import_paths.iter_mut().for_each(absolute);
         }
         self
+    }
+
+    /// A Socket.IO request (it has a `[socketio]` table).
+    pub fn is_socketio(&self) -> bool {
+        self.socketio.is_some()
     }
 
     /// A `grpc://` or `grpcs://` request.
@@ -1017,10 +1046,54 @@ subprotocols = ["graphql-transport-ws", "graphql-ws"]
         let long = WsMessage {
             name: String::new(),
             body: "a much longer first line that goes on and on and on\nsecond".into(),
-            format: MessageFormat::Text,
+            ..Default::default()
         };
         assert_eq!(long.label().chars().count(), 41);
         assert!(long.label().ends_with('…'));
+    }
+
+    #[test]
+    fn socketio_requests_round_trip() {
+        let text = r#"
+name = "Chat"
+url = "http://localhost:3000"
+
+[[message]]
+event = "join"
+body = '{"room": "{{room}}"}'
+ack = true
+
+[[message]]
+body = "hi"
+
+[socketio]
+namespace = "/chat"
+auth = '{"token": "{{token}}"}'
+"#;
+        let req: Request = toml::from_str(text).unwrap();
+        assert!(req.is_socketio());
+        assert!(!Request::new(Method::Get, "ws://x").is_socketio());
+        assert_eq!(req.messages[0].event, "join");
+        assert!(req.messages[0].ack);
+        assert!(!req.messages[1].ack);
+        let back: Request = toml::from_str(&toml::to_string_pretty(&req).unwrap()).unwrap();
+        assert_eq!(req, back);
+        // Plain messages write neither field.
+        let plain = toml::to_string(&req.messages[1]).unwrap();
+        assert!(!plain.contains("event") && !plain.contains("ack"));
+        // An empty table still marks the request.
+        let empty = Request {
+            socketio: Some(SocketIoOptions::default()),
+            ..Request::new(Method::Get, "ws://x")
+        };
+        let back: Request = toml::from_str(&toml::to_string_pretty(&empty).unwrap()).unwrap();
+        assert!(back.is_socketio());
+        // The auth takes variables; messages wait until they are sent.
+        let mut vars = crate::Variables::new();
+        vars.set("token", "s3cret");
+        let resolved = req.resolve(&vars).request;
+        assert_eq!(resolved.socketio.unwrap().auth, r#"{"token": "s3cret"}"#);
+        assert_eq!(resolved.messages[0].body, r#"{"room": "{{room}}"}"#);
     }
 
     #[test]
