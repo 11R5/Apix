@@ -54,6 +54,10 @@ pub struct Summary {
     /// The full body size, even when less was kept.
     #[serde(default)]
     pub size: u64,
+    /// A gRPC call: `status` is its status code (0 is OK) and the body is
+    /// the call's log.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub grpc: bool,
 }
 
 /// What came back, without the body.
@@ -67,6 +71,12 @@ pub struct StoredResponse {
     /// Whether the body was cut at `MAX_BODY`.
     #[serde(default)]
     pub truncated: bool,
+    /// A gRPC call's trailers (its response metadata is in `headers`).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub trailers: Vec<(String, String)>,
+    /// A gRPC call's status message.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub message: String,
 }
 
 /// A whole history entry.
@@ -266,6 +276,7 @@ mod tests {
                 error: None,
                 duration_ms: 12,
                 size: body.len() as u64,
+                grpc: false,
             },
             request,
             response: Some(StoredResponse {
@@ -275,9 +286,34 @@ mod tests {
                 ttfb_us: 9_000,
                 total_us: 12_000,
                 truncated: false,
+                trailers: Vec::new(),
+                message: String::new(),
             }),
             body: body.to_vec(),
         }
+    }
+
+    #[test]
+    fn keeps_grpc_calls() {
+        let history = History::new(temp("grpc"));
+        let mut call = entry(3, br#"[{"at_ms":0,"sent":true,"message":{}}]"#);
+        call.summary.grpc = true;
+        call.summary.status = Some(5);
+        let response = call.response.as_mut().unwrap();
+        response.status = 5;
+        response.trailers = vec![("x-cause".into(), "gone".into())];
+        response.message = "no such user".into();
+        history.record(&call).unwrap();
+        let id = history.list()[0].id.clone();
+        assert_eq!(history.load(&id).unwrap(), call);
+        // HTTP entries do not write the gRPC fields.
+        history.record(&entry(4, b"")).unwrap();
+        let http = fs::read_to_string(history.dir().join(format!("{:013}-0000.json", 4))).unwrap();
+        assert!(
+            !http.contains("grpc") && !http.contains("trailers"),
+            "{http}"
+        );
+        fs::remove_dir_all(history.dir()).ok();
     }
 
     #[test]

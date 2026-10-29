@@ -237,6 +237,62 @@ impl CallOutcome {
     pub fn code_name(&self) -> &'static str {
         code_name(self.code)
     }
+
+    /// The call as an HTTP response, for test scripts, checks and run
+    /// reports: the status is the HTTP status the gRPC code stands for (OK
+    /// is 200, NOT_FOUND 404, …) with the code's name as the reason; the
+    /// headers are the metadata, the trailers, and `grpc-status` and
+    /// `grpc-message`; the body is the message, or a JSON list of them for a
+    /// method that answers with a stream.
+    pub fn to_response(&self, server_streaming: bool) -> apix_http::Response {
+        let mut headers = self.headers.clone();
+        headers.extend(self.trailers.iter().cloned());
+        headers.push(("grpc-status".into(), self.code.to_string()));
+        if !self.status_message.is_empty() {
+            headers.push(("grpc-message".into(), self.status_message.clone()));
+        }
+        headers.push(("content-type".into(), "application/json".into()));
+        let body = if server_streaming {
+            let items: Vec<serde_json::Value> = self
+                .received
+                .iter()
+                .filter_map(|m| serde_json::from_str(m).ok())
+                .collect();
+            serde_json::to_string_pretty(&items).unwrap_or_default()
+        } else {
+            self.received.first().cloned().unwrap_or_default()
+        };
+        let mut response = apix_http::Response::from_parts(
+            http_status(self.code),
+            "HTTP/2.0".into(),
+            headers,
+            body.into_bytes(),
+            apix_http::Timing {
+                ttfb: self.elapsed,
+                total: self.elapsed,
+            },
+        );
+        response.reason = Some(self.code_name());
+        response
+    }
+}
+
+/// The HTTP status a gRPC status code stands for (as Google's APIs map them).
+pub fn http_status(code: i32) -> u16 {
+    match code {
+        0 => 200,
+        1 => 499,
+        3 | 9 | 11 => 400,
+        4 => 504,
+        5 => 404,
+        6 | 10 => 409,
+        7 => 403,
+        8 => 429,
+        12 => 501,
+        14 => 503,
+        16 => 401,
+        _ => 500,
+    }
 }
 
 /// The canonical name of a gRPC status code.
@@ -482,6 +538,22 @@ pub async fn send(
     req: &Request,
     on_event: impl FnMut(CallEvent) + Send,
 ) -> Result<CallOutcome, GrpcError> {
+    let (channel, method, messages, metadata) = prepare(req).await?;
+    call(channel, &method, messages, metadata, on_event).await
+}
+
+/// Like `send`, with the outcome as an HTTP response (see
+/// `CallOutcome::to_response`), for runs and test scripts.
+pub async fn send_for_tests(req: &Request) -> Result<apix_http::Response, GrpcError> {
+    let (channel, method, messages, metadata) = prepare(req).await?;
+    let outcome = call(channel, &method, messages, metadata, |_| {}).await?;
+    Ok(outcome.to_response(method.is_server_streaming()))
+}
+
+/// The connection, the method, its messages and the metadata of a request.
+async fn prepare(
+    req: &Request,
+) -> Result<(Channel, MethodDescriptor, Vec<DynamicMessage>, MetadataMap), GrpcError> {
     let name = req
         .grpc
         .as_ref()
@@ -494,7 +566,7 @@ pub async fn send(
     let pool = descriptors(req, &channel, &metadata).await?;
     let method = find_method(&pool, &name).ok_or(GrpcError::UnknownMethod(name))?;
     let messages = messages(req, &method)?;
-    call(channel, &method, messages, metadata, on_event).await
+    Ok((channel, method, messages, metadata))
 }
 
 #[cfg(test)]
@@ -526,6 +598,34 @@ mod tests {
             status_text(&Status::not_found("no such user")),
             "NOT_FOUND: no such user"
         );
+        assert_eq!(http_status(0), 200);
+        assert_eq!(http_status(5), 404);
+        assert_eq!(http_status(16), 401);
+        assert_eq!(http_status(2), 500);
+    }
+
+    #[test]
+    fn an_outcome_reads_like_an_http_response() {
+        let outcome = CallOutcome {
+            code: 5,
+            status_message: "no such user".into(),
+            headers: vec![("x-a".into(), "1".into())],
+            trailers: vec![("x-b".into(), "2".into())],
+            received: vec!["{\n  \"n\": 1\n}".into(), "{\n  \"n\": 2\n}".into()],
+            sent: 1,
+            elapsed: Duration::from_millis(7),
+        };
+        let stream = outcome.to_response(true);
+        assert_eq!(stream.status, 404);
+        assert_eq!(stream.reason, Some("NOT_FOUND"));
+        assert_eq!(stream.header("grpc-status"), Some("5"));
+        assert_eq!(stream.header("grpc-message"), Some("no such user"));
+        assert_eq!(stream.header("x-b"), Some("2"));
+        let body: serde_json::Value = serde_json::from_slice(&stream.body).unwrap();
+        assert_eq!(body, serde_json::json!([{"n": 1}, {"n": 2}]));
+        let unary = outcome.to_response(false);
+        assert_eq!(unary.raw_body(), "{\n  \"n\": 1\n}");
+        assert!(!unary.is_success());
     }
 
     #[tokio::test]

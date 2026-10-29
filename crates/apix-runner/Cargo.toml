@@ -9,6 +9,8 @@ repository.workspace = true
 [dependencies]
 anyhow.workspace = true
 apix-core.workspace = true
+# gRPC requests in runs.
+apix-grpc.workspace = true
 apix-http.workspace = true
 apix-script.workspace = true
 serde.workspace = true

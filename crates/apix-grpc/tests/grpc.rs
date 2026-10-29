@@ -218,6 +218,26 @@ async fn mistakes_are_explained() {
     assert!(matches!(err, GrpcError::Connect { .. }), "{err}");
 }
 
+#[tokio::test]
+async fn runs_see_a_call_as_an_http_response() {
+    let addr = start(true).await;
+    let req = request(addr, "apix.test.Greeter/SayHello", r#"{"name": "Ada"}"#);
+    let response = apix_grpc::send_for_tests(&req).await.unwrap();
+    assert_eq!(response.status, 200);
+    assert_eq!(response.reason, Some("OK"));
+    assert_eq!(response.header("grpc-status"), Some("0"));
+    assert_eq!(json(&response.raw_body())["message"], "Hello, Ada!");
+
+    let req = request(addr, "apix.test.Greeter/CountDown", r#"{"from": 2}"#);
+    let response = apix_grpc::send_for_tests(&req).await.unwrap();
+    assert_eq!(json(&response.raw_body()), json(r#"[{"n": 2}, {"n": 1}]"#));
+
+    let req = request(addr, "apix.test.Greeter/SayHello", "{}");
+    let response = apix_grpc::send_for_tests(&req).await.unwrap();
+    assert_eq!(response.status, 400);
+    assert_eq!(response.header("grpc-message"), Some("name is required"));
+}
+
 #[test]
 fn an_example_message_shows_every_field() {
     let pool = server::pool();

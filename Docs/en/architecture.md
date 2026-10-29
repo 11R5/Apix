@@ -442,8 +442,18 @@ from the input type. The call runs on the network runtime and fills a shared
 struct the UI reads every 60 ms; the response pane is a log
 (`ResponseState::Grpc`, `workspace/grpc_ui.rs`) like a WebSocket's, and Esc
 drops the call. The CLI prints a unary answer whole and streams line by line,
-and `apix schema` writes the service as `.proto`-like text. `apix run` skips
-gRPC requests for now.
+and `apix schema` writes the service as `.proto`-like text.
+
+Runs call gRPC requests through `apix_grpc::send_for_tests`, which turns the
+`CallOutcome` into an `apix_http::Response` (`CallOutcome::to_response`): the
+HTTP status the code stands for (Google's mapping) with the code's name as the
+reason, the metadata and trailers plus `grpc-status` and `grpc-message` as
+headers, and the message (a JSON list for a server stream) as the body. Test
+scripts, checks and reports then need nothing gRPC-specific. The history keeps
+a call with `Summary::grpc` set: the status is the gRPC code, the trailers and
+status message have their own fields, and the body is the log
+(`[{"at_ms", "sent", "message"}]`), which `grpc_ui::restored` turns back into
+the log view.
 
 ## Themes
 

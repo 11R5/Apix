@@ -855,7 +855,7 @@ impl Workspace {
                 Some(dir) => resolved.request.with_files_relative_to(&dir),
                 None => resolved.request,
             };
-            self.call_grpc(request, window, cx);
+            self.call_grpc(request, record, window, cx);
             return;
         }
         if apix_http::ws::is_websocket_url(&resolved.request.url) {
