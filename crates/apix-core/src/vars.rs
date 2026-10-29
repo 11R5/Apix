@@ -240,6 +240,7 @@ impl Request {
             // Filled in one by one when each is sent.
             messages: self.messages.clone(),
             grpc: self.grpc.clone(),
+            websocket: self.websocket.clone(),
         };
         Resolved { request, missing }
     }

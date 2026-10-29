@@ -601,9 +601,15 @@ sidebar.rename: إعادة تسمية…
 sidebar.run: "تشغيل…"
 sidebar.settings: إعدادات الطلب…
 sidebar.show_in_environment: العرض في البيئة
+stream.all_types: الكل %{count}
 stream.count: "%{count} أحداث"
+stream.dropped_reconnecting: انقطع الاتصال (%{error})؛ إعادة الاتصال بعد %{seconds} ث
+stream.ended_reconnecting: انتهى التدفق؛ إعادة الاتصال بعد %{seconds} ث
 stream.live: "مباشر"
+stream.not_a_stream: أجاب الخادم بـ %{status}، وليس تدفق أحداث؛ توقف
 stream.older_hidden: "لا تُعرض %{count} أحداث أقدم"
+stream.reconnect: إعادة الاتصال
+stream.reconnected: أُعيد الاتصال
 stream.stop: "إيقاف"
 stream.stopped: "متوقف"
 stream.waiting: "تم الاتصال. في انتظار أول حدث…"
@@ -666,7 +672,8 @@ vault.unlock_title: فتح قفل «%{name}»
 vault.use_password: استخدام كلمة المرور بدلًا من ذلك
 vault.use_recovery: نسيت كلمة المرور؟ استخدم مفتاح الاسترداد
 vault.working: جارٍ العمل… اشتقاق المفتاح يستغرق لحظة عن قصد.
-ws.binary: "<%{count} بايت من البيانات الثنائية>"
+ws.bad_message: "لا يمكن إرسال الرسالة: %{reason}"
+ws.bytes: "%{count} بايت: %{hex}"
 ws.closed: "مغلق"
 ws.closed_code: "مغلق (%{code})"
 ws.closed_reason: "مغلق (%{code}): %{reason}"
@@ -676,9 +683,13 @@ ws.connecting: "جارٍ الاتصال…"
 ws.disconnect: "قطع الاتصال"
 ws.error: "خطأ: %{error}"
 ws.failed: "انقطع الاتصال"
+ws.format_text: نص
 ws.open: "متصل"
 ws.save: "حفظ الرسالة"
 ws.saved: "الرسائل المحفوظة (%{count})"
 ws.saved_empty: "تُحفظ الرسائل التي تحفظها هنا في ملف الطلب. انقر على رسالة لتعديلها."
 ws.send: "إرسال"
 ws.send_hint: "Ctrl+Enter للإرسال؛ تُستبدل {{المتغيرات}}"
+ws.subprotocol: "البروتوكول الفرعي: %{protocol}"
+ws.subprotocols: البروتوكولات الفرعية
+ws.subprotocols_placeholder: تُعرض في المصافحة، مفصولة بفواصل، مثل graphql-transport-ws

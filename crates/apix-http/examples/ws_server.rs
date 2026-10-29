@@ -6,7 +6,8 @@
 //!
 //! `ws://127.0.0.1:8768/` greets you and echoes what you send (`bye` makes it
 //! close the connection); `ws://127.0.0.1:8768/ticker` also pushes a message
-//! every second.
+//! every second. Binary messages come back as they are, and the first
+//! subprotocol offered is picked.
 
 use std::time::Duration;
 
@@ -25,8 +26,20 @@ async fn main() -> std::io::Result<()> {
         tokio::spawn(async move {
             let mut path = String::new();
             #[allow(clippy::result_large_err)]
-            let callback = |req: &Request, response: Response| {
+            let callback = |req: &Request, mut response: Response| {
                 path = req.uri().path().to_owned();
+                // Picks the first subprotocol offered, if any.
+                if let Some(first) = req
+                    .headers()
+                    .get("sec-websocket-protocol")
+                    .and_then(|v| v.to_str().ok())
+                    .and_then(|v| v.split(',').next())
+                    .and_then(|p| p.trim().parse().ok())
+                {
+                    response
+                        .headers_mut()
+                        .insert("sec-websocket-protocol", first);
+                }
                 Ok(response)
             };
             let Ok(stream) = tokio_tungstenite::accept_hdr_async(socket, callback).await else {

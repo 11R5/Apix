@@ -601,9 +601,15 @@ sidebar.rename: Переименовать…
 sidebar.run: "Запустить…"
 sidebar.settings: Настройки запросов…
 sidebar.show_in_environment: Показать в окружении
+stream.all_types: Все %{count}
 stream.count: "Событий: %{count}"
+stream.dropped_reconnecting: Соединение оборвалось (%{error}); переподключение через %{seconds} с
+stream.ended_reconnecting: Поток закончился; переподключение через %{seconds} с
 stream.live: "В эфире"
+stream.not_a_stream: Сервер ответил %{status}, это не поток событий; остановлено
 stream.older_hidden: "Старые события не показаны: %{count}"
+stream.reconnect: Переподключаться
+stream.reconnected: Переподключено
 stream.stop: "Остановить"
 stream.stopped: "остановлено"
 stream.waiting: "Подключено. Ждём первое событие…"
@@ -666,7 +672,8 @@ vault.unlock_title: Разблокировать «%{name}»
 vault.use_password: Использовать пароль
 vault.use_recovery: Забыли пароль? Используйте ключ восстановления
 vault.working: Подождите… получение ключа намеренно занимает некоторое время.
-ws.binary: "<%{count} байт двоичных данных>"
+ws.bad_message: "Сообщение нельзя отправить: %{reason}"
+ws.bytes: "Байт: %{count}: %{hex}"
 ws.closed: "Закрыто"
 ws.closed_code: "Закрыто (%{code})"
 ws.closed_reason: "Закрыто (%{code}): %{reason}"
@@ -676,9 +683,13 @@ ws.connecting: "Подключение…"
 ws.disconnect: "Отключиться"
 ws.error: "Ошибка: %{error}"
 ws.failed: "Соединение потеряно"
+ws.format_text: Текст
 ws.open: "Подключено"
 ws.save: "Сохранить сообщение"
 ws.saved: "Сохранённые сообщения (%{count})"
 ws.saved_empty: "Сохранённые здесь сообщения хранятся в файле запроса. Нажмите на сообщение, чтобы изменить его."
 ws.send: "Отправить"
 ws.send_hint: "Ctrl+Enter отправляет; {{переменные}} подставляются"
+ws.subprotocol: "Подпротокол: %{protocol}"
+ws.subprotocols: Подпротоколы
+ws.subprotocols_placeholder: Предлагаются при рукопожатии, через запятую, напр. graphql-transport-ws

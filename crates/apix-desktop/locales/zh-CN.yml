@@ -601,9 +601,15 @@ sidebar.rename: 重命名…
 sidebar.run: "运行…"
 sidebar.settings: 请求设置…
 sidebar.show_in_environment: 在环境中显示
+stream.all_types: 全部 %{count}
 stream.count: "%{count} 个事件"
+stream.dropped_reconnecting: 连接已断开（%{error}）；%{seconds} 秒后重新连接
+stream.ended_reconnecting: 流已结束；%{seconds} 秒后重新连接
 stream.live: "实时"
+stream.not_a_stream: 服务器返回 %{status}，不是事件流；已停止
 stream.older_hidden: "未显示 %{count} 个较早的事件"
+stream.reconnect: 重新连接
+stream.reconnected: 已重新连接
 stream.stop: "停止"
 stream.stopped: "已停止"
 stream.waiting: "已连接，正在等待第一个事件…"
@@ -666,7 +672,8 @@ vault.unlock_title: 解锁“%{name}”
 vault.use_password: 改用密码
 vault.use_recovery: 忘记密码？使用恢复密钥
 vault.working: 正在处理…密钥派生需要一些时间，这是有意设计的。
-ws.binary: "<%{count} 字节的二进制数据>"
+ws.bad_message: 无法发送消息：%{reason}
+ws.bytes: "%{count} 字节：%{hex}"
 ws.closed: "已关闭"
 ws.closed_code: "已关闭 (%{code})"
 ws.closed_reason: "已关闭 (%{code})：%{reason}"
@@ -676,9 +683,13 @@ ws.connecting: "正在连接…"
 ws.disconnect: "断开"
 ws.error: "错误：%{error}"
 ws.failed: "连接已断开"
+ws.format_text: 文本
 ws.open: "已连接"
 ws.save: "保存消息"
 ws.saved: "已保存的消息 (%{count})"
 ws.saved_empty: "在这里保存的消息会存入请求文件。点击一条即可编辑。"
 ws.send: "发送"
 ws.send_hint: "Ctrl+Enter 发送；{{变量}} 会被替换"
+ws.subprotocol: 子协议：%{protocol}
+ws.subprotocols: 子协议
+ws.subprotocols_placeholder: 握手时提供，以逗号分隔，例如 graphql-transport-ws

@@ -601,9 +601,15 @@ sidebar.rename: Umbenennen…
 sidebar.run: "Ausführen…"
 sidebar.settings: Anfrage-Einstellungen…
 sidebar.show_in_environment: In Umgebung anzeigen
+stream.all_types: Alle %{count}
 stream.count: "%{count} Ereignisse"
+stream.dropped_reconnecting: Die Verbindung brach ab (%{error}); neue Verbindung in %{seconds} s
+stream.ended_reconnecting: Der Stream endete; neue Verbindung in %{seconds} s
 stream.live: "Live"
+stream.not_a_stream: Der Server antwortete %{status}, kein Ereignisstrom; gestoppt
 stream.older_hidden: "%{count} ältere Ereignisse werden nicht angezeigt"
+stream.reconnect: Neu verbinden
+stream.reconnected: Neu verbunden
 stream.stop: "Stoppen"
 stream.stopped: "gestoppt"
 stream.waiting: "Verbunden. Warte auf das erste Ereignis…"
@@ -666,7 +672,8 @@ vault.unlock_title: „%{name}“ entsperren
 vault.use_password: Stattdessen das Passwort verwenden
 vault.use_recovery: Passwort vergessen? Wiederherstellungsschlüssel verwenden
 vault.working: Bitte warten… Das Ableiten des Schlüssels dauert absichtlich einen Moment.
-ws.binary: "<%{count} Bytes Binärdaten>"
+ws.bad_message: "Die Nachricht kann nicht gesendet werden: %{reason}"
+ws.bytes: "%{count} Bytes: %{hex}"
 ws.closed: "Geschlossen"
 ws.closed_code: "Geschlossen (%{code})"
 ws.closed_reason: "Geschlossen (%{code}): %{reason}"
@@ -676,9 +683,13 @@ ws.connecting: "Verbinde…"
 ws.disconnect: "Trennen"
 ws.error: "Fehler: %{error}"
 ws.failed: "Verbindung verloren"
+ws.format_text: Text
 ws.open: "Verbunden"
 ws.save: "Nachricht speichern"
 ws.saved: "Gespeicherte Nachrichten (%{count})"
 ws.saved_empty: "Hier gespeicherte Nachrichten stehen in der Anfragedatei. Zum Bearbeiten anklicken."
 ws.send: "Senden"
 ws.send_hint: "Strg+Enter sendet; {{Variablen}} werden ersetzt"
+ws.subprotocol: "Subprotokoll: %{protocol}"
+ws.subprotocols: Subprotokolle
+ws.subprotocols_placeholder: Im Handshake angeboten, durch Kommas getrennt, z. B. graphql-transport-ws

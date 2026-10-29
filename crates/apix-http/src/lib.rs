@@ -5,6 +5,7 @@ pub mod graphql;
 mod local;
 pub mod oauth2;
 pub mod sse;
+pub mod tls;
 mod trace;
 pub mod ws;
 
@@ -770,7 +771,7 @@ fn build(client: &reqwest::Client, req: &Request) -> Result<reqwest::RequestBuil
 }
 
 /// Reads a file the request sends. Files are read whole when sending.
-fn read_file(path: &str) -> Result<Vec<u8>, HttpError> {
+pub(crate) fn read_file(path: &str) -> Result<Vec<u8>, HttpError> {
     if path.trim().is_empty() {
         return Err(HttpError::Body("choose a file to send".into()));
     }

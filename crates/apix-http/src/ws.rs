@@ -2,9 +2,12 @@
 //! it over HTTP (URL with params, headers, auth), so the same `.apix` file
 //! works for both; then messages go both ways until either side closes.
 
-use apix_core::{Auth, Request};
+use std::sync::Arc;
+
+use apix_core::{Auth, MessageFormat, Request};
 use futures_util::{SinkExt as _, StreamExt as _};
 use tokio::sync::mpsc;
+use tokio_tungstenite::Connector;
 use tokio_tungstenite::tungstenite::client::IntoClientRequest as _;
 use tokio_tungstenite::tungstenite::protocol::CloseFrame;
 use tokio_tungstenite::tungstenite::protocol::frame::coding::CloseCode;
@@ -21,6 +24,14 @@ pub enum WsData {
 }
 
 impl WsData {
+    /// A message from its text: as is, or the bytes it writes in base64 or hex.
+    pub fn from_text(text: String, format: MessageFormat) -> Result<Self, String> {
+        match format.decode(&text) {
+            None => Ok(WsData::Text(text)),
+            Some(bytes) => bytes.map(WsData::Binary),
+        }
+    }
+
     pub fn len(&self) -> usize {
         match self {
             WsData::Text(text) => text.len(),
@@ -31,6 +42,19 @@ impl WsData {
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
+}
+
+/// The first 32 bytes in hex: `01 02 ff`, with ` …` when there are more.
+pub fn hex_bytes(bytes: &[u8]) -> String {
+    let shown: Vec<String> = bytes.iter().take(32).map(|b| format!("{b:02x}")).collect();
+    let more = if bytes.len() > 32 { " …" } else { "" };
+    format!("{}{more}", shown.join(" "))
+}
+
+/// Bytes for the eye: `5 bytes: 01 02 03 04 05`, the first 32 of them.
+pub fn hex_preview(bytes: &[u8]) -> String {
+    let unit = if bytes.len() == 1 { "byte" } else { "bytes" };
+    format!("{} {unit}: {}", bytes.len(), hex_bytes(bytes))
 }
 
 /// What happens on an open connection.
@@ -59,6 +83,8 @@ pub struct WsConnection {
     /// `101` and the server's headers.
     pub status: u16,
     pub headers: Vec<(String, String)>,
+    /// The subprotocol the server picked, if it picked one.
+    pub protocol: Option<String>,
     stream: WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>,
 }
 
@@ -104,8 +130,40 @@ pub async fn connect(req: &Request) -> Result<WsConnection, HttpError> {
         }
         handshake.headers_mut().append(name.clone(), value.clone());
     }
-    let connecting = tokio_tungstenite::connect_async(handshake);
-    let result = match req.settings.effective().timeout {
+    let offered = req
+        .websocket
+        .as_ref()
+        .map(|w| {
+            w.subprotocols
+                .iter()
+                .map(|p| p.trim())
+                .filter(|p| !p.is_empty())
+                .collect::<Vec<_>>()
+                .join(", ")
+        })
+        .unwrap_or_default();
+    if !offered.is_empty() {
+        let value = offered
+            .parse()
+            .map_err(|_| HttpError::Settings(format!("invalid subprotocols `{offered}`")))?;
+        handshake
+            .headers_mut()
+            .insert("sec-websocket-protocol", value);
+    }
+    // wss:// takes the request's TLS settings: a trusted CA, a client
+    // certificate, or no verification.
+    let settings = req.settings.effective();
+    let connector = if prepared.url().scheme() == "wss" {
+        Connector::Rustls(Arc::new(crate::tls::client_config(
+            &settings,
+            &[b"http/1.1"],
+        )?))
+    } else {
+        Connector::Plain
+    };
+    let connecting =
+        tokio_tungstenite::connect_async_tls_with_config(handshake, None, false, Some(connector));
+    let result = match settings.timeout {
         Some(limit) => tokio::time::timeout(limit, connecting)
             .await
             .map_err(|_| HttpError::TimedOut)?,
@@ -114,6 +172,11 @@ pub async fn connect(req: &Request) -> Result<WsConnection, HttpError> {
     let (stream, response) = result.map_err(|e| HttpError::Settings(describe(&e)))?;
     Ok(WsConnection {
         status: response.status().as_u16(),
+        protocol: response
+            .headers()
+            .get("sec-websocket-protocol")
+            .and_then(|v| v.to_str().ok())
+            .map(str::to_owned),
         headers: response
             .headers()
             .iter()
@@ -150,6 +213,14 @@ fn describe(err: &tungstenite::Error) -> String {
                 response.status()
             )
         }
+        tungstenite::Error::Protocol(
+            tungstenite::error::ProtocolError::SecWebSocketSubProtocolError(
+                tungstenite::error::SubProtocolError::NoSubProtocol,
+            ),
+        ) => "the server accepted none of the subprotocols offered".into(),
+        tungstenite::Error::Protocol(
+            tungstenite::error::ProtocolError::SecWebSocketSubProtocolError(_),
+        ) => "the server picked a subprotocol that was not offered".into(),
         other => format!("WebSocket handshake failed: {other}"),
     }
 }

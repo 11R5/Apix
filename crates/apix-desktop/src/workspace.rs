@@ -422,6 +422,10 @@ pub struct Workspace {
     schema_task: Option<Task<()>>,
     /// Loading the methods of the open gRPC request.
     grpc_task: Option<Task<()>>,
+    /// The server-sent event type the events list is narrowed to.
+    event_filter: Option<String>,
+    /// Pick an event stream up again when it ends or drops.
+    sse_reconnect: bool,
     /// The open tabs as last written to the app state.
     remembered_tabs: Option<(PathBuf, crate::state::OpenTabs)>,
     /// The sidebar row and zone a drag would drop into.
@@ -488,7 +492,7 @@ impl Workspace {
                 &ws_editor,
                 window,
                 |this, _, event: &ws_editor::SendMessage, window, cx| {
-                    this.send_socket_message(event.0.clone(), window, cx)
+                    this.send_socket_message(event.0.clone(), event.1, window, cx)
                 },
             ),
             cx.subscribe_in(
@@ -586,6 +590,8 @@ impl Workspace {
             task: None,
             schema_task: None,
             grpc_task: None,
+            event_filter: None,
+            sse_reconnect: false,
             last_input: std::cell::Cell::new(std::time::Instant::now()),
             bench_sent: None,
             _auto_lock: None,
@@ -635,6 +641,8 @@ impl Workspace {
         self.body_editor
             .update(cx, |editor, cx| editor.retranslate(window, cx));
         self.settings_editor
+            .update(cx, |editor, cx| editor.retranslate(window, cx));
+        self.ws_editor
             .update(cx, |editor, cx| editor.retranslate(window, cx));
         self.refresh_environments(window, cx);
         cx.notify();
@@ -711,8 +719,10 @@ impl Workspace {
         self.script_editor
             .update(cx, |editor, cx| editor.set_asserts(&asserts, window, cx));
         let messages = request.messages.clone();
-        self.ws_editor
-            .update(cx, |editor, cx| editor.set_messages(&messages, cx));
+        let ws_options = request.websocket.clone();
+        self.ws_editor.update(cx, |editor, cx| {
+            editor.set_messages(&messages, ws_options.as_ref(), window, cx)
+        });
         let grpc = request.grpc.clone();
         let body = request.body.clone();
         self.grpc_task = None;
@@ -773,6 +783,7 @@ impl Workspace {
         request.settings = self.settings_editor.read(cx).settings(cx);
         request.asserts = self.script_editor.read(cx).asserts(cx);
         request.messages = self.ws_editor.read(cx).messages();
+        request.websocket = self.ws_editor.read(cx).options(cx);
         // A gRPC request's message is its body.
         if self.grpc_mode(cx) {
             let grpc = self.grpc_editor.read(cx);
@@ -1488,8 +1499,9 @@ impl Workspace {
                     (_, 6) => self.render_console(done, cx).into_any_element(),
                     (_, 2) => self.render_response_headers(response).into_any_element(),
                     (_, 3) => self.render_network(done).into_any_element(),
-                    (None, 0) if done.events.is_some() => stream_ui::render_events(
+                    (None, 0) if done.events.is_some() => self.render_events(
                         done.events.as_deref().unwrap_or_default(),
+                        &[],
                         &self.events_scroll,
                         cx,
                     ),

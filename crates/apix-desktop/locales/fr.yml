@@ -601,9 +601,15 @@ sidebar.rename: Renommer…
 sidebar.run: "Exécuter…"
 sidebar.settings: Réglages de requête…
 sidebar.show_in_environment: Afficher dans l'environnement
+stream.all_types: Tous %{count}
 stream.count: "%{count} événements"
+stream.dropped_reconnecting: La connexion a été perdue (%{error}) ; reconnexion dans %{seconds} s
+stream.ended_reconnecting: Le flux s'est terminé ; reconnexion dans %{seconds} s
 stream.live: "En direct"
+stream.not_a_stream: Le serveur a répondu %{status}, pas un flux d'événements ; arrêté
 stream.older_hidden: "%{count} événements plus anciens ne sont pas affichés"
+stream.reconnect: Reconnecter
+stream.reconnected: Reconnecté
 stream.stop: "Arrêter"
 stream.stopped: "arrêté"
 stream.waiting: "Connecté. En attente du premier événement…"
@@ -666,7 +672,8 @@ vault.unlock_title: Déverrouiller « %{name} »
 vault.use_password: Utiliser plutôt le mot de passe
 vault.use_recovery: Mot de passe oublié ? Utiliser la clé de récupération
 vault.working: Traitement… la dérivation de la clé prend volontairement un moment.
-ws.binary: "<%{count} octets binaires>"
+ws.bad_message: "Le message ne peut pas être envoyé : %{reason}"
+ws.bytes: "%{count} octets : %{hex}"
 ws.closed: "Fermée"
 ws.closed_code: "Fermée (%{code})"
 ws.closed_reason: "Fermée (%{code}) : %{reason}"
@@ -676,9 +683,13 @@ ws.connecting: "Connexion…"
 ws.disconnect: "Se déconnecter"
 ws.error: "Erreur : %{error}"
 ws.failed: "Connexion perdue"
+ws.format_text: Texte
 ws.open: "Connecté"
 ws.save: "Enregistrer le message"
 ws.saved: "Messages enregistrés (%{count})"
 ws.saved_empty: "Les messages enregistrés ici sont gardés dans le fichier de la requête. Cliquez pour en modifier un."
 ws.send: "Envoyer"
 ws.send_hint: "Ctrl+Entrée envoie ; les {{variables}} sont remplacées"
+ws.subprotocol: "Sous-protocole : %{protocol}"
+ws.subprotocols: Sous-protocoles
+ws.subprotocols_placeholder: Proposés à la poignée de main, séparés par des virgules, ex. graphql-transport-ws

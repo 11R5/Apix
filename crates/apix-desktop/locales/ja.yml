@@ -601,9 +601,15 @@ sidebar.rename: 名前を変更…
 sidebar.run: "実行…"
 sidebar.settings: リクエスト設定…
 sidebar.show_in_environment: 環境で表示
+stream.all_types: すべて %{count}
 stream.count: "%{count} 件のイベント"
+stream.dropped_reconnecting: 接続が切れました (%{error})。%{seconds} 秒後に再接続します
+stream.ended_reconnecting: ストリームが終了しました。%{seconds} 秒後に再接続します
 stream.live: "ライブ"
+stream.not_a_stream: サーバーの応答は %{status} でイベントストリームではありません。停止しました
 stream.older_hidden: "古いイベント %{count} 件は表示されていません"
+stream.reconnect: 再接続
+stream.reconnected: 再接続しました
 stream.stop: "停止"
 stream.stopped: "停止済み"
 stream.waiting: "接続しました。最初のイベントを待っています…"
@@ -666,7 +672,8 @@ vault.unlock_title: 「%{name}」のロックを解除
 vault.use_password: 代わりにパスワードを使用
 vault.use_recovery: パスワードを忘れた場合は回復キーを使用
 vault.working: 処理中… キーの導出には意図的に時間がかかります。
-ws.binary: "<%{count} バイトのバイナリ>"
+ws.bad_message: "メッセージを送信できません: %{reason}"
+ws.bytes: "%{count} バイト: %{hex}"
 ws.closed: "切断されました"
 ws.closed_code: "切断されました (%{code})"
 ws.closed_reason: "切断されました (%{code}): %{reason}"
@@ -676,9 +683,13 @@ ws.connecting: "接続中…"
 ws.disconnect: "切断"
 ws.error: "エラー: %{error}"
 ws.failed: "接続が切れました"
+ws.format_text: テキスト
 ws.open: "接続済み"
 ws.save: "メッセージを保存"
 ws.saved: "保存したメッセージ (%{count})"
 ws.saved_empty: "ここで保存したメッセージはリクエストファイルに保存されます。クリックすると編集できます。"
 ws.send: "送信"
 ws.send_hint: "Ctrl+Enter で送信。{{変数}} は置き換えられます"
+ws.subprotocol: "サブプロトコル: %{protocol}"
+ws.subprotocols: サブプロトコル
+ws.subprotocols_placeholder: "ハンドシェイクで提示（カンマ区切り）、例: graphql-transport-ws"

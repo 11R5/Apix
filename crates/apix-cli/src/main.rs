@@ -41,6 +41,16 @@ enum Command {
         /// WebSocket: send this text instead of the saved messages (repeatable)
         #[arg(short = 'm', long = "message", value_name = "TEXT")]
         messages: Vec<String>,
+        /// WebSocket: how --message texts are read: text, or bytes as base64 or hex
+        #[arg(long = "format", value_name = "FORMAT", default_value = "text")]
+        message_format: apix_core::MessageFormat,
+        /// Server-sent events: print only events of this type (repeatable)
+        #[arg(long = "event", value_name = "TYPE")]
+        event_types: Vec<String>,
+        /// Server-sent events: when the stream ends or drops, connect again after the
+        /// server's retry time, sending Last-Event-ID (Ctrl+C stops)
+        #[arg(long)]
+        reconnect: bool,
         /// WebSocket: how long to keep listening after sending, in seconds (0: until the server closes)
         #[arg(long, value_name = "SECONDS", default_value_t = 3.0)]
         listen: f64,
@@ -403,6 +413,9 @@ async fn run(cli: Cli) -> Result<bool> {
             include_headers,
             network,
             messages,
+            message_format,
+            event_types,
+            reconnect,
             listen,
             net,
         } => {
@@ -427,9 +440,10 @@ async fn run(cli: Cli) -> Result<bool> {
                 }
                 return websocket(
                     &style,
-                    resolved.request,
+                    relative_to_file(resolved.request, &file),
                     &vars,
                     messages,
+                    message_format,
                     listen,
                     include_headers,
                 )
@@ -444,7 +458,12 @@ async fn run(cli: Cli) -> Result<bool> {
             // Server-sent events are printed as they arrive, not at the end.
             let started = std::time::Instant::now();
             let mut stream: Option<(apix_http::sse::SseParser, usize)> = None;
-            let done = apix_runner::exchange(
+            let wanted = |event: &apix_http::sse::SseEvent| {
+                event_types.is_empty() || event_types.contains(&event.event)
+            };
+            // For reconnecting: the request as sent (scripts aside).
+            let again = relative_to_file(resolved.request.clone(), &file);
+            let sent = apix_runner::exchange(
                 &client,
                 &scope,
                 &file,
@@ -487,12 +506,29 @@ async fn run(cli: Cli) -> Result<bool> {
                         };
                         for event in parser.feed(chunk) {
                             *count += 1;
-                            print_event(&style, started.elapsed(), &event);
+                            if wanted(&event) {
+                                print_event(&style, started.elapsed(), &event);
+                            }
                         }
                     }
                 },
             )
-            .await?;
+            .await;
+            // A stream that drops can be picked up again; anything else fails.
+            let done = match sent {
+                Ok(done) => done,
+                Err(e) if reconnect && stream.is_some() => {
+                    println!("{}connection lost: {e:#}{}", style.dim, style.reset);
+                    let (parser, count) = stream.take().unwrap_or_default();
+                    return follow_stream(&style, &client, &again, parser, count, &event_types)
+                        .await;
+                }
+                Err(e) => return Err(e),
+            };
+            if reconnect && let Some((parser, count)) = stream.take() {
+                println!("{}stream ended: {count} events{}", style.dim, style.reset);
+                return follow_stream(&style, &client, &again, parser, count, &event_types).await;
+            }
             if let (Some((_, count)), Some(response)) = (&stream, &done.response) {
                 println!(
                     "{}stream ended: {count} events in {:.1} s · {}{}",
@@ -965,17 +1001,18 @@ async fn websocket(
     request: apix_core::Request,
     vars: &Variables,
     extra: Vec<String>,
+    extra_format: apix_core::MessageFormat,
     listen: f64,
     include_headers: bool,
 ) -> Result<bool> {
     use apix_http::ws::{WsCommand, WsData, WsEvent};
 
-    let outgoing: Vec<String> = if extra.is_empty() {
+    let outgoing: Vec<(String, apix_core::MessageFormat)> = if extra.is_empty() {
         let mut missing = std::collections::BTreeSet::new();
         let bodies = request
             .messages
             .iter()
-            .map(|m| vars.interpolate(&m.body, &mut missing))
+            .map(|m| (vars.interpolate(&m.body, &mut missing), m.format))
             .collect();
         if !missing.is_empty() {
             let names: Vec<_> = missing.into_iter().collect();
@@ -986,14 +1023,23 @@ async fn websocket(
         }
         bodies
     } else {
-        extra
+        extra.into_iter().map(|text| (text, extra_format)).collect()
     };
+    // Base64 and hex become bytes before anything is sent.
+    let outgoing = outgoing
+        .into_iter()
+        .map(|(text, format)| WsData::from_text(text, format))
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| anyhow::anyhow!("cannot send a message: {e}"))?;
     let started = std::time::Instant::now();
     let connection = apix_http::ws::connect(&request).await?;
     println!(
         "{}{} Switching Protocols{}  {}connected to {}{}",
         style.green, connection.status, style.reset, style.dim, request.url, style.reset
     );
+    if let Some(protocol) = &connection.protocol {
+        println!("{}subprotocol {protocol}{}", style.dim, style.reset);
+    }
     if include_headers {
         for (k, v) in &connection.headers {
             println!("{}{k}{}: {v}", style.dim, style.reset);
@@ -1001,8 +1047,8 @@ async fn websocket(
         println!();
     }
     let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
-    for text in outgoing {
-        let _ = tx.send(WsCommand::Send(WsData::Text(text)));
+    for data in outgoing {
+        let _ = tx.send(WsCommand::Send(data));
     }
     if listen > 0.0 {
         let closer = tx.clone();
@@ -1017,7 +1063,7 @@ async fn websocket(
             let at = format!("{:>8.2}s", started.elapsed().as_secs_f64());
             let show = |data: &WsData| match data {
                 WsData::Text(text) => text.clone(),
-                WsData::Binary(bytes) => format!("<{} bytes of binary>", bytes.len()),
+                WsData::Binary(bytes) => apix_http::ws::hex_preview(bytes),
             };
             match event {
                 WsEvent::Sent(data) => println!(
@@ -1154,6 +1200,86 @@ async fn grpc(style: &Style, request: &apix_core::Request, include_headers: bool
         }
     }
     Ok(outcome.is_ok())
+}
+
+/// `apix send --reconnect` once a stream ended or dropped: wait the server's
+/// retry time, connect again with `Last-Event-ID`, print the events, and so
+/// on until Ctrl+C, or until the server answers with something other than
+/// an event stream.
+async fn follow_stream(
+    style: &Style,
+    client: &HttpClient,
+    request: &apix_core::Request,
+    mut parser: apix_http::sse::SseParser,
+    mut count: usize,
+    event_types: &[String],
+) -> Result<bool> {
+    let started = std::time::Instant::now();
+    loop {
+        let wait = parser.reconnection_time();
+        let id = parser
+            .last_id()
+            .map(|id| format!(" with Last-Event-ID {id}"))
+            .unwrap_or_default();
+        println!(
+            "{}reconnecting in {:.1} s{id}{}",
+            style.dim,
+            wait.as_secs_f64(),
+            style.reset
+        );
+        tokio::time::sleep(wait).await;
+        let next = apix_http::sse::reconnect_request(request, parser.last_id());
+        parser = parser.reconnected();
+        let mut stream_ok = false;
+        let result = client
+            .send_with(&next, |progress| match progress {
+                apix_http::Progress::Head { status, headers } => {
+                    stream_ok = status == 200
+                        && headers.iter().any(|(k, v)| {
+                            k.eq_ignore_ascii_case("content-type")
+                                && apix_http::sse::is_event_stream(v)
+                        });
+                    if stream_ok {
+                        println!("{}{status} reconnected{}", style.green, style.reset);
+                    }
+                }
+                apix_http::Progress::Chunk(chunk) if stream_ok => {
+                    for event in parser.feed(chunk) {
+                        count += 1;
+                        if event_types.is_empty() || event_types.contains(&event.event) {
+                            print_event(style, started.elapsed(), &event);
+                        }
+                    }
+                }
+                apix_http::Progress::Chunk(_) => {}
+            })
+            .await;
+        match result {
+            // As a browser does: an answer that is not a stream ends it all.
+            Ok(response) if !stream_ok => {
+                print_status(
+                    style,
+                    response.status,
+                    response.reason.unwrap_or(""),
+                    response.timing.total.as_secs_f64() * 1000.0,
+                    response.body.len(),
+                );
+                println!(
+                    "{}not an event stream any more; stopped after {count} events{}",
+                    style.dim, style.reset
+                );
+                return Ok(false);
+            }
+            Ok(_) => println!(
+                "{}stream ended: {count} events so far{}",
+                style.dim, style.reset
+            ),
+            Err(e) => {
+                let e = anyhow::Error::from(e);
+                println!("{}connection failed: {e:#}{}", style.dim, style.reset)
+            }
+        }
+    }
 }
 
 /// One server-sent event: when it came, its type and id, then its data.

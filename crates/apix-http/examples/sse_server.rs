@@ -6,7 +6,8 @@
 //!
 //! then send `GET http://127.0.0.1:8767/` (endless: a `tick` every second and
 //! a `price` now and then) or `GET http://127.0.0.1:8767/5` (five events, then
-//! the stream ends).
+//! the stream ends). A client that reconnects with Last-Event-ID gets the
+//! events after that id.
 
 use std::time::Duration;
 
@@ -25,11 +26,21 @@ async fn main() -> std::io::Result<()> {
             let head = String::from_utf8_lossy(&buf[..n]);
             let path = head.split_whitespace().nth(1).unwrap_or("/").to_owned();
             let limit: Option<u64> = path.trim_start_matches('/').parse().ok();
+            // A client that reconnects carries on after the last id it saw.
+            let resume: u64 = head
+                .lines()
+                .find_map(|l| {
+                    let (k, v) = l.split_once(':')?;
+                    k.trim()
+                        .eq_ignore_ascii_case("last-event-id")
+                        .then(|| v.trim().parse().ok())?
+                })
+                .unwrap_or(0);
             let start = b"HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nCache-Control: no-cache\r\nConnection: close\r\n\r\n: connected\n\nretry: 5000\n\n";
             if socket.write_all(start).await.is_err() {
                 return;
             }
-            let mut n = 0u64;
+            let mut n = resume;
             loop {
                 n += 1;
                 let event = if n.is_multiple_of(4) {
@@ -44,7 +55,7 @@ async fn main() -> std::io::Result<()> {
                 if socket.write_all(event.as_bytes()).await.is_err() {
                     return;
                 }
-                if limit.is_some_and(|limit| n >= limit) {
+                if limit.is_some_and(|limit| n - resume >= limit) {
                     let _ = socket.shutdown().await;
                     return;
                 }
