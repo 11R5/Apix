@@ -132,6 +132,7 @@ body.kind.none: 无
 body.kind.text: 文本
 body.multipart_hint: 以 multipart/form-data 发送。将字段切换为“文件”即可上传文件；集合内的路径会保存为相对于请求的路径。
 body.none_hint: 此请求没有请求体。
+body.part_content_type: 类型 (自动)
 body.part_file: 文件
 body.part_text: 文本
 body.send_file_instead: 改为发送文件

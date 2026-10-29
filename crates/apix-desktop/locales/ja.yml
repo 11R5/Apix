@@ -132,6 +132,7 @@ body.kind.none: なし
 body.kind.text: テキスト
 body.multipart_hint: multipart/form-data として送信します。ファイルをアップロードするには、フィールドを「ファイル」に切り替えます。コレクション内のパスは、リクエストからの相対パスで保存されます。
 body.none_hint: このリクエストにはボディがありません。
+body.part_content_type: タイプ (自動)
 body.part_file: ファイル
 body.part_text: テキスト
 body.send_file_instead: 代わりにファイルを送信

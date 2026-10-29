@@ -132,6 +132,7 @@ body.kind.none: بلا
 body.kind.text: نص
 body.multipart_hint: يُرسل بصيغة multipart/form-data. حوّل حقلًا إلى «ملف» لرفع ملف؛ تُحفظ المسارات داخل المجموعة نسبةً إلى الطلب.
 body.none_hint: لا يحتوي هذا الطلب على متن.
+body.part_content_type: النوع (تلقائي)
 body.part_file: ملف
 body.part_text: نص
 body.send_file_instead: إرسال ملف بدلًا من ذلك

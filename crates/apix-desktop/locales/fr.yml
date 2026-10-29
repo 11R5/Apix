@@ -132,6 +132,7 @@ body.kind.none: Aucun
 body.kind.text: Texte
 body.multipart_hint: Envoyé en multipart/form-data. Passez un champ sur Fichier pour envoyer un fichier ; les chemins situés dans la collection sont enregistrés relativement à la requête.
 body.none_hint: Cette requête n'a pas de corps.
+body.part_content_type: Type (auto)
 body.part_file: Fichier
 body.part_text: Texte
 body.send_file_instead: Envoyer un fichier à la place

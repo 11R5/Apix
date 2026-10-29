@@ -132,6 +132,7 @@ body.kind.none: Yok
 body.kind.text: Metin
 body.multipart_hint: multipart/form-data olarak gönderilir. Dosya yüklemek için bir alanı Dosya olarak değiştirin; koleksiyon içindeki yollar isteğe göre göreli kaydedilir.
 body.none_hint: Bu isteğin gövdesi yok.
+body.part_content_type: Tür (otomatik)
 body.part_file: Dosya
 body.part_text: Metin
 body.send_file_instead: Bunun yerine dosya gönder

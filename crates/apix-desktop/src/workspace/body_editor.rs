@@ -123,10 +123,10 @@ struct PartRow {
     text: Entity<InputState>,
     path: Entity<InputState>,
     file: bool,
-    /// Kept from the file; not editable yet.
-    content_type: Option<String>,
+    /// The part's own Content-Type; empty lets the engine choose.
+    content_type: Entity<InputState>,
     enabled: bool,
-    _chips: [Subscription; 3],
+    _chips: [Subscription; 4],
 }
 
 impl PartRow {
@@ -139,14 +139,20 @@ impl PartRow {
         let (key, key_chips) = chipped_input(&part.key, tr!("table.key"), window, cx);
         let (text, text_chips) = chipped_input(text, tr!("table.value"), window, cx);
         let (path, path_chips) = chipped_input(path, tr!("body.file_path"), window, cx);
+        let (content_type, type_chips) = chipped_input(
+            part.content_type.as_deref().unwrap_or_default(),
+            tr!("body.part_content_type"),
+            window,
+            cx,
+        );
         Self {
             key,
             text,
             path,
             file: part.file,
-            content_type: part.content_type.clone(),
+            content_type,
             enabled: part.enabled,
-            _chips: [key_chips, text_chips, path_chips],
+            _chips: [key_chips, text_chips, path_chips, type_chips],
         }
     }
 
@@ -161,7 +167,8 @@ impl PartRow {
             key,
             value,
             file: self.file,
-            content_type: self.content_type.clone(),
+            content_type: Some(self.content_type.read(cx).value().trim().to_string())
+                .filter(|t| !t.is_empty()),
             enabled: self.enabled,
         })
     }
@@ -265,6 +272,7 @@ impl BodyEditor {
                 (&row.key, tr!("table.key")),
                 (&row.text, tr!("table.value")),
                 (&row.path, tr!("body.file_path")),
+                (&row.content_type, tr!("body.part_content_type")),
             ] {
                 input.update(cx, |state, cx| state.set_placeholder(text, window, cx));
             }
@@ -555,6 +563,12 @@ impl BodyEditor {
                         })),
                 )
                 .child(value)
+                .child(
+                    div()
+                        .w(px(150.))
+                        .flex_none()
+                        .child(self.field(&row.content_type, cx)),
+                )
                 .child(remove_button(("part-del", ix), cx, move |this| {
                     if ix < this.parts.len() {
                         this.parts.remove(ix);

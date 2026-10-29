@@ -132,6 +132,7 @@ body.kind.none: Ninguno
 body.kind.text: Texto
 body.multipart_hint: Se envía como multipart/form-data. Cambia un campo a Archivo para subir un archivo; las rutas dentro de la colección se guardan relativas a la solicitud.
 body.none_hint: Esta solicitud no tiene cuerpo.
+body.part_content_type: Tipo (auto)
 body.part_file: Archivo
 body.part_text: Texto
 body.send_file_instead: Enviar un archivo en su lugar

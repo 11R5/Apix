@@ -132,6 +132,7 @@ body.kind.none: Нет
 body.kind.text: Текст
 body.multipart_hint: Отправляется как multipart/form-data. Переключите поле на «Файл», чтобы загрузить файл; пути внутри коллекции сохраняются относительно запроса.
 body.none_hint: У этого запроса нет тела.
+body.part_content_type: Тип (авто)
 body.part_file: Файл
 body.part_text: Текст
 body.send_file_instead: Отправить файл вместо текста
