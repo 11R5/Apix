@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:cf54dabb66759a8b -->
+<!-- translated from en/user-guide.md sha256:f539f3218cf0d208 -->
 
 # Apix kullanım kılavuzu
 
@@ -308,6 +308,15 @@ anahtarı, OAuth 2.0 …) kullanır.
   neden). Yukarı kaydırmadıkça yeni mesajları izler.
 - **Bağlantıyı kes** (ya da Esc) bağlantıyı kapatır; günlük yeniden
   bağlanana kadar kalır. Sekmesi arkadayken de bağlantı sürer.
+- **İkili mesajlar:** düğmelerin yanından **Base64** ya da **Hex** seç ve
+  baytları öyle yaz (`01 02 ff`; boşluk ve `0x` olabilir); bayt olarak
+  okunamayan bir mesaj gönderilemez. Kayıtlı mesajlar biçimlerini korur.
+  İkili mesajlar günlükte boyutları ve ilk baytlarıyla görünür.
+- **Alt protokoller** (Mesajlar sekmesinin üstünde, virgülle ayrılır) el
+  sıkışmada önerilir; günlük sunucunun seçtiğini yazar. Hiçbirini seçmeyen
+  bir sunucu, tarayıcılardaki gibi reddedilir.
+- `wss://` istek ayarlarına uyar: güvenilen CA, istemci sertifikası ya da
+  kapatılmış "TLS sertifikasını doğrula".
 
 **Sunucu olayları (server-sent events).** Bir yanıt `text/event-stream` ise
 olayları geldikçe görünür: zamanı, olay türü ve kimliği, sonra verisi.
@@ -317,8 +326,19 @@ her yanıttaki gibidir. Sunucu istiyorsa `Accept: text/event-stream`
 başlığını gönder. Ayarlar'daki istek zaman aşımı bir akışı da bitirir; açık
 kalan akışlar için onu boş bırak.
 
-Komut satırında `apix send` olayları geldikçe yazar; bir WebSocket'te
-bağlanır, kayıtlı mesajları (ya da `--message` metinlerini) gönderir, iki
+- Birden çok olay türü varsa türler, her birinden kaç tane geldiğiyle
+  listenin üstünde görünür; yalnızca o türü görmek için birine, hepsi için
+  **Tümü**'ne tıkla.
+- **Yeniden bağlan** (canlı görünümde) akış bittiğinde ya da bağlantı
+  koptuğunda akışı yeniden alır: sunucunun `retry:` süresinden sonra
+  (vermediyse 3 sn), son görülen kimlik `Last-Event-ID` olarak gönderilerek,
+  tarayıcıdaki gibi. Liste her yeniden bağlanmayı not eder. Olay akışı
+  olmayan bir cevap bunu durdurur, Esc de durdurur.
+
+Komut satırında `apix send` olayları geldikçe yazar (`--event TÜR`, birden
+çok verilebilir, yalnızca o türleri yazar; `--reconnect` Ctrl+C'ye kadar
+yeniden bağlanır). Bir WebSocket'te bağlanır, kayıtlı mesajları (ya da
+`--format text|base64|hex` ile okunan `--message` metinlerini) gönderir, iki
 yöndekileri yazar ve `--listen` saniye sonra kapatır (varsayılan 3, `0`
 sunucuyu bekler). `apix run` WebSocket isteklerini atlar.
 
