@@ -132,6 +132,7 @@ body.kind.none: Yok
 body.kind.text: Metin
 body.multipart_hint: multipart/form-data olarak gönderilir. Dosya yüklemek için bir alanı Dosya olarak değiştirin; koleksiyon içindeki yollar isteğe göre göreli kaydedilir.
 body.none_hint: Bu isteğin gövdesi yok.
+body.part_content_type: Tür (otomatik)
 body.part_file: Dosya
 body.part_text: Metin
 body.send_file_instead: Bunun yerine dosya gönder
@@ -403,6 +404,7 @@ project.move_in: Projeye taşı
 project.move_in_detail: "“%{collection}” (%{path}), “%{project}” projesinin klasörüne taşınır ve kenar çubuğunda görünür."
 project.move_in_title: Koleksiyon projeye taşınsın mı?
 project.not_a_project: "%{path} bir Apix projesinin içinde değil (apix-project.toml yok)."
+reqset.ca_cert: Güvenilen CA
 reqset.client_cert: İstemci sertifikası
 reqset.client_key: Sertifika anahtarı
 reqset.dialog.collection_title: "“%{name}” istek ayarları"
@@ -411,6 +413,7 @@ reqset.dialog.note: Altındaki, kendi ayarını koymayan her isteğe uygulanır.
 reqset.dialog.project_title: "“%{name}” projesinin istek ayarları"
 reqset.effective: "Geçerli: zaman aşımı %{timeout} · yönlendirme %{redirects} · TLS doğrulama %{tls} · proxy %{proxy} · çerezler %{cookies}"
 reqset.follow: Yönlendirmeleri izle
+reqset.hint.ca: Ek sertifika yetkililerinin PEM dosyası; boş = miras
 reqset.hint.cert: PEM dosyası; boş = miras
 reqset.hint.inherit: boş = miras
 reqset.hint.key: PEM anahtarı; boş = sertifika dosyası

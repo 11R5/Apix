@@ -5,6 +5,7 @@
 
 mod codec;
 mod descriptors;
+mod insecure;
 
 use std::time::{Duration, Instant};
 
@@ -15,7 +16,7 @@ use prost_reflect::{
 };
 use tonic::Status;
 use tonic::metadata::{MetadataKey, MetadataMap, MetadataValue};
-use tonic::transport::{Channel, ClientTlsConfig, Endpoint, Identity};
+use tonic::transport::{Certificate, Channel, ClientTlsConfig, Endpoint, Identity};
 
 pub use codec::DynamicCodec;
 pub use descriptors::{
@@ -46,6 +47,8 @@ pub enum GrpcError {
     Metadata(String),
     #[error("cannot read {path}: {reason}")]
     File { path: String, reason: String },
+    #[error("{0}")]
+    Tls(String),
 }
 
 /// A `grpc://` or `grpcs://` URL.
@@ -81,8 +84,10 @@ fn read(path: &str) -> Result<Vec<u8>, GrpcError> {
     })
 }
 
-/// Opens a connection to the request's server, with its timeout and client
-/// certificate. TLS checks the server against the usual root certificates.
+/// Opens a connection to the request's server, with its timeout, client
+/// certificate and extra certificate authorities. TLS checks the server
+/// against the usual root certificates and those, unless the request turns
+/// verification off.
 pub async fn connect(req: &Request) -> Result<Channel, GrpcError> {
     let (uri, tls) = endpoint_uri(&req.url)?;
     let target = uri.clone();
@@ -91,21 +96,51 @@ pub async fn connect(req: &Request) -> Result<Channel, GrpcError> {
         reason,
     };
     let settings = req.settings.effective();
-    let mut endpoint = Endpoint::from_shared(uri.clone())
-        .map_err(|_| GrpcError::Url(req.url.clone()))?
-        .connect_timeout(Duration::from_secs(10));
-    if let Some(timeout) = settings.timeout {
-        endpoint = endpoint.timeout(timeout).connect_timeout(timeout);
-    }
-    if tls {
-        let mut config = ClientTlsConfig::new().with_webpki_roots();
-        if let Some(cert) = &settings.client_cert {
+    let identity = match &settings.client_cert {
+        Some(cert) if tls => {
             let cert_pem = read(cert)?;
             let key_pem = match &settings.client_key {
                 Some(key) => read(key)?,
                 None => cert_pem.clone(),
             };
+            Some((cert_pem, key_pem))
+        }
+        _ => None,
+    };
+    // Without verification the TLS is done by our own connector, so tonic
+    // is given a plain address and told the real (https) origin.
+    let insecure = tls && !settings.tls_verify;
+    let plain = if insecure {
+        uri.replacen("https://", "http://", 1)
+    } else {
+        uri.clone()
+    };
+    let mut endpoint = Endpoint::from_shared(plain)
+        .map_err(|_| GrpcError::Url(req.url.clone()))?
+        .connect_timeout(Duration::from_secs(10));
+    if let Some(timeout) = settings.timeout {
+        endpoint = endpoint.timeout(timeout).connect_timeout(timeout);
+    }
+    if insecure {
+        let origin = uri.parse().map_err(|_| GrpcError::Url(req.url.clone()))?;
+        let connector = insecure::Connector::new(insecure::config(identity)?);
+        return endpoint
+            .origin(origin)
+            .connect_with_connector(connector)
+            .await
+            .map_err(|e| fail(error_chain(&e)));
+    }
+    if tls {
+        let mut config = ClientTlsConfig::new().with_webpki_roots();
+        if let Some((cert_pem, key_pem)) = identity {
             config = config.identity(Identity::from_pem(cert_pem, key_pem));
+        }
+        if let Some(ca) = &settings.ca_cert {
+            let pem = read(ca)?;
+            if !String::from_utf8_lossy(&pem).contains("-----BEGIN CERTIFICATE-----") {
+                return Err(GrpcError::Tls(format!("{ca} holds no PEM certificate")));
+            }
+            config = config.ca_certificate(Certificate::from_pem(pem));
         }
         endpoint = endpoint
             .tls_config(config)

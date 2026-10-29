@@ -132,6 +132,7 @@ body.kind.none: Keiner
 body.kind.text: Text
 body.multipart_hint: Gesendet als multipart/form-data. Stellen Sie ein Feld auf Datei um, um eine Datei hochzuladen; Pfade innerhalb der Sammlung werden relativ zur Anfrage gespeichert.
 body.none_hint: Diese Anfrage hat keinen Body.
+body.part_content_type: Typ (auto)
 body.part_file: Datei
 body.part_text: Text
 body.send_file_instead: Stattdessen eine Datei senden
@@ -403,6 +404,7 @@ project.move_in: In das Projekt verschieben
 project.move_in_detail: "„%{collection}“ (%{path}) wird in den Ordner des Projekts „%{project}“ verschoben und erscheint in seiner Seitenleiste."
 project.move_in_title: Die Sammlung in das Projekt verschieben?
 project.not_a_project: "%{path} liegt in keinem Apix-Projekt (keine apix-project.toml)."
+reqset.ca_cert: Vertrauenswürdige CA
 reqset.client_cert: Client-Zertifikat
 reqset.client_key: Zertifikatsschlüssel
 reqset.dialog.collection_title: Anfrage-Einstellungen für „%{name}“
@@ -411,6 +413,7 @@ reqset.dialog.note: Gilt für jede Anfrage darunter, die nichts Eigenes setzt.
 reqset.dialog.project_title: Anfrage-Einstellungen für Projekt „%{name}“
 reqset.effective: "Wirksam: Timeout %{timeout} · Weiterleitungen %{redirects} · TLS-Prüfung %{tls} · Proxy %{proxy} · Cookies %{cookies}"
 reqset.follow: Weiterleitungen folgen
+reqset.hint.ca: PEM-Datei mit zusätzlichen Zertifizierungsstellen; leer = erben
 reqset.hint.cert: PEM-Datei; leer = erben
 reqset.hint.inherit: leer = erben
 reqset.hint.key: PEM-Schlüssel; leer = die Zertifikatsdatei

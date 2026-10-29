@@ -1046,6 +1046,322 @@ pub fn describe_at(schema: &Schema, text: &str, offset: usize) -> Option<String>
     }
 }
 
+// ------------------------------------------------------ variables (JSON)
+
+/// The variables the query declares, `$name: Type`, in order.
+pub fn variable_types(query: &str) -> Vec<(String, TypeRef)> {
+    let bytes = query.as_bytes();
+    let skip = |mut i: usize| {
+        while i < bytes.len() && bytes[i].is_ascii_whitespace() {
+            i += 1;
+        }
+        i
+    };
+    // `[Name!]!` from `i`, and where it ends.
+    fn read_type(
+        bytes: &[u8],
+        i: usize,
+        skip: &dyn Fn(usize) -> usize,
+    ) -> Option<(TypeRef, usize)> {
+        let mut i = skip(i);
+        let ty = if bytes.get(i) == Some(&b'[') {
+            let (inner, end) = read_type(bytes, i + 1, skip)?;
+            i = skip(end);
+            if bytes.get(i) != Some(&b']') {
+                return None;
+            }
+            i += 1;
+            TypeRef::List(Box::new(inner))
+        } else {
+            let start = i;
+            while i < bytes.len() && is_name_byte(bytes[i]) {
+                i += 1;
+            }
+            if start == i {
+                return None;
+            }
+            TypeRef::Named(String::from_utf8_lossy(&bytes[start..i]).into_owned())
+        };
+        let after = skip(i);
+        Some(if bytes.get(after) == Some(&b'!') {
+            (TypeRef::NonNull(Box::new(ty)), after + 1)
+        } else {
+            (ty, i)
+        })
+    }
+    let mut out: Vec<(String, TypeRef)> = Vec::new();
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i] != b'$' {
+            i += 1;
+            continue;
+        }
+        let start = i + 1;
+        let mut end = start;
+        while end < bytes.len() && is_name_byte(bytes[end]) {
+            end += 1;
+        }
+        let colon = skip(end);
+        // `$x:` only appears where a variable is declared; uses are not followed by `:`.
+        if end > start
+            && bytes.get(colon) == Some(&b':')
+            && let Some((ty, after)) = read_type(bytes, colon + 1, &skip)
+        {
+            let name = query[start..end].to_owned();
+            if !out.iter().any(|(n, _)| *n == name) {
+                out.push((name, ty));
+            }
+            i = after;
+            continue;
+        }
+        i = end.max(i + 1);
+    }
+    out
+}
+
+/// One step from the variables object down to the cursor.
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum Step {
+    Key(String),
+    Item,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum JsonPlace {
+    /// Naming a key of an object (those already there are listed).
+    Key(Vec<String>),
+    Value,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct JsonSpot {
+    /// The keys and list items above the place, from the variables object.
+    path: Vec<Step>,
+    place: JsonPlace,
+    /// Where the content of a string still being typed starts.
+    open_string: Option<usize>,
+}
+
+enum JsonFrame {
+    Object {
+        key: Option<String>,
+        after_colon: bool,
+        given: Vec<String>,
+    },
+    Array,
+}
+
+/// Where `text` (the variables up to the cursor) leaves off. `None` before
+/// the first `{`.
+fn json_spot(text: &str) -> Option<JsonSpot> {
+    let bytes = text.as_bytes();
+    let mut stack: Vec<JsonFrame> = Vec::new();
+    let mut open_string = None;
+    let mut i = 0;
+    while i < bytes.len() {
+        match bytes[i] {
+            b'"' => {
+                let start = i + 1;
+                let mut j = start;
+                while j < bytes.len() && bytes[j] != b'"' {
+                    j += if bytes[j] == b'\\' { 2 } else { 1 };
+                }
+                if j >= bytes.len() {
+                    open_string = Some(start);
+                    break;
+                }
+                if let Some(JsonFrame::Object {
+                    key,
+                    after_colon: false,
+                    given,
+                }) = stack.last_mut()
+                {
+                    let name = text[start..j].to_owned();
+                    given.push(name.clone());
+                    *key = Some(name);
+                }
+                i = j + 1;
+            }
+            b'{' => {
+                stack.push(JsonFrame::Object {
+                    key: None,
+                    after_colon: false,
+                    given: Vec::new(),
+                });
+                i += 1;
+            }
+            b'[' => {
+                stack.push(JsonFrame::Array);
+                i += 1;
+            }
+            b'}' | b']' => {
+                stack.pop();
+                i += 1;
+            }
+            b':' => {
+                if let Some(JsonFrame::Object { after_colon, .. }) = stack.last_mut() {
+                    *after_colon = true;
+                }
+                i += 1;
+            }
+            b',' => {
+                if let Some(JsonFrame::Object {
+                    key, after_colon, ..
+                }) = stack.last_mut()
+                {
+                    *key = None;
+                    *after_colon = false;
+                }
+                i += 1;
+            }
+            _ => i += 1,
+        }
+    }
+    let (last, above) = stack.split_last()?;
+    let mut path: Vec<Step> = above
+        .iter()
+        .map(|frame| match frame {
+            JsonFrame::Object { key, .. } => Step::Key(key.clone().unwrap_or_default()),
+            JsonFrame::Array => Step::Item,
+        })
+        .collect();
+    let place = match last {
+        JsonFrame::Object {
+            after_colon: false,
+            given,
+            ..
+        } => JsonPlace::Key(given.clone()),
+        JsonFrame::Object { key, .. } => {
+            path.push(Step::Key(key.clone().unwrap_or_default()));
+            JsonPlace::Value
+        }
+        JsonFrame::Array => {
+            path.push(Step::Item);
+            JsonPlace::Value
+        }
+    };
+    Some(JsonSpot {
+        path,
+        place,
+        open_string,
+    })
+}
+
+/// The type at `path` below the variables: the variable's type, then input
+/// fields and list items. `None` for the variables object itself.
+fn type_at(schema: &Schema, vars: &[(String, TypeRef)], path: &[Step]) -> Option<TypeRef> {
+    let (Step::Key(first), rest) = path.split_first()? else {
+        return None;
+    };
+    let mut ty = vars.iter().find(|(n, _)| n == first)?.1.clone();
+    for step in rest {
+        ty = match step {
+            Step::Item => item_type(&ty),
+            Step::Key(field) => schema
+                .get(ty.named())?
+                .input_fields
+                .iter()
+                .find(|f| f.name == *field)?
+                .ty
+                .clone(),
+        };
+    }
+    Some(ty)
+}
+
+/// What fits at byte `cursor` of the variables `json`, given the `query`
+/// they belong to: the variables it declares, the fields of an input
+/// object, enum values and `true`/`false`. Returns the range to replace
+/// (a string being typed, its quotes included) and the suggestions, whose
+/// `insert` is JSON ready to go in.
+pub fn variable_suggestions(
+    schema: &Schema,
+    query: &str,
+    json: &str,
+    cursor: usize,
+) -> (usize, usize, Vec<Suggestion>) {
+    let cursor = cursor.min(json.len());
+    let vars = variable_types(query);
+    let Some(spot) = json_spot(&json[..cursor]) else {
+        return (cursor, cursor, Vec::new());
+    };
+    let (start, typed, mut end) = match spot.open_string {
+        Some(content) => (content - 1, &json[content..cursor], cursor),
+        None => {
+            let start = word_start(json, cursor);
+            (start, &json[start..cursor], cursor)
+        }
+    };
+    // An editor that closes quotes left one after the cursor.
+    if spot.open_string.is_some() && json[cursor..].starts_with('"') {
+        end += 1;
+    }
+    let typed = typed.to_ascii_lowercase();
+    let mut all = Vec::new();
+    match &spot.place {
+        JsonPlace::Key(given) => {
+            let fields: Vec<(String, String, String)> = if spot.path.is_empty() {
+                vars.iter()
+                    .map(|(name, ty)| (name.clone(), ty.to_string(), String::new()))
+                    .collect()
+            } else {
+                type_at(schema, &vars, &spot.path)
+                    .and_then(|ty| schema.get(ty.named()))
+                    .map(|def| {
+                        def.input_fields
+                            .iter()
+                            .map(|f| (f.name.clone(), f.ty.to_string(), f.description.clone()))
+                            .collect()
+                    })
+                    .unwrap_or_default()
+            };
+            for (name, detail, doc) in fields.into_iter().filter(|(n, ..)| !given.contains(n)) {
+                let mut s = Suggestion::new(&name, detail, &doc, SuggestionKind::Argument);
+                s.insert = format!("\"{name}\": ");
+                all.push(s);
+            }
+        }
+        JsonPlace::Value => {
+            if let Some(ty) = type_at(schema, &vars, &spot.path) {
+                match schema.get(ty.named()) {
+                    Some(def) if def.kind == TypeKind::Enum => {
+                        for v in &def.enum_values {
+                            let mut s = Suggestion::new(
+                                &v.name,
+                                def.name.clone(),
+                                &v.description,
+                                SuggestionKind::Value,
+                            );
+                            s.insert = format!("\"{}\"", v.name);
+                            s.deprecated = v.deprecated.is_some();
+                            all.push(s);
+                        }
+                    }
+                    _ if ty.named() == "Boolean" && spot.open_string.is_none() => {
+                        for b in ["true", "false"] {
+                            all.push(Suggestion::new(
+                                b,
+                                "Boolean".into(),
+                                "",
+                                SuggestionKind::Value,
+                            ));
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+    all.retain(|s| s.label.to_ascii_lowercase().contains(&typed));
+    all.sort_by_key(|s| {
+        (
+            !s.label.to_ascii_lowercase().starts_with(&typed),
+            s.deprecated,
+        )
+    });
+    (start, end, all)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1179,6 +1495,70 @@ mod tests {
         assert!(labels("query Q($r: ").contains(&"Role".to_string()));
         assert!(!labels("query Q($r: ").contains(&"User".to_string()));
         assert!(labels("query Q($r: Role) { users(role: $r) { ").contains(&"name".to_string()));
+    }
+
+    #[test]
+    fn reads_variable_declarations() {
+        let query = "query Q($id: ID!, $roles: [Role!], $f: UserFilter = {active: true}) {\n  users(role: $r, filter: $f) { id }\n}";
+        let vars = variable_types(query);
+        let shown: Vec<(String, String)> = vars
+            .iter()
+            .map(|(n, t)| (n.clone(), t.to_string()))
+            .collect();
+        assert_eq!(
+            shown,
+            [
+                ("id".to_owned(), "ID!".to_owned()),
+                ("roles".to_owned(), "[Role!]".to_owned()),
+                ("f".to_owned(), "UserFilter".to_owned()),
+            ]
+        );
+        assert!(variable_types("{ users { id } }").is_empty());
+    }
+
+    #[test]
+    fn suggests_in_the_variables() {
+        let s = schema();
+        let query = "query Q($id: ID!, $role: Role, $filter: UserFilter, $roles: [Role]) { users(role: $role) { id } }";
+        let at = |json: &str| {
+            let (start, end, list) = variable_suggestions(&s, query, json, json.len());
+            (
+                start,
+                end,
+                list.into_iter()
+                    .map(|x| (x.label, x.insert))
+                    .collect::<Vec<_>>(),
+            )
+        };
+        // The variables the query declares, those not given yet.
+        let (_, _, list) = at("{\n  \"id\": \"1\",\n  ");
+        let labels: Vec<&str> = list.iter().map(|(l, _)| l.as_str()).collect();
+        assert_eq!(labels, ["role", "filter", "roles"]);
+        assert_eq!(list[0].1, "\"role\": ");
+        // Typing inside quotes replaces the quoted word, closing quote included.
+        let json = "{ \"fi\"";
+        let (start, end, list) = variable_suggestions(&s, query, json, 5);
+        assert_eq!((start, end), (2, 6));
+        assert_eq!(list[0].insert, "\"filter\": ");
+        // Enum values, as JSON strings.
+        let (_, _, list) = at("{ \"role\": ");
+        assert_eq!(list[0], ("ADMIN".to_owned(), "\"ADMIN\"".to_owned()));
+        let (_, _, list) = at("{ \"role\": \"U");
+        assert_eq!(list.len(), 1);
+        assert_eq!(list[0].0, "USER");
+        // Input object fields, and values below them.
+        let (_, _, list) = at("{ \"filter\": { ");
+        let labels: Vec<&str> = list.iter().map(|(l, _)| l.as_str()).collect();
+        assert_eq!(labels, ["roles", "active"]);
+        let (_, _, list) = at("{ \"filter\": { \"active\": ");
+        assert_eq!(list[0].0, "true");
+        let (_, _, list) = at("{ \"filter\": { \"roles\": [\"ADMIN\", ");
+        assert_eq!(list.len(), 2);
+        // A list variable's items.
+        let (_, _, list) = at("{ \"roles\": [ ");
+        assert_eq!(list[1].0, "USER");
+        // Nothing before the object starts.
+        assert!(at("").2.is_empty());
     }
 
     #[test]

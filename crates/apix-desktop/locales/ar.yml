@@ -132,6 +132,7 @@ body.kind.none: بلا
 body.kind.text: نص
 body.multipart_hint: يُرسل بصيغة multipart/form-data. حوّل حقلًا إلى «ملف» لرفع ملف؛ تُحفظ المسارات داخل المجموعة نسبةً إلى الطلب.
 body.none_hint: لا يحتوي هذا الطلب على متن.
+body.part_content_type: النوع (تلقائي)
 body.part_file: ملف
 body.part_text: نص
 body.send_file_instead: إرسال ملف بدلًا من ذلك
@@ -403,6 +404,7 @@ project.move_in: نقل إلى المشروع
 project.move_in_detail: "تُنقل «%{collection}» (%{path}) إلى مجلد المشروع «%{project}» وتظهر في شريطه الجانبي."
 project.move_in_title: نقل المجموعة إلى المشروع؟
 project.not_a_project: "%{path} ليس داخل مشروع Apix (لا يوجد apix-project.toml)."
+reqset.ca_cert: جهة تصديق موثوقة
 reqset.client_cert: شهادة العميل
 reqset.client_key: مفتاح الشهادة
 reqset.dialog.collection_title: إعدادات طلبات «%{name}»
@@ -411,6 +413,7 @@ reqset.dialog.note: تنطبق على كل طلب أدناه لا يضع إعد�
 reqset.dialog.project_title: إعدادات طلبات المشروع «%{name}»
 reqset.effective: "المفعول: المهلة %{timeout} · إعادة التوجيه %{redirects} · تحقق TLS %{tls} · الوكيل %{proxy} · الكوكيز %{cookies}"
 reqset.follow: اتباع إعادة التوجيه
+reqset.hint.ca: ملف PEM لجهات تصديق إضافية؛ فارغ = وراثة
 reqset.hint.cert: ملف PEM؛ فارغ = وراثة
 reqset.hint.inherit: فارغ = وراثة
 reqset.hint.key: مفتاح PEM؛ فارغ = ملف الشهادة

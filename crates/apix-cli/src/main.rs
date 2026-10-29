@@ -265,6 +265,9 @@ struct NetArgs {
     /// Send through this proxy (overrides the environment)
     #[arg(long, value_name = "URL")]
     proxy: Option<String>,
+    /// Also trust the certificate authorities in this PEM file
+    #[arg(long, value_name = "FILE")]
+    cacert: Option<String>,
 }
 
 impl NetArgs {
@@ -273,6 +276,12 @@ impl NetArgs {
             timeout_ms: self.timeout.map(|s| (s * 1000.0) as u64),
             tls_verify: self.insecure.then_some(false),
             proxy: self.proxy.clone(),
+            // Relative to where the command runs, like any path given to it.
+            ca_cert: self.cacert.as_ref().map(|path| {
+                std::path::absolute(path)
+                    .map(|p| p.to_string_lossy().into_owned())
+                    .unwrap_or_else(|_| path.clone())
+            }),
             ..Default::default()
         }
     }

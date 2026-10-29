@@ -55,6 +55,7 @@ struct Parsed {
     proxy: Option<String>,
     cert: Option<String>,
     key: Option<String>,
+    ca: Option<String>,
     warnings: Vec<String>,
 }
 
@@ -210,6 +211,7 @@ fn build(args: &[String]) -> CurlImport {
             }
             "-E" | "--cert" => p.cert = value(&mut i, arg, &mut p.warnings),
             "--key" => p.key = value(&mut i, arg, &mut p.warnings),
+            "--cacert" => p.ca = value(&mut i, arg, &mut p.warnings),
             _ if IGNORED_FLAGS.contains(&arg) => {}
             _ if SKIPPED_WITH_VALUE.contains(&arg) => {
                 value(&mut i, arg, &mut p.warnings);
@@ -372,6 +374,7 @@ fn finish(mut p: Parsed) -> CurlImport {
         proxy: p.proxy,
         client_cert: p.cert,
         client_key: p.key,
+        ca_cert: p.ca,
         ..Default::default()
     };
 
@@ -811,6 +814,14 @@ mod tests {
             .unwrap()
             .request;
         assert_eq!(off.settings.proxy.as_deref(), Some(""));
+
+        // An own certificate authority, there and back.
+        let ca = from_curl("curl --cacert certs/ca.pem https://x.dev").unwrap();
+        assert!(ca.warnings.is_empty(), "{:?}", ca.warnings);
+        assert_eq!(ca.request.settings.ca_cert.as_deref(), Some("certs/ca.pem"));
+        let script = crate::to_shell(&ca.request, crate::Shell::Bash);
+        assert!(script.contains("--cacert 'certs/ca.pem'"), "{script}");
+        assert_eq!(from_curl(&script).unwrap().request, ca.request);
     }
 
     #[test]

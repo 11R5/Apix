@@ -129,12 +129,13 @@ request (or folder) stops inheritance. `apix_core::project::inherited_auth`
 does the lookup for the desktop app, the CLI and "Copy as" alike.
 
 **Request settings.** A `[settings]` table (timeout, redirects, TLS verify,
-proxy, client certificate, cookies) lives at the same four levels. Every field
+proxy, client certificate, trusted CA, cookies) lives at the same four levels. Every field
 is an `Option`: `None` inherits per field through the same chain
 (`apix_core::project::inherited_settings`), and what is still unset falls back
 to the defaults in `RequestSettings::effective` — no timeout, follow up to 10
 redirects, verify TLS, proxy from the environment, cookies on. The engine
-applies the result when it builds each send's `reqwest::Client`; the shared
+applies the result when it builds each send's `reqwest::Client` (a trusted CA
+file adds its certificates as roots); the shared
 cookie jar (a `cookie_store` the cookie manager can list and edit) is handed to
 that client unless the request turns cookies off.
 
@@ -394,7 +395,13 @@ following aliases, `... on Type`, fragments and variable definitions, to say
 what fits there (`Spot`). `suggestions` turns that into labels with their
 types and descriptions, ranked by prefix, then substring, deprecated last;
 `describe_at` gives the Markdown for hover. Nothing is validated: a broken
-query still completes as well as it can.
+query still completes as well as it can. The variables editor completes too:
+`variable_types` reads the `$name: Type` declarations, a small JSON scanner
+finds the path of keys and list items down to the cursor and whether a key
+or a value goes there, and `variable_suggestions` walks that path through
+input fields and list items to suggest the variables not given yet, input
+fields, enum values (as JSON strings) and `true`/`false`; a string being
+typed is replaced with its quotes, including one the editor closed.
 
 `apix_http::graphql::fetch_schema` sends the introspection query as a POST
 with the request's URL, headers, auth and settings (the request is resolved
@@ -427,8 +434,12 @@ hyper and rustls the HTTP engine already uses).
 
 The request's headers and auth become metadata (Bearer, Basic, an API key
 header, OAuth 2.0 through `apix_http::oauth2`; `-bin` keys are base64);
-auth types that sign HTTP requests are refused with a reason. The timeout and
-client certificate come from the request settings. `call` reports `Sent`,
+auth types that sign HTTP requests are refused with a reason. The timeout,
+client certificate and trusted CA come from the request settings. With TLS
+verification off, tonic (which has no such switch) is given a plain
+`http://` address and the real `https` origin, and a connector of our own
+(`insecure.rs`) does the TLS: rustls with ALPN h2 and a verifier that accepts
+any certificate but still checks the handshake signatures. `call` reports `Sent`,
 `Headers` and `Received` events as they happen and ends with a `CallOutcome`:
 the status code and message, response metadata, trailers and every message.
 A status other than OK is an outcome, not an error; errors are things that

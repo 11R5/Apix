@@ -430,6 +430,19 @@ impl HttpClient {
             })?;
             builder = builder.identity(identity);
         }
+        if let Some(ca) = &eff.ca_cert {
+            let certs = reqwest::Certificate::from_pem_bundle(&read_file(ca)?).map_err(|e| {
+                HttpError::Settings(format!("cannot load the CA certificate {ca}: {e}"))
+            })?;
+            if certs.is_empty() {
+                return Err(HttpError::Settings(format!(
+                    "{ca} holds no PEM certificate"
+                )));
+            }
+            for cert in certs {
+                builder = builder.add_root_certificate(cert);
+            }
+        }
         if eff.send_cookies {
             builder = builder.cookie_provider(self.cookies.clone());
         }

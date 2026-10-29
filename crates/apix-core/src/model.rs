@@ -438,6 +438,10 @@ pub struct RequestSettings {
     /// certificate file carries the key too.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub client_key: Option<String>,
+    /// Path to a PEM file with certificate authorities to trust besides the
+    /// usual ones (a company or self-signed CA).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ca_cert: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub send_cookies: Option<bool>,
 }
@@ -459,6 +463,7 @@ impl RequestSettings {
             .take()
             .or_else(|| parent.client_cert.clone());
         self.client_key = self.client_key.take().or_else(|| parent.client_key.clone());
+        self.ca_cert = self.ca_cert.take().or_else(|| parent.ca_cert.clone());
         self.send_cookies = self.send_cookies.or(parent.send_cookies);
         self
     }
@@ -480,6 +485,7 @@ impl RequestSettings {
             },
             client_cert: self.client_cert.clone().filter(|s| !s.is_empty()),
             client_key: self.client_key.clone().filter(|s| !s.is_empty()),
+            ca_cert: self.ca_cert.clone().filter(|s| !s.is_empty()),
             send_cookies: self.send_cookies.unwrap_or(true),
         }
     }
@@ -487,9 +493,13 @@ impl RequestSettings {
     /// Certificate and key paths made absolute against `dir`, the folder
     /// of the file that defined them.
     pub fn with_files_relative_to(mut self, dir: &std::path::Path) -> Self {
-        for path in [&mut self.client_cert, &mut self.client_key]
-            .into_iter()
-            .flatten()
+        for path in [
+            &mut self.client_cert,
+            &mut self.client_key,
+            &mut self.ca_cert,
+        ]
+        .into_iter()
+        .flatten()
         {
             if !path.is_empty() && std::path::Path::new(path).is_relative() {
                 *path = dir.join(&*path).to_string_lossy().into_owned();
@@ -511,6 +521,7 @@ pub struct EffectiveSettings {
     pub proxy: ProxyChoice,
     pub client_cert: Option<String>,
     pub client_key: Option<String>,
+    pub ca_cert: Option<String>,
     pub send_cookies: bool,
 }
 
@@ -790,6 +801,17 @@ proxy = ""
         // An untouched [settings] table is not written back to disk.
         let out = toml::to_string(&Request::new(Method::Get, "x")).unwrap();
         assert!(!out.contains("[settings]"));
+        // A CA file is inherited like the rest and found next to its file.
+        let parent = RequestSettings {
+            ca_cert: Some("certs/ca.pem".into()),
+            ..Default::default()
+        };
+        let merged = RequestSettings::default().or_inherit(&parent);
+        let dir = std::path::Path::new("/collection");
+        assert_eq!(
+            merged.with_files_relative_to(dir).effective().ca_cert,
+            Some(dir.join("certs/ca.pem").to_string_lossy().into_owned())
+        );
         // timeout_ms = 0 means "no timeout" explicitly.
         let eff = RequestSettings {
             timeout_ms: Some(0),

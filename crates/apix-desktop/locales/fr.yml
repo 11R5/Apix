@@ -132,6 +132,7 @@ body.kind.none: Aucun
 body.kind.text: Texte
 body.multipart_hint: Envoyé en multipart/form-data. Passez un champ sur Fichier pour envoyer un fichier ; les chemins situés dans la collection sont enregistrés relativement à la requête.
 body.none_hint: Cette requête n'a pas de corps.
+body.part_content_type: Type (auto)
 body.part_file: Fichier
 body.part_text: Texte
 body.send_file_instead: Envoyer un fichier à la place
@@ -403,6 +404,7 @@ project.move_in: Déplacer dans le projet
 project.move_in_detail: "« %{collection} » (%{path}) est déplacée dans le dossier du projet « %{project} » et apparaît dans sa barre latérale."
 project.move_in_title: Déplacer la collection dans le projet ?
 project.not_a_project: "%{path} n’est dans aucun projet Apix (pas de apix-project.toml)."
+reqset.ca_cert: AC de confiance
 reqset.client_cert: Certificat client
 reqset.client_key: Clé du certificat
 reqset.dialog.collection_title: Réglages de requête de « %{name} »
@@ -411,6 +413,7 @@ reqset.dialog.note: S’applique à toute requête en dessous qui ne définit ri
 reqset.dialog.project_title: Réglages de requête du projet « %{name} »
 reqset.effective: "En vigueur : délai %{timeout} · redirections %{redirects} · vérification TLS %{tls} · proxy %{proxy} · cookies %{cookies}"
 reqset.follow: Suivre les redirections
+reqset.hint.ca: Fichier PEM d'autorités de certification en plus ; vide = hériter
 reqset.hint.cert: Fichier PEM ; vide = hériter
 reqset.hint.inherit: vide = hériter
 reqset.hint.key: Clé PEM ; vide = le fichier du certificat

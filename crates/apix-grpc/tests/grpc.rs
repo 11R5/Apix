@@ -238,6 +238,60 @@ async fn runs_see_a_call_as_an_http_response() {
     assert_eq!(response.header("grpc-message"), Some("name is required"));
 }
 
+/// A certificate authority, and a certificate it signed for 127.0.0.1 (PEM):
+/// (CA, server certificate, server key).
+fn certificates() -> (String, String, String) {
+    use rcgen::{BasicConstraints, CertificateParams, DnType, IsCa, Issuer, KeyPair};
+    let mut ca = CertificateParams::new(Vec::<String>::new()).unwrap();
+    ca.is_ca = IsCa::Ca(BasicConstraints::Unconstrained);
+    ca.distinguished_name
+        .push(DnType::CommonName, "Apix test CA");
+    let ca_key = KeyPair::generate().unwrap();
+    let ca_pem = ca.self_signed(&ca_key).unwrap().pem();
+    let issuer = Issuer::new(ca, ca_key);
+    let server = CertificateParams::new(vec!["127.0.0.1".to_owned()]).unwrap();
+    let server_key = KeyPair::generate().unwrap();
+    let server_pem = server.signed_by(&server_key, &issuer).unwrap().pem();
+    (ca_pem, server_pem, server_key.serialize_pem())
+}
+
+#[tokio::test]
+async fn tls_with_an_own_authority_or_without_verifying() {
+    let (ca, cert, key) = certificates();
+    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let addr = listener.local_addr().unwrap();
+    tokio::spawn(server::serve_tls(listener, cert, key));
+    let dir = std::env::temp_dir().join(format!("apix-grpc-tls-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let ca_file = dir.join("ca.pem");
+    std::fs::write(&ca_file, &ca).unwrap();
+
+    let mut req = request(addr, "apix.test.Greeter/SayHello", r#"{"name": "Ada"}"#);
+    req.url = format!("grpcs://{addr}");
+    // The authority is unknown, so the certificate is refused.
+    let err = apix_grpc::send(&req, |_| {}).await.unwrap_err();
+    assert!(matches!(err, GrpcError::Connect { .. }), "{err}");
+
+    // Trusting the authority.
+    req.settings.ca_cert = Some(ca_file.to_string_lossy().into_owned());
+    let outcome = apix_grpc::send(&req, |_| {}).await.unwrap();
+    assert_eq!(json(&outcome.received[0])["message"], "Hello, Ada!");
+
+    // Not verifying at all, with reflection over the same connection kind.
+    req.settings.ca_cert = None;
+    req.settings.tls_verify = Some(false);
+    let outcome = apix_grpc::send(&req, |_| {}).await.unwrap();
+    assert!(outcome.is_ok(), "{outcome:?}");
+
+    // A file that is not a certificate says so.
+    std::fs::write(&ca_file, "not a certificate").unwrap();
+    req.settings.tls_verify = None;
+    req.settings.ca_cert = Some(ca_file.to_string_lossy().into_owned());
+    let err = apix_grpc::send(&req, |_| {}).await.unwrap_err();
+    assert!(err.to_string().contains("no PEM certificate"), "{err}");
+    std::fs::remove_dir_all(&dir).ok();
+}
+
 #[test]
 fn an_example_message_shows_every_field() {
     let pool = server::pool();

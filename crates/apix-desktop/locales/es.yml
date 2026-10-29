@@ -132,6 +132,7 @@ body.kind.none: Ninguno
 body.kind.text: Texto
 body.multipart_hint: Se envía como multipart/form-data. Cambia un campo a Archivo para subir un archivo; las rutas dentro de la colección se guardan relativas a la solicitud.
 body.none_hint: Esta solicitud no tiene cuerpo.
+body.part_content_type: Tipo (auto)
 body.part_file: Archivo
 body.part_text: Texto
 body.send_file_instead: Enviar un archivo en su lugar
@@ -403,6 +404,7 @@ project.move_in: Mover al proyecto
 project.move_in_detail: "«%{collection}» (%{path}) se mueve a la carpeta del proyecto «%{project}» y aparece en su barra lateral."
 project.move_in_title: ¿Mover la colección al proyecto?
 project.not_a_project: "%{path} no está dentro de un proyecto de Apix (no hay apix-project.toml)."
+reqset.ca_cert: CA de confianza
 reqset.client_cert: Certificado de cliente
 reqset.client_key: Clave del certificado
 reqset.dialog.collection_title: Ajustes de petición de «%{name}»
@@ -411,6 +413,7 @@ reqset.dialog.note: Se aplica a toda petición debajo que no defina los suyos.
 reqset.dialog.project_title: Ajustes de petición del proyecto «%{name}»
 reqset.effective: "En vigor: tiempo límite %{timeout} · redirecciones %{redirects} · verificación TLS %{tls} · proxy %{proxy} · cookies %{cookies}"
 reqset.follow: Seguir redirecciones
+reqset.hint.ca: Archivo PEM con autoridades de certificación adicionales; vacío = heredar
 reqset.hint.cert: Archivo PEM; vacío = heredar
 reqset.hint.inherit: vacío = heredar
 reqset.hint.key: Clave PEM; vacío = el archivo del certificado
