@@ -30,7 +30,7 @@ crates/
 │                 projects, environments and secrets, tree and file operations,
 │                 GraphQL schemas (introspection, SDL) and query completion
 ├── apix-http     HTTP engine: reqwest + rustls, timings, response capture, network trace,
-│                 server-sent events, WebSocket (tokio-tungstenite), GraphQL schema fetch
+│                 server-sent events, WebSocket (tokio-tungstenite), Socket.IO, GraphQL schema fetch
 │                 (DNS, connection setup, redirects, certificate, local interface)
 ├── apix-import   Postman v2.0/v2.1 collections and environments → Apix collections
 ├── apix-codegen  requests ↔ shell commands: curl (bash), curl.exe (cmd), PowerShell; parses pasted curl; code in 10 languages
@@ -69,7 +69,7 @@ Planned crates:
 
 | Crate          | Purpose                                                            |
 |----------------|--------------------------------------------------------------------|
-| `apix-proto`   | Socket.IO, MQTT, SOAP                                              |
+| `apix-proto`   | MQTT, SOAP                                                         |
 | `apix-mock`    | A local mock server that serves saved examples (`hyper`)           |
 
 ### One desktop crate for three operating systems
@@ -391,6 +391,36 @@ tab (`workspace/ws_editor.rs`) and the response pane to
 `ResponseState::Socket` (`workspace/socket_ui.rs`). Both states are routed to
 their tab like a finished response, so a stream or socket keeps running in a
 tab in the back. The CLI prints events and messages from the same callbacks.
+
+## Socket.IO (M6)
+
+`apix_http::socketio` speaks Socket.IO 3/4 (Engine.IO protocol 4) on top of
+the WebSocket connection above, so the handshake, headers, auth and TLS
+settings are the same. A request is Socket.IO when it has a `[socketio]`
+table (`SocketIoOptions`: namespace, path, auth); `handshake_request` turns
+`http(s)://` into `ws(s)://`, takes the namespace from the options or the
+URL's path, puts the server's path (`/socket.io/`) in its place and adds
+`EIO=4&transport=websocket`. `connect` waits for Engine.IO's open packet,
+sends the namespace's CONNECT with the auth JSON and waits for the answer
+(`40…` with the socket id, or `44…` with the refusal) before it returns, so
+a wrong server, namespace or token fails like a failed handshake.
+
+`SioConnection::run` runs `WsConnection::run` beside a translator between
+two channels: `SioCommand::Emit` becomes an `EVENT` packet (`42…`, with an
+ack id when asked, ids counting from 0) or a `BINARY_EVENT` (`45n-…`) whose
+`{"$binary": "<base64>"}` values are replaced by placeholders and sent as
+binary frames after it; received packets become `SioEvent`s (received
+events with the ack id the server wants, acks of ours, the server making us
+leave, unreadable frames), with binary attachments collected and put back
+where their placeholders were. Engine.IO pings (`2`) get a pong (`3`).
+
+The desktop app keeps one Messages tab for both: `WsEditor` has a
+WebSocket/Socket.IO switch and the Socket.IO fields, and `WsMessage` carries
+`event` and `ack`. `net::SocketIncoming` is generic over the event type, and
+`socket_ui.rs` follows both kinds of connection with one loop, turning
+`SioEvent`s into log entries with the event name and ack chips. The test
+server in `apix-http/tests/common/socketio_server.rs` is also the
+`socketio_server` example (:8771).
 
 ## GraphQL schemas (M6)
 

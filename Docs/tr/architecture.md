@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:ce606028a0adfb9e -->
+<!-- translated from en/architecture.md sha256:5bd9efc5dfead96e -->
 
 # Apix mimarisi
 
@@ -32,7 +32,7 @@ crates/
 │                 projeler, ortamlar ve gizli değerler, ağaç ve dosya işlemleri,
 │                 GraphQL şemaları (introspection, SDL) ve sorgu tamamlama
 ├── apix-http     HTTP motoru: reqwest + rustls, zamanlamalar, yanıt yakalama, ağ izi,
-│                 sunucu olayları (SSE), WebSocket (tokio-tungstenite), GraphQL şeması çekme
+│                 sunucu olayları (SSE), WebSocket (tokio-tungstenite), Socket.IO, GraphQL şeması çekme
 │                 (DNS, bağlantı kurulumu, yönlendirmeler, sertifika, yerel ağ arayüzü)
 ├── apix-import   Postman v2.0/v2.1 koleksiyonları ve ortamları → Apix koleksiyonları
 ├── apix-codegen  istekler ↔ kabuk komutları: curl (bash), curl.exe (cmd), PowerShell; yapıştırılan curl'ü ayrıştırır; 10 dilde kod
@@ -74,7 +74,7 @@ Planlanan crate'ler:
 
 | Crate          | Amaç                                                               |
 |----------------|--------------------------------------------------------------------|
-| `apix-proto`   | Socket.IO, MQTT, SOAP                                              |
+| `apix-proto`   | MQTT, SOAP                                                         |
 | `apix-mock`    | Kaydedilmiş örnekleri sunan yerel bir mock sunucu (`hyper`)        |
 
 ### Üç işletim sistemi için tek masaüstü crate'i
@@ -412,6 +412,38 @@ bir yanıta çevirir. `ws://` adresi istek alanını Mesajlar sekmesine
 (`workspace/socket_ui.rs`) geçirir. İki durum da bitmiş bir yanıt gibi kendi
 sekmesine yönlendirilir; bu yüzden akış ya da soket arkadaki bir sekmede de
 sürer. CLI olayları ve mesajları aynı geri çağırmalardan yazar.
+
+## Socket.IO (M6)
+
+`apix_http::socketio`, Socket.IO 3/4'ü (Engine.IO protokolü 4) yukarıdaki
+WebSocket bağlantısının üstünde konuşur; el sıkışma, başlıklar, auth ve TLS
+ayarları aynıdır. `[socketio]` tablosu (`SocketIoOptions`: ad alanı, yol,
+auth) olan istek Socket.IO'dur. `handshake_request` `http(s)://` adresini
+`ws(s)://` yapar, ad alanını seçeneklerden ya da URL'nin yolundan alır,
+yerine sunucunun yolunu (`/socket.io/`) koyar ve
+`EIO=4&transport=websocket` ekler. `connect` Engine.IO'nun açılış paketini
+bekler, ad alanının CONNECT paketini auth JSON'uyla gönderir ve yanıtı
+(soket kimliğiyle `40…` ya da ret nedeniyle `44…`) bekledikten sonra döner;
+böylece yanlış sunucu, ad alanı ya da token başarısız bir el sıkışma gibi
+hata verir.
+
+`SioConnection::run`, `WsConnection::run`'ı iki kanal arasındaki bir
+çeviricinin yanında çalıştırır: `SioCommand::Emit` bir `EVENT` paketi
+(`42…`; istenirse ack id'siyle, id'ler 0'dan sayılır) ya da `BINARY_EVENT`
+(`45n-…`) olur; ikincisinde `{"$binary": "<base64>"}` değerlerinin yerine
+yer tutucular konur ve baytlar paketin ardından ikili çerçeveler olarak
+gider. Gelen paketler `SioEvent`'e dönüşür (sunucunun istediği ack id'siyle
+gelen olaylar, bizim olaylarımızın ack'leri, sunucunun bizi ad alanından
+çıkarması, okunamayan çerçeveler); ikili ekler toplanıp yer tutucularının
+yerine konur. Engine.IO ping'lerine (`2`) pong (`3`) gider.
+
+Masaüstü uygulaması ikisi için tek Mesajlar sekmesi kullanır: `WsEditor`'da
+WebSocket/Socket.IO seçimi ve Socket.IO alanları vardır, `WsMessage` da
+`event` ve `ack` taşır. `net::SocketIncoming` olay türüne göre geneldir;
+`socket_ui.rs` iki tür bağlantıyı da tek döngüyle izler ve `SioEvent`'leri
+olay adı ve ack etiketli günlük satırlarına çevirir.
+`apix-http/tests/common/socketio_server.rs` içindeki test sunucusu aynı
+zamanda `socketio_server` örneğidir (:8771).
 
 ## GraphQL şemaları (M6)
 

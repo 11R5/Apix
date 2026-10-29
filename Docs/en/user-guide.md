@@ -22,6 +22,7 @@ command line runs the same requests in a terminal or CI.
 - [The response](#the-response)
 - [The Network tab](#the-network-tab)
 - [WebSocket and server-sent events](#websocket-and-server-sent-events)
+- [Socket.IO](#socketio)
 - [gRPC](#grpc)
 - [Scripts and tests](#scripts-and-tests)
 - [Runner](#runner)
@@ -327,6 +328,45 @@ Ctrl+C). For a WebSocket it connects, sends the saved messages (or
 `--message` texts, read as `--format text|base64|hex`), prints both
 directions and closes after `--listen` seconds (3 by default, `0` waits for
 the server). `apix run` skips WebSocket requests.
+
+## Socket.IO
+
+A Socket.IO request talks to servers of Socket.IO 3 and 4 over WebSocket.
+Open a request's **Messages** tab (give it a `ws://` URL for the tab to
+show) and pick **Socket.IO** at the top; the URL may then be `http://`,
+`https://`, `ws://` or `wss://`, as in a Socket.IO client. The request file
+gets a `[socketio]` table, and a Socket.IO request opens on its Messages tab.
+
+![A Socket.IO connection: events, acks and a binary attachment](images/socketio.png)
+
+- **Namespace:** the one to join, like `/chat`. Left empty, it is the URL's
+  path (`http://localhost:3000/chat` joins `/chat`), or `/`. **Path** is where
+  the server listens, `/socket.io/` unless the server moved it. An address
+  copied from the browser's network tab
+  (`…/socket.io/?EIO=4&transport=websocket`) works as it is.
+- **Auth:** a JSON object sent when joining (the client's `auth` option),
+  with `{{variables}}` filled in. When the server refuses, the reason it gave
+  is shown as the error.
+- **Event** names what a message is emitted as (`message` when empty).
+  The text is one argument: JSON as it is, any other text as a string, and
+  nothing at all when it is empty. **Base64** and **Hex** send the bytes as
+  a binary attachment. **Ask for an ack** asks the server to acknowledge.
+  Saved messages keep their event and ack.
+- The log shows each event with its name: ↑ emitted (with `ack 0`, `ack 1`
+  … when an ack was asked), ↓ received (with `wants ack 9` when the server
+  asks for one), and ✓ for the server's acks with what it answered. Binary
+  attachments show as their size and first bytes. The handshake headers,
+  params and auth and the TLS settings work as for a WebSocket.
+- Apix answers the server's pings. When the server makes the client leave
+  the namespace, the log says so and the connection closes; **Disconnect**
+  (or Esc) leaves the namespace and closes.
+
+`apix send` joins, emits the saved messages and prints the events, acks and
+binary attachments as they come; `--message TEXT` (repeatable) emits texts
+instead, as the event `--event NAME` gives (`message` by default).
+`apix run` skips Socket.IO requests. Received attachments are written as
+`{"$binary": "<base64>"}`. Not yet: Socket.IO 2 servers (Engine.IO 3), the
+long-polling transport, and answering an ack the server asks for.
 
 ## gRPC
 
