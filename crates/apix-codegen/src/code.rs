@@ -130,6 +130,7 @@ struct Handles {
     proxy_url: bool,
     proxy_off: bool,
     cert: bool,
+    ca: bool,
     digest: bool,
 }
 
@@ -233,6 +234,15 @@ impl<'a> Parts<'a> {
             .filter(|c| !c.is_empty())
     }
 
+    /// Certificate authorities to trust besides the usual ones (not when
+    /// the certificate is not checked at all).
+    fn ca(&self) -> Option<&str> {
+        self.settings
+            .ca_cert
+            .as_deref()
+            .filter(|c| !c.is_empty() && !self.insecure())
+    }
+
     /// The key file, or the certificate file when it holds the key too.
     fn key(&self) -> Option<&str> {
         self.settings
@@ -281,6 +291,11 @@ impl<'a> Parts<'a> {
             && !handles.cert
         {
             notes.push(format!("client certificate {cert}"));
+        }
+        if let Some(ca) = self.ca()
+            && !handles.ca
+        {
+            notes.push(format!("trusted CA certificate {ca}"));
         }
         if let Some(login) = self.digest()
             && !handles.digest
@@ -728,6 +743,7 @@ fn python(parts: &Parts) -> String {
             insecure: true,
             proxy_url: true,
             cert: true,
+            ca: true,
             digest: true,
             ..Handles::default()
         },
@@ -790,6 +806,8 @@ fn python(parts: &Parts) -> String {
     }
     if parts.insecure() {
         args.push("verify=False".into());
+    } else if let Some(ca) = parts.ca() {
+        args.push(format!("verify={}", dq(ca)));
     }
     if let Some(url) = parts.proxy_url() {
         args.push(format!(
@@ -1046,6 +1064,7 @@ fn rust(parts: &Parts) -> String {
             proxy_off: true,
             proxy_url: true,
             cert: true,
+            ca: true,
             ..Handles::default()
         },
         "//",
@@ -1091,6 +1110,13 @@ fn rust(parts: &Parts) -> String {
         let _ = writeln!(
             out,
             "        .identity(reqwest::Identity::from_pem({pem})?)"
+        );
+    }
+    if let Some(ca) = parts.ca() {
+        let _ = writeln!(
+            out,
+            "        .add_root_certificate(reqwest::Certificate::from_pem(&std::fs::read({})?)?)",
+            rust_str(ca)
         );
     }
     out.push_str("        .build()?;\n");
@@ -1345,6 +1371,7 @@ fn csharp(parts: &Parts) -> String {
             proxy_off: true,
             proxy_url: true,
             cert: true,
+            ca: false,
             digest: true,
         },
         "//",
@@ -1530,6 +1557,7 @@ fn php(parts: &Parts) -> String {
             proxy_off: true,
             proxy_url: true,
             cert: true,
+            ca: false,
             digest: true,
         },
         "//",
@@ -1952,6 +1980,26 @@ mod tests {
                 "nothing to note without settings: {lang:?}\n{code}"
             );
         }
+    }
+
+    #[test]
+    fn an_own_certificate_authority() {
+        let mut r = post_json();
+        r.settings.ca_cert = Some("certs/ca.pem".into());
+        assert!(to_code(&r, Lang::Python).contains("verify=\"certs/ca.pem\""));
+        assert!(
+            to_code(&r, Lang::Rust)
+                .contains(".add_root_certificate(reqwest::Certificate::from_pem(&std::fs::read(")
+        );
+        let go = to_code(&r, Lang::Go);
+        assert!(
+            go.contains("Not in this snippet: trusted CA certificate certs/ca.pem"),
+            "{go}"
+        );
+        // Not checking certificates at all makes the authority moot.
+        r.settings.tls_verify = Some(false);
+        assert!(!to_code(&r, Lang::Go).contains("trusted CA"));
+        assert!(to_code(&r, Lang::Python).contains("verify=False"));
     }
 
     #[test]

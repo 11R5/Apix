@@ -405,6 +405,7 @@ project.move_in: Move into project
 project.move_in_detail: "“%{collection}” (%{path}) moves into the folder of the project “%{project}” and appears in its sidebar."
 project.move_in_title: Move the collection into the project?
 project.not_a_project: "%{path} is not inside an Apix project (no apix-project.toml)."
+reqset.ca_cert: Trusted CA
 reqset.client_cert: Client certificate
 reqset.client_key: Certificate key
 reqset.dialog.collection_title: Request settings for “%{name}”
@@ -413,6 +414,7 @@ reqset.dialog.note: Applies to every request below that does not set its own.
 reqset.dialog.project_title: Request settings for project “%{name}”
 reqset.effective: "In effect: timeout %{timeout} · redirects %{redirects} · TLS verify %{tls} · proxy %{proxy} · cookies %{cookies}"
 reqset.follow: Follow redirects
+reqset.hint.ca: PEM file of extra certificate authorities; empty = inherit
 reqset.hint.cert: PEM file; empty = inherit
 reqset.hint.inherit: empty = inherit
 reqset.hint.key: PEM key; empty = the certificate file

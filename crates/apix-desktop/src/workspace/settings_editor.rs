@@ -58,15 +58,17 @@ enum F {
     Proxy,
     ClientCert,
     ClientKey,
+    CaCert,
 }
 
 impl F {
-    const ALL: [F; 5] = [
+    const ALL: [F; 6] = [
         F::Timeout,
         F::MaxRedirects,
         F::Proxy,
         F::ClientCert,
         F::ClientKey,
+        F::CaCert,
     ];
 
     fn placeholder(self) -> SharedString {
@@ -75,6 +77,7 @@ impl F {
             F::Proxy => "http://proxy.example.com:8080".into(),
             F::ClientCert => tr!("reqset.hint.cert"),
             F::ClientKey => tr!("reqset.hint.key"),
+            F::CaCert => tr!("reqset.hint.ca"),
         }
     }
 }
@@ -211,6 +214,7 @@ impl SettingsEditor {
                 F::ClientKey,
                 settings.client_key.clone().unwrap_or_default(),
             ),
+            (F::CaCert, settings.ca_cert.clone().unwrap_or_default()),
         ];
         for (f, text) in texts {
             self.fields[&f].update(cx, |state, cx| state.set_value(text, window, cx));
@@ -241,6 +245,7 @@ impl SettingsEditor {
             },
             client_cert: some(self.text(F::ClientCert, cx)),
             client_key: some(self.text(F::ClientKey, cx)),
+            ca_cert: some(self.text(F::CaCert, cx)),
             send_cookies: tri_value(Self::selected(&self.cookies, cx)),
         }
     }
@@ -328,6 +333,7 @@ impl Render for SettingsEditor {
             .children(custom_proxy.then(|| self.field(tr!("reqset.proxy_url"), F::Proxy)))
             .child(self.field(tr!("reqset.client_cert"), F::ClientCert))
             .child(self.field(tr!("reqset.client_key"), F::ClientKey))
+            .child(self.field(tr!("reqset.ca_cert"), F::CaCert))
             .child(self.picker_row(tr!("reqset.send_cookies"), &self.cookies))
             .child(
                 div()

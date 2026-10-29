@@ -27,6 +27,27 @@ pub fn pool() -> DescriptorPool {
 
 /// Serves the Greeter on `listener` until the process ends.
 pub async fn serve(listener: TcpListener, reflection: bool, tick: Duration) {
+    serve_with(listener, reflection, tick, None).await
+}
+
+/// The same over TLS, with this certificate chain and key (PEM).
+#[allow(dead_code)]
+pub async fn serve_tls(listener: TcpListener, cert_pem: String, key_pem: String) {
+    serve_with(
+        listener,
+        true,
+        Duration::from_millis(5),
+        Some((cert_pem, key_pem)),
+    )
+    .await
+}
+
+async fn serve_with(
+    listener: TcpListener,
+    reflection: bool,
+    tick: Duration,
+    tls: Option<(String, String)>,
+) {
     let pool = pool();
     let greeter = Greeter {
         pool: pool.clone(),
@@ -41,7 +62,14 @@ pub async fn serve(listener: TcpListener, reflection: bool, tick: Duration) {
             .build_v1()
             .expect("the reflection service builds")
     });
-    tonic::transport::Server::builder()
+    let mut builder = tonic::transport::Server::builder();
+    if let Some((cert, key)) = tls {
+        let identity = tonic::transport::Identity::from_pem(cert, key);
+        builder = builder
+            .tls_config(tonic::transport::ServerTlsConfig::new().identity(identity))
+            .expect("the test certificate is usable");
+    }
+    builder
         .add_service(greeter)
         .add_optional_service(reflection)
         .serve_with_incoming(TcpListenerStream::new(listener))

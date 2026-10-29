@@ -403,6 +403,7 @@ project.move_in: Переместить в проект
 project.move_in_detail: "«%{collection}» (%{path}) переместится в папку проекта «%{project}» и появится на его боковой панели."
 project.move_in_title: Переместить коллекцию в проект?
 project.not_a_project: "%{path} не находится внутри проекта Apix (нет apix-project.toml)."
+reqset.ca_cert: Доверенный УЦ
 reqset.client_cert: Клиентский сертификат
 reqset.client_key: Ключ сертификата
 reqset.dialog.collection_title: Настройки запросов «%{name}»
@@ -411,6 +412,7 @@ reqset.dialog.note: Действует для каждого запроса ни
 reqset.dialog.project_title: Настройки запросов проекта «%{name}»
 reqset.effective: "Действует: тайм-аут %{timeout} · перенаправления %{redirects} · проверка TLS %{tls} · прокси %{proxy} · cookie %{cookies}"
 reqset.follow: Следовать перенаправлениям
+reqset.hint.ca: Файл PEM с дополнительными центрами сертификации; пусто = наследовать
 reqset.hint.cert: Файл PEM; пусто = наследовать
 reqset.hint.inherit: пусто = наследовать
 reqset.hint.key: Ключ PEM; пусто = файл сертификата

@@ -90,6 +90,8 @@ fn httpie(request: &Request) -> String {
     }
     if settings.tls_verify == Some(false) {
         parts.push("--verify=no".into());
+    } else if let Some(ca) = ca_cert(settings) {
+        parts.push(format!("--verify={}", q(ca)));
     }
     match settings.proxy.as_deref() {
         None => {}
@@ -206,6 +208,9 @@ fn wget(request: &Request) -> String {
     if let Some(cert) = &settings.client_cert {
         parts.push(format!("--certificate={}", q(cert)));
     }
+    if let Some(ca) = ca_cert(settings) {
+        parts.push(format!("--ca-certificate={}", q(ca)));
+    }
     if let Some(key) = &settings.client_key {
         parts.push(format!("--private-key={}", q(key)));
     }
@@ -286,6 +291,9 @@ fn curl(request: &Request, program: &str, quote: fn(&str) -> String, newline: &s
     if let Some(key) = &settings.client_key {
         parts.push(format!("--key {}", quote(key)));
     }
+    if let Some(ca) = ca_cert(settings) {
+        parts.push(format!("--cacert {}", quote(ca)));
+    }
     if let Some(text) = text_body(&request.body) {
         parts.push(format!("--data-raw {}", quote(&text)));
     } else if let Some(fields) = form_fields(&request.body) {
@@ -343,6 +351,14 @@ fn form_value(path: &str) -> String {
 }
 
 /// POSIX single quotes: nothing inside is special; `'` becomes `'\''`.
+/// The CA file to trust, unless certificates are not checked at all.
+fn ca_cert(settings: &apix_core::RequestSettings) -> Option<&str> {
+    settings
+        .ca_cert
+        .as_deref()
+        .filter(|c| !c.is_empty() && settings.tls_verify != Some(false))
+}
+
 fn bash_quote(s: &str) -> String {
     format!("'{}'", s.replace('\'', r"'\''"))
 }
@@ -489,6 +505,12 @@ fn powershell(request: &Request) -> String {
             "$certificate = [System.Security.Cryptography.X509Certificates.X509Certificate2]::CreateFromPemFile({args})\n"
         ));
         extra.push_str(" -Certificate $certificate");
+    }
+    if let Some(ca) = ca_cert(settings) {
+        out.push_str(&format!(
+            "# Invoke-RestMethod has no option for a CA file; trust {} in the certificate store\n",
+            ca
+        ));
     }
     let has_headers = !headers.is_empty() || basic.is_some();
     if has_headers {

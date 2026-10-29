@@ -232,6 +232,7 @@ impl Request {
                 proxy: self.settings.proxy.as_deref().map(&mut s),
                 client_cert: self.settings.client_cert.as_deref().map(&mut s),
                 client_key: self.settings.client_key.as_deref().map(&mut s),
+                ca_cert: self.settings.ca_cert.as_deref().map(&mut s),
                 ..self.settings.clone()
             },
             // Filled in when they run, with what scripts set by then.

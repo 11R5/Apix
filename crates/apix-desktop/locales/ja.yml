@@ -403,6 +403,7 @@ project.move_in: プロジェクトに移動
 project.move_in_detail: "「%{collection}」（%{path}）をプロジェクト「%{project}」のフォルダーに移動し、そのサイドバーに表示します。"
 project.move_in_title: コレクションをプロジェクトに移動しますか？
 project.not_a_project: "%{path} は Apix プロジェクト内にありません（apix-project.toml がありません）。"
+reqset.ca_cert: 信頼する CA
 reqset.client_cert: クライアント証明書
 reqset.client_key: 証明書の鍵
 reqset.dialog.collection_title: 「%{name}」のリクエスト設定
@@ -411,6 +412,7 @@ reqset.dialog.note: 下にある、独自に設定しないすべてのリクエ
 reqset.dialog.project_title: プロジェクト「%{name}」のリクエスト設定
 reqset.effective: "有効: タイムアウト %{timeout} · リダイレクト %{redirects} · TLS検証 %{tls} · プロキシ %{proxy} · Cookie %{cookies}"
 reqset.follow: リダイレクトに従う
+reqset.hint.ca: 追加の認証局の PEM ファイル。空 = 継承
 reqset.hint.cert: PEMファイル。空 = 継承
 reqset.hint.inherit: 空 = 継承
 reqset.hint.key: PEM鍵。空 = 証明書ファイル

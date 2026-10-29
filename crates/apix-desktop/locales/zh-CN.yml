@@ -403,6 +403,7 @@ project.move_in: 移到项目
 project.move_in_detail: "“%{collection}”（%{path}）将移到项目“%{project}”的文件夹中，并显示在其侧边栏里。"
 project.move_in_title: 要把集合移到项目中吗？
 project.not_a_project: "%{path} 不在任何 Apix 项目中（没有 apix-project.toml）。"
+reqset.ca_cert: 受信任的 CA
 reqset.client_cert: 客户端证书
 reqset.client_key: 证书密钥
 reqset.dialog.collection_title: “%{name}”的请求设置
@@ -411,6 +412,7 @@ reqset.dialog.note: 适用于其下所有未自行设置的请求。
 reqset.dialog.project_title: 项目“%{name}”的请求设置
 reqset.effective: "生效: 超时 %{timeout} · 重定向 %{redirects} · TLS 验证 %{tls} · 代理 %{proxy} · Cookie %{cookies}"
 reqset.follow: 跟随重定向
+reqset.hint.ca: 额外证书颁发机构的 PEM 文件；留空 = 继承
 reqset.hint.cert: PEM 文件；留空 = 继承
 reqset.hint.inherit: 留空 = 继承
 reqset.hint.key: PEM 密钥；留空 = 证书文件
