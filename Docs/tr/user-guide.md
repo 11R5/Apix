@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:370b0c3e16a4c70f -->
+<!-- translated from en/user-guide.md sha256:f664b10a61bf4614 -->
 
 # Apix kullanım kılavuzu
 
@@ -344,7 +344,20 @@ olarak okunur.
 
 Komut satırında `apix send` metodu çağırır (akışlar geldikçe her mesaj bir
 satıra yazılır; durum OK değilse çıkış kodu sıfırdan farklıdır), `apix schema`
-servisi ve mesajlarını yazar. `apix run` gRPC isteklerini şimdilik atlar.
+servisi ve mesajlarını yazar.
+
+**Koşularda ve testlerde.** `apix run` ve Runner gRPC isteklerini de çağırır;
+test scriptleri ve kontroller çağrıyı bir HTTP yanıtı olarak görür: durum,
+gRPC kodunun karşılığı olan HTTP durumudur (`OK` 200, `INVALID_ARGUMENT` 400,
+`NOT_FOUND` 404, `UNAUTHENTICATED` 401, …); gRPC kodu ve mesajı, metadata ve
+trailer'ların yanında `grpc-status` ve `grpc-message` başlıklarındadır; gövde
+cevaptır, akışla cevap veren bir metotta ise mesajların JSON listesidir. Yani
+`pm.response.json().message` ya da `body.message` üzerine bir kontrol, her
+istekteki gibi çalışır. Tek başına **Gönder**, çağrıyı scriptlerini
+çalıştırmadan gösterir.
+
+Her çağrı günlüğü, durumu ve metadata'sıyla **Geçmiş**'te (Ctrl+H) tutulur;
+seçince çağrı bittiği haliyle yeniden görünür.
 
 ## Scriptler ve testler
 

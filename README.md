@@ -122,7 +122,7 @@ Measurements of the other tools on the same machine are planned.
 - **gRPC:** `grpc://` requests call unary and streaming methods, described by
   server reflection or `.proto` files (no `protoc` needed), with messages as
   JSON, an example message for any method, and a live log of what goes both
-  ways; `apix send` and `apix schema` work on them too.
+  ways; `apix send`, `apix schema`, runs and test scripts work on them too.
 - **History** of sent requests with their responses (Ctrl+H): search it and
   send any of them again.
 - **Command palette** (Ctrl+K) and a menu bar that holds every command.

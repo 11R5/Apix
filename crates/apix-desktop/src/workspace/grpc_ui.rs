@@ -8,6 +8,7 @@ use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
+use apix_core::history::{Entry, StoredResponse};
 use apix_grpc::{CallEvent, CallOutcome};
 use apix_http::human_duration;
 use gpui_kit::component::spinner::Spinner;
@@ -15,13 +16,91 @@ use gpui_kit::component::{ActiveTheme as _, Sizable, h_flex, v_flex};
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
+use super::history_ui::PendingRecord;
 use super::{ResponseState, Workspace, undefined_message};
 use crate::bidi::Bidi as _;
 use crate::{net, tr};
 
+#[derive(Clone)]
 pub(super) enum GrpcEntry {
     Sent(String),
     Received(String),
+}
+
+/// A call's log as the history keeps it:
+/// `[{"at_ms": 12, "sent": true, "message": {…}}, …]`.
+pub(super) fn log_to_json(log: &[(Duration, GrpcEntry)]) -> Vec<u8> {
+    let items: Vec<serde_json::Value> = log
+        .iter()
+        .map(|(at, entry)| {
+            let (sent, text) = match entry {
+                GrpcEntry::Sent(t) => (true, t),
+                GrpcEntry::Received(t) => (false, t),
+            };
+            let message = serde_json::from_str(text)
+                .unwrap_or_else(|_| serde_json::Value::String(text.clone()));
+            serde_json::json!({ "at_ms": at.as_millis() as u64, "sent": sent, "message": message })
+        })
+        .collect();
+    serde_json::to_vec(&items).unwrap_or_default()
+}
+
+/// The log back from the history (empty when it was cut short).
+pub(super) fn log_from_json(bytes: &[u8]) -> Vec<(Duration, GrpcEntry)> {
+    let Ok(serde_json::Value::Array(items)) = serde_json::from_slice(bytes) else {
+        return Vec::new();
+    };
+    items
+        .iter()
+        .map(|item| {
+            let at = Duration::from_millis(item["at_ms"].as_u64().unwrap_or(0));
+            let text = serde_json::to_string_pretty(&item["message"]).unwrap_or_default();
+            let entry = if item["sent"].as_bool().unwrap_or(false) {
+                GrpcEntry::Sent(text)
+            } else {
+                GrpcEntry::Received(text)
+            };
+            (at, entry)
+        })
+        .collect()
+}
+
+/// A call from the history, shown as it ended.
+pub(super) fn restored(entry: &Entry, stored: &StoredResponse) -> Rc<RefCell<GrpcSession>> {
+    let log = log_from_json(&entry.body);
+    let received = log
+        .iter()
+        .filter_map(|(_, e)| match e {
+            GrpcEntry::Received(text) => Some(text.clone()),
+            GrpcEntry::Sent(_) => None,
+        })
+        .collect();
+    let sent = log
+        .iter()
+        .filter(|(_, e)| matches!(e, GrpcEntry::Sent(_)))
+        .count();
+    Rc::new(RefCell::new(GrpcSession {
+        method: entry
+            .request
+            .grpc
+            .as_ref()
+            .map(|g| g.method.clone())
+            .unwrap_or_default(),
+        started: Instant::now(),
+        log,
+        headers: stored.headers.clone(),
+        outcome: Some(CallOutcome {
+            code: i32::from(stored.status),
+            status_message: stored.message.clone(),
+            headers: stored.headers.clone(),
+            trailers: stored.trailers.clone(),
+            received,
+            sent,
+            elapsed: Duration::from_micros(stored.total_us),
+        }),
+        stopped: false,
+        scroll: ScrollHandle::new(),
+    }))
 }
 
 pub(super) struct GrpcSession {
@@ -123,9 +202,11 @@ impl Workspace {
     pub(super) fn call_grpc(
         &mut self,
         request: apix_core::Request,
+        record: Option<PendingRecord>,
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
+        let mut record = record;
         let method = request
             .grpc
             .as_ref()
@@ -165,6 +246,26 @@ impl Workspace {
                     let mut incoming = incoming.lock().unwrap_or_else(|e| e.into_inner());
                     (std::mem::take(&mut incoming.events), incoming.result.take())
                 };
+                // Into the history once it is over, on a background thread.
+                if let Some(result) = &result
+                    && let Some(record) = record.take()
+                {
+                    let mut log = session.borrow().log.clone();
+                    log.extend(events.iter().filter_map(|(at, event)| {
+                        let at = at.saturating_duration_since(session.borrow().started);
+                        match event {
+                            CallEvent::Sent(json) => Some((at, GrpcEntry::Sent(json.clone()))),
+                            CallEvent::Received(json) => {
+                                Some((at, GrpcEntry::Received(json.clone())))
+                            }
+                            CallEvent::Headers(_) => None,
+                        }
+                    }));
+                    let result = result.clone();
+                    cx.background_executor()
+                        .spawn(async move { record.save_grpc(log_to_json(&log), &result) })
+                        .detach();
+                }
                 if let Some(Err(message)) = result {
                     let tab = tab.clone();
                     this.update(cx, |this, cx| this.set_grpc_failed(tab, message, cx))
@@ -376,5 +477,33 @@ impl Workspace {
                 ),
             )
             .into_any_element()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::time::Duration;
+
+    use super::{GrpcEntry, log_from_json, log_to_json};
+
+    #[test]
+    fn the_log_survives_the_history() {
+        let log = vec![
+            (
+                Duration::from_millis(0),
+                GrpcEntry::Sent("{\n  \"from\": 3\n}".into()),
+            ),
+            (
+                Duration::from_millis(1010),
+                GrpcEntry::Received("{\n  \"n\": 2\n}".into()),
+            ),
+        ];
+        let back = log_from_json(&log_to_json(&log));
+        assert_eq!(back.len(), 2);
+        assert_eq!(back[1].0, Duration::from_millis(1010));
+        assert!(matches!(&back[0].1, GrpcEntry::Sent(t) if t == "{\n  \"from\": 3\n}"));
+        assert!(matches!(&back[1].1, GrpcEntry::Received(t) if t == "{\n  \"n\": 2\n}"));
+        // A log cut at the history's size limit is not JSON any more.
+        assert!(log_from_json(b"[{\"at_ms\": 0, \"sent\"").is_empty());
     }
 }

@@ -9,6 +9,7 @@ use std::time::{Duration, Instant};
 
 use apix_core::history::{self, Entry, History, StoredResponse, Summary};
 use apix_core::{Request, vfs};
+use apix_grpc::CallOutcome;
 use apix_http::{Response, Timing};
 use gpui_kit::component::button::{Button, ButtonVariants as _};
 use gpui_kit::component::command::{Command, CommandGroup, CommandItem, CommandState};
@@ -53,6 +54,8 @@ impl PendingRecord {
                     ttfb_us: r.timing.ttfb.as_micros() as u64,
                     total_us: r.timing.total.as_micros() as u64,
                     truncated: false,
+                    trailers: Vec::new(),
+                    message: String::new(),
                 }),
                 r.body[..r.body.len().min(history::MAX_BODY)].to_vec(),
             ),
@@ -77,10 +80,55 @@ impl PendingRecord {
                 error,
                 duration_ms: duration.as_millis() as u64,
                 size,
+                grpc: false,
             },
             request: self.request,
             response,
             body,
+        };
+        if let Err(e) = self.history.record(&entry) {
+            eprintln!("apix: could not save the history: {e}");
+        }
+    }
+
+    /// A gRPC call: its status code as the status, its log (`log`, from
+    /// `grpc_ui::log_to_json`) as the body. Runs on a background thread.
+    pub(super) fn save_grpc(self, log: Vec<u8>, result: &Result<CallOutcome, String>) {
+        let (status, error, duration, response) = match result {
+            Ok(outcome) => (
+                Some(outcome.code as u16),
+                None,
+                outcome.elapsed,
+                Some(StoredResponse {
+                    status: outcome.code as u16,
+                    version: "gRPC".into(),
+                    headers: outcome.headers.clone(),
+                    ttfb_us: 0,
+                    total_us: outcome.elapsed.as_micros() as u64,
+                    truncated: false,
+                    trailers: outcome.trailers.clone(),
+                    message: outcome.status_message.clone(),
+                }),
+            ),
+            Err(message) => (None, Some(message.clone()), self.started.elapsed(), None),
+        };
+        let entry = Entry {
+            summary: Summary {
+                id: history::new_id(self.at),
+                at: self.at,
+                method: self.request.method,
+                url: self.request.url.clone(),
+                name: self.request.name.clone(),
+                path: self.path,
+                status,
+                error,
+                duration_ms: duration.as_millis() as u64,
+                size: log.len() as u64,
+                grpc: true,
+            },
+            request: self.request,
+            response,
+            body: log,
         };
         if let Err(e) = self.history.record(&entry) {
             eprintln!("apix: could not save the history: {e}");
@@ -119,14 +167,18 @@ impl HistoryView {
         self.entries
             .iter()
             .filter(|e| {
-                let text = format!(
-                    "{} {} {} {}",
-                    e.method,
-                    e.name,
-                    e.url,
-                    e.status.map(|s| s.to_string()).unwrap_or_default()
-                )
-                .to_lowercase();
+                let (method, status) = match (e.grpc, e.status) {
+                    (true, Some(code)) => (
+                        "grpc".to_owned(),
+                        apix_grpc::code_name(code.into()).to_owned(),
+                    ),
+                    (true, None) => ("grpc".to_owned(), String::new()),
+                    (false, status) => (
+                        e.method.to_string(),
+                        status.map(|s| s.to_string()).unwrap_or_default(),
+                    ),
+                };
+                let text = format!("{method} {} {} {status}", e.name, e.url).to_lowercase();
                 words.iter().all(|w| text.contains(w))
             })
             .collect()
@@ -136,9 +188,20 @@ impl HistoryView {
         let colors = self.colors;
         let entry = entry.clone();
         let (status_text, status_color) = match entry.status {
+            // A gRPC status: 0 is OK, everything else went wrong.
+            Some(0) if entry.grpc => ("OK".to_owned(), colors.ok),
+            Some(s) if entry.grpc => (apix_grpc::code_name(s.into()).to_owned(), colors.err),
             Some(s) if s < 400 => (s.to_string(), colors.ok),
             Some(s) => (s.to_string(), colors.err),
             None => (tr!("history.failed").to_string(), colors.err),
+        };
+        let (badge, badge_color): (SharedString, Hsla) = if entry.grpc {
+            ("gRPC".into(), theme::grpc_color())
+        } else {
+            (
+                entry.method.as_str().into(),
+                theme::method_color(entry.method),
+            )
         };
         let detail = format!(
             "{} · {}",
@@ -160,8 +223,8 @@ impl HistoryView {
                             .text_xs()
                             .font_family(mono.clone())
                             .font_weight(FontWeight::BOLD)
-                            .text_color(theme::method_color(entry.method))
-                            .child(entry.method.as_str()),
+                            .text_color(badge_color)
+                            .child(badge.clone()),
                     )
                     .child(
                         v_flex()
@@ -400,6 +463,14 @@ impl Workspace {
         self.task = None;
         let mut message = tr!("history.restored", when = ago(entry.summary.at)).to_string();
         match &entry.response {
+            Some(stored) if entry.summary.grpc => {
+                if stored.truncated {
+                    message.push(' ');
+                    message.push_str(&tr!("history.truncated"));
+                }
+                self.raw_doc = None;
+                self.response = ResponseState::Grpc(super::grpc_ui::restored(entry, stored));
+            }
             Some(stored) => {
                 if stored.truncated {
                     message.push(' ');

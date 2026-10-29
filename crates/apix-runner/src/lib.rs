@@ -179,21 +179,18 @@ pub async fn exchange(
         });
         return Ok(done);
     }
-    if resolved.request.is_grpc() {
-        done.pre.skip_request = true;
-        done.pre.logs.push(LogLine {
-            level: "info".into(),
-            text: "gRPC request: not part of runs yet (use apix send)".into(),
-        });
-        return Ok(done);
-    }
     done.sent = Some(resolved.request.clone());
-    // Body files are relative to the request file.
+    // Body files (and .proto files) are relative to the request file.
     let sent = match path.parent() {
         Some(dir) => resolved.request.with_files_relative_to(dir),
         None => resolved.request,
     };
-    let response = client.send_with(&sent, progress).await?;
+    // A gRPC call is tested like an HTTP response (`CallOutcome::to_response`).
+    let response = if sent.is_grpc() {
+        apix_grpc::send_for_tests(&sent).await?
+    } else {
+        client.send_with(&sent, progress).await?
+    };
     let view = ResponseView::new(
         response.status,
         response.reason.unwrap_or(""),

@@ -332,8 +332,20 @@ certificate apply. A `-bin` header is read as base64.
 
 From the command line, `apix send` calls the method (streams are printed one
 message per line as they come; the exit code is non-zero unless the status is
-OK), and `apix schema` prints the service and its messages. `apix run` skips
-gRPC requests for now.
+OK), and `apix schema` prints the service and its messages.
+
+**In runs and tests.** `apix run` and the Runner call gRPC requests too, and
+their test scripts and checks see the call as an HTTP response: the status is
+the HTTP status the gRPC code stands for (`OK` is 200, `INVALID_ARGUMENT` 400,
+`NOT_FOUND` 404, `UNAUTHENTICATED` 401, …), the gRPC code and message are in
+the `grpc-status` and `grpc-message` headers next to the metadata and
+trailers, and the body is the answer, or a JSON list of the messages for a
+method that answers with a stream. So `pm.response.json().message` or a check
+on `body.message` works as for any request. A single **Send** shows the call
+without running its scripts.
+
+Every call is kept in the **History** (Ctrl+H) with its log, status and
+metadata; picking it shows the call again as it ended.
 
 ## Scripts and tests
 

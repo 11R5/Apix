@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:2e870b2c1f05ad2b -->
+<!-- translated from en/architecture.md sha256:08584e249dcf6a37 -->
 
 # Apix mimarisi
 
@@ -464,8 +464,18 @@ metot seçici, `.proto` dosyaları ve girdi türünden üretilen bir örnekle me
 yapıyı doldurur; yanıt alanı WebSocket'inki gibi bir günlüktür
 (`ResponseState::Grpc`, `workspace/grpc_ui.rs`), Esc çağrıyı bırakır. CLI
 tekli cevabı bütün olarak, akışları satır satır yazar; `apix schema` servisi
-`.proto` benzeri metin olarak yazar. `apix run` gRPC isteklerini şimdilik
-atlar.
+`.proto` benzeri metin olarak yazar.
+
+Koşular gRPC isteklerini `apix_grpc::send_for_tests` ile çağırır; bu,
+`CallOutcome`'u bir `apix_http::Response`'a çevirir (`CallOutcome::to_response`):
+kodun karşılığı olan HTTP durumu (Google'ın eşlemesi) ve gerekçe olarak kodun
+adı; başlık olarak metadata ve trailer'lar ile `grpc-status` ve
+`grpc-message`; gövde olarak mesaj (sunucu akışında JSON listesi). Böylece
+test scriptleri, kontroller ve raporlar gRPC'ye özel hiçbir şey istemez.
+Geçmiş bir çağrıyı `Summary::grpc` işaretiyle tutar: durum gRPC kodudur,
+trailer'lar ve durum mesajı kendi alanlarındadır, gövde de günlüktür
+(`[{"at_ms", "sent", "message"}]`); `grpc_ui::restored` onu yeniden günlük
+görünümüne çevirir.
 
 ## Temalar
 

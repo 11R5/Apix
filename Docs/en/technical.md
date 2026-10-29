@@ -86,7 +86,7 @@ release build of the desktop app takes a few minutes.
 | `<config>/Apix/graphql/*.json` | the GraphQL schema last fetched from each endpoint (the server's introspection answer), named by a hash of the URL |
 | `<config>/Apix/themes/*.toml` | your own themes (written only when you press **Open the folder** in Settings and the folder is empty: one example) |
 | OS credential store, service `Apix` | only when asked for: remembered passwords of encrypted collections (`vault:<folder>`) and environment secrets (`env:<id>`, plus `env:<id>#1`, … for long values) |
-| `<config>/Apix/history/` | sent requests (`{{variables}}` unresolved) and their responses: `index.jsonl`, one `<id>.json` and `<id>.body` per entry; the last 300, bodies cut at 256 KB |
+| `<config>/Apix/history/` | sent requests (`{{variables}}` unresolved) and their responses: `index.jsonl`, one `<id>.json` and `<id>.body` per entry; the last 300, bodies cut at 256 KB; a gRPC call keeps its log as the body |
 
 `<config>` is `%APPDATA%` on Windows, `~/Library/Application Support` on macOS
 and `~/.config` on Linux. OAuth 2.0 tokens and passwords of encrypted
@@ -184,13 +184,13 @@ so a new commit rebuilds it and an unchanged one reuses it.
 
 | Crate | What is covered |
 |---|---|
-| apix-core | model and file format round trips, variables, environment secrets in the keychain (skipped without a credential store), signing against the AWS test suite, RFC 7616 (Digest), RFC 7636 (PKCE) and the OAuth 1.0 example; GraphQL schemas (reading introspection, SDL) and what is suggested and described at each place in a query (fields, aliases, arguments, enum values, input objects, lists, fragments, variable types, comments and strings) |
+| apix-core | model and file format round trips, variables, environment secrets in the keychain (skipped without a credential store), signing against the AWS test suite, RFC 7616 (Digest), RFC 7636 (PKCE) and the OAuth 1.0 example; GraphQL schemas (reading introspection, SDL) and what is suggested and described at each place in a query (fields, aliases, arguments, enum values, input objects, lists, fragments, variable types, comments and strings); the `[grpc]` table; history entries, gRPC calls included |
 | apix-http | request building, every body type, a local server for OAuth 2.0, Digest, AWS and OAuth 1.0, the network trace; the SSE parser (pieces split anywhere), streaming against a server that sends slowly, WebSocket (echo, auth and params in the handshake, closing from either side, a refused handshake), fetching a GraphQL schema with the request's auth and the errors when there is none |
-| apix-grpc | addresses, status codes, headers and auth as metadata; against a local Greeter (built from dynamic messages, with and without reflection): listing and describing the service, all four kinds of method, auth reaching the server, a failed status, .proto files with imports, and the errors for no description, an unknown method, a message that does not fit, a list for a unary method, a missing file and no server; example messages |
+| apix-grpc | addresses, status codes, headers and auth as metadata; against a local Greeter (built from dynamic messages, with and without reflection): listing and describing the service, all four kinds of method, auth reaching the server, a failed status, .proto files with imports, and the errors for no description, an unknown method, a message that does not fit, a list for a unary method, a missing file and no server; example messages; a call as an HTTP response for runs (status mapping, `grpc-status`, a stream as a list) |
 | apix-codegen | shell quoting for bash, cmd and PowerShell; curl paste; round trips; every language's URL, headers, bodies, string escaping and settings |
 | apix-import | Postman v2.0/v2.1 fixtures |
 | apix-script | variables and request changes from pre-request scripts, `pm.test` / `pm.expect` results and messages, the older `tests[...]` API, errors naming the file, endless scripts stopped, `setNextRequest`, `atob`/`btoa`, `pm.sendRequest` (callback and `await`, waiting not counted), the built-in libraries against known digests, checks without code, values and expressions for response targets |
 | apix-runner | CSV (quotes, line breaks, `;`, BOM) and JSON data files, dotenv files and `APIX_VAR_*` names, iteration counts and data rows, pause/stop timing, JUnit/JSON/HTML output and escaping, dates; whole runs against a local server (data rows, sidebar order, `bail`, `setNextRequest`) |
 | apix-vault | encryption format, tampering, password change, recovery key, keychain entries (against the real credential store under a test service name; skipped where none exists) |
-| apix-desktop | translations complete, language helpers, file paths, highlighting query, theme files (reading, errors, round trip), accent and transparency colours, GraphQL schema file names |
+| apix-desktop | translations complete, language helpers, file paths, highlighting query, theme files (reading, errors, round trip), accent and transparency colours, GraphQL schema file names, a gRPC call's log in the history |
 | docs-check | documentation structure and stamps |
