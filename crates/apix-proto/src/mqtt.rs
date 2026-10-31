@@ -103,17 +103,6 @@ pub fn payload_from_text(text: &str, format: MessageFormat) -> Result<Vec<u8>, S
     }
 }
 
-/// The URL for logs and messages: without a password it may hold.
-pub fn display_url(url: &str) -> String {
-    let Ok(mut parsed) = url::Url::parse(url.trim()) else {
-        return url.to_owned();
-    };
-    if parsed.password().is_some() {
-        let _ = parsed.set_password(None);
-    }
-    parsed.to_string()
-}
-
 /// A payload for the eye: its text, or its size and first bytes.
 pub fn show_payload(payload: &[u8]) -> String {
     match std::str::from_utf8(payload) {
@@ -146,7 +135,7 @@ fn new_client_id() -> String {
 /// The broker's options for a resolved request.
 fn options(req: &Request) -> Result<(MqttOptions, Vec<(String, u8)>), MqttError> {
     let invalid = |reason: String| MqttError::InvalidUrl {
-        url: req.url.clone(),
+        url: apix_core::display_url(&req.url),
         reason,
     };
     let url = url::Url::parse(req.url.trim()).map_err(|e| invalid(e.to_string()))?;
@@ -533,9 +522,6 @@ mod tests {
         let mut bearer = request("mqtt://b");
         bearer.auth = Auth::Bearer { token: "t".into() };
         assert!(options(&bearer).unwrap_err().to_string().contains("Basic"));
-        assert_eq!(display_url("mqtt://ann:secret@b:1883"), "mqtt://ann@b:1883");
-        assert_eq!(display_url("mqtts://b"), "mqtts://b");
-        assert_eq!(display_url("not a url"), "not a url");
         assert!(options(&request("ws://b")).is_err());
         assert!(options(&request("mqtt://")).is_err());
     }

@@ -161,7 +161,7 @@ pub async fn connect(req: &Request) -> Result<SioConnection, HttpError> {
     Ok(SioConnection {
         status: ws.status,
         headers: ws.headers.clone(),
-        url: handshake.url,
+        url: apix_core::display_url(&handshake.url),
         namespace,
         sid,
         ping_interval,
@@ -177,7 +177,7 @@ fn handshake_request(
     options: &SocketIoOptions,
 ) -> Result<(Request, String), HttpError> {
     let invalid = |reason: String| HttpError::InvalidUrl {
-        url: req.url.clone(),
+        url: apix_core::display_url(&req.url),
         reason,
     };
     let mut url = reqwest::Url::parse(req.url.trim()).map_err(|e| invalid(e.to_string()))?;

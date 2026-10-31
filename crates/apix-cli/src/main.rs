@@ -1090,7 +1090,12 @@ async fn websocket(
     let connection = apix_http::ws::connect(&request).await?;
     println!(
         "{}{} Switching Protocols{}  {}connected to {}{}",
-        style.green, connection.status, style.reset, style.dim, request.url, style.reset
+        style.green,
+        connection.status,
+        style.reset,
+        style.dim,
+        apix_core::display_url(&request.url),
+        style.reset
     );
     if let Some(protocol) = &connection.protocol {
         println!("{}subprotocol {protocol}{}", style.dim, style.reset);
@@ -1398,7 +1403,7 @@ async fn mqtt(
         style.green,
         style.reset,
         style.dim,
-        apix_proto::mqtt::display_url(&request.url),
+        apix_core::display_url(&request.url),
         connection.client_id,
         style.reset
     );
@@ -1722,7 +1727,10 @@ fn print_network(style: &Style, response: &Response) {
         line("Remote", format!("{remote} · {}", response.version));
     }
     for hop in &trace.redirects {
-        line("Redirect", format!("{} → {}", hop.status, hop.to));
+        line(
+            "Redirect",
+            format!("{} → {}", hop.status, apix_core::display_url(&hop.to)),
+        );
     }
     if let Some(cert) = &trace.certificate {
         line("Certificate", cert.subject.clone());
