@@ -246,30 +246,51 @@ extract.path: "Значение (как в проверках: body.data.token, 
 extract.saved_collection: "%{name} = %{value} сохранено в переменных коллекции."
 extract.saved_env: "%{name} = %{value} сохранено в «%{env}»."
 extract.title: Сохранить значение как переменную
-grpc.add_protos: Добавить .proto
+grpc.add_protos: Добавить файл
 grpc.calling: Вызов…
-grpc.choose_protos: Выберите файлы .proto
+grpc.choose_protos: Выберите файлы .proto или наборы дескрипторов
+grpc.def_choose: Выберите файл для преобразования
+grpc.def_clear: Удалить
+grpc.def_convert: Преобразовать
+grpc.def_exact: "Точно, источник: %{format}."
+grpc.def_from_file: Прочитать файл
+grpc.def_from_message: Взять сообщение
+grpc.def_guessed: "Предположение из источника %{format}: номера полей должны совпадать с серверными, неверные без ошибки заполняют не те поля."
+grpc.def_method: Вызываемый метод
+grpc.def_none: "Определения нет: сервис описывают файлы или сервер."
+grpc.def_numbers: "Номера полей из источника (%{format}); проверьте правильность вызовов."
+grpc.def_response: Ответ, если выше только запрос (необязательно)
+grpc.def_result: Определение, хранимое в запросе
+grpc.def_save: Сохранить в файл
+grpc.def_saved: "Сохранено: %{path}"
+grpc.def_source: Преобразовать из
+grpc.def_source_hint: Protobuf, набор дескрипторов, сгенерированный код, типы на языке программирования или пример JSON
+grpc.def_unverified: Номера полей этого определения могут быть неверны; перезагрузите методы, чтобы сверить его с сервером.
 grpc.example: Пример сообщения
 grpc.headers: Метаданные ответа
-grpc.hint_protos: Загрузите методы из файлов .proto.
-grpc.hint_reflection: Загрузите методы с сервера (reflection) или добавьте .proto-файлы сервиса.
+grpc.hint_definition: Загрузите методы из определения.
+grpc.hint_protos: Загрузите методы из файлов.
+grpc.hint_reflection: "Загрузите методы с сервера (reflection) или укажите описание сервиса: файлы или вкладка «Определение»."
 grpc.kind_bidi: двунаправленный
 grpc.kind_client: поток клиента
 grpc.kind_server: поток сервера
 grpc.kind_unary: унарный
 grpc.load_methods: Загрузить методы
-grpc.loaded_protos: "%{count} методов, из файлов .proto"
+grpc.loaded_definition: "Методов: %{count}, из определения"
+grpc.loaded_protos: "Методов: %{count}, из файлов"
 grpc.loaded_reflection: "%{count} методов, с сервера (reflection)"
 grpc.loading: Загрузка методов…
 grpc.message: Сообщение (JSON)
 grpc.method: Метод
 grpc.pick_method: Выберите метод
-grpc.protos: Файлы .proto
+grpc.protos: Файлы
 grpc.protos_none: нет, спрашиваем сервер
 grpc.reload_methods: Обновить методы
 grpc.search_methods: Поиск методов
 grpc.stopped: Остановлено
 grpc.stream_hint: JSON-список отправляет несколько сообщений
+grpc.tab_definition: Определение
+grpc.tab_message: Сообщение
 grpc.trailers: Трейлеры
 history.ago_days: "%{count} дн. назад"
 history.ago_hours: "%{count} ч назад"

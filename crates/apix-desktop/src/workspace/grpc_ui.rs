@@ -97,7 +97,9 @@ pub(super) fn restored(entry: &Entry, stored: &StoredResponse) -> Rc<RefCell<Grp
             received,
             sent,
             elapsed: Duration::from_micros(stored.total_us),
+            notes: Vec::new(),
         }),
+        notes: Vec::new(),
         stopped: false,
         scroll: ScrollHandle::new(),
     }))
@@ -110,6 +112,8 @@ pub(super) struct GrpcSession {
     pub headers: Vec<(String, String)>,
     /// How it ended, once it has.
     pub outcome: Option<CallOutcome>,
+    /// What the call gave reason to say about the description or the answer.
+    pub notes: Vec<String>,
     /// Stopped with Esc before the server finished.
     pub stopped: bool,
     pub scroll: ScrollHandle,
@@ -178,15 +182,11 @@ impl Workspace {
         };
         self.grpc_editor
             .update(cx, |editor, cx| editor.set_loading(cx));
-        let load = net::spawn(async move {
-            let metadata = apix_grpc::metadata(&request).await?;
-            let channel = apix_grpc::connect(&request).await?;
-            apix_grpc::descriptors(&request, &channel, &metadata).await
-        });
+        let load = net::spawn(async move { apix_grpc::load_description(&request).await });
         let editor = self.grpc_editor.downgrade();
         self.grpc_task = Some(cx.spawn_in(window, async move |_, cx| {
             let result = match load.await {
-                Ok(Ok(pool)) => Ok(pool),
+                Ok(Ok(described)) => Ok(described),
                 Ok(Err(e)) => Err(message_of(&e)),
                 Err(e) => Err(e),
             };
@@ -218,6 +218,7 @@ impl Workspace {
             log: Vec::new(),
             headers: Vec::new(),
             outcome: None,
+            notes: Vec::new(),
             stopped: false,
             scroll: ScrollHandle::new(),
         }));
@@ -258,7 +259,7 @@ impl Workspace {
                             CallEvent::Received(json) => {
                                 Some((at, GrpcEntry::Received(json.clone())))
                             }
-                            CallEvent::Headers(_) => None,
+                            CallEvent::Headers(_) | CallEvent::Note(_) => None,
                         }
                     }));
                     let result = result.clone();
@@ -284,6 +285,7 @@ impl Workspace {
                                 s.log.push((at, GrpcEntry::Received(json)))
                             }
                             CallEvent::Headers(headers) => s.headers = headers,
+                            CallEvent::Note(note) => s.notes.push(note),
                         }
                     }
                     if let Some(Ok(outcome)) = result {
@@ -459,6 +461,22 @@ impl Workspace {
             .children(
                 detail.map(|text| div().px_3().pb_2().text_sm().text_color(p.err).child(text)),
             )
+            .when(!s.notes.is_empty(), |d| {
+                d.child(
+                    v_flex()
+                        .id("grpc-notes")
+                        .ltr()
+                        .flex_none()
+                        .max_h(px(110.))
+                        .overflow_y_scroll()
+                        .px_3()
+                        .pb_2()
+                        .gap_0p5()
+                        .text_xs()
+                        .text_color(p.warn)
+                        .children(s.notes.iter().map(|note| div().child(note.clone()))),
+                )
+            })
             .child(
                 div().flex_1().min_h_0().p_2().child(
                     v_flex()

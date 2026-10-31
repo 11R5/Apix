@@ -246,30 +246,51 @@ extract.path: "Valor (como en Comprobaciones: body.data.token, header.X-Token, s
 extract.saved_collection: "%{name} = %{value} guardada en las variables de la colección."
 extract.saved_env: "%{name} = %{value} guardada en «%{env}»."
 extract.title: Guardar un valor como variable
-grpc.add_protos: Añadir .proto
+grpc.add_protos: Añadir archivo
 grpc.calling: Llamando…
-grpc.choose_protos: Elegir archivos .proto
+grpc.choose_protos: Elija archivos .proto o descriptor sets
+grpc.def_choose: Elija un archivo para convertir
+grpc.def_clear: Quitar
+grpc.def_convert: Convertir
+grpc.def_exact: "Exacta, a partir de %{format}."
+grpc.def_from_file: Leer un archivo
+grpc.def_from_message: Usar el mensaje
+grpc.def_guessed: "Una estimación a partir de %{format}: los números de campo deben coincidir con los del servidor; los incorrectos rellenan campos equivocados sin dar error."
+grpc.def_method: Método a llamar
+grpc.def_none: "Sin definición: los archivos o el servidor describen el servicio."
+grpc.def_numbers: "Números de campo de la fuente (%{format}); compruebe que las llamadas sean correctas."
+grpc.def_response: La respuesta, si lo anterior es solo la petición (opcional)
+grpc.def_result: Definición guardada en la petición
+grpc.def_save: Guardar como archivo
+grpc.def_saved: "Guardado en %{path}"
+grpc.def_source: Convertir desde
+grpc.def_source_hint: Protobuf, un descriptor set, código generado, tipos en un lenguaje de programación o un ejemplo JSON
+grpc.def_unverified: Los números de campo de esta definición pueden ser incorrectos; recargue los métodos para compararla con el servidor.
 grpc.example: Mensaje de ejemplo
 grpc.headers: Metadatos de respuesta
-grpc.hint_protos: Carga los métodos de los archivos .proto.
-grpc.hint_reflection: Carga los métodos del servidor (reflexión) o añade los archivos .proto del servicio.
+grpc.hint_definition: Cargue los métodos desde la definición.
+grpc.hint_protos: Cargue los métodos desde los archivos.
+grpc.hint_reflection: "Cargue los métodos desde el servidor (reflection) o indique la descripción del servicio: archivos o la pestaña Definición."
 grpc.kind_bidi: bidireccional
 grpc.kind_client: flujo del cliente
 grpc.kind_server: flujo del servidor
 grpc.kind_unary: unario
 grpc.load_methods: Cargar métodos
-grpc.loaded_protos: "%{count} métodos, de los archivos .proto"
+grpc.loaded_definition: "%{count} métodos, de la definición"
+grpc.loaded_protos: "%{count} métodos, de los archivos"
 grpc.loaded_reflection: "%{count} métodos, del servidor (reflexión)"
 grpc.loading: Cargando los métodos…
 grpc.message: Mensaje (JSON)
 grpc.method: Método
 grpc.pick_method: Elige un método
-grpc.protos: Archivos .proto
+grpc.protos: Archivos
 grpc.protos_none: ninguno, se pregunta al servidor
 grpc.reload_methods: Recargar métodos
 grpc.search_methods: Buscar métodos
 grpc.stopped: Detenido
 grpc.stream_hint: una lista JSON envía varios mensajes
+grpc.tab_definition: Definición
+grpc.tab_message: Mensaje
 grpc.trailers: Trailers
 history.ago_days: hace %{count} d
 history.ago_hours: hace %{count} h

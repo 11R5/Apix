@@ -18,12 +18,38 @@ use tonic::transport::Channel;
 
 use crate::GrpcError;
 
-/// Reads `.proto` files (absolute paths). Imports are looked up in
-/// `import_paths`, then next to each file; Google's well-known types are built in.
+/// Reads description files (absolute paths): `.proto` files, whose imports
+/// are looked up in `import_paths`, then next to each file (Google's
+/// well-known types are built in), and descriptor sets, binary or `.json`.
 pub fn from_protos(
     protos: &[String],
     import_paths: &[String],
 ) -> Result<DescriptorPool, GrpcError> {
+    let is_proto = |path: &String| {
+        Path::new(path)
+            .extension()
+            .is_some_and(|e| e.eq_ignore_ascii_case("proto"))
+    };
+    let (sets, protos): (Vec<String>, Vec<String>) =
+        protos.iter().cloned().partition(|p| !is_proto(p));
+    let mut pool = compile_protos(&protos, import_paths)?;
+    for set in &sets {
+        if !Path::new(set).is_file() {
+            return Err(GrpcError::Protos(format!("{set} does not exist")));
+        }
+        let other = crate::convert::pool_from_set_file(Path::new(set))?;
+        if protos.is_empty() && sets.len() == 1 {
+            return Ok(other);
+        }
+        pool.add_file_descriptor_protos(in_dependency_order(
+            other.file_descriptor_protos().cloned().collect(),
+        ))
+        .map_err(|e| GrpcError::Protos(format!("{set}: {e}")))?;
+    }
+    Ok(pool)
+}
+
+fn compile_protos(protos: &[String], import_paths: &[String]) -> Result<DescriptorPool, GrpcError> {
     let mut includes: Vec<PathBuf> = import_paths.iter().map(PathBuf::from).collect();
     for proto in protos {
         if let Some(dir) = Path::new(proto).parent()
@@ -141,7 +167,7 @@ pub async fn reflect(
     }
     .map_err(|status| {
         GrpcError::Reflection(if status.code() == tonic::Code::Unimplemented {
-            "the server does not offer reflection; add the service's .proto files to the request"
+            "the server does not offer reflection; give the request the service's description: .proto files, a descriptor set, or a definition made from generated code, types or a JSON example"
                 .into()
         } else {
             format!("reflection failed: {}", crate::status_text(&status))
@@ -158,7 +184,7 @@ pub async fn reflect(
 }
 
 /// Each file after the files it imports.
-fn in_dependency_order(files: Vec<FileDescriptorProto>) -> Vec<FileDescriptorProto> {
+pub(crate) fn in_dependency_order(files: Vec<FileDescriptorProto>) -> Vec<FileDescriptorProto> {
     let mut left: BTreeMap<String, FileDescriptorProto> = files
         .into_iter()
         .map(|f| (f.name().to_owned(), f))
@@ -202,6 +228,16 @@ impl MethodInfo {
             (true, false) => "client streaming",
             (true, true) => "bidirectional",
         }
+    }
+}
+
+/// "unary", "server streaming", … of a method.
+pub(crate) fn kind_of(method: &MethodDescriptor) -> &'static str {
+    match (method.is_client_streaming(), method.is_server_streaming()) {
+        (false, false) => "unary",
+        (false, true) => "server streaming",
+        (true, false) => "client streaming",
+        (true, true) => "bidirectional",
     }
 }
 
@@ -425,7 +461,7 @@ fn type_name(field: &FieldDescriptor) -> String {
     kind_name(&field.kind())
 }
 
-fn kind_name(kind: &Kind) -> String {
+pub(crate) fn kind_name(kind: &Kind) -> String {
     match kind {
         Kind::Double => "double".into(),
         Kind::Float => "float".into(),

@@ -584,13 +584,22 @@ pub struct GrpcCall {
     /// `package.Service/Method`.
     #[serde(default)]
     pub method: String,
-    /// `.proto` files that describe the service, relative to the request
-    /// file. Without them the server is asked (reflection).
+    /// `.proto` files or descriptor sets (binary, or `.json`) that describe
+    /// the service, relative to the request file. Without them or a
+    /// `definition` the server is asked (reflection).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub protos: Vec<String>,
     /// Folders their `import`s are looked up in, relative to the request file.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub import_paths: Vec<String>,
+    /// The service's description, kept in the request: `.proto` text, or a
+    /// descriptor set as JSON. Goes before `protos`.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub definition: String,
+    /// The definition was worked out, so its field numbers may be wrong: a
+    /// server's reflection goes before it and differences are told.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub guessed: bool,
 }
 
 /// A message saved with a WebSocket request. `{{variables}}` in the body

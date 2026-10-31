@@ -246,30 +246,51 @@ extract.path: 值（与检查相同：body.data.token、header.X-Token、status�
 extract.saved_collection: "%{name} = %{value} 已保存到集合的变量中。"
 extract.saved_env: "%{name} = %{value} 已保存到“%{env}”。"
 extract.title: 将值保存为变量
-grpc.add_protos: 添加 .proto
+grpc.add_protos: 添加文件
 grpc.calling: 调用中…
-grpc.choose_protos: 选择 .proto 文件
+grpc.choose_protos: 选择 .proto 文件或描述符集
+grpc.def_choose: 选择要转换的文件
+grpc.def_clear: 移除
+grpc.def_convert: 转换
+grpc.def_exact: "准确,来源:%{format}。"
+grpc.def_from_file: 读取文件
+grpc.def_from_message: 使用消息
+grpc.def_guessed: "根据 %{format} 推测:字段编号必须与服务器一致,错误的编号会在不报错的情况下填入错误的字段。"
+grpc.def_method: 要调用的方法
+grpc.def_none: 没有定义:由文件或服务器描述服务。
+grpc.def_numbers: "字段编号来自源(%{format});请检查调用是否正确。"
+grpc.def_response: 响应(如果上面只是请求,可选)
+grpc.def_result: 保存在请求中的定义
+grpc.def_save: 保存为文件
+grpc.def_saved: "已保存到 %{path}"
+grpc.def_source: 转换来源
+grpc.def_source_hint: Protobuf、描述符集、生成的代码、编程语言中的类型或 JSON 示例
+grpc.def_unverified: 此定义的字段编号可能有误;请重新加载方法以与服务器核对。
 grpc.example: 示例消息
 grpc.headers: 响应元数据
-grpc.hint_protos: 从 .proto 文件加载方法。
-grpc.hint_reflection: 从服务器加载方法（反射），或添加服务的 .proto 文件。
+grpc.hint_definition: 从定义加载方法。
+grpc.hint_protos: 从文件加载方法。
+grpc.hint_reflection: 从服务器加载方法(反射),或提供服务描述:文件或“定义”选项卡。
 grpc.kind_bidi: 双向流
 grpc.kind_client: 客户端流
 grpc.kind_server: 服务器流
 grpc.kind_unary: 一元
 grpc.load_methods: 加载方法
-grpc.loaded_protos: "%{count} 个方法，来自 .proto 文件"
+grpc.loaded_definition: "%{count} 个方法,来自定义"
+grpc.loaded_protos: "%{count} 个方法,来自文件"
 grpc.loaded_reflection: "%{count} 个方法，来自服务器（反射）"
 grpc.loading: 正在加载方法…
 grpc.message: 消息 (JSON)
 grpc.method: 方法
 grpc.pick_method: 选择方法
-grpc.protos: Proto 文件
+grpc.protos: 文件
 grpc.protos_none: 无，将询问服务器
 grpc.reload_methods: 重新加载方法
 grpc.search_methods: 搜索方法
 grpc.stopped: 已停止
 grpc.stream_hint: JSON 数组会发送多条消息
+grpc.tab_definition: 定义
+grpc.tab_message: 消息
 grpc.trailers: 尾部元数据
 history.ago_days: "%{count} 天前"
 history.ago_hours: "%{count} 小时前"

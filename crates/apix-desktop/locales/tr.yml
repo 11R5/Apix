@@ -246,30 +246,51 @@ extract.path: "Değer (Doğrulamalar'daki gibi: body.data.token, header.X-Token,
 extract.saved_collection: "%{name} = %{value}, koleksiyon değişkenlerine kaydedildi."
 extract.saved_env: "%{name} = %{value}, “%{env}” ortamına kaydedildi."
 extract.title: Bir değeri değişken olarak kaydet
-grpc.add_protos: .proto ekle
+grpc.add_protos: Dosya ekle
 grpc.calling: Çağrılıyor…
-grpc.choose_protos: .proto dosyalarını seçin
+grpc.choose_protos: .proto dosyalarını ya da descriptor set'leri seçin
+grpc.def_choose: Dönüştürülecek dosyayı seçin
+grpc.def_clear: Kaldır
+grpc.def_convert: Dönüştür
+grpc.def_exact: "Kesin, kaynak: %{format}."
+grpc.def_from_file: Dosyadan oku
+grpc.def_from_message: Mesajı kullan
+grpc.def_guessed: "%{format} kaynağından tahmin: alan numaraları sunucununkilerle aynı olmalı, yanlışları hata vermeden yanlış alanları doldurur."
+grpc.def_method: Çağrılacak metot
+grpc.def_none: "Tanım yok: servisi dosyalar ya da sunucu tanımlıyor."
+grpc.def_numbers: "Alan numaraları kaynaktan (%{format}); çağrıların doğruluğunu kontrol edin."
+grpc.def_response: Yukarıdaki yalnızca istekse yanıt (isteğe bağlı)
+grpc.def_result: İstekte saklanan tanım
+grpc.def_save: Dosya olarak kaydet
+grpc.def_saved: "Kaydedildi: %{path}"
+grpc.def_source: Dönüştürülecek kaynak
+grpc.def_source_hint: Protobuf, descriptor set, üretilmiş kod, bir programlama dilindeki tipler ya da örnek JSON
+grpc.def_unverified: Bu tanımın alan numaraları yanlış olabilir; sunucuyla karşılaştırmak için metotları yeniden yükleyin.
 grpc.example: Örnek mesaj
 grpc.headers: Yanıt metadata'sı
-grpc.hint_protos: Metotları .proto dosyalarından yükleyin.
-grpc.hint_reflection: Metotları sunucudan yükleyin (reflection) ya da servisin .proto dosyalarını ekleyin.
+grpc.hint_definition: Metotları tanımdan yükleyin.
+grpc.hint_protos: Metotları dosyalardan yükleyin.
+grpc.hint_reflection: "Metotları sunucudan (reflection) yükleyin ya da servisin tanımını verin: dosyalar veya Tanım sekmesi."
 grpc.kind_bidi: çift yönlü
 grpc.kind_client: istemci akışı
 grpc.kind_server: sunucu akışı
 grpc.kind_unary: tekli
 grpc.load_methods: Metotları yükle
-grpc.loaded_protos: "%{count} metot, .proto dosyalarından"
+grpc.loaded_definition: "%{count} metot, tanımdan"
+grpc.loaded_protos: "%{count} metot, dosyalardan"
 grpc.loaded_reflection: "%{count} metot, sunucudan (reflection)"
 grpc.loading: Metotlar yükleniyor…
 grpc.message: Mesaj (JSON)
 grpc.method: Metot
 grpc.pick_method: Bir metot seçin
-grpc.protos: Proto dosyaları
+grpc.protos: Dosyalar
 grpc.protos_none: yok, sunucuya sorulur
 grpc.reload_methods: Metotları yenile
 grpc.search_methods: Metot ara
 grpc.stopped: Durduruldu
 grpc.stream_hint: bir JSON listesi birden çok mesaj gönderir
+grpc.tab_definition: Tanım
+grpc.tab_message: Mesaj
 grpc.trailers: Trailer'lar
 history.ago_days: "%{count} gün önce"
 history.ago_hours: "%{count} sa önce"

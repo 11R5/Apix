@@ -4,6 +4,7 @@
 //! and come out as JSON, so nothing is generated at build time.
 
 mod codec;
+mod convert;
 mod descriptors;
 mod insecure;
 
@@ -12,13 +13,17 @@ use std::time::{Duration, Instant};
 use apix_core::{ApiKeyLocation, Auth, Body, Request};
 use base64::Engine as _;
 use prost_reflect::{
-    DescriptorPool, DeserializeOptions, DynamicMessage, MethodDescriptor, SerializeOptions,
+    DescriptorPool, DeserializeOptions, DynamicMessage, MethodDescriptor, ReflectMessage as _,
+    SerializeOptions,
 };
 use tonic::Status;
 use tonic::metadata::{MetadataKey, MetadataMap, MetadataValue};
 use tonic::transport::{Certificate, Channel, ClientTlsConfig, Endpoint, Identity};
 
 pub use codec::DynamicCodec;
+pub use convert::{
+    Certainty, Conversion, ConvertInput, compare, compile_definition, convert, convert_bytes,
+};
 pub use descriptors::{
     MethodInfo, describe, example_message, find_method, from_protos, methods, reflect,
 };
@@ -229,17 +234,121 @@ pub async fn metadata(req: &Request) -> Result<MetadataMap, GrpcError> {
     Ok(map)
 }
 
-/// The service description the request asks for: its `.proto` files, or
-/// else the server's reflection.
+/// A service description, and what the user should know about it.
+#[derive(Debug, Clone)]
+pub struct Described {
+    pub pool: DescriptorPool,
+    pub notes: Vec<String>,
+}
+
+/// What the request itself holds about the service: its definition, or else
+/// its files.
+fn own_description(req: &Request) -> Option<Result<DescriptorPool, GrpcError>> {
+    let call = req.grpc.as_ref()?;
+    if !call.definition.trim().is_empty() {
+        return Some(compile_definition(&call.definition, &call.import_paths));
+    }
+    (!call.protos.is_empty()).then(|| from_protos(&call.protos, &call.import_paths))
+}
+
+/// A guess gives way to what the server says about itself, and the
+/// differences are told; without reflection the guess is all there is.
+async fn check_guess(
+    guess: DescriptorPool,
+    channel: &Channel,
+    metadata: &MetadataMap,
+) -> Described {
+    match reflect(channel, metadata).await {
+        Ok(server) => {
+            let differences = compare(&guess, &server);
+            let notes = if differences.is_empty() {
+                vec!["The definition was checked against the server's reflection and matches".to_owned()]
+            } else {
+                let mut notes = vec![
+                    "The server's reflection was used instead of the definition, which differs:"
+                        .to_owned(),
+                ];
+                notes.extend(differences.into_iter().map(|d| format!("• {d}")));
+                notes
+            };
+            Described {
+                pool: server,
+                notes,
+            }
+        }
+        Err(_) => Described {
+            pool: guess,
+            notes: vec![
+                "The server offers no reflection to check against: the definition's field numbers may be wrong, and wrong numbers fill the wrong fields without an error".to_owned(),
+            ],
+        },
+    }
+}
+
+/// The service description the request asks for, with what to know about it.
+/// Its definition, or else its files, or else the server's reflection; a
+/// definition marked as a guess is checked against reflection first.
+pub async fn described(
+    req: &Request,
+    channel: &Channel,
+    metadata: &MetadataMap,
+) -> Result<Described, GrpcError> {
+    let guessed = req.grpc.as_ref().is_some_and(|c| c.guessed);
+    match own_description(req) {
+        Some(pool) if guessed => Ok(check_guess(pool?, channel, metadata).await),
+        Some(pool) => Ok(Described {
+            pool: pool?,
+            notes: Vec::new(),
+        }),
+        None => Ok(Described {
+            pool: reflect(channel, metadata).await?,
+            notes: Vec::new(),
+        }),
+    }
+}
+
+/// `described`, only connecting when it has to: a request that describes the
+/// service itself works with the server down, and so does a guess, unchecked.
+pub async fn load_description(req: &Request) -> Result<Described, GrpcError> {
+    let guessed = req.grpc.as_ref().is_some_and(|c| c.guessed);
+    match own_description(req) {
+        Some(pool) if !guessed => Ok(Described {
+            pool: pool?,
+            notes: Vec::new(),
+        }),
+        Some(pool) => {
+            let guess = pool?;
+            let connected = async {
+                let metadata = metadata(req).await?;
+                let channel = connect(req).await?;
+                Ok::<_, GrpcError>((channel, metadata))
+            }
+            .await;
+            match connected {
+                Ok((channel, metadata)) => Ok(check_guess(guess, &channel, &metadata).await),
+                Err(e) => Ok(Described {
+                    pool: guess,
+                    notes: vec![format!(
+                        "The definition could not be checked against the server: {e}"
+                    )],
+                }),
+            }
+        }
+        None => {
+            let metadata = metadata(req).await?;
+            let channel = connect(req).await?;
+            described(req, &channel, &metadata).await
+        }
+    }
+}
+
+/// The service description the request asks for (see `described`).
 pub async fn descriptors(
     req: &Request,
     channel: &Channel,
     metadata: &MetadataMap,
 ) -> Result<DescriptorPool, GrpcError> {
-    match &req.grpc {
-        Some(call) if !call.protos.is_empty() => from_protos(&call.protos, &call.import_paths),
-        _ => reflect(channel, metadata).await,
-    }
+    described(req, channel, metadata).await.map(|d| d.pool)
 }
 
 /// Something that happened during a call, as it happens.
@@ -251,6 +360,38 @@ pub enum CallEvent {
     Headers(Vec<(String, String)>),
     /// A message came in (JSON).
     Received(String),
+    /// Something the user should know about the description or the answer.
+    Note(String),
+}
+
+/// Fields of a message its description does not know, at any depth: the server
+/// has fields the definition lacks, or the numbers do not match. Nothing fails
+/// when that happens, so it has to be said.
+fn unknown_fields(message: &DynamicMessage) -> Vec<String> {
+    fn visit(message: &DynamicMessage, out: &mut Vec<String>) {
+        let unknown: Vec<String> = message.unknown_fields().map(|f| f.to_string()).collect();
+        if !unknown.is_empty() {
+            out.push(format!(
+                "{} has fields its description does not know: {}. The definition may lack them, or its numbers may be wrong",
+                message.descriptor().full_name(),
+                unknown.join(", ")
+            ));
+        }
+        for (_, value) in message.fields() {
+            visit_value(value, out);
+        }
+    }
+    fn visit_value(value: &prost_reflect::Value, out: &mut Vec<String>) {
+        match value {
+            prost_reflect::Value::Message(inner) => visit(inner, out),
+            prost_reflect::Value::List(items) => items.iter().for_each(|v| visit_value(v, out)),
+            prost_reflect::Value::Map(items) => items.values().for_each(|v| visit_value(v, out)),
+            _ => {}
+        }
+    }
+    let mut out = Vec::new();
+    visit(message, &mut out);
+    out
 }
 
 /// How a call ended.
@@ -265,6 +406,8 @@ pub struct CallOutcome {
     pub received: Vec<String>,
     pub sent: usize,
     pub elapsed: Duration,
+    /// What was said along the way (`CallEvent::Note`).
+    pub notes: Vec<String>,
 }
 
 impl CallOutcome {
@@ -489,12 +632,27 @@ pub async fn call(
         received: Vec::new(),
         sent,
         elapsed: Duration::ZERO,
+        notes: Vec::new(),
     };
-    let failed = |status: Status, mut outcome: CallOutcome| {
+    // Once per kind of problem: a stream would repeat it for every message.
+    fn say(note: String, outcome: &mut CallOutcome, on_event: &mut (impl FnMut(CallEvent) + Send)) {
+        if !outcome.notes.contains(&note) {
+            outcome.notes.push(note.clone());
+            on_event(CallEvent::Note(note));
+        }
+    }
+    let failed = |status: Status,
+                  mut outcome: CallOutcome,
+                  on_event: &mut (dyn FnMut(CallEvent) + Send)| {
         outcome.code = status.code() as i32;
         outcome.status_message = status.message().to_owned();
         outcome.trailers = pairs(status.metadata());
         outcome.elapsed = started.elapsed();
+        if status.message().starts_with("cannot decode the message") {
+            let note = "The answer does not fit its description: the definition's field numbers or types do not match the server's".to_owned();
+            outcome.notes.push(note.clone());
+            on_event(CallEvent::Note(note));
+        }
         Ok(outcome)
     };
     if let Err(e) = grpc.ready().await {
@@ -518,7 +676,7 @@ pub async fn call(
             };
             match result {
                 Ok(response) => response,
-                Err(status) => return failed(status, outcome),
+                Err(status) => return failed(status, outcome, &mut on_event),
             }
             .map(Some)
             .into_parts()
@@ -537,7 +695,7 @@ pub async fn call(
             };
             let response = match result {
                 Ok(response) => response,
-                Err(status) => return failed(status, outcome),
+                Err(status) => return failed(status, outcome, &mut on_event),
             };
             let (meta, mut stream, _) = response.into_parts();
             outcome.headers = pairs(&meta);
@@ -548,9 +706,12 @@ pub async fn call(
                         let json = to_json(&message);
                         on_event(CallEvent::Received(json.clone()));
                         outcome.received.push(json);
+                        for note in unknown_fields(&message) {
+                            say(note, &mut outcome, &mut on_event);
+                        }
                     }
                     Ok(None) => break,
-                    Err(status) => return failed(status, outcome),
+                    Err(status) => return failed(status, outcome, &mut on_event),
                 }
             }
             if let Ok(Some(trailers)) = stream.trailers().await {
@@ -567,6 +728,9 @@ pub async fn call(
         let json = to_json(&message);
         on_event(CallEvent::Received(json.clone()));
         outcome.received.push(json);
+        for note in unknown_fields(&message) {
+            say(note, &mut outcome, &mut on_event);
+        }
     }
     outcome.elapsed = started.elapsed();
     Ok(outcome)
@@ -575,24 +739,40 @@ pub async fn call(
 /// Everything for one request, start to end: connect, describe, call.
 pub async fn send(
     req: &Request,
-    on_event: impl FnMut(CallEvent) + Send,
+    mut on_event: impl FnMut(CallEvent) + Send,
 ) -> Result<CallOutcome, GrpcError> {
-    let (channel, method, messages, metadata) = prepare(req).await?;
-    call(channel, &method, messages, metadata, on_event).await
+    let (channel, method, messages, metadata, notes) = prepare(req).await?;
+    for note in &notes {
+        on_event(CallEvent::Note(note.clone()));
+    }
+    let mut outcome = call(channel, &method, messages, metadata, on_event).await?;
+    outcome.notes.splice(0..0, notes);
+    Ok(outcome)
 }
 
 /// Like `send`, with the outcome as an HTTP response (see
 /// `CallOutcome::to_response`), for runs and test scripts.
 pub async fn send_for_tests(req: &Request) -> Result<apix_http::Response, GrpcError> {
-    let (channel, method, messages, metadata) = prepare(req).await?;
+    let (channel, method, messages, metadata, _) = prepare(req).await?;
     let outcome = call(channel, &method, messages, metadata, |_| {}).await?;
     Ok(outcome.to_response(method.is_server_streaming()))
 }
 
-/// The connection, the method, its messages and the metadata of a request.
+/// The connection, the method, its messages and the metadata of a request,
+/// and what to know about its description.
+#[allow(clippy::type_complexity)]
 async fn prepare(
     req: &Request,
-) -> Result<(Channel, MethodDescriptor, Vec<DynamicMessage>, MetadataMap), GrpcError> {
+) -> Result<
+    (
+        Channel,
+        MethodDescriptor,
+        Vec<DynamicMessage>,
+        MetadataMap,
+        Vec<String>,
+    ),
+    GrpcError,
+> {
     let name = req
         .grpc
         .as_ref()
@@ -602,10 +782,10 @@ async fn prepare(
         .to_owned();
     let metadata = metadata(req).await?;
     let channel = connect(req).await?;
-    let pool = descriptors(req, &channel, &metadata).await?;
+    let Described { pool, notes } = described(req, &channel, &metadata).await?;
     let method = find_method(&pool, &name).ok_or(GrpcError::UnknownMethod(name))?;
     let messages = messages(req, &method)?;
-    Ok((channel, method, messages, metadata))
+    Ok((channel, method, messages, metadata, notes))
 }
 
 #[cfg(test)]
@@ -653,6 +833,7 @@ mod tests {
             received: vec!["{\n  \"n\": 1\n}".into(), "{\n  \"n\": 2\n}".into()],
             sent: 1,
             elapsed: Duration::from_millis(7),
+            notes: Vec::new(),
         };
         let stream = outcome.to_response(true);
         assert_eq!(stream.status, 404);

@@ -21,6 +21,8 @@ prost-types = "0.14"
 prost-reflect = { version = "0.16", features = ["serde"] }
 # Reads .proto files in Rust; no protoc needed.
 protox = "0.10"
+regex = "1"
+serde.workspace = true
 serde_json.workspace = true
 tokio = { workspace = true, features = ["time", "net"] }
 tokio-stream = "0.1"
@@ -41,3 +43,4 @@ tokio-stream = { version = "0.1", features = ["net"] }
 # A certificate authority and a server certificate for the TLS tests.
 rcgen = { version = "0.14", default-features = false, features = ["crypto", "pem", "ring"] }
 serde_json.workspace = true
+toml.workspace = true

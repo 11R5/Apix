@@ -37,7 +37,7 @@ crates/
 ├── apix-vault    encrypted collections: per-file XChaCha20-Poly1305, Argon2id, recovery key
 ├── apix-script   pre-request and test scripts: QuickJS with a pm.*-compatible API
 ├── apix-runner   runs collections: order, iterations, data files, delay, bail, reports
-├── apix-grpc     gRPC calls: tonic, messages as JSON (prost-reflect), .proto files (protox)
+├── apix-grpc     gRPC calls: tonic, messages as JSON (prost-reflect), .proto files (protox), definitions from code or JSON
 ├── apix-proto    other protocols: MQTT (rumqttc)
 │                 or server reflection
 ├── apix-cli      `apix` binary: send / run / schema / import / shell from terminal & CI
@@ -210,6 +210,24 @@ json = '{"name": "Ada"}'
 method = "helloworld.Greeter/SayHello"
 protos = ["../protos/helloworld.proto"]   # optional
 import_paths = ["../protos"]              # optional
+```
+
+Instead of files, `definition` keeps the description in the request: `.proto`
+text, or a descriptor set as JSON. It goes before `protos`. `guessed = true` marks
+one worked out from types or JSON: server reflection goes before it, and the
+differences are told. `protos` also takes descriptor sets, binary or `.json`.
+
+```toml
+[grpc]
+method = "shop.v1.Orders/Create"
+guessed = true
+definition = """
+syntax = "proto3";
+package shop.v1;
+service Orders { rpc Create(CreateRequest) returns (CreateResponse); }
+message CreateRequest { string customer = 1; }
+message CreateResponse {}
+"""
 ```
 
 Open questions:
@@ -521,6 +539,21 @@ field names and default values shown. `DynamicCodec` plugs them into tonic,
 so `tonic::client::Grpc` runs all four kinds of method (unary, server
 streaming, client streaming, bidirectional) over one `Channel` (HTTP/2 on the
 hyper and rustls the HTTP engine already uses).
+
+`apix_grpc::convert` makes a description from what else there is, trying in
+turn: a descriptor set in JSON; `.proto` text; the `FileDescriptorProto` that
+generated code embeds (`embedded.rs` knows how each generator writes those bytes,
+and PHP's may not even be valid text); then declarations in a programming language
+(`source.rs`: comments out, blocks found, members read by language family, types
+normalized, numbers taken from annotations and ts-proto's encoders) or a JSON example
+(`json.rs`, keeping key order, which `serde_json::Value` would lose). The last two go
+through a small `Schema` rendered to `.proto`. `printer.rs` writes an exact description
+back as `.proto` text and is believed only if that text compiles to the same description;
+otherwise, or for several files, the definition stays a descriptor set in JSON.
+`compare` walks a definition against a server's description, matching fields by name since
+message names never reach the wire. `described` holds the order: the request's definition,
+its files, reflection; a guess first tries reflection and gives way. `call` reports fields
+a `DynamicMessage` could not place (`CallEvent::Note`), because nothing else would.
 
 The request's headers and auth become metadata (Bearer, Basic, an API key
 header, OAuth 2.0 through `apix_http::oauth2`; `-bin` keys are base64);

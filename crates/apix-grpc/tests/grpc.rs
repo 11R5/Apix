@@ -44,6 +44,212 @@ fn json(text: &str) -> serde_json::Value {
     serde_json::from_str(text).unwrap()
 }
 
+/// The same request, with a definition kept in it.
+fn with_definition(mut req: Request, definition: &str, guessed: bool) -> Request {
+    if let Some(grpc) = &mut req.grpc {
+        grpc.definition = definition.into();
+        grpc.guessed = guessed;
+    }
+    req
+}
+
+/// The Greeter's service as one `.proto` text, as generated code would give it.
+fn greeter_definition() -> String {
+    let pool = server::pool();
+    let set = prost_types::FileDescriptorSet {
+        file: pool.file_descriptor_protos().cloned().collect(),
+    };
+    apix_grpc::convert_bytes(&prost::Message::encode_to_vec(&set), None, None)
+        .unwrap()
+        .definition
+}
+
+#[tokio::test]
+async fn a_definition_needs_neither_reflection_nor_files() {
+    let addr = start(false).await;
+    let req = request(addr, "apix.test.Greeter/SayHello", r#"{"name": "Ada"}"#);
+    let no_way = apix_grpc::send(&req, |_| {}).await.unwrap_err().to_string();
+    assert!(no_way.contains("does not offer reflection"), "{no_way}");
+
+    let req = with_definition(req, &greeter_definition(), false);
+    let mut notes = Vec::new();
+    let outcome = apix_grpc::send(&req, |event| {
+        if let CallEvent::Note(note) = event {
+            notes.push(note);
+        }
+    })
+    .await
+    .unwrap();
+    assert!(outcome.is_ok(), "{outcome:?}");
+    assert!(outcome.received[0].contains("Ada"), "{outcome:?}");
+    assert!(notes.is_empty(), "{notes:?}");
+}
+
+#[tokio::test]
+async fn runs_call_through_a_definition_too() {
+    let addr = start(false).await;
+    let req = with_definition(
+        request(addr, "apix.test.Greeter/SayHello", r#"{"name": "Ada"}"#),
+        &greeter_definition(),
+        false,
+    );
+    let response = apix_grpc::send_for_tests(&req).await.unwrap();
+    assert_eq!(response.status, 200);
+    assert!(response.raw_body().contains("Ada"));
+}
+
+#[tokio::test]
+async fn a_descriptor_set_file_describes_the_service() {
+    let addr = start(false).await;
+    let pool = server::pool();
+    let set = prost_types::FileDescriptorSet {
+        file: pool.file_descriptor_protos().cloned().collect(),
+    };
+    let dir = std::env::temp_dir().join(format!("apix-grpc-set-{}", addr.port()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("greeter.pb");
+    std::fs::write(&path, prost::Message::encode_to_vec(&set)).unwrap();
+
+    let mut req = request(addr, "apix.test.Greeter/SayHello", r#"{"name": "Ada"}"#);
+    if let Some(grpc) = &mut req.grpc {
+        grpc.protos = vec![path.to_string_lossy().into_owned()];
+    }
+    let outcome = apix_grpc::send(&req, |_| {}).await.unwrap();
+    assert!(outcome.is_ok(), "{outcome:?}");
+
+    std::fs::write(&path, b"not a set").unwrap();
+    let error = apix_grpc::send(&req, |_| {}).await.unwrap_err().to_string();
+    assert!(error.contains("greeter.pb"), "{error}");
+    std::fs::remove_dir_all(&dir).ok();
+}
+
+/// A guess at `HelloRequest`: its name in a field number the server does not use.
+const WRONG_GUESS: &str = r#"syntax = "proto3";
+package apix.test;
+service Greeter { rpc SayHello(Guess) returns (Answer); }
+message Guess { string name = 9; }
+message Answer { }
+"#;
+
+#[tokio::test]
+async fn a_guess_gives_way_to_reflection_and_the_differences_are_told() {
+    let addr = start(true).await;
+    let req = with_definition(
+        request(addr, "apix.test.Greeter/SayHello", r#"{"name": "Ada"}"#),
+        WRONG_GUESS,
+        true,
+    );
+    let mut notes = Vec::new();
+    let outcome = apix_grpc::send(&req, |event| {
+        if let CallEvent::Note(note) = event {
+            notes.push(note);
+        }
+    })
+    .await
+    .unwrap();
+    assert!(outcome.is_ok(), "{outcome:?}");
+    assert!(outcome.received[0].contains("Ada"), "{outcome:?}");
+    let told = notes.join("\n");
+    assert!(told.contains("reflection was used"), "{told}");
+    assert!(told.contains("number 9 here"), "{told}");
+    assert_eq!(outcome.notes, notes);
+
+    // The same call, not marked as a guess, is taken at its word.
+    let req = with_definition(
+        request(addr, "apix.test.Greeter/SayHello", r#"{"name": "Ada"}"#),
+        WRONG_GUESS,
+        false,
+    );
+    let described = apix_grpc::load_description(&req).await.unwrap();
+    assert!(described.notes.is_empty());
+    assert!(apix_grpc::find_method(&described.pool, "apix.test.Greeter/SayHello").is_some());
+}
+
+#[tokio::test]
+async fn a_wrong_guess_without_reflection_is_called_out() {
+    let addr = start(false).await;
+    let req = with_definition(
+        request(addr, "apix.test.Greeter/SayHello", r#"{"name": "Ada"}"#),
+        WRONG_GUESS,
+        true,
+    );
+    let outcome = apix_grpc::send(&req, |_| {}).await.unwrap();
+    let told = outcome.notes.join("\n");
+    assert!(told.contains("no reflection to check against"), "{told}");
+    // The server answered, or said the name was missing; either way nothing
+    // of what it may have sent back was understood, and the user is told.
+    if outcome.is_ok() {
+        assert!(told.contains("does not know"), "{told}");
+    }
+}
+
+#[tokio::test]
+async fn an_answer_with_unknown_fields_is_called_out_once() {
+    let addr = start(false).await;
+    let definition = r#"syntax = "proto3";
+package apix.test;
+service Greeter { rpc CountDown(In) returns (stream Out); }
+message In { int32 from = 1; }
+message Out { }
+"#;
+    let req = with_definition(
+        request(addr, "apix.test.Greeter/CountDown", r#"{"from": 3}"#),
+        definition,
+        false,
+    );
+    let outcome = apix_grpc::send(&req, |_| {}).await.unwrap();
+    assert!(outcome.is_ok(), "{outcome:?}");
+    let about_fields: Vec<_> = outcome
+        .notes
+        .iter()
+        .filter(|n| n.contains("does not know"))
+        .collect();
+    assert!(!about_fields.is_empty(), "{:?}", outcome.notes);
+    assert!(about_fields.iter().all(|n| n.contains("apix.test.Out")));
+}
+
+#[tokio::test]
+async fn an_answer_of_another_type_says_the_definition_is_at_fault() {
+    let addr = start(false).await;
+    let definition = r#"syntax = "proto3";
+package apix.test;
+service Greeter { rpc SayHello(In) returns (Out); }
+message In { string name = 1; }
+message Out { int32 message = 1; }
+"#;
+    let req = with_definition(
+        request(addr, "apix.test.Greeter/SayHello", r#"{"name": "Ada"}"#),
+        definition,
+        false,
+    );
+    let outcome = apix_grpc::send(&req, |_| {}).await.unwrap();
+    assert!(!outcome.is_ok(), "{outcome:?}");
+    assert!(
+        outcome.notes.iter().any(|n| n.contains("does not fit")),
+        "{outcome:?}"
+    );
+}
+
+#[tokio::test]
+async fn a_description_without_a_server_loads_all_the_same() {
+    // Nothing listens on this port.
+    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let addr = listener.local_addr().unwrap();
+    drop(listener);
+    let req = with_definition(request(addr, "", ""), WRONG_GUESS, false);
+    let described = apix_grpc::load_description(&req).await.unwrap();
+    assert_eq!(apix_grpc::methods(&described.pool).len(), 1);
+
+    let req = with_definition(request(addr, "", ""), WRONG_GUESS, true);
+    let described = apix_grpc::load_description(&req).await.unwrap();
+    assert_eq!(apix_grpc::methods(&described.pool).len(), 1);
+    assert!(
+        described.notes[0].contains("could not be checked"),
+        "{:?}",
+        described.notes
+    );
+}
+
 #[tokio::test]
 async fn reflection_lists_and_describes_the_service() {
     let addr = start(true).await;

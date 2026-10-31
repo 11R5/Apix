@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:fd87823f517ebf46 -->
+<!-- translated from en/user-guide.md sha256:fa4196e436f2ee67 -->
 
 # Apix kullanım kılavuzu
 
@@ -472,9 +472,12 @@ Adresi `grpc://` (TLS için `grpcs://`) ile başlayan istek bir gRPC metodunu
 
 1. Adresi yaz, örneğin `grpc://localhost:50051`.
 2. **Metotları yükle** sunucuya neler sunduğunu sorar (gRPC sunucu
-   reflection'ı). Sunucuda reflection yoksa **.proto ekle** ile servisin
-   `.proto` dosyalarını seç; import'lar onların yanında aranır, Google'ın
-   bilinen türleri yerleşiktir. Hiçbir şey için `protoc` gerekmez.
+   reflection'ı). Sunucuda reflection yoksa **Dosya ekle** ile servisin
+   `.proto` dosyalarını ya da descriptor set'lerini (`protoc
+   --descriptor_set_out`, `buf build`, ikili ya da JSON) seç; import'lar onların
+   yanında aranır, Google'ın bilinen türleri yerleşiktir. Hiçbir şey için
+   `protoc` gerekmez. Böyle bir dosya yoksa
+   [.proto dosyası olmadan](#proto-dosyası-olmadan) bölümüne bak.
 3. Metodu seç. Türü yanında görünür: tekli, sunucu akışı, istemci akışı ya da
    çift yönlü.
 4. Mesajı JSON olarak yaz ya da her alanı dolu bir örnek için **Örnek mesaj**'a
@@ -506,6 +509,60 @@ istekteki gibi çalışır. Tek başına **Gönder**, çağrıyı scriptlerini
 
 Her çağrı günlüğü, durumu ve metadata'sıyla **Geçmiş**'te (Ctrl+H) tutulur;
 seçince çağrı bittiği haliyle yeniden görünür.
+
+### .proto dosyası olmadan
+
+gRPC telde alan adı değil alan numarası gönderir ve `paket.Servis/Metot` çağırır.
+Yani nereden başlarsan başla, bunların doğru çıkması gerekir. **Mesaj**'ın yanındaki
+**Tanım** sekmesi elindekinden tanım üretir. Kaynağı yapıştır (ya da **Dosyadan oku**,
+**Mesajı kullan**), kaynak söylemiyorsa **Çağrılacak metot**'u yaz ve **Dönüştür**'e
+bas. Sonuç, düzenleyebileceğin ve istekte saklanan `.proto` metnidir; **Dosya olarak
+kaydet** onu dışarı yazar.
+
+![Örnek JSON'dan üretilen tanım ve uyuşmadığında çıkan uyarı](images/grpc-definition.png)
+
+| Elindeki | Sonucu |
+|---|---|
+| `.proto` metni, descriptor set (ikili ya da JSON) | Kesin. |
+| Tanımı içinde taşıyan üretilmiş kod: `_pb2.py`, Java'nın dış sınıfı, onun üzerinden Kotlin, `.cs`, `.pb.cc`, `.pb.go`, `_pb.rb`, PHP'nin `GPBMetadata`'sı, protobuf-es `_pb.ts` | Kesin: dil ne olursa olsun içindeki tanım okunur. |
+| Numarası olup tanımı olmayan kod: Go `protobuf:"…"` etiketleri, Rust `#[prost(…)]`, ts-proto, betterproto, `[ProtoMember(n)]`, `@ProtoNumber(n)` | Numaralar ve türler doğrudur; kaynak çağrıları listelemiyorsa onları kontrol et. |
+| Elle yazılmış tipler: TypeScript, Go, Rust, C#, Java, Kotlin, Python, Swift, Dart, C++ | **Tahmin.** Alanlar yazıldıkları sırayla numaralanır. |
+| JSON örnek mesaj (isteğe bağlı ikinci kutu yanıtı alır) | **Tahmin.** Türler değerlerden gelir; JSON listesi akış olur. |
+
+Tahmin, numaraları kadar iyidir ve **yanlış numara hata vermez: yanlış alanları
+doldurur.** Bu yüzden Apix bunu gizlemez:
+
+- Sunucu reflection sunuyorsa tahminin yerine onun tanımı kullanılır ve her fark
+  listelenir (`number 1 here, 7 on the server`).
+- Sunmuyorsa her çağrı numaraların doğrulanmadığını söyler. Yanıtta tanımın bilmediği
+  alanlar numara ve değerleriyle gösterilir (`1:"o-1"`); tipini bilmediğin bir yanıtı
+  çözmenin yolu da budur. Tanıma hiç uymayan yanıt, nedenin büyük olasılıkla tanım
+  olduğunu söyleyen bir satırla başarısız olur.
+
+`protoc`'un ürettiği diğer dosyalar tanımı yalnızca kullanır (`.pb.h`, Kotlin'in
+builder'ları, `.pyi`), gRPC stub'ları da yalnızca çağrıları tutar; Apix hangi dosyanın
+kullanılacağını söyler. Okunmayanlar: `.proto` metni olarak Protobuf editions (descriptor
+set olarak kalır), etiket ya da tiplerden oneof'lar (alanları düz alan olur, telde aynı
+gider) ve generic'ler.
+
+Komut satırından:
+
+```bash
+apix proto service_pb2.py
+```
+
+```bash
+apix proto order.json --method shop.v1.Orders/Create --response answer.json --out orders.proto
+```
+
+```bash
+apix proto types.ts --method shop.v1.Orders/Create --into create.apix
+```
+
+`.proto` standart çıktıya ya da `--out`'a gider, `--into` onu istekte saklar, seçim
+gerektiren noktalar standart hataya yazılır. `apix send`, `apix run` ve `apix schema`
+tanımı aynı şekilde kullanır; `apix send` aynı uyarıları basar, koşu raporlarında bu
+uyarılar yer almaz.
 
 ## Scriptler ve testler
 
