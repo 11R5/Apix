@@ -116,6 +116,9 @@ Measurements of the other tools on the same machine are planned.
   or saved messages and log both directions live; `text/event-stream`
   responses show their events as they arrive. `apix send` does both in a
   terminal.
+- **MQTT:** `mqtt://` and `mqtts://` requests subscribe to topics and publish
+  at QoS 0, 1 and 2, retained or not, with a live log by topic, in the app or
+  with `apix send`.
 - **Socket.IO:** join a namespace with auth, emit named events (with acks
   and binary attachments) and see every event, ack and attachment the
   server sends, in the app's Messages tab or with `apix send`.

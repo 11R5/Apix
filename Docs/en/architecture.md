@@ -38,6 +38,7 @@ crates/
 ├── apix-script   pre-request and test scripts: QuickJS with a pm.*-compatible API
 ├── apix-runner   runs collections: order, iterations, data files, delay, bail, reports
 ├── apix-grpc     gRPC calls: tonic, messages as JSON (prost-reflect), .proto files (protox)
+├── apix-proto    other protocols: MQTT (rumqttc)
 │                 or server reflection
 ├── apix-cli      `apix` binary: send / run / schema / import / shell from terminal & CI
 └── apix-desktop  GPUI desktop app (Windows, macOS and Linux from one crate)
@@ -69,7 +70,6 @@ Planned crates:
 
 | Crate          | Purpose                                                            |
 |----------------|--------------------------------------------------------------------|
-| `apix-proto`   | MQTT, SOAP                                                         |
 | `apix-mock`    | A local mock server that serves saved examples (`hyper`)           |
 
 ### One desktop crate for three operating systems
@@ -421,6 +421,32 @@ WebSocket/Socket.IO switch and the Socket.IO fields, and `WsMessage` carries
 `SioEvent`s into log entries with the event name and ack chips. The test
 server in `apix-http/tests/common/socketio_server.rs` is also the
 `socketio_server` example (:8771).
+
+## MQTT (M6)
+
+`apix_proto::mqtt` wraps rumqttc's event loop (MQTT 3.1.1; its TLS only through
+the configuration from `apix_http::tls::client_config`, so it brings no crypto
+provider of its own). A `mqtt://` or `mqtts://` URL makes a request MQTT, as
+`grpc://` does for gRPC; `[mqtt]` holds the client id, session, keep alive and
+subscriptions. `connect` polls the event loop until the broker's CONNACK, so a
+refused login fails like a failed handshake.
+
+`MqttConnection::run` runs two futures side by side, never cancelling the
+event loop's poll: one hands `MqttCommand`s to the client (which can wait when
+its queue is full, and that queue is emptied by the poll), the other follows
+the connection and reports `MqttEvent`s. rumqttc reports the packet id of each
+outgoing packet in the order it was handed over, so a queue matches publishes
+and subscriptions with their ids and the broker's PUBACK, PUBCOMP, SUBACK and
+UNSUBACK with what they confirm. A message is reported as sent when its packet
+has gone out. A bad topic or a refused subscription is an event and the
+connection goes on; closing, and the broker hanging up, end it.
+
+In the desktop app `WsEditor` also holds the MQTT fields (the URL decides, and
+`Workspace` tells it), and `socket_ui.rs` follows the connection with the same
+loop as WebSocket and Socket.IO, turning `MqttEvent`s into log lines by topic.
+The test broker in `apix-proto/tests/common/broker.rs` (wildcards, QoS 0–2,
+retained messages, refusals, TLS through any stream) is also the `mqtt_broker`
+example (:8772).
 
 ## GraphQL schemas (M6)
 

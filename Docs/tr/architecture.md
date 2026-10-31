@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:5bd9efc5dfead96e -->
+<!-- translated from en/architecture.md sha256:7e71d2adc1852004 -->
 
 # Apix mimarisi
 
@@ -41,6 +41,7 @@ crates/
 ├── apix-runner   koleksiyon koşuları: sıra, tekrar, veri dosyaları, bekleme, bail, raporlar
 ├── apix-grpc     gRPC çağrıları: tonic, JSON mesajlar (prost-reflect), .proto dosyaları (protox)
 │                 ya da sunucu reflection'ı
+├── apix-proto    diğer protokoller: MQTT (rumqttc)
 ├── apix-cli      `apix` binary'si: terminalden ve CI'dan send / run / schema / import / shell
 └── apix-desktop  GPUI masaüstü uygulaması (tek crate'ten Windows, macOS ve Linux)
 tools/
@@ -74,7 +75,6 @@ Planlanan crate'ler:
 
 | Crate          | Amaç                                                               |
 |----------------|--------------------------------------------------------------------|
-| `apix-proto`   | MQTT, SOAP                                                         |
 | `apix-mock`    | Kaydedilmiş örnekleri sunan yerel bir mock sunucu (`hyper`)        |
 
 ### Üç işletim sistemi için tek masaüstü crate'i
@@ -444,6 +444,33 @@ WebSocket/Socket.IO seçimi ve Socket.IO alanları vardır, `WsMessage` da
 olay adı ve ack etiketli günlük satırlarına çevirir.
 `apix-http/tests/common/socketio_server.rs` içindeki test sunucusu aynı
 zamanda `socketio_server` örneğidir (:8771).
+
+## MQTT (M6)
+
+`apix_proto::mqtt`, rumqttc'nin olay döngüsünü sarar (MQTT 3.1.1; TLS yalnızca
+`apix_http::tls::client_config`'ten gelen yapılandırmayla, böylece kendi kripto
+sağlayıcısını getirmez). `grpc://` gRPC'de olduğu gibi `mqtt://` ya da
+`mqtts://` adresi isteği MQTT yapar; `[mqtt]` istemci kimliğini, oturumu, keep
+alive'ı ve abonelikleri tutar. `connect` olay döngüsünü broker'ın CONNACK'ine
+kadar çalıştırır; böylece reddedilen giriş başarısız bir el sıkışma gibi hata
+verir.
+
+`MqttConnection::run` iki future'ı yan yana çalıştırır ve olay döngüsünün
+poll'unu hiç iptal etmez: biri `MqttCommand`'ları istemciye verir (kuyruğu
+doluysa bekleyebilir, o kuyruğu da poll boşaltır), diğeri bağlantıyı izleyip
+`MqttEvent` bildirir. rumqttc giden her paketin kimliğini teslim sırasıyla
+bildirir; bir kuyruk yayın ve abonelikleri kimlikleriyle, broker'ın PUBACK,
+PUBCOMP, SUBACK ve UNSUBACK'lerini de onayladıkları şeyle eşleştirir. Mesaj,
+paketi çıktığında gönderilmiş sayılır. Geçersiz konu ya da reddedilen abonelik
+bir olaydır ve bağlantı sürer; kapatma ve broker'ın bağlantıyı kesmesi bağlantıyı
+bitirir.
+
+Masaüstü uygulamasında MQTT alanları da `WsEditor`'dadır (URL karar verir,
+`Workspace` ona bildirir); `socket_ui.rs` bağlantıyı WebSocket ve Socket.IO ile
+aynı döngüyle izler ve `MqttEvent`'leri konu etiketli günlük satırlarına çevirir.
+`apix-proto/tests/common/broker.rs` içindeki test broker'ı (joker konular, QoS
+0–2, retained mesajlar, retler, herhangi bir akış üzerinden TLS) aynı zamanda
+`mqtt_broker` örneğidir (:8772).
 
 ## GraphQL şemaları (M6)
 
