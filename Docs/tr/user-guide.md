@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:b9e4c8f7ac593fde -->
+<!-- translated from en/user-guide.md sha256:63f4174369ee0a4c -->
 
 # Apix kullanım kılavuzu
 
@@ -396,7 +396,8 @@ broker'ına bağlanır: URL çubuğu ve kenar çubuğu **MQTT** gösterir, **Gö
 
 - **Giriş:** kullanıcı adı ve şifre Yetkilendirme sekmesindeki Basic türünden
   ya da URL'den gelir (`mqtt://kullanici:sifre@host`). Diğer auth türleri
-  MQTT'de geçerli değildir. Broker reddederse nedenini söyler.
+  MQTT'de geçerli değildir. Broker reddederse nedenini söyler. URL'deki şifre
+  Apix'in yazdıklarında gösterilmez.
 - **İstemci kimliği** boş bırakılırsa her bağlantıda yenilenir. **Oturumu
   koru** broker'dan oturumu bağlantılar arasında saklamasını ister ve istemci
   kimliği gerektirir; broker oturumu saklamışsa günlük bunu yazar. **Keep
@@ -420,7 +421,8 @@ broker'ına bağlanır: URL çubuğu ve kenar çubuğu **MQTT** gösterir, **Gö
 olanları yazar; `--listen` saniye sonra kapatır (varsayılan 3, `0` broker'ı
 bekler). `--subscribe KONU` (birden çok verilebilir) abonelik ekler;
 `--message METİN` ile `--topic KONU` kayıtlı mesajlar yerine yayınlar; `--qos`
-ve `--retain` bunlara uygulanır. Broker bir aboneliği reddederse çıkış kodu
+ve `--retain` bunlara uygulanır. Broker bir aboneliği reddederse ya da bir aboneliğe veya mesaja cevap vermeden
+bağlantıyı keserse çıkış kodu
 1'dir. `apix run` MQTT isteklerini atlar. Henüz yok: MQTT 5, son vasiyet (last
 will) ve WebSocket üzerinden MQTT.
 

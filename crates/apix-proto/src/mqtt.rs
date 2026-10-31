@@ -103,6 +103,17 @@ pub fn payload_from_text(text: &str, format: MessageFormat) -> Result<Vec<u8>, S
     }
 }
 
+/// The URL for logs and messages: without a password it may hold.
+pub fn display_url(url: &str) -> String {
+    let Ok(mut parsed) = url::Url::parse(url.trim()) else {
+        return url.to_owned();
+    };
+    if parsed.password().is_some() {
+        let _ = parsed.set_password(None);
+    }
+    parsed.to_string()
+}
+
 /// A payload for the eye: its text, or its size and first bytes.
 pub fn show_payload(payload: &[u8]) -> String {
     match std::str::from_utf8(payload) {
@@ -395,6 +406,22 @@ impl MqttConnection {
                 let event = match events.poll().await {
                     Ok(event) => event,
                     Err(e) if is_hang_up(&e) => {
+                        // What it never answered may be why it hung up.
+                        let mut unanswered: Vec<&String> =
+                            subscribes.values().map(|(topic, _)| topic).collect();
+                        unanswered.sort();
+                        for topic in unanswered {
+                            report(MqttEvent::Rejected(format!(
+                                "the broker closed the connection without answering the subscription to `{topic}`"
+                            )));
+                        }
+                        let mut unconfirmed: Vec<&String> = publishes.values().collect();
+                        unconfirmed.sort();
+                        for topic in unconfirmed {
+                            report(MqttEvent::Rejected(format!(
+                                "the broker closed the connection without confirming a message to `{topic}`"
+                            )));
+                        }
                         report(MqttEvent::Closed { by_broker: true });
                         return;
                     }
@@ -506,6 +533,9 @@ mod tests {
         let mut bearer = request("mqtt://b");
         bearer.auth = Auth::Bearer { token: "t".into() };
         assert!(options(&bearer).unwrap_err().to_string().contains("Basic"));
+        assert_eq!(display_url("mqtt://ann:secret@b:1883"), "mqtt://ann@b:1883");
+        assert_eq!(display_url("mqtts://b"), "mqtts://b");
+        assert_eq!(display_url("not a url"), "not a url");
         assert!(options(&request("ws://b")).is_err());
         assert!(options(&request("mqtt://")).is_err());
     }

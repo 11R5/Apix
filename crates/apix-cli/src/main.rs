@@ -1395,7 +1395,12 @@ async fn mqtt(
     };
     println!(
         "{}connected{}  {}{} as {}{session}{}",
-        style.green, style.reset, style.dim, request.url, connection.client_id, style.reset
+        style.green,
+        style.reset,
+        style.dim,
+        apix_proto::mqtt::display_url(&request.url),
+        connection.client_id,
+        style.reset
     );
     let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
     for command in publishes {

@@ -4,6 +4,7 @@
 //!
 //! - a user name with a password other than `secret` is refused,
 //! - a subscription under `forbidden/` is refused,
+//! - a subscription under `drop/` makes the broker hang up without answering,
 //! - publishing to `kick` makes the broker hang up,
 //! - a client id seen before with `keep_session` finds its session present.
 
@@ -159,6 +160,13 @@ impl Broker {
             // A subscriber's half of QoS 2.
             Packet::PubRec(PubRec { pkid, .. }) => answer(Packet::PubRel(PubRel::new(pkid))),
             Packet::Subscribe(subscribe) => {
+                if subscribe
+                    .filters
+                    .iter()
+                    .any(|f| f.path.starts_with("drop/"))
+                {
+                    return false;
+                }
                 let mut state = self.state.lock().unwrap();
                 let mut codes = Vec::new();
                 let mut retained = Vec::new();

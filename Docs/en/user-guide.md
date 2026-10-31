@@ -380,7 +380,8 @@ or 8883 with TLS, unless the URL names one.
 
 - **Login:** the user name and password from the Auth tab's Basic type, or
   from the URL (`mqtt://user:password@host`). Other auth types do not apply
-  to MQTT. When the broker refuses, it says why.
+  to MQTT. When the broker refuses, it says why. A password in the URL is left
+  out of what Apix prints.
 - **Client id** is new for every connection when left empty. **Keep session**
   asks the broker to keep the session between connections, which needs a
   client id; the log says when the broker still had one. **Keep alive** is
@@ -406,7 +407,8 @@ goes both ways, closing after `--listen` seconds (3 by default, `0` waits for
 the broker). `--subscribe TOPIC` (repeatable) adds subscriptions; `--message
 TEXT` with `--topic TOPIC` publishes instead of the saved messages; `--qos` and
 `--retain` apply to these. The exit code is 1 when the broker refused a
-subscription. `apix run` skips MQTT requests. Not yet: MQTT 5, a last will,
+subscription, or hung up without answering one or confirming a message.
+`apix run` skips MQTT requests. Not yet: MQTT 5, a last will,
 and MQTT over WebSocket.
 
 ## gRPC

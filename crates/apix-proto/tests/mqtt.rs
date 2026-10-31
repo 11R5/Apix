@@ -231,6 +231,20 @@ async fn the_broker_hanging_up_and_nobody_home() {
         "{events:#?}"
     );
 
+    // Hanging up instead of answering a subscription is reported as such.
+    let connection = mqtt::connect(&request(&url, &[("fine", 0), ("drop/x", 0)]))
+        .await
+        .unwrap();
+    let events = run(connection, Vec::new()).await;
+    assert!(
+        events.iter().any(|e| matches!(
+            e,
+            MqttEvent::Rejected(why) if why.contains("without answering the subscription to `drop/x`")
+        )),
+        "{events:#?}"
+    );
+    assert_eq!(events.last(), Some(&MqttEvent::Closed { by_broker: true }));
+
     // A port nobody listens on.
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let free = format!("mqtt://{}", listener.local_addr().unwrap());

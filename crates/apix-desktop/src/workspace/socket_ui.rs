@@ -207,7 +207,7 @@ impl SocketSession {
                 self.push(at, Entry::Note(tr!("mqtt.unsubscribed", topic = topic)))
             }
             MqttEvent::Rejected(reason) => {
-                self.push(at, Entry::Note(tr!("ws.bad_message", reason = reason)))
+                self.push(at, Entry::Note(tr!("ws.error", error = reason)))
             }
             MqttEvent::Closed { by_broker } => {
                 let note = if by_broker {
@@ -302,7 +302,7 @@ impl Workspace {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
-        let url = request.url.clone();
+        let url = apix_proto::mqtt::display_url(&request.url);
         let (incoming, commands, running) = net::mqtt_connect(request);
         self.follow_socket(
             url,
