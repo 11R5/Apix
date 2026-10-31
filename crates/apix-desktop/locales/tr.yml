@@ -300,6 +300,8 @@ import.project_in: Oluşturulacağı klasör…
 import.project_summary: "%{collections} koleksiyon, %{requests} istek ve %{environments} ortam artık %{name} içinde."
 import.prompt: Postman, Insomnia, OpenAPI veya HAR dosyası içe aktar
 import.unknown_format: "%{path} Apix'in okuyabildiği bir dışa aktarım değil (Postman, Insomnia v4, OpenAPI/Swagger, HAR)."
+import.url_ok: İçe aktar
+import.url_title: URL'den içe aktar
 menu.active_environment: Etkin ortam
 menu.cancel: İptal
 menu.close_tab: Sekmeyi kapat
@@ -318,7 +320,8 @@ menu.group_collection: Koleksiyon
 menu.group_environment: Ortam
 menu.help: Yardım
 menu.history: Geçmiş…
-menu.import_postman: İçe aktar (Postman, Insomnia, OpenAPI, HAR)…
+menu.import_postman: İçe aktar (Postman, Insomnia, OpenAPI, HAR, WSDL)…
+menu.import_url: URL'den içe aktar…
 menu.lock_collections: Şifreli koleksiyonları kilitle
 menu.method: Metot
 menu.move_into_project: Bir projeye taşı…
@@ -630,6 +633,8 @@ sio.path: Yol
 sio.send_hint: "Ctrl+Enter yayınlar; JSON tek argümandır, başka metin bir dize"
 sio.unreadable: "Okunamayan çerçeve: %{text}"
 sio.wants_ack: "ack %{id} bekliyor"
+soap.fault: "SOAP hatası: %{fault}"
+soap.template_hint: "SOAP zarfı başlat:"
 stream.all_types: Tümü %{count}
 stream.count: "%{count} olay"
 stream.dropped_reconnecting: Bağlantı koptu (%{error}); %{seconds} sn sonra yeniden bağlanılıyor

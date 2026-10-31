@@ -300,6 +300,8 @@ import.project_in: Crear en…
 import.project_summary: "%{collections} colecciones, %{requests} peticiones y %{environments} entornos están ahora en %{name}."
 import.prompt: Importar un archivo de Postman, Insomnia, OpenAPI o HAR
 import.unknown_format: "%{path} no es una exportación que Apix pueda leer (Postman, Insomnia v4, OpenAPI/Swagger, HAR)."
+import.url_ok: Importar
+import.url_title: Importar desde URL
 menu.active_environment: Entorno activo
 menu.cancel: Cancelar
 menu.close_tab: Cerrar pestaña
@@ -318,7 +320,8 @@ menu.group_collection: Colección
 menu.group_environment: Entorno
 menu.help: Ayuda
 menu.history: Historial…
-menu.import_postman: Importar (Postman, Insomnia, OpenAPI, HAR)…
+menu.import_postman: Importar (Postman, Insomnia, OpenAPI, HAR, WSDL)…
+menu.import_url: Importar desde URL…
 menu.lock_collections: Bloquear colecciones cifradas
 menu.method: Método
 menu.move_into_project: Mover a un proyecto…
@@ -630,6 +633,8 @@ sio.path: Ruta
 sio.send_hint: "Ctrl+Intro emite; el JSON es un argumento, otro texto una cadena"
 sio.unreadable: "Trama ilegible: %{text}"
 sio.wants_ack: "espera ack %{id}"
+soap.fault: "Error SOAP: %{fault}"
+soap.template_hint: "Empezar un sobre SOAP:"
 stream.all_types: Todos %{count}
 stream.count: "%{count} eventos"
 stream.dropped_reconnecting: Se cortó la conexión (%{error}); reconectando en %{seconds} s

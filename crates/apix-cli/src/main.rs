@@ -129,10 +129,10 @@ enum Command {
         net: NetArgs,
     },
     /// Import a Postman collection or environment, an Insomnia v4 export, an
-    /// OpenAPI 3 / Swagger 2 spec (JSON or YAML) or a HAR file; or a whole
-    /// folder / "Export data" zip of them as a project
+    /// OpenAPI 3 / Swagger 2 spec (JSON or YAML), a HAR file or a WSDL; or a
+    /// whole folder / "Export data" zip of them as a project
     Import {
-        /// An export file, a folder of them, or a `.zip`
+        /// An export file or its http(s) address, a folder of them, or a `.zip`
         file: PathBuf,
         /// Folder to create for a collection (default: ./<collection-name>);
         /// for a folder or zip, the folder to create the project in (default: .)
@@ -603,6 +603,9 @@ async fn run(cli: Cli) -> Result<bool> {
                     response.timing.total.as_secs_f64() * 1000.0,
                     response.body.len(),
                 );
+                if let Some(fault) = response.soap_fault() {
+                    println!("{}SOAP Fault: {fault}{}", style.red, style.reset);
+                }
                 if include_headers {
                     for (k, v) in &response.headers {
                         println!("{}{k}{}: {v}", style.dim, style.reset);
@@ -614,7 +617,10 @@ async fn run(cli: Cli) -> Result<bool> {
                 }
                 println!("{}", response.pretty_body());
             }
-            print_scripts(&style, &done.to_item(0, String::new()));
+            // A SOAP fault was already shown, with the response.
+            let mut item = done.to_item(0, String::new());
+            item.error = None;
+            print_scripts(&style, &item);
             Ok(done.passed())
         }
         Command::Run {
@@ -780,7 +786,7 @@ async fn run(cli: Cli) -> Result<bool> {
             }
             Ok(true)
         }
-        Command::Import { file, out, into } => import(&style, &file, out, into),
+        Command::Import { file, out, into } => import(&style, &client, &file, out, into).await,
         Command::Export { dir, out } => {
             unlock_around(&dir, &var)?;
             let scope = Scope::find(&dir)?;
@@ -878,15 +884,41 @@ fn decrypt(style: &Style, dir: &Path, out: &Path, recovery: bool, var: &str) -> 
     Ok(true)
 }
 
-fn import(style: &Style, file: &Path, out: Option<PathBuf>, into: Option<PathBuf>) -> Result<bool> {
+/// A document from the web, or a local file.
+async fn fetch_text(client: &HttpClient, location: &str) -> Result<String, String> {
+    if !is_web_address(location) {
+        return std::fs::read_to_string(location).map_err(|e| e.to_string());
+    }
+    let request = apix_core::Request::new(apix_core::Method::Get, location);
+    let response = client.send(&request).await.map_err(|e| e.to_string())?;
+    if !response.is_success() {
+        return Err(format!("the server answered {}", response.status));
+    }
+    Ok(String::from_utf8_lossy(&response.body).into_owned())
+}
+
+fn is_web_address(location: &str) -> bool {
+    let lower = location.to_ascii_lowercase();
+    lower.starts_with("http://") || lower.starts_with("https://")
+}
+
+async fn import(
+    style: &Style,
+    client: &HttpClient,
+    file: &Path,
+    out: Option<PathBuf>,
+    into: Option<PathBuf>,
+) -> Result<bool> {
     use apix_import::postman::{self, Kind};
     use apix_import::postman_dump;
 
+    let location = file.to_string_lossy().into_owned();
+    let remote = is_web_address(&location);
     // A folder of exports or Postman's "Export data" zip: one project.
     let is_zip = file
         .extension()
         .is_some_and(|e| e.eq_ignore_ascii_case("zip"));
-    if file.is_dir() || is_zip {
+    if !remote && (file.is_dir() || is_zip) {
         let found = postman_dump::scan(file)?;
         if found.is_empty() {
             bail!(
@@ -913,25 +945,39 @@ fn import(style: &Style, file: &Path, out: Option<PathBuf>, into: Option<PathBuf
         return Ok(true);
     }
 
-    let json =
-        std::fs::read_to_string(file).with_context(|| format!("reading {}", file.display()))?;
+    let shown = apix_core::display_url(&location);
+    let json = fetch_text(client, &location)
+        .await
+        .map_err(|e| anyhow::anyhow!("reading {shown}: {e}"))?;
     let format = apix_import::detect(&json)?.with_context(|| {
         format!(
-            "{} is not an export Apix reads (Postman, Insomnia v4, OpenAPI/Swagger, HAR)",
-            file.display()
+            "{shown} is not an export Apix reads (Postman, Insomnia v4, OpenAPI/Swagger, HAR, WSDL)"
         )
     })?;
     let kind = match format {
         apix_import::Format::Postman(kind) => kind,
         other => {
-            let name = postman_dump::project_name(file);
-            let found =
-                apix_import::convert_named(&json, &name)?.expect("detected formats always convert");
+            let name = if remote {
+                apix_import::location_name(&location)
+            } else {
+                postman_dump::project_name(file)
+            };
+            let found = if other == apix_import::Format::Wsdl {
+                // A WSDL's imports are read too, from where it points.
+                let mut loader = apix_import::wsdl::Loader::new(&location, &json);
+                while let Some(next) = loader.next_location() {
+                    let read = fetch_text(client, &next).await;
+                    loader.add(next, read);
+                }
+                apix_import::wsdl::convert(&json, &loader)?
+            } else {
+                apix_import::convert_named(&json, &name)?.expect("detected formats always convert")
+            };
             let written = found.write(&out.unwrap_or_else(|| PathBuf::from(".")), &name)?;
             println!(
                 "Imported {} from {}: {} collections, {} requests, {} environments.",
                 other.label(),
-                file.display(),
+                shown,
                 written.collections,
                 written.requests,
                 written.environments

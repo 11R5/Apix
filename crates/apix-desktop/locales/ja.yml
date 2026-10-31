@@ -300,6 +300,8 @@ import.project_in: 作成先…
 import.project_summary: "コレクション %{collections} 件、リクエスト %{requests} 件、環境 %{environments} 件を %{name} に作成しました。"
 import.prompt: Postman、Insomnia、OpenAPI、HAR ファイルをインポート
 import.unknown_format: "%{path} は Apix が読めるエクスポートではありません（Postman、Insomnia v4、OpenAPI/Swagger、HAR）。"
+import.url_ok: インポート
+import.url_title: URL からインポート
 menu.active_environment: アクティブな環境
 menu.cancel: キャンセル
 menu.close_tab: タブを閉じる
@@ -318,7 +320,8 @@ menu.group_collection: コレクション
 menu.group_environment: 環境
 menu.help: ヘルプ
 menu.history: 履歴…
-menu.import_postman: インポート（Postman、Insomnia、OpenAPI、HAR）…
+menu.import_postman: インポート（Postman、Insomnia、OpenAPI、HAR、WSDL）…
+menu.import_url: URL からインポート…
 menu.lock_collections: 暗号化されたコレクションをロック
 menu.method: メソッド
 menu.move_into_project: プロジェクトに移動…
@@ -630,6 +633,8 @@ sio.path: パス
 sio.send_hint: "Ctrl+Enter で送信。JSON は 1 つの引数、それ以外のテキストは文字列"
 sio.unreadable: "読めないフレーム: %{text}"
 sio.wants_ack: "ack %{id} を待っています"
+soap.fault: "SOAP フォールト: %{fault}"
+soap.template_hint: "SOAP エンベロープを開始:"
 stream.all_types: すべて %{count}
 stream.count: "%{count} 件のイベント"
 stream.dropped_reconnecting: 接続が切れました (%{error})。%{seconds} 秒後に再接続します

@@ -79,13 +79,17 @@ pub struct Exchange {
 
 impl Exchange {
     /// Whether this request counts as passed: no script error, no failed
-    /// test, and, for requests without tests, a successful status.
+    /// test, and, for requests without tests, a successful status and no SOAP
+    /// fault (some servers answer one with 200).
     pub fn passed(&self) -> bool {
         let scripts_ok = self.pre.error.is_none()
             && self.tests.error.is_none()
             && self.tests.failed_tests() == 0;
-        let status_ok =
-            !self.tests.tests.is_empty() || self.response.as_ref().is_none_or(Response::is_success);
+        let status_ok = !self.tests.tests.is_empty()
+            || self
+                .response
+                .as_ref()
+                .is_none_or(|r| r.is_success() && r.soap_fault().is_none());
         scripts_ok && status_ok && (self.response.is_some() || self.pre.skip_request)
     }
 
@@ -110,7 +114,10 @@ impl Exchange {
             size: response.map_or(0, |r| r.body.len() as u64),
             tests: self.tests.tests.clone(),
             logs,
-            error: None,
+            error: (!self.passed())
+                .then(|| response.and_then(Response::soap_fault))
+                .flatten()
+                .map(|fault| format!("SOAP Fault: {fault}")),
             pre_error: self.pre.error.clone(),
             test_error: self.tests.error.clone(),
             skipped: self.pre.skip_request,

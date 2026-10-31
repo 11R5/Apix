@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:9143a3a8eaeaa913 -->
+<!-- translated from en/user-guide.md sha256:fd87823f517ebf46 -->
 
 # Apix kullanım kılavuzu
 
@@ -27,6 +27,7 @@ veya CI'da çalıştırır.
 - [WebSocket ve sunucu olayları (SSE)](#websocket-ve-sunucu-olayları-sse)
 - [Socket.IO](#socketio)
 - [MQTT](#mqtt)
+- [SOAP](#soap)
 - [gRPC](#grpc)
 - [Scriptler ve testler](#scriptler-ve-testler)
 - [Runner](#runner)
@@ -426,6 +427,42 @@ bağlantıyı keserse çıkış kodu
 1'dir. `apix run` MQTT isteklerini atlar. Henüz yok: MQTT 5, son vasiyet (last
 will) ve WebSocket üzerinden MQTT.
 
+## SOAP
+
+SOAP çağrısı POST ile gönderilen bir XML zarfıdır; bu yüzden SOAP isteği normal
+bir istektir: scriptler, testler, koşular ve geçmiş diğerlerindeki gibi çalışır.
+
+**WSDL'den.** WSDL 1.1 dosyasını **Dosya › İçe aktar…** ile, adresini
+**Dosya › URL'den içe aktar…** ile (`http://host/servis?wsdl`) içe aktarın. Her
+işlem için bir istek içeren bir koleksiyon oluşur; birden çok port varsa
+(genellikle SOAP 1.1 ve 1.2 için birer tane) port başına bir klasör açılır.
+Portun adresi `baseUrl` değişkenidir (adresler farklıysa port başına bir
+değişken); WSDL'in içe aktardığı belgeler de okunur. Okunamayanlar ve SOAP
+olmayan portlar içe aktarma bitince listelenir.
+
+![WSDL'den üretilmiş bir SOAP isteği ve sunucunun döndürdüğü hata](images/soap.png)
+
+- **Başlıklar** sürüme uyar: SOAP 1.1 `Content-Type: text/xml` ve `SOAPAction`
+  gönderir; SOAP 1.2 `application/soap+xml` ile işlemi onun içinde gönderir.
+- **Gövde**, şemadan üretilmiş örnek değerli bir zarftır: sayılar için `1`, metin
+  için `string`, enum'un ilk değeri, `choice`'un ilk seçeneği. Yorumlar neyin
+  opsiyonel olduğunu ya da tekrarlandığını ve diğer değerleri söyler. Opsiyonel
+  nitelikler yazılmaz. Değerleri değiştirin ya da `{{değişkenler}}` koyun,
+  gerekmeyenleri silin.
+- Kendini içeren bir tip ikinci seviyede, bir yorumla kesilir.
+
+**WSDL olmadan.** Gövde olarak **XML** seçin; gövde boşken yanındaki **SOAP 1.1**
+ve **SOAP 1.2** bir zarf başlatır ve başlıkları koyar. İşlemi ve eylemi
+(`SOAPAction` ya da `Content-Type` içindeki `action=`) doldurun.
+
+**Hatalar (fault).** Yanıtta SOAP hatası varsa yanıtın üstündeki kırmızı satır
+kodunu ve mesajını gösterir, `apix send` de yazar. Bazı sunucular hatayı 200 ile
+gönderdiği için, testi olmayan istek durum 200 olsa da `apix send`, `apix run`
+ve Runner'da başarısız sayılır. Test scriptleri kendisi karar verir.
+
+Henüz yok: WSDL 2.0 (bu nedenle reddedilir), WS-Security, MTOM ekleri ve SOAP
+encoding örneklerinde `xsi:type` (içe aktarma bunun için uyarır).
+
 ## gRPC
 
 Adresi `grpc://` (TLS için `grpcs://`) ile başlayan istek bir gRPC metodunu
@@ -705,6 +742,7 @@ içerikten tanınır, bir klasör ya da zip bunları karışık içerebilir:
 |---|---|
 | Insomnia v4 (JSON dışa aktarım) | Her çalışma alanı için bir koleksiyon, auth'larıyla klasörler, koleksiyon değişkeni olarak temel ortam ve ortam olarak her alt ortam. `{{ _.ad }}`, `{{ad}}` olur. |
 | OpenAPI 3 / Swagger 2 (JSON veya YAML) | Her işlem için bir istek, her etiket için bir klasör. Sunucu `baseUrl` değişkeni olur (birden fazla sunucu varsa her biri bir ortam), yol parametreleri örnek değerleriyle değişken olur, zorunlu sorgu ve başlık parametreleri açık gelir, gövdeler örneklerden alınır ya da şemadan üretilir, güvenlik tanımları da bir ortamda doldurulacak boş kimlik değişkenleriyle (`bearerToken`, `apiKey`, …) auth'a dönüşür. |
+| WSDL 1.1 | İşlem başına örnek zarflı bir istek; bkz. [SOAP](#soap). |
 | HAR (tarayıcı geliştirici araçlarında "Save all as HAR") | Yalnızca API çağrıları, ana makine başına bir klasör. Betikler, stiller, resimler ve fontlar, `data:` adresleri ve tekrarlar alınmaz; tarayıcının oturumunu taşıdığı için `Cookie` başlıkları da alınmaz. |
 
 Tek dosyadan tek koleksiyon çıkarsa koleksiyon olarak, birden fazlası proje

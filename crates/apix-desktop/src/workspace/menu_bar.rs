@@ -103,6 +103,7 @@ impl MenuState {
             );
         }
         menu = menu.menu(tr!("menu.import_postman"), Box::new(ImportFile));
+        menu = menu.menu(tr!("menu.import_url"), Box::new(ImportUrl));
         if self.open {
             menu = menu.item(self.item(
                 tr!("menu.export_postman"),

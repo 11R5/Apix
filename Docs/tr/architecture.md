@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:7e71d2adc1852004 -->
+<!-- translated from en/architecture.md sha256:ee911c38d6a81a05 -->
 
 # Apix mimarisi
 
@@ -34,7 +34,7 @@ crates/
 ├── apix-http     HTTP motoru: reqwest + rustls, zamanlamalar, yanıt yakalama, ağ izi,
 │                 sunucu olayları (SSE), WebSocket (tokio-tungstenite), Socket.IO, GraphQL şeması çekme
 │                 (DNS, bağlantı kurulumu, yönlendirmeler, sertifika, yerel ağ arayüzü)
-├── apix-import   Postman v2.0/v2.1 koleksiyonları ve ortamları → Apix koleksiyonları
+├── apix-import   Postman, Insomnia, OpenAPI, HAR ve WSDL → Apix koleksiyonları
 ├── apix-codegen  istekler ↔ kabuk komutları: curl (bash), curl.exe (cmd), PowerShell; yapıştırılan curl'ü ayrıştırır; 10 dilde kod
 ├── apix-vault    şifreli koleksiyonlar: dosya başına XChaCha20-Poly1305, Argon2id, kurtarma anahtarı
 ├── apix-script   istek öncesi ve test scriptleri: pm.* uyumlu API ile QuickJS
@@ -471,6 +471,29 @@ aynı döngüyle izler ve `MqttEvent`'leri konu etiketli günlük satırlarına 
 `apix-proto/tests/common/broker.rs` içindeki test broker'ı (joker konular, QoS
 0–2, retained mesajlar, retler, herhangi bir akış üzerinden TLS) aynı zamanda
 `mqtt_broker` örneğidir (:8772).
+
+## SOAP (M6)
+
+SOAP yeni bir istek türü eklemez: `apix_import::wsdl` WSDL 1.1'i XML gövdeli
+normal POST isteklerine çevirir, böylece istek üzerinde çalışan her şey bunlarda
+da çalışır. `apix_core::soap` sürümlerin farklı olduğu şeyleri (başlıklar, zarf)
+tutar ve hataları okur; `Response::soap_fault` bunu XML yanıtlara uygular, koşucu
+da testi olmayan isteği durumu ne olursa olsun bu hatada başarısız sayar.
+
+İçe aktarıcı hiçbir şey indirmez. `Loader`, `wsdl:import`, `xsd:import` ve
+`xsd:include` zincirini izler: sıradaki konumu söyler ve metni geri alır; CLI ve
+masaüstü uygulaması dosyayı ve ağı kendi yollarıyla okur. Konumlar kendi
+belgelerine göre çözülür, ağdan gelen belge yerel dosyaya yönlendiremez, okuma 64
+belgede durur. `Model` ardından tüm belgelerden mesajları, port tiplerini,
+bağlamaları, portları ve şema öğelerini ad alanı ve adla toplar. `Writer` XSD
+düğümlerinden örnekleri üretir (roxmltree düğümleri tutar ve `önek:ad`'ı düğümün
+kendi bildirimlerine göre çözer) ve her öğenin nitelikli olup olmadığına `form`,
+`elementFormDefault` ve genel olup olmamasına göre karar verir. Kullandığı ad
+alanları zarfa yazılır. Adlı tiplerin yığını özyinelemeyi durdurur.
+
+Uygulama ve CLI'daki URL içe aktarma metni okur, sonra dosyayla aynı yolu izler;
+bu yüzden her biçimde çalışır. `apix-import/tests/fixtures/` içindeki test
+WSDL'leri `soap_server` örneğini de besler (:8773).
 
 ## GraphQL şemaları (M6)
 

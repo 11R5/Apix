@@ -33,7 +33,7 @@ use super::drag::{DraggedNode, Kind as DragKind, draggable};
 use super::{Workspace, describe, key_hint};
 use crate::bidi::{self, Bidi as _, DialogBidi as _};
 use crate::theme;
-use crate::{tr, tr_plain};
+use crate::{net, tr, tr_plain};
 
 /// Keeps the folder watcher alive; dropping it stops watching.
 pub(super) struct Watcher {
@@ -1111,12 +1111,78 @@ impl Workspace {
                 return;
             }
         };
+        let base = file.to_string_lossy().into_owned();
+        self.import_text(file, base, json, window, cx);
+    }
+
+    /// Asks for an address and imports what is there.
+    pub(super) fn prompt_import_url(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        self.prompt_name(
+            tr!("import.url_title"),
+            String::new(),
+            tr!("import.url_ok"),
+            window,
+            cx,
+            |this, url, window, cx| this.import_url(url, window, cx),
+        );
+    }
+
+    fn import_url(&mut self, url: String, window: &mut Window, cx: &mut Context<Self>) {
+        let url = url.trim().to_owned();
+        let fetching = net::spawn(net::fetch_text(url.clone()));
+        cx.spawn_in(window, async move |this, cx| {
+            let text = fetching.await.and_then(|read| read);
+            this.update_in(cx, |this, window, cx| match text {
+                Ok(text) => {
+                    let name = apix_import::location_name(&url);
+                    this.import_text(PathBuf::from(name), url.clone(), text, window, cx)
+                }
+                Err(e) => {
+                    let shown = apix_core::display_url(&url);
+                    this.notify_error(format!("{shown}: {e}"), window, cx)
+                }
+            })
+            .ok();
+        })
+        .detach();
+    }
+
+    /// Imports a document read from `base` (a path or an address), named
+    /// after `file`.
+    fn import_text(
+        &mut self,
+        file: PathBuf,
+        base: String,
+        json: String,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         match apix_import::detect(&json) {
             Ok(Some(Format::Postman(Kind::Collection))) => {
                 self.import_collection(&json, window, cx)
             }
             Ok(Some(Format::Postman(Kind::Environment | Kind::Globals))) => {
                 self.import_environment(&json, window, cx)
+            }
+            // A WSDL's imports are read first, from where it points.
+            Ok(Some(Format::Wsdl)) => {
+                let loading = net::spawn(async move {
+                    let mut loader = apix_import::wsdl::Loader::new(&base, &json);
+                    while let Some(next) = loader.next_location() {
+                        let read = net::fetch_text(next.clone()).await;
+                        loader.add(next, read);
+                    }
+                    apix_import::wsdl::convert(&json, &loader).map_err(|e| e.to_string())
+                });
+                cx.spawn_in(window, async move |this, cx| {
+                    let found = loading.await.and_then(|found| found);
+                    this.update_in(cx, |this, window, cx| match found {
+                        Ok(found) => this.write_dump(file, Rc::new(found), true, window, cx),
+                        Err(e) => this.notify_error(e, window, cx),
+                    })
+                    .ok();
+                })
+                .detach();
             }
             // Insomnia, OpenAPI, HAR: a collection, or a project when there are several.
             Ok(Some(_)) => {

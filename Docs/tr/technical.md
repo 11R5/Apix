@@ -1,4 +1,4 @@
-<!-- translated from en/technical.md sha256:bd3a94a49dafb490 -->
+<!-- translated from en/technical.md sha256:9a2ff38f0ba97b7c -->
 
 # Teknik notlar
 
@@ -11,7 +11,7 @@ Apix'in nasıl derlendiği, nelere bağımlı olduğu ve nasıl ölçüleceği.
 crates/
 ├── apix-core       istek modeli, değişkenler, disk formatı, projeler, imzalama (sign.rs), GraphQL şemaları
 ├── apix-http       HTTP motoru (reqwest), ağ izi, OAuth 2.0 token'ları, SSE, WebSocket, Socket.IO, GraphQL şeması çekme
-├── apix-import     Postman koleksiyonu ve ortamı içe aktarma
+├── apix-import     Postman, Insomnia, OpenAPI, HAR ve WSDL içe aktarma
 ├── apix-codegen    "Komut veya kod olarak kopyala" (curl, curl.exe, PowerShell, 10 dilde kod) ve curl yapıştırma
 ├── apix-vault      şifreli koleksiyonlar
 ├── apix-script     istek öncesi ve test scriptleri (QuickJS)
@@ -136,6 +136,7 @@ cargo run -p apix-http --example ws_server                          # :8768 üze
 cargo run -p apix-http --example graphql_server                     # :8769 üzerinde bir GraphQL uç noktası (şema ve birkaç kullanıcı)
 cargo run -p apix-http --example socketio_server                    # :8771 üzerinde Socket.IO 4: /, /chat, /ticker, /private (auth) ad alanları
 cargo run -p apix-grpc --example grpc_server                        # :8770 üzerinde reflection'lı bir gRPC Greeter
+cargo run -p apix-http --example soap_server                        # :8773 üzerinde bir SOAP hesap makinesi (WSDL ?wsdl adresinde; 500 ve 200 ile hatalar)
 cargo run -p apix-proto --example mqtt_broker                       # :8772 üzerinde bir MQTT broker'ı (`clock` her saniye yayın yapar)
 ```
 
@@ -194,7 +195,7 @@ alır; yeni bir commit yeniden derler, değişmeyen kaynak öncekini kullanır.
 | apix-grpc | adresler, durum kodları, metadata olarak başlıklar ve yetkilendirme; yerel bir Greeter'a karşı (dinamik mesajlarla kurulmuş, reflection'lı ve reflection'sız): servisi listeleme ve tanımlama, dört metot türünün hepsi, yetkilendirmenin sunucuya ulaşması, başarısız bir durum, import'lu .proto dosyaları ve tanım yokken, bilinmeyen metotta, türüne uymayan mesajda, tekli metoda liste verilince, eksik dosyada ve sunucu yokken verilen hatalar; örnek mesajlar; koşular için HTTP yanıtı olarak çağrı (durum eşlemesi, `grpc-status`, liste olarak akış); kendi sertifika yetkilisinden sertifikalı bir sunucuya karşı TLS (reddedilir, CA ile güvenilir, denetlenmeden kabul edilir) |
 | apix-proto | MQTT adresleri, girişler ve seçenekler; yerel bir broker'a karşı: her QoS, joker konular, bağlıyken abone olma ve bırakma, reddedilen abonelikler ve geçersiz konular, retained mesajlar, girişler ve saklanan oturumlar, broker'ın bağlantıyı kesmesi, kendi CA'sıyla ya da denetimsiz `mqtts://` |
 | apix-codegen | bash, cmd ve PowerShell için kabuk tırnaklama; curl yapıştırma; gidiş-dönüş testleri; her dilde URL, başlıklar, gövdeler, dize kaçışları ve ayarlar |
-| apix-import | Postman v2.0/v2.1 fixture'ları |
+| apix-import | Postman v2.0/v2.1 fixture'ları; WSDL: iki SOAP sürümü, portlar ve adresler, document ve rpc stilleri, başlıklar, şemadan örnekler (extension, enum, choice, `form`, özyineleme), içe aktarılanlar ve okunamayanlar, konumlar, reddedilen WSDL 2.0 |
 | apix-script | istek öncesi scriptlerden değişken ve istek değişiklikleri, `pm.test` / `pm.expect` sonuçları ve mesajları, eski `tests[...]` API'si, dosyayı adlandıran hatalar, sonsuz scriptlerin durdurulması, `setNextRequest`, `atob`/`btoa`, `pm.sendRequest` (geri çağırma ve `await`, bekleme sayılmaz), bilinen özet değerlerine karşı hazır kütüphaneler, kodsuz doğrulamalar, yanıt hedefleri için değer ve ifade üretimi |
 | apix-runner | CSV (tırnaklar, satır sonları, `;`, BOM) ve JSON veri dosyaları, dotenv dosyaları ve `APIX_VAR_*` adları, tekrar sayıları ve veri satırları, duraklatma/durdurma zamanlaması, JUnit/JSON/HTML çıktısı ve kaçışlar, tarihler; yerel bir sunucuya karşı bütün koşular (veri satırları, kenar çubuğu sırası, `bail`, `setNextRequest`) |
 | apix-vault | şifreleme formatı, kurcalama (tampering), parola değişikliği, kurtarma anahtarı, anahtarlık kayıtları (gerçek kimlik bilgisi deposunda, test servis adıyla; depo yoksa atlanır) |

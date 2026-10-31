@@ -12,6 +12,8 @@ serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
 toml.workspace = true
+# Reads SOAP faults in responses.
+roxmltree = "0.21"
 # Request signing (AWS SigV4, OAuth 1.0, Digest, PKCE). Already built for other crates, except sha1.
 base64 = "0.22"
 hmac = "0.12"

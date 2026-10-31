@@ -12,6 +12,7 @@ pub mod openapi;
 pub mod postman;
 pub mod postman_dump;
 pub mod postman_export;
+pub mod wsdl;
 
 pub use bundle::{Found, Written};
 
@@ -22,6 +23,7 @@ pub enum Format {
     Insomnia,
     OpenApi,
     Har,
+    Wsdl,
 }
 
 impl Format {
@@ -33,6 +35,7 @@ impl Format {
             Format::Insomnia => "Insomnia",
             Format::OpenApi => "OpenAPI",
             Format::Har => "HAR",
+            Format::Wsdl => "WSDL",
         }
     }
 }
@@ -40,6 +43,9 @@ impl Format {
 /// Which export `text` is, or `None` for anything else. A Postman v1
 /// collection is an error with advice, not `None`.
 pub fn detect(text: &str) -> Result<Option<Format>, ImportError> {
+    if wsdl::is_wsdl(text) {
+        return Ok(Some(Format::Wsdl));
+    }
     let Some(value) = openapi::parse(text) else {
         return Ok(None);
     };
@@ -86,8 +92,29 @@ pub fn convert_named(text: &str, name: &str) -> Result<Option<Found>, ImportErro
         Format::Insomnia => insomnia::convert(text)?,
         Format::OpenApi => openapi::convert(text)?,
         Format::Har => har::convert(text, name)?,
+        // Without its imports; see [`wsdl::Loader`] to follow them.
+        Format::Wsdl => wsdl::convert(text, &wsdl::Loader::default())?,
     };
     Ok(Some(found))
+}
+
+/// A name for something imported from this address: its last path segment
+/// without an extension, or the host.
+pub fn location_name(location: &str) -> String {
+    let address = location.split(['?', '#']).next().unwrap_or(location);
+    let rest = address.split_once("://").map_or(address, |(_, rest)| rest);
+    let name = match rest.trim_end_matches('/').rsplit_once('/') {
+        Some((_, last)) => last.rsplit_once('.').map_or(last, |(stem, _)| stem),
+        None => {
+            let host = rest.rsplit('@').next().unwrap_or(rest);
+            host.split(':').next().unwrap_or(host).trim_end_matches('/')
+        }
+    };
+    if name.is_empty() {
+        "Import".to_owned()
+    } else {
+        name.to_owned()
+    }
 }
 
 /// [`convert_named`] without a name.
@@ -372,6 +399,19 @@ mod tests {
             "two collections make a project"
         );
         fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn names_of_addresses() {
+        for (location, name) in [
+            ("http://h:1/soap/calc.asmx?WSDL", "calc"),
+            ("https://h/api/spec.yaml", "spec"),
+            ("https://h/service/", "service"),
+            ("https://ann:pw@api.example.com:8443", "api.example.com"),
+            ("https://h/", "h"),
+        ] {
+            assert_eq!(location_name(location), name);
+        }
     }
 
     #[test]

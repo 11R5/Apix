@@ -10,6 +10,7 @@ pub mod project;
 pub mod scripts;
 pub mod secrets;
 pub mod sign;
+pub mod soap;
 pub mod store;
 pub mod text;
 pub mod vars;

@@ -176,6 +176,53 @@ fn bail_stops_at_the_first_failure() {
 }
 
 #[test]
+fn a_soap_fault_fails_even_with_status_200() {
+    // Answers any request with a SOAP fault and 200.
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    let addr = listener.local_addr().unwrap();
+    std::thread::spawn(move || {
+        let fault = r#"<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body><s:Fault><faultcode>s:Server</faultcode><faultstring>Closed</faultstring></s:Fault></s:Body></s:Envelope>"#;
+        for mut stream in listener.incoming().flatten() {
+            let mut reader = BufReader::new(stream.try_clone().unwrap());
+            let mut line = String::new();
+            while reader.read_line(&mut line).unwrap() > 0 && line.trim() != "" {
+                line.clear();
+            }
+            write!(
+                stream,
+                "HTTP/1.1 200 OK\r\nContent-Type: text/xml\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{fault}",
+                fault.len()
+            )
+            .unwrap();
+        }
+    });
+    let root = collection("fault", &format!("http://{addr}"));
+    let scope = Scope::find(&root).unwrap();
+    let mut plan = plan(&root, &scope);
+    plan.data = data::parse_csv("id\n7\n").unwrap();
+    // The request without tests: its test script would decide otherwise.
+    plan.requests.retain(|p| p.ends_with("z-fail.apix"));
+    let rt = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap();
+    let client = HttpClient::new().unwrap();
+    let report = rt.block_on(apix_runner::run(
+        &scope,
+        &plan,
+        &client,
+        sender(),
+        &Control::default(),
+        |_| {},
+    ));
+    let item = &report.items[0];
+    assert_eq!(item.status, Some(200));
+    assert!(!item.passed, "{item:?}");
+    assert_eq!(item.error.as_deref(), Some("SOAP Fault: s:Server: Closed"));
+    assert!(report.to_junit().contains("SOAP Fault: s:Server: Closed"));
+}
+
+#[test]
 fn passwords_in_urls_stay_out_of_reports() {
     let rt = tokio::runtime::Builder::new_current_thread()
         .enable_all()

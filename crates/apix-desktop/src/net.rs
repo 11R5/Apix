@@ -36,6 +36,19 @@ fn net() -> &'static Net {
     })
 }
 
+/// A document from the web, or a local file (runs on the network runtime).
+pub async fn fetch_text(location: String) -> Result<String, String> {
+    let lower = location.to_ascii_lowercase();
+    if !lower.starts_with("http://") && !lower.starts_with("https://") {
+        return std::fs::read_to_string(&location).map_err(|e| e.to_string());
+    }
+    let response = send(Request::new(apix_core::Method::Get, location)).await?;
+    if !response.is_success() {
+        return Err(format!("HTTP {}", response.status));
+    }
+    Ok(String::from_utf8_lossy(&response.body).into_owned())
+}
+
 /// The shared client, for the cookie manager.
 pub fn client() -> &'static HttpClient {
     &net().client

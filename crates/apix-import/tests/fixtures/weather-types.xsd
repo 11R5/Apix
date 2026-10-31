@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    targetNamespace="urn:apix:types" xmlns:t="urn:apix:types" elementFormDefault="qualified">
+  <xs:complexType name="Place">
+    <xs:sequence>
+      <xs:element name="lat" type="xs:double"/>
+      <xs:element ref="t:Country"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="Country" type="xs:string"/>
+</xs:schema>

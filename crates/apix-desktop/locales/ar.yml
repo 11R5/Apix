@@ -300,6 +300,8 @@ import.project_in: أنشئه في…
 import.project_summary: "أصبحت %{collections} مجموعة و%{requests} طلبًا و%{environments} بيئة في %{name}."
 import.prompt: استيراد ملف Postman أو Insomnia أو OpenAPI أو HAR
 import.unknown_format: "%{path} ليس تصديرًا يقرؤه Apix (Postman وInsomnia v4 وOpenAPI/Swagger وHAR)."
+import.url_ok: استيراد
+import.url_title: استيراد من عنوان URL
 menu.active_environment: البيئة النشطة
 menu.cancel: إلغاء
 menu.close_tab: إغلاق علامة التبويب
@@ -318,7 +320,8 @@ menu.group_collection: المجموعة
 menu.group_environment: البيئة
 menu.help: تعليمات
 menu.history: السجل…
-menu.import_postman: استيراد (Postman وInsomnia وOpenAPI وHAR)…
+menu.import_postman: استيراد (Postman وInsomnia وOpenAPI وHAR وWSDL)…
+menu.import_url: استيراد من عنوان URL…
 menu.lock_collections: قفل المجموعات المشفّرة
 menu.method: الطريقة
 menu.move_into_project: نقل إلى مشروع…
@@ -630,6 +633,8 @@ sio.path: المسار
 sio.send_hint: "Ctrl+Enter للإرسال؛ JSON وسيط واحد، وأي نص آخر سلسلة"
 sio.unreadable: "إطار غير مقروء: %{text}"
 sio.wants_ack: "ينتظر ack %{id}"
+soap.fault: "خطأ SOAP: %{fault}"
+soap.template_hint: "بدء مظروف SOAP:"
 stream.all_types: الكل %{count}
 stream.count: "%{count} أحداث"
 stream.dropped_reconnecting: انقطع الاتصال (%{error})؛ إعادة الاتصال بعد %{seconds} ث

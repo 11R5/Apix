@@ -32,7 +32,7 @@ crates/
 ├── apix-http     HTTP engine: reqwest + rustls, timings, response capture, network trace,
 │                 server-sent events, WebSocket (tokio-tungstenite), Socket.IO, GraphQL schema fetch
 │                 (DNS, connection setup, redirects, certificate, local interface)
-├── apix-import   Postman v2.0/v2.1 collections and environments → Apix collections
+├── apix-import   Postman, Insomnia, OpenAPI, HAR and WSDL → Apix collections
 ├── apix-codegen  requests ↔ shell commands: curl (bash), curl.exe (cmd), PowerShell; parses pasted curl; code in 10 languages
 ├── apix-vault    encrypted collections: per-file XChaCha20-Poly1305, Argon2id, recovery key
 ├── apix-script   pre-request and test scripts: QuickJS with a pm.*-compatible API
@@ -447,6 +447,30 @@ loop as WebSocket and Socket.IO, turning `MqttEvent`s into log lines by topic.
 The test broker in `apix-proto/tests/common/broker.rs` (wildcards, QoS 0–2,
 retained messages, refusals, TLS through any stream) is also the `mqtt_broker`
 example (:8772).
+
+## SOAP (M6)
+
+SOAP adds no kind of request: `apix_import::wsdl` turns a WSDL 1.1 into ordinary
+POST requests with XML bodies, so everything that works on a request works on
+them. `apix_core::soap` holds what the versions differ in (headers, envelope)
+and reads faults; `Response::soap_fault` applies it to XML answers, and the
+runner fails a request without tests on one, whatever its status.
+
+The importer fetches nothing. `Loader` walks `wsdl:import`, `xsd:import` and
+`xsd:include`: it says which location to read next and takes the text back, so
+the CLI and the desktop app read files and the network each in their own way.
+Locations resolve against their document, a document from the network cannot
+point at local files, and a read stops at 64 documents. `Model` then gathers
+messages, port types, bindings, ports and schema globals from all documents,
+keyed by namespace and name. `Writer` builds examples from the XSD nodes
+(roxmltree keeps them, and resolves `prefix:name` against the node's own
+declarations), and decides for each element whether it is qualified from
+`form`, `elementFormDefault` and being global. Namespaces it uses go on the
+envelope. A stack of the named types being written stops recursion.
+
+The URL import in the app and the CLI reads the text, then takes the same paths
+as a file, so it serves every format. The test WSDLs in
+`apix-import/tests/fixtures/` also drive the `soap_server` example (:8773).
 
 ## GraphQL schemas (M6)
 
