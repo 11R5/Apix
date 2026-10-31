@@ -12,6 +12,7 @@ use std::time::{Duration, Instant};
 use apix_http::human_duration;
 use apix_http::socketio::{SioCommand, SioEvent, SioMessage};
 use apix_http::ws::{WsCommand, WsData, WsEvent};
+use apix_proto::mqtt::{MqttCommand, MqttEvent, MqttMessage};
 use gpui_kit::component::button::{Button, ButtonVariants as _};
 use gpui_kit::component::spinner::Spinner;
 use gpui_kit::component::{ActiveTheme as _, IconName, Sizable, h_flex, v_flex};
@@ -51,6 +52,18 @@ pub(super) enum Entry {
         id: u64,
         args: SharedString,
     },
+    /// A MQTT message, published or received.
+    Topic {
+        sent: bool,
+        topic: String,
+        payload: SharedString,
+        qos: u8,
+        retain: bool,
+    },
+    /// The broker confirmed a MQTT message.
+    Delivered {
+        topic: String,
+    },
     /// Connected, closed, or an error, in words.
     Note(SharedString),
 }
@@ -58,12 +71,14 @@ pub(super) enum Entry {
 enum Outgoing {
     Ws(WsCommand),
     Sio(SioCommand),
+    Mqtt(MqttCommand),
 }
 
 /// Where the user's messages go.
 enum Commands {
     Ws(UnboundedSender<WsCommand>),
     Sio(UnboundedSender<SioCommand>),
+    Mqtt(UnboundedSender<MqttCommand>),
 }
 
 impl Commands {
@@ -71,6 +86,7 @@ impl Commands {
         self.send(match self {
             Commands::Ws(_) => Outgoing::Ws(WsCommand::Close),
             Commands::Sio(_) => Outgoing::Sio(SioCommand::Close),
+            Commands::Mqtt(_) => Outgoing::Mqtt(MqttCommand::Close),
         });
     }
 
@@ -81,6 +97,9 @@ impl Commands {
                 let _ = tx.send(command);
             }
             (Commands::Sio(tx), Outgoing::Sio(command)) => {
+                let _ = tx.send(command);
+            }
+            (Commands::Mqtt(tx), Outgoing::Mqtt(command)) => {
                 let _ = tx.send(command);
             }
             _ => {}
@@ -107,9 +126,14 @@ impl SocketSession {
 
     fn push(&mut self, at: Instant, entry: Entry) {
         match &entry {
-            Entry::Sent(_) | Entry::Event { sent: true, .. } => self.sent += 1,
-            Entry::Received(_) | Entry::Event { .. } | Entry::Acked { .. } => self.received += 1,
-            Entry::Note(_) => {}
+            Entry::Sent(_) | Entry::Event { sent: true, .. } | Entry::Topic { sent: true, .. } => {
+                self.sent += 1
+            }
+            Entry::Received(_)
+            | Entry::Event { .. }
+            | Entry::Topic { .. }
+            | Entry::Acked { .. } => self.received += 1,
+            Entry::Delivered { .. } | Entry::Note(_) => {}
         }
         self.log
             .push((at.saturating_duration_since(self.started), entry));
@@ -159,18 +183,67 @@ impl SocketSession {
             SioEvent::Error(message) => self.failed(at, message),
         }
     }
+
+    fn take_mqtt(&mut self, at: Instant, event: MqttEvent) {
+        let entry = |sent: bool, m: MqttMessage| Entry::Topic {
+            sent,
+            payload: payload_text(&m.payload),
+            topic: m.topic,
+            qos: m.qos,
+            retain: m.retain,
+        };
+        match event {
+            MqttEvent::Sent(m) => self.push(at, entry(true, m)),
+            MqttEvent::Received(m) => self.push(at, entry(false, m)),
+            MqttEvent::Delivered { topic } => self.push(at, Entry::Delivered { topic }),
+            MqttEvent::Subscribed { topic, qos } => {
+                let note = tr!("mqtt.subscribed", topic = topic, qos = qos);
+                self.push(at, Entry::Note(note))
+            }
+            MqttEvent::SubscribeRefused { topic } => {
+                self.push(at, Entry::Note(tr!("mqtt.sub_refused", topic = topic)))
+            }
+            MqttEvent::Unsubscribed { topic } => {
+                self.push(at, Entry::Note(tr!("mqtt.unsubscribed", topic = topic)))
+            }
+            MqttEvent::Rejected(reason) => {
+                self.push(at, Entry::Note(tr!("ws.error", error = reason)))
+            }
+            MqttEvent::Closed { by_broker } => {
+                let note = if by_broker {
+                    tr!("mqtt.closed_by_broker")
+                } else {
+                    tr!("ws.closed")
+                };
+                self.push(at, Entry::Note(note));
+                self.state = SocketState::Closed {
+                    code: None,
+                    reason: String::new(),
+                };
+            }
+            MqttEvent::Error(message) => self.failed(at, message),
+        }
+    }
 }
 
 impl Workspace {
-    /// Whether the request in front is a connection: a `ws://` or `wss://`
-    /// URL (variables filled in), or Socket.IO.
+    /// Whether the request in front is a connection: a `ws://`, `wss://`,
+    /// `mqtt://` or `mqtts://` URL (variables filled in), or Socket.IO.
     pub(super) fn websocket_mode(&self, cx: &App) -> bool {
-        if self.ws_editor.read(cx).is_socketio() {
+        if self.ws_editor.read(cx).is_socketio() || self.mqtt_mode(cx) {
             return true;
         }
         let url = self.url.read(cx).value().trim().to_string();
         let mut missing = Default::default();
         apix_http::ws::is_websocket_url(&self.vars.interpolate(&url, &mut missing))
+    }
+
+    /// Whether the URL in the editor (variables filled in) is `mqtt://` or `mqtts://`.
+    pub(super) fn mqtt_mode(&self, cx: &App) -> bool {
+        let url = self.url.read(cx).value().trim().to_string();
+        let mut missing = Default::default();
+        let url = self.vars.interpolate(&url, &mut missing);
+        apix_core::Request::new(apix_core::Method::Get, url).is_mqtt()
     }
 
     /// The open (or opening) connection of the request in front.
@@ -222,6 +295,26 @@ impl Workspace {
         );
     }
 
+    /// Connects a resolved MQTT request and follows the connection.
+    pub(super) fn connect_mqtt(
+        &mut self,
+        request: apix_core::Request,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let url = apix_proto::mqtt::display_url(&request.url);
+        let (incoming, commands, running) = net::mqtt_connect(request);
+        self.follow_socket(
+            url,
+            Commands::Mqtt(commands),
+            incoming,
+            Box::new(running),
+            SocketSession::take_mqtt,
+            window,
+            cx,
+        );
+    }
+
     /// Shows a new connection and takes what it reports every 60 ms until it is over.
     #[allow(clippy::too_many_arguments)]
     fn follow_socket<E: Send + 'static>(
@@ -253,11 +346,12 @@ impl Workspace {
                 cx.background_executor()
                     .timer(Duration::from_millis(60))
                     .await;
-                let (opened, joined, events, failed, done) = {
+                let (opened, joined, client, events, failed, done) = {
                     let mut incoming = incoming.lock().unwrap_or_else(|e| e.into_inner());
                     (
                         incoming.opened.take(),
                         incoming.joined.take(),
+                        incoming.client.take(),
                         std::mem::take(&mut incoming.events),
                         incoming.failed.take(),
                         incoming.done,
@@ -276,7 +370,8 @@ impl Workspace {
                     let mut s = session.borrow_mut();
                     let follow = at_bottom(&s.scroll);
                     if let Some((at, status, headers)) = opened {
-                        s.status = Some(status);
+                        // MQTT has no HTTP status to show.
+                        s.status = (status != 0).then_some(status);
                         s.state = SocketState::Open;
                         let note = tr!("ws.connected", url = s.url.clone());
                         s.push(at, Entry::Note(note));
@@ -290,6 +385,14 @@ impl Workspace {
                         }
                         if let Some((namespace, sid)) = joined {
                             let note = tr!("sio.joined", namespace = namespace, sid = sid);
+                            s.push(at, Entry::Note(note));
+                        }
+                        if let Some((id, session_present)) = client {
+                            let note = if session_present {
+                                tr!("mqtt.session_kept", id = id)
+                            } else {
+                                tr!("mqtt.session", id = id)
+                            };
                             s.push(at, Entry::Note(note));
                         }
                     }
@@ -347,13 +450,23 @@ impl Workspace {
         let mut missing = Default::default();
         let text = self.vars.interpolate(&message.body, &mut missing);
         let event = self.vars.interpolate(&message.event, &mut missing);
+        let topic = self.vars.interpolate(&message.topic, &mut missing);
         if !missing.is_empty() {
             let message = undefined_message(missing);
             self.notify_error(message, window, cx);
             return;
         }
         // Base64 and hex become bytes here, after the variables.
-        let command = if self.ws_editor.read(cx).is_socketio() {
+        let command = if self.mqtt_mode(cx) {
+            apix_proto::mqtt::payload_from_text(&text, message.format).map(|payload| {
+                Outgoing::Mqtt(MqttCommand::Publish(MqttMessage {
+                    topic,
+                    payload,
+                    qos: message.qos,
+                    retain: message.retain,
+                }))
+            })
+        } else if self.ws_editor.read(cx).is_socketio() {
             apix_http::socketio::args_from_text(&text, message.format).map(|args| {
                 let event = match event.trim() {
                     "" => "message".to_owned(),
@@ -380,6 +493,43 @@ impl Workspace {
         }
         if let Some(session) = self.live_socket() {
             session.borrow().commands.send(command);
+        }
+    }
+
+    /// Subscribes to a topic now; without a connection, connecting subscribes
+    /// to the request's list, which holds this one.
+    pub(super) fn subscribe_topic(
+        &mut self,
+        topic: &str,
+        qos: u8,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let mut missing = Default::default();
+        let topic = self.vars.interpolate(topic, &mut missing);
+        if !missing.is_empty() {
+            let message = undefined_message(missing);
+            self.notify_error(message, window, cx);
+            return;
+        }
+        match self.live_socket() {
+            Some(session) => session
+                .borrow()
+                .commands
+                .send(Outgoing::Mqtt(MqttCommand::Subscribe { topic, qos })),
+            None => self.send(window, cx),
+        }
+    }
+
+    /// Leaves a topic taken off the list, if connected.
+    pub(super) fn unsubscribe_topic(&mut self, topic: &str) {
+        if let Some(session) = self.live_socket() {
+            let mut missing = Default::default();
+            let topic = self.vars.interpolate(topic, &mut missing);
+            session
+                .borrow()
+                .commands
+                .send(Outgoing::Mqtt(MqttCommand::Unsubscribe { topic }));
         }
     }
 
@@ -429,10 +579,25 @@ impl Workspace {
                     }
                 }
                 Entry::Acked { args, .. } => ("✓", p.ok, args.clone()),
+                Entry::Topic { sent, payload, .. } => {
+                    if *sent {
+                        ("↑", p.accent, payload.clone())
+                    } else {
+                        ("↓", p.ok, payload.clone())
+                    }
+                }
+                Entry::Delivered { .. } => ("✓", p.ok, tr!("mqtt.delivered")),
                 Entry::Note(note) => ("•", p.text_muted, note.clone()),
             };
-            // The event name and ack in front of a Socket.IO line.
+            // A MQTT line's retain flag.
+            let retained = matches!(entry, Entry::Topic { retain: true, .. });
+            // The event name and ack, or the topic and QoS, in front of a line.
             let (name, ack): (Option<SharedString>, Option<SharedString>) = match entry {
+                Entry::Topic { topic, qos, .. } => (
+                    Some(topic.clone().into()),
+                    (*qos > 0).then(|| format!("QoS {qos}").into()),
+                ),
+                Entry::Delivered { topic } => (Some(topic.clone().into()), None),
                 Entry::Event {
                     sent, name, ack, ..
                 } => (
@@ -474,6 +639,7 @@ impl Workspace {
                 )
                 .children(name.map(|name| chip(name, color)))
                 .children(ack.map(|ack| chip(ack, p.text_muted)))
+                .when(retained, |d| d.child(chip("retain".into(), p.text_muted)))
                 .child(
                     div()
                         .flex_1()
@@ -557,6 +723,18 @@ fn show(data: &WsData) -> SharedString {
             "ws.bytes",
             count = bytes.len(),
             hex = apix_http::ws::hex_bytes(bytes)
+        ),
+    }
+}
+
+/// A MQTT payload: its text, or its size and first bytes.
+fn payload_text(payload: &[u8]) -> SharedString {
+    match std::str::from_utf8(payload) {
+        Ok(text) => text.to_owned().into(),
+        Err(_) => tr!(
+            "ws.bytes",
+            count = payload.len(),
+            hex = apix_http::ws::hex_bytes(payload)
         ),
     }
 }

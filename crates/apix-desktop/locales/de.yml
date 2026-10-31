@@ -344,6 +344,22 @@ menu.settings: Einstellungen…
 menu.source_code: Quellcode
 menu.variables: Variablen und Umgebungen…
 menu.view: Ansicht
+mqtt.client_id: Client-ID
+mqtt.client_id_placeholder: Für jede Verbindung neu
+mqtt.closed_by_broker: Der Broker hat die Verbindung geschlossen
+mqtt.delivered: zugestellt
+mqtt.keep_alive: Keep-Alive
+mqtt.keep_session: Sitzung behalten
+mqtt.retain: Retain
+mqtt.send_hint: "Strg+Enter veröffentlicht; {{Variablen}} werden ersetzt"
+mqtt.session: "Client-ID %{id}"
+mqtt.session_kept: "Client-ID %{id}; der Broker hatte die Sitzung noch"
+mqtt.sub_refused: "Der Broker hat das Abonnement von %{topic} abgelehnt"
+mqtt.subscribe: Jetzt abonnieren
+mqtt.subscribed: "%{topic} abonniert (QoS %{qos})"
+mqtt.subscriptions: Abonnements
+mqtt.topic: Topic
+mqtt.unsubscribed: "Abonnement von %{topic} beendet"
 network.cert.days_left: "Noch %{count} Tage"
 network.cert.engine_note: Die HTTP-Engine meldet das Zertifikat des Servers, nicht die TLS-Version oder die Cipher-Suite.
 network.cert.expired_days_ago: vor %{count} Tagen abgelaufen

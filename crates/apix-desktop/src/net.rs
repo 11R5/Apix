@@ -194,6 +194,8 @@ pub struct SocketIncoming<E = apix_http::ws::WsEvent> {
     pub opened: Option<Opened>,
     /// Socket.IO: the namespace joined and the socket id.
     pub joined: Option<(String, String)>,
+    /// MQTT: the client id and whether the broker still had its session.
+    pub client: Option<(String, bool)>,
     /// Messages and the closing, each with when it happened.
     pub events: Vec<(std::time::Instant, E)>,
     /// Why the connection could not be opened.
@@ -207,6 +209,7 @@ impl<E> Default for SocketIncoming<E> {
         Self {
             opened: None,
             joined: None,
+            client: None,
             events: Vec::new(),
             failed: None,
             done: false,
@@ -239,6 +242,41 @@ pub fn sio_connect(
                         connection.headers.clone(),
                     ));
                     incoming.joined = Some((connection.namespace.clone(), connection.sid.clone()));
+                }
+                connection
+                    .run(rx, |event| {
+                        lock().events.push((std::time::Instant::now(), event));
+                    })
+                    .await;
+            }
+        }
+        lock().done = true;
+        Ok(())
+    });
+    (incoming, tx, AbortOnDrop(handle))
+}
+
+/// Connects a resolved MQTT request on the network runtime, like [`ws_connect`].
+pub fn mqtt_connect(
+    request: Request,
+) -> (
+    std::sync::Arc<std::sync::Mutex<SocketIncoming<apix_proto::mqtt::MqttEvent>>>,
+    tokio::sync::mpsc::UnboundedSender<apix_proto::mqtt::MqttCommand>,
+    impl Drop + Send + 'static,
+) {
+    let incoming = std::sync::Arc::new(std::sync::Mutex::new(SocketIncoming::default()));
+    let shared = incoming.clone();
+    let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+    let handle = net().runtime.spawn(async move {
+        let lock = || shared.lock().unwrap_or_else(|e| e.into_inner());
+        match apix_proto::mqtt::connect(&request).await {
+            Err(e) => lock().failed = Some(error_chain(&e)),
+            Ok(connection) => {
+                {
+                    let mut incoming = lock();
+                    incoming.opened = Some((std::time::Instant::now(), 0, Vec::new()));
+                    incoming.client =
+                        Some((connection.client_id.clone(), connection.session_present));
                 }
                 connection
                     .run(rx, |event| {

@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:61baab8350114e6a -->
+<!-- translated from en/user-guide.md sha256:63f4174369ee0a4c -->
 
 # Apix kullanım kılavuzu
 
@@ -26,6 +26,7 @@ veya CI'da çalıştırır.
 - [Ağ sekmesi](#ağ-sekmesi)
 - [WebSocket ve sunucu olayları (SSE)](#websocket-ve-sunucu-olayları-sse)
 - [Socket.IO](#socketio)
+- [MQTT](#mqtt)
 - [gRPC](#grpc)
 - [Scriptler ve testler](#scriptler-ve-testler)
 - [Runner](#runner)
@@ -383,6 +384,47 @@ yayınlar (varsayılan `message`). `apix run` Socket.IO isteklerini atlar.
 Gelen ekler `{"$binary": "<base64>"}` olarak yazılır. Henüz yok: Socket.IO 2
 sunucuları (Engine.IO 3), long-polling taşıması ve sunucunun istediği ack'i
 yanıtlama.
+
+## MQTT
+
+Adresi `mqtt://` (TLS için `mqtts://`) ile başlayan istek bir MQTT 3.1.1
+broker'ına bağlanır: URL çubuğu ve kenar çubuğu **MQTT** gösterir, **Gönder**
+**Bağlan** olur, Gövde sekmesi de **Mesajlar** olur. URL port belirtmezse port
+1883, TLS'te 8883'tür.
+
+![Bir MQTT bağlantısı: abonelikler, yayınlanan ve gelen mesajlar](images/mqtt.png)
+
+- **Giriş:** kullanıcı adı ve şifre Yetkilendirme sekmesindeki Basic türünden
+  ya da URL'den gelir (`mqtt://kullanici:sifre@host`). Diğer auth türleri
+  MQTT'de geçerli değildir. Broker reddederse nedenini söyler. URL'deki şifre
+  Apix'in yazdıklarında gösterilmez.
+- **İstemci kimliği** boş bırakılırsa her bağlantıda yenilenir. **Oturumu
+  koru** broker'dan oturumu bağlantılar arasında saklamasını ister ve istemci
+  kimliği gerektirir; broker oturumu saklamışsa günlük bunu yazar. **Keep
+  alive** boştayken ping'ler arasındaki saniyedir (varsayılan 60, 0 ise yok).
+- **Abonelikler** bağlanınca, her biri kendi QoS'uyla yapılır; konularda `+` ve
+  `#` kullanılabilir. Bağlıyken ▷ o satıra hemen abone olur, ✕ aboneliği
+  bırakır. Günlük broker'ın neyi kabul ettiğini ya da reddettiğini yazar.
+- Yayınlamak için **Konu**'yu doldurun, QoS'u seçin, broker mesajı sonraki
+  aboneler için saklasın isterseniz **Retain**'i işaretleyin ve **Gönder**'e
+  (ya da Ctrl+Enter'a) basın. `{{değişkenler}}` doldurulur. **Base64** ve
+  **Hex** bayt gönderir. Boş mesaj da gönderilebilir: Retain ile broker'ın
+  sakladığını temizler. **Mesajı kaydet** mesajı istek dosyasında tutar.
+- Günlük her mesajı konusuyla gösterir: ↑ yayınlanan, ↓ gelen, QoS ve retain
+  bilgisiyle; ✓ ise broker'ın QoS 1 ya da 2 mesajını onayladığını belirtir.
+  Metin olmayan yükler boyutları ve ilk baytlarıyla görünür.
+- `mqtts://` istek ayarlarına uyar: güvenilen CA, istemci sertifikası ya da
+  kapatılmış "TLS sertifikasını doğrula". İsteğin zaman aşımı bağlanmayı
+  sınırlar (yoksa 10 sn).
+
+`apix send` bağlanır, abone olur, kayıtlı mesajları yayınlar ve iki yönde
+olanları yazar; `--listen` saniye sonra kapatır (varsayılan 3, `0` broker'ı
+bekler). `--subscribe KONU` (birden çok verilebilir) abonelik ekler;
+`--message METİN` ile `--topic KONU` kayıtlı mesajlar yerine yayınlar; `--qos`
+ve `--retain` bunlara uygulanır. Broker bir aboneliği reddederse ya da bir aboneliğe veya mesaja cevap vermeden
+bağlantıyı keserse çıkış kodu
+1'dir. `apix run` MQTT isteklerini atlar. Henüz yok: MQTT 5, son vasiyet (last
+will) ve WebSocket üzerinden MQTT.
 
 ## gRPC
 

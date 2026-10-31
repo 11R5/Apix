@@ -344,6 +344,22 @@ menu.settings: 设置…
 menu.source_code: 源代码
 menu.variables: 变量和环境…
 menu.view: 视图
+mqtt.client_id: 客户端 ID
+mqtt.client_id_placeholder: 每次连接新建
+mqtt.closed_by_broker: 代理关闭了连接
+mqtt.delivered: 已送达
+mqtt.keep_alive: 保活
+mqtt.keep_session: 保留会话
+mqtt.retain: 保留
+mqtt.send_hint: "Ctrl+Enter 发布；{{变量}} 会被替换"
+mqtt.session: "客户端 ID %{id}"
+mqtt.session_kept: "客户端 ID %{id}；代理仍保留其会话"
+mqtt.sub_refused: "代理拒绝了对 %{topic} 的订阅"
+mqtt.subscribe: 立即订阅
+mqtt.subscribed: "已订阅 %{topic}（QoS %{qos}）"
+mqtt.subscriptions: 订阅
+mqtt.topic: 主题
+mqtt.unsubscribed: "已取消订阅 %{topic}"
 network.cert.days_left: "剩余 %{count} 天"
 network.cert.engine_note: HTTP 引擎只报告服务器证书，不报告 TLS 版本或加密套件。
 network.cert.expired_days_ago: 已于 %{count} 天前过期

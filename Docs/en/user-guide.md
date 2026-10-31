@@ -23,6 +23,7 @@ command line runs the same requests in a terminal or CI.
 - [The Network tab](#the-network-tab)
 - [WebSocket and server-sent events](#websocket-and-server-sent-events)
 - [Socket.IO](#socketio)
+- [MQTT](#mqtt)
 - [gRPC](#grpc)
 - [Scripts and tests](#scripts-and-tests)
 - [Runner](#runner)
@@ -367,6 +368,48 @@ instead, as the event `--event NAME` gives (`message` by default).
 `apix run` skips Socket.IO requests. Received attachments are written as
 `{"$binary": "<base64>"}`. Not yet: Socket.IO 2 servers (Engine.IO 3), the
 long-polling transport, and answering an ack the server asks for.
+
+## MQTT
+
+A request whose URL starts with `mqtt://` (or `mqtts://` for TLS) connects to
+an MQTT 3.1.1 broker: the URL bar and the sidebar show **MQTT**, **Send**
+becomes **Connect**, and the Body tab becomes **Messages**. The port is 1883,
+or 8883 with TLS, unless the URL names one.
+
+![An MQTT connection: subscriptions, published and received messages](images/mqtt.png)
+
+- **Login:** the user name and password from the Auth tab's Basic type, or
+  from the URL (`mqtt://user:password@host`). Other auth types do not apply
+  to MQTT. When the broker refuses, it says why. A password in the URL is left
+  out of what Apix prints.
+- **Client id** is new for every connection when left empty. **Keep session**
+  asks the broker to keep the session between connections, which needs a
+  client id; the log says when the broker still had one. **Keep alive** is
+  the seconds between pings when idle (60 by default, 0 for none).
+- **Subscriptions** are made on connecting, each with its quality of service;
+  `+` and `#` work in topics. While connected, ▷ subscribes to a row now and
+  ✕ leaves it. The log notes what the broker accepted or refused.
+- To publish, fill in the **Topic**, pick the quality of service, tick
+  **Retain** if the broker should keep the message for later subscribers, and
+  press **Send** (or Ctrl+Enter). `{{variables}}` are filled in. **Base64**
+  and **Hex** send bytes. An empty message is allowed: with Retain, it clears
+  what the broker kept. **Save message** keeps it in the request file.
+- The log shows each message under its topic: ↑ published, ↓ received, with
+  its quality of service and retain flag, and ✓ when the broker confirmed a
+  message of QoS 1 or 2. Payloads that are not text show as their size and
+  first bytes.
+- `mqtts://` follows the request settings: a trusted CA, a client
+  certificate, or "Verify TLS certificate" turned off. The request's timeout
+  limits connecting (10 s without one).
+
+`apix send` connects, subscribes, publishes the saved messages and prints what
+goes both ways, closing after `--listen` seconds (3 by default, `0` waits for
+the broker). `--subscribe TOPIC` (repeatable) adds subscriptions; `--message
+TEXT` with `--topic TOPIC` publishes instead of the saved messages; `--qos` and
+`--retain` apply to these. The exit code is 1 when the broker refused a
+subscription, or hung up without answering one or confirming a message.
+`apix run` skips MQTT requests. Not yet: MQTT 5, a last will,
+and MQTT over WebSocket.
 
 ## gRPC
 

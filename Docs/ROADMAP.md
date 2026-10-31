@@ -108,7 +108,8 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [x] GraphQL: the schema fetched with the request's own URL, headers and auth (introspection) and kept per endpoint; completion of fields, arguments, enum values, input fields, fragments and variable types; docs on hover; completion in the variables (declared variables, input fields, enum values); the schema as SDL beside the query; `apix schema`
 - [x] gRPC: `grpc://`/`grpcs://` requests; services from server reflection or `.proto` files (protox, no `protoc`); unary, server, client and bidirectional streaming with messages as JSON; metadata from headers and auth; an example message per method; a live log with status, metadata and trailers; `apix send` and `apix schema`; runs and test scripts see a call as an HTTP response (OK is 200, `grpc-status`); calls kept in the history; TLS with a trusted CA or without certificate checks
 - [x] Socket.IO (servers of Socket.IO 3 and 4, over WebSocket): a `[socketio]` table (namespace, path, auth) on an `http(s)://` or `ws(s)://` request; joining the namespace with JSON auth; events with names, acks both ways shown in the log, binary attachments; a WebSocket/Socket.IO switch in the Messages tab; `apix send --message … --event …`
-- [ ] MQTT, SOAP
+- [x] MQTT 3.1.1: `mqtt://`/`mqtts://` requests with a `[mqtt]` table (client id, session, keep alive, subscriptions); subscribing and leaving while connected; publishing at QoS 0, 1 and 2 with retain, text or bytes; a user name and password from Basic auth or the URL; the TLS settings for `mqtts://`; a live log by topic; `apix send --subscribe/--topic/--qos/--retain`
+- [ ] SOAP
 
 ## M7 — Advanced
 - [ ] Route (traceroute) and network map, with an offline IP-geolocation database

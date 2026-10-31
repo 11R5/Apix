@@ -1,0 +1,27 @@
+[package]
+name = "apix-proto"
+description = "Other protocols for Apix: MQTT"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+apix-core.workspace = true
+# The TLS settings a request can have (a trusted CA, a client certificate, no verification).
+apix-http.workspace = true
+# The MQTT 3.1.1 client. TLS only through the rustls configuration we give it,
+# so no crypto provider of its own comes along.
+rumqttc = { version = "0.25", default-features = false, features = ["use-rustls-no-provider"] }
+url = "2"
+percent-encoding = "2"
+thiserror.workspace = true
+tokio = { workspace = true, features = ["sync", "time", "macros"] }
+
+[dev-dependencies]
+bytes.workspace = true
+tokio = { workspace = true, features = ["net", "io-util", "sync", "macros", "time", "rt-multi-thread"] }
+# A local broker over TLS with a certificate from an authority of its own.
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
+tokio-rustls = { version = "0.26", default-features = false, features = ["ring", "tls12"] }
+rcgen = { version = "0.14", default-features = false, features = ["crypto", "pem", "ring"] }

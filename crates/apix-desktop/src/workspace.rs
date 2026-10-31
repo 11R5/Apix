@@ -496,6 +496,17 @@ impl Workspace {
                 },
             ),
             cx.subscribe_in(
+                &ws_editor,
+                window,
+                |this, _, event: &ws_editor::SubscribeTopic, window, cx| {
+                    this.subscribe_topic(&event.0, event.1, window, cx)
+                },
+            ),
+            cx.subscribe(
+                &ws_editor,
+                |this, _, event: &ws_editor::UnsubscribeTopic, _| this.unsubscribe_topic(&event.0),
+            ),
+            cx.subscribe_in(
                 &script_editor,
                 window,
                 |this, _, _: &body_editor::SendRequested, window, cx| this.send(window, cx),
@@ -721,23 +732,28 @@ impl Workspace {
         let messages = request.messages.clone();
         let ws_options = request.websocket.clone();
         let sio_options = request.socketio.clone();
+        let mqtt_options = request.mqtt.clone();
+        let is_mqtt = request.is_mqtt();
         self.ws_editor.update(cx, |editor, cx| {
             editor.set_messages(
                 &messages,
                 ws_options.as_ref(),
                 sio_options.as_ref(),
+                mqtt_options.as_ref(),
                 window,
                 cx,
             )
         });
+        self.ws_editor
+            .update(cx, |editor, cx| editor.set_mqtt(is_mqtt, cx));
         let grpc = request.grpc.clone();
         let body = request.body.clone();
         self.grpc_task = None;
         self.grpc_editor.update(cx, |editor, cx| {
             editor.set_call(grpc.as_ref(), &body, window, cx)
         });
-        // A gRPC or Socket.IO request opens on what it sends.
-        if request.is_grpc() || request.is_socketio() {
+        // A gRPC, Socket.IO or MQTT request opens on what it sends.
+        if request.is_grpc() || request.is_socketio() || request.is_mqtt() {
             self.request_tab = 3;
         }
         // A GraphQL endpoint's schema, if it was fetched before.
@@ -793,6 +809,16 @@ impl Workspace {
         request.messages = self.ws_editor.read(cx).messages();
         request.websocket = self.ws_editor.read(cx).options(cx);
         request.socketio = self.ws_editor.read(cx).socketio_options(cx);
+        // The URL decides MQTT; the other two have no say then.
+        if self.mqtt_mode(cx) {
+            let settings = self.ws_editor.read(cx).mqtt_settings(cx);
+            let is_set = settings != Default::default() || self.base.mqtt.is_some();
+            request.mqtt = is_set.then_some(settings);
+            request.websocket = None;
+            request.socketio = None;
+        } else {
+            request.mqtt = None;
+        }
         // A gRPC request's message is its body.
         if self.grpc_mode(cx) {
             let grpc = self.grpc_editor.read(cx);
@@ -820,6 +846,7 @@ impl Workspace {
         if self.settings.confirm_prod
             && self.is_prod()
             && !self.grpc_mode(cx)
+            && !self.mqtt_mode(cx)
             && matches!(method, Method::Delete | Method::Put | Method::Patch)
         {
             self.confirm_prod_send(method, window, cx);
@@ -876,6 +903,19 @@ impl Workspace {
                 None => resolved.request,
             };
             self.call_grpc(request, record, window, cx);
+            return;
+        }
+        // mqtt:// and mqtts:// connect to a broker.
+        if resolved.request.is_mqtt() {
+            if !resolved.missing.is_empty() {
+                self.fail(undefined_message(resolved.missing), cx);
+                return;
+            }
+            let request = match self.body_location().0 {
+                Some(dir) => resolved.request.with_files_relative_to(&dir),
+                None => resolved.request,
+            };
+            self.connect_mqtt(request, window, cx);
             return;
         }
         // Socket.IO joins a namespace on a WebSocket, whatever the URL's scheme.
@@ -1216,13 +1256,16 @@ impl Workspace {
                 .on_click(cx.listener(|this, _: &ClickEvent, window, cx| this.send(window, cx)))
         };
 
-        // A gRPC request has no HTTP method: the method is in the Message tab.
+        // A gRPC or MQTT request has no HTTP method to pick.
         let grpc = self.grpc_mode(cx);
+        let mqtt = self.mqtt_mode(cx);
         h_flex()
             .gap_2()
             .items_center()
             .child(div().w(px(4.)).h(px(20.)).rounded_full().bg(if grpc {
                 theme::grpc_color()
+            } else if mqtt {
+                theme::mqtt_color()
             } else {
                 theme::method_color(method)
             }))
@@ -1233,6 +1276,14 @@ impl Workspace {
                     .font_weight(FontWeight::BOLD)
                     .text_color(theme::grpc_color())
                     .child("gRPC")
+                    .into_any_element()
+            } else if mqtt {
+                div()
+                    .px_2()
+                    .text_sm()
+                    .font_weight(FontWeight::BOLD)
+                    .text_color(theme::mqtt_color())
+                    .child("MQTT")
                     .into_any_element()
             } else {
                 Select::new(&self.method).small().into_any_element()
@@ -1267,6 +1318,9 @@ impl Workspace {
             n => tr!("request.tab.headers_count", count = n),
         };
         // A WebSocket request has messages where an HTTP one has a body.
+        let mqtt = self.mqtt_mode(cx);
+        self.ws_editor
+            .update(cx, |editor, cx| editor.set_mqtt(mqtt, cx));
         let websocket = self.websocket_mode(cx);
         let grpc = self.grpc_mode(cx);
         let body_label = if grpc {

@@ -3,9 +3,13 @@
 //! the namespace, path and auth (Socket.IO), a message to send (Ctrl+Enter)
 //! as text or as bytes written in base64 or hex, with its event name and
 //! whether to ask for an ack (Socket.IO), and the request's saved messages,
-//! kept in the `.apix` file as `[[message]]`.
+//! kept in the `.apix` file as `[[message]]`. A MQTT request (`mqtt://` or
+//! `mqtts://`) has its client id, session and subscriptions there instead,
+//! and a message has its topic, quality of service and retain flag.
 
-use apix_core::{MessageFormat, SocketIoOptions, WebSocketOptions, WsMessage};
+use apix_core::{
+    MessageFormat, MqttSettings, MqttSubscription, SocketIoOptions, WebSocketOptions, WsMessage,
+};
 use gpui_kit::component::button::{Button, ButtonVariants as _};
 use gpui_kit::component::checkbox::Checkbox;
 use gpui_kit::component::input::{Editor, EditorState, Input, InputEvent, InputState};
@@ -18,8 +22,22 @@ use crate::bidi::{self, Bidi as _};
 use crate::tr;
 
 /// Send this message over the connection (connecting first when needed):
-/// its text read as the format says, and for Socket.IO its event and ack.
+/// its text read as the format says, and for Socket.IO its event and ack,
+/// for MQTT its topic, quality of service and retain flag.
 pub(super) struct SendMessage(pub WsMessage);
+
+/// Subscribe to this topic now (connecting first when needed).
+pub(super) struct SubscribeTopic(pub String, pub u8);
+
+/// A subscription was taken off the list; leave it if connected.
+pub(super) struct UnsubscribeTopic(pub String);
+
+/// A row of the subscriptions list.
+struct TopicRow {
+    topic: Entity<InputState>,
+    qos: u8,
+    _changed: Subscription,
+}
 
 pub(super) struct WsEditor {
     composer: Entity<EditorState>,
@@ -32,11 +50,24 @@ pub(super) struct WsEditor {
     auth: Entity<InputState>,
     event: Entity<InputState>,
     ack: bool,
+    /// A MQTT request, which the URL decides.
+    mqtt: bool,
+    client_id: Entity<InputState>,
+    keep_alive: Entity<InputState>,
+    keep_session: bool,
+    topics: Vec<TopicRow>,
+    topic: Entity<InputState>,
+    qos: u8,
+    retain: bool,
     messages: Vec<WsMessage>,
     _subscriptions: Vec<Subscription>,
 }
 
 impl EventEmitter<SendMessage> for WsEditor {}
+impl EventEmitter<SubscribeTopic> for WsEditor {}
+impl EventEmitter<UnsubscribeTopic> for WsEditor {}
+
+const QOS_LABELS: [&str; 3] = ["0", "1", "2"];
 
 fn format_label(format: MessageFormat) -> SharedString {
     match format {
@@ -62,6 +93,9 @@ impl WsEditor {
         let path = input("/socket.io/".into(), window, cx);
         let auth = input(tr!("sio.auth_placeholder"), window, cx);
         let event = input("message".into(), window, cx);
+        let client_id = input(tr!("mqtt.client_id_placeholder"), window, cx);
+        let keep_alive = input("60".into(), window, cx);
+        let topic = input("sensors/kitchen".into(), window, cx);
         let mut subscriptions = vec![cx.subscribe_in(
             &composer,
             window,
@@ -76,7 +110,16 @@ impl WsEditor {
                 _ => {}
             },
         )];
-        for state in [&subprotocols, &namespace, &path, &auth, &event] {
+        for state in [
+            &subprotocols,
+            &namespace,
+            &path,
+            &auth,
+            &event,
+            &client_id,
+            &keep_alive,
+            &topic,
+        ] {
             subscriptions.push(cx.subscribe(state, |_, _, event: &InputEvent, cx| {
                 if matches!(event, InputEvent::Change) {
                     cx.notify();
@@ -93,6 +136,14 @@ impl WsEditor {
             auth,
             event,
             ack: false,
+            mqtt: false,
+            client_id,
+            keep_alive,
+            keep_session: false,
+            topics: Vec::new(),
+            topic,
+            qos: 0,
+            retain: false,
             messages: Vec::new(),
             _subscriptions: subscriptions,
         }
@@ -104,6 +155,7 @@ impl WsEditor {
             (&self.subprotocols, tr!("ws.subprotocols_placeholder")),
             (&self.namespace, tr!("sio.namespace_placeholder")),
             (&self.auth, tr!("sio.auth_placeholder")),
+            (&self.client_id, tr!("mqtt.client_id_placeholder")),
         ] {
             state.update(cx, |state, cx| state.set_placeholder(text, window, cx));
         }
@@ -115,6 +167,7 @@ impl WsEditor {
         messages: &[WsMessage],
         options: Option<&WebSocketOptions>,
         socketio: Option<&SocketIoOptions>,
+        mqtt: Option<&MqttSettings>,
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
@@ -135,7 +188,74 @@ impl WsEditor {
             state.update(cx, |state, cx| state.set_value(value, window, cx));
         }
         self.ack = false;
+        let settings = mqtt.cloned().unwrap_or_default();
+        let keep_alive = settings
+            .keep_alive
+            .map(|s| s.to_string())
+            .unwrap_or_default();
+        for (state, value) in [
+            (&self.client_id, settings.client_id),
+            (&self.keep_alive, keep_alive),
+            (&self.topic, String::new()),
+        ] {
+            state.update(cx, |state, cx| state.set_value(value, window, cx));
+        }
+        self.keep_session = settings.keep_session;
+        self.topics = settings
+            .subscribe
+            .iter()
+            .map(|s| self.topic_row(s, window, cx))
+            .collect();
+        self.qos = 0;
+        self.retain = false;
         cx.notify();
+    }
+
+    fn topic_row(
+        &self,
+        subscription: &MqttSubscription,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> TopicRow {
+        let topic = input("sensors/#".into(), window, cx);
+        let value = subscription.topic.clone();
+        topic.update(cx, |state, cx| state.set_value(value, window, cx));
+        let changed = cx.subscribe(&topic, |_, _, event: &InputEvent, cx| {
+            if matches!(event, InputEvent::Change) {
+                cx.notify();
+            }
+        });
+        TopicRow {
+            topic,
+            qos: subscription.qos,
+            _changed: changed,
+        }
+    }
+
+    /// The URL decides whether the request is MQTT.
+    pub(super) fn set_mqtt(&mut self, mqtt: bool, cx: &mut Context<Self>) {
+        if self.mqtt != mqtt {
+            self.mqtt = mqtt;
+            cx.notify();
+        }
+    }
+
+    /// The `[mqtt]` options. A keep alive that is not a number counts as unset.
+    pub(super) fn mqtt_settings(&self, cx: &App) -> MqttSettings {
+        MqttSettings {
+            client_id: self.client_id.read(cx).value().trim().to_owned(),
+            keep_session: self.keep_session,
+            keep_alive: self.keep_alive.read(cx).value().trim().parse().ok(),
+            subscribe: self
+                .topics
+                .iter()
+                .map(|row| MqttSubscription {
+                    topic: row.topic.read(cx).value().trim().to_owned(),
+                    qos: row.qos,
+                })
+                .filter(|s| !s.topic.is_empty())
+                .collect(),
+        }
     }
 
     pub(super) fn messages(&self) -> Vec<WsMessage> {
@@ -177,8 +297,19 @@ impl WsEditor {
         self.composer.read(cx).value().to_string()
     }
 
-    /// The composer as a message (event and ack only for Socket.IO).
+    /// The composer as a message (event and ack only for Socket.IO; topic,
+    /// quality of service and retain only for MQTT).
     fn composed(&self, cx: &App) -> WsMessage {
+        if self.mqtt {
+            return WsMessage {
+                body: self.composer_text(cx),
+                format: self.format,
+                topic: self.topic.read(cx).value().trim().to_owned(),
+                qos: self.qos,
+                retain: self.retain,
+                ..Default::default()
+            };
+        }
         WsMessage {
             body: self.composer_text(cx),
             format: self.format,
@@ -212,8 +343,12 @@ impl WsEditor {
         }
     }
 
-    /// An empty text is a message only for Socket.IO (an event without arguments).
+    /// An empty text is a message for Socket.IO (an event without arguments)
+    /// and for MQTT, which only needs a topic (it clears a retained message).
     fn can_send(&self, cx: &App) -> bool {
+        if self.mqtt {
+            return !self.topic.read(cx).value().trim().is_empty();
+        }
         self.socketio || !self.composer_text(cx).trim().is_empty()
     }
 
@@ -234,14 +369,137 @@ impl WsEditor {
     fn load(&mut self, ix: usize, window: &mut Window, cx: &mut Context<Self>) {
         if let Some(message) = self.messages.get(ix) {
             let (body, event) = (message.body.clone(), message.event.clone());
+            let topic = message.topic.clone();
             self.format = message.format;
             self.ack = message.ack;
+            self.qos = message.qos;
+            self.retain = message.retain;
+            self.topic
+                .update(cx, |state, cx| state.set_value(topic, window, cx));
             self.composer
                 .update(cx, |state, cx| state.set_value(body, window, cx));
             self.event
                 .update(cx, |state, cx| state.set_value(event, window, cx));
             cx.notify();
         }
+    }
+
+    /// A MQTT connection's options and its subscriptions, each with its
+    /// quality of service, a button to subscribe now and one to take it off.
+    fn render_mqtt_setup(&self, cx: &Context<Self>) -> impl IntoElement + use<> {
+        let p = crate::theme::current();
+        let rows = self.topics.iter().enumerate().map(|(ix, row)| {
+            h_flex()
+                .dir_row()
+                .gap_2()
+                .items_center()
+                .child(
+                    div()
+                        .flex_1()
+                        .min_w_0()
+                        .ltr()
+                        .child(Input::new(&row.topic).small()),
+                )
+                .child(bidi::fill_tabs(
+                    TabBar::new(("mqtt-topic-qos", ix)).segmented().xsmall(),
+                    Some(row.qos.into()),
+                    QOS_LABELS.iter().map(|q| Tab::new().label(*q)).collect(),
+                    cx.listener(move |this, qos: &usize, _, cx| {
+                        if let Some(row) = this.topics.get_mut(ix) {
+                            row.qos = *qos as u8;
+                        }
+                        cx.notify();
+                    }),
+                ))
+                .child(
+                    Button::new(("mqtt-topic-go", ix))
+                        .ghost()
+                        .xsmall()
+                        .icon(IconName::Play)
+                        .tooltip(tr!("mqtt.subscribe"))
+                        .on_click(cx.listener(move |this, _: &ClickEvent, _, cx| {
+                            if let Some(row) = this.topics.get(ix) {
+                                let topic = row.topic.read(cx).value().trim().to_owned();
+                                if !topic.is_empty() {
+                                    cx.emit(SubscribeTopic(topic, row.qos));
+                                }
+                            }
+                        })),
+                )
+                .child(
+                    Button::new(("mqtt-topic-del", ix))
+                        .ghost()
+                        .xsmall()
+                        .icon(IconName::Close)
+                        .on_click(cx.listener(move |this, _: &ClickEvent, _, cx| {
+                            if ix < this.topics.len() {
+                                let row = this.topics.remove(ix);
+                                let topic = row.topic.read(cx).value().trim().to_owned();
+                                if !topic.is_empty() {
+                                    cx.emit(UnsubscribeTopic(topic));
+                                }
+                            }
+                            cx.notify();
+                        })),
+                )
+        });
+        v_flex()
+            .gap_2()
+            .child(
+                h_flex()
+                    .dir_row()
+                    .gap_3()
+                    .items_center()
+                    .child(self.field(tr!("mqtt.client_id"), &self.client_id))
+                    .child(
+                        div()
+                            .w(px(140.))
+                            .flex_none()
+                            .child(self.field(tr!("mqtt.keep_alive"), &self.keep_alive)),
+                    )
+                    .child(
+                        Checkbox::new("mqtt-keep-session")
+                            .dir_row()
+                            .checked(self.keep_session)
+                            .label(tr!("mqtt.keep_session"))
+                            .on_click(cx.listener(|this, checked: &bool, _, cx| {
+                                this.keep_session = *checked;
+                                cx.notify();
+                            })),
+                    ),
+            )
+            .child(
+                h_flex()
+                    .dir_row()
+                    .gap_2()
+                    .items_center()
+                    .child(
+                        div()
+                            .text_xs()
+                            .font_weight(FontWeight::MEDIUM)
+                            .text_color(p.text_muted)
+                            .child(tr!("mqtt.subscriptions")),
+                    )
+                    .child(
+                        Button::new("mqtt-topic-add")
+                            .ghost()
+                            .xsmall()
+                            .icon(IconName::Plus)
+                            .on_click(cx.listener(|this, _: &ClickEvent, window, cx| {
+                                let row = this.topic_row(&Default::default(), window, cx);
+                                this.topics.push(row);
+                                cx.notify();
+                            })),
+                    ),
+            )
+            .child(
+                v_flex()
+                    .id("mqtt-topics")
+                    .gap_1()
+                    .max_h(px(96.))
+                    .overflow_y_scroll()
+                    .children(rows),
+            )
     }
 
     /// A label and its input, side by side.
@@ -290,7 +548,8 @@ impl Render for WsEditor {
                 .text_color(color)
                 .child(text)
         };
-        let socketio = self.socketio;
+        let mqtt = self.mqtt;
+        let socketio = self.socketio && !mqtt;
         let rows = self.messages.iter().enumerate().map(|(ix, message)| {
             let event = match message.event.as_str() {
                 "" => "message".to_owned(),
@@ -310,6 +569,15 @@ impl Render for WsEditor {
                     cx.listener(move |this, _: &ClickEvent, window, cx| this.load(ix, window, cx)),
                 )
                 .when(socketio, |row| row.child(chip(event.into(), p.ok)))
+                .when(mqtt, |row| {
+                    row.child(chip(message.topic.clone().into(), p.ok))
+                        .when(message.qos > 0, |row| {
+                            row.child(chip(format!("QoS {}", message.qos).into(), p.text_muted))
+                        })
+                        .when(message.retain, |row| {
+                            row.child(chip("retain".into(), p.text_muted))
+                        })
+                })
                 .when(socketio && message.ack, |row| {
                     row.child(chip("ack".into(), p.text_muted))
                 })
@@ -364,7 +632,9 @@ impl Render for WsEditor {
             }),
         );
         // What the connection is set up with: subprotocols, or Socket.IO's options.
-        let setup = if socketio {
+        let setup = if mqtt {
+            self.render_mqtt_setup(cx).into_any_element()
+        } else if socketio {
             v_flex()
                 .gap_2()
                 .child(
@@ -385,7 +655,9 @@ impl Render for WsEditor {
                 .child(self.field(tr!("ws.subprotocols"), &self.subprotocols))
                 .into_any_element()
         };
-        let hint = if socketio {
+        let hint = if mqtt {
+            tr!("mqtt.send_hint")
+        } else if socketio {
             tr!("sio.send_hint")
         } else {
             tr!("ws.send_hint")
@@ -413,9 +685,43 @@ impl Render for WsEditor {
                         ),
                 )
             })
+            .when(mqtt, |d| {
+                d.child(
+                    h_flex()
+                        .dir_row()
+                        .gap_3()
+                        .items_center()
+                        .child(self.field(tr!("mqtt.topic"), &self.topic))
+                        .child(bidi::fill_tabs(
+                            TabBar::new("mqtt-qos").segmented().xsmall(),
+                            Some(self.qos.into()),
+                            QOS_LABELS.iter().map(|q| Tab::new().label(*q)).collect(),
+                            cx.listener(|this, ix: &usize, _, cx| {
+                                this.qos = *ix as u8;
+                                cx.notify();
+                            }),
+                        ))
+                        .child(
+                            Checkbox::new("mqtt-retain")
+                                .dir_row()
+                                .checked(self.retain)
+                                .label(tr!("mqtt.retain"))
+                                .on_click(cx.listener(|this, checked: &bool, _, cx| {
+                                    this.retain = *checked;
+                                    cx.notify();
+                                })),
+                        ),
+                )
+            })
             .child(
                 div()
-                    .h(px(if socketio { 120. } else { 160. }))
+                    .h(px(if mqtt {
+                        90.
+                    } else if socketio {
+                        120.
+                    } else {
+                        160.
+                    }))
                     .flex_none()
                     .child(Editor::new(&self.composer).h_full()),
             )

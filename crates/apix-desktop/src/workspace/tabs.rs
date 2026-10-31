@@ -397,15 +397,17 @@ impl Workspace {
         let p = crate::theme::current();
         let front_method = self.current_method(cx);
         let front_grpc = self.grpc_mode(cx);
+        let front_mqtt = self.mqtt_mode(cx);
         let tabs = self.tabs.iter().enumerate().map(|(ix, tab)| {
             let front = tab.parked.is_none();
-            let (name, method, grpc) = match &tab.parked {
+            let (name, method, grpc, mqtt) = match &tab.parked {
                 Some(parked) => (
                     parked.draft.name.clone(),
                     parked.draft.method,
                     parked.draft.is_grpc(),
+                    parked.draft.is_mqtt(),
                 ),
-                None => (self.base.name.clone(), front_method, front_grpc),
+                None => (self.base.name.clone(), front_method, front_grpc, front_mqtt),
             };
             let name = if name.is_empty() {
                 tab.path
@@ -463,10 +465,18 @@ impl Workspace {
                         .font_weight(FontWeight::BOLD)
                         .text_color(if grpc {
                             theme::grpc_color()
+                        } else if mqtt {
+                            theme::mqtt_color()
                         } else {
                             theme::method_color(method)
                         })
-                        .child(if grpc { "gRPC" } else { short(method) }),
+                        .child(if grpc {
+                            "gRPC"
+                        } else if mqtt {
+                            "MQTT"
+                        } else {
+                            short(method)
+                        }),
                 )
                 .child(
                     div()
