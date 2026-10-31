@@ -13,7 +13,12 @@ serde_json.workspace = true
 thiserror.workspace = true
 # OpenAPI and Swagger specs are often YAML.
 serde_yaml = "0.9"
+# WSDL documents and the XML schemas in them.
+roxmltree = "0.21"
 # URLs in HAR files are taken apart into base, path and query.
 url = "2"
 # Postman's "Export data" arrives as a zip of collection and environment files.
 zip = { version = "2", default-features = false, features = ["deflate"] }
+
+[dev-dependencies]
+toml.workspace = true

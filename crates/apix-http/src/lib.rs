@@ -158,6 +158,18 @@ impl Response {
             .is_some_and(sse::is_event_stream)
     }
 
+    /// The SOAP fault an XML answer holds, if it holds one.
+    pub fn soap_fault(&self) -> Option<apix_core::soap::Fault> {
+        let xml = self.headers.iter().any(|(name, value)| {
+            name.eq_ignore_ascii_case("content-type") && value.to_ascii_lowercase().contains("xml")
+        });
+        if xml {
+            apix_core::soap::fault(&self.body)
+        } else {
+            None
+        }
+    }
+
     pub fn is_success(&self) -> bool {
         (200..400).contains(&self.status)
     }

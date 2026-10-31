@@ -106,7 +106,8 @@ Measurements of the other tools on the same machine are planned.
 - **Encrypted collections** with a recovery key, auto-lock and, if you choose,
   the password remembered in the OS keychain.
 - **Import** from Postman (collections, environments, a whole "Export data"
-  zip), Insomnia v4, OpenAPI 3 / Swagger 2 (JSON or YAML) and HAR, with a
+  zip), Insomnia v4, OpenAPI 3 / Swagger 2 (JSON or YAML), HAR and WSDL, from a
+  file or a URL, with a
   report; formats are recognised by content. **Export to Postman** for
   teammates who stay on it.
 - **Copy as** `curl` (bash or fish), `curl.exe`, PowerShell, HTTPie or wget, or as code in fetch, axios,
@@ -116,6 +117,9 @@ Measurements of the other tools on the same machine are planned.
   or saved messages and log both directions live; `text/event-stream`
   responses show their events as they arrive. `apix send` does both in a
   terminal.
+- **SOAP:** import a WSDL from a file or a URL and get a request per operation,
+  with the right headers and an example envelope built from the schema; faults
+  are shown plainly and fail a run even with status 200.
 - **MQTT:** `mqtt://` and `mqtts://` requests subscribe to topics and publish
   at QoS 0, 1 and 2, retained or not, with a live log by topic, in the app or
   with `apix send`.

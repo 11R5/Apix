@@ -300,6 +300,8 @@ import.project_in: 创建位置…
 import.project_summary: "%{collections} 个集合、%{requests} 个请求和 %{environments} 个环境现已位于 %{name}。"
 import.prompt: 导入 Postman、Insomnia、OpenAPI 或 HAR 文件
 import.unknown_format: "%{path} 不是 Apix 能读取的导出（Postman、Insomnia v4、OpenAPI/Swagger、HAR）。"
+import.url_ok: 导入
+import.url_title: 从 URL 导入
 menu.active_environment: 当前环境
 menu.cancel: 取消
 menu.close_tab: 关闭标签页
@@ -318,7 +320,8 @@ menu.group_collection: 集合
 menu.group_environment: 环境
 menu.help: 帮助
 menu.history: 历史…
-menu.import_postman: 导入（Postman、Insomnia、OpenAPI、HAR）…
+menu.import_postman: 导入（Postman、Insomnia、OpenAPI、HAR、WSDL）…
+menu.import_url: 从 URL 导入…
 menu.lock_collections: 锁定加密集合
 menu.method: 方法
 menu.move_into_project: 移到项目…
@@ -630,6 +633,8 @@ sio.path: 路径
 sio.send_hint: "Ctrl+Enter 发送；JSON 为一个参数，其他文本为字符串"
 sio.unreadable: "无法读取的帧：%{text}"
 sio.wants_ack: "等待 ack %{id}"
+soap.fault: "SOAP 错误：%{fault}"
+soap.template_hint: "创建 SOAP 信封："
 stream.all_types: 全部 %{count}
 stream.count: "%{count} 个事件"
 stream.dropped_reconnecting: 连接已断开（%{error}）；%{seconds} 秒后重新连接

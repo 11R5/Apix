@@ -407,6 +407,10 @@ impl Workspace {
             name!("menu.import_postman"),
             run(Workspace::prompt_import),
         ));
+        out.push(Entry::command(
+            name!("menu.import_url"),
+            run(Workspace::prompt_import_url),
+        ));
         out.push(Entry::command(name!("menu.history"), run(Workspace::open_history)).keys("H"));
         if open {
             out.push(

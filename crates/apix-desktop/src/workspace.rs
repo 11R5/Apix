@@ -66,6 +66,7 @@ actions!(
         NewRequest,
         OpenCollection,
         ImportFile,
+        ImportUrl,
         EditVariables,
         OpenPalette,
         OpenSettings,
@@ -194,6 +195,8 @@ struct Finished {
     local: apix_http::LocalNetwork,
     /// Test results and console lines, when the request has scripts.
     scripts: Option<script_run::ScriptReport>,
+    /// The fault a SOAP response holds.
+    soap_fault: Option<apix_core::soap::Fault>,
     /// The events of a server-sent event stream.
     events: Option<Vec<stream_ui::TimedEvent>>,
     /// The stream was stopped before the server ended it.
@@ -247,6 +250,7 @@ impl Finished {
         };
         let local = apix_http::local_network(response.trace.local_addr.map(|a| a.ip()));
         let events = stream_ui::events_of(&response);
+        let soap_fault = response.soap_fault();
         Self {
             response,
             pretty,
@@ -257,6 +261,7 @@ impl Finished {
             image,
             local,
             scripts: None,
+            soap_fault,
             events,
             stopped: false,
         }
@@ -487,6 +492,13 @@ impl Workspace {
                 &grpc_editor,
                 window,
                 |this, _, _: &body_editor::SendRequested, window, cx| this.send(window, cx),
+            ),
+            cx.subscribe_in(
+                &body_editor,
+                window,
+                |this, _, event: &body_editor::SoapTemplate, window, cx| {
+                    this.use_soap_headers(event.0, window, cx)
+                },
             ),
             cx.subscribe_in(
                 &ws_editor,
@@ -833,6 +845,23 @@ impl Workspace {
             request.grpc = None;
         }
         request
+    }
+
+    /// The headers a SOAP envelope needs, in place of those it replaces.
+    fn use_soap_headers(
+        &mut self,
+        version: apix_core::soap::SoapVersion,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        self.headers.retain(|row| {
+            let key = row.to_key_value(cx).map(|kv| kv.key).unwrap_or_default();
+            !key.eq_ignore_ascii_case("content-type") && !key.eq_ignore_ascii_case("soapaction")
+        });
+        for header in version.headers("") {
+            self.headers.push(KvRow::new(&header, window, cx));
+        }
+        cx.notify();
     }
 
     /// Sends the request, after asking first when it would change something
@@ -1666,6 +1695,18 @@ impl Workspace {
                                     })),
                             ),
                     )
+                    .children(done.soap_fault.as_ref().map(|fault| {
+                        div()
+                            .mx_3()
+                            .mb_2()
+                            .px_2()
+                            .py_1()
+                            .rounded_md()
+                            .bg(p.err.opacity(0.14))
+                            .text_sm()
+                            .text_color(p.err)
+                            .child(bidi::para(tr!("soap.fault", fault = fault.to_string())))
+                    }))
                     .child(bidi::tab_bar(
                         "response-tabs",
                         self.response_tab,
@@ -1933,6 +1974,9 @@ impl Render for Workspace {
             }))
             .on_action(
                 cx.listener(|this, _: &ImportFile, window, cx| this.prompt_import(window, cx)),
+            )
+            .on_action(
+                cx.listener(|this, _: &ImportUrl, window, cx| this.prompt_import_url(window, cx)),
             )
             .on_action(
                 cx.listener(|this, _: &EditVariables, window, cx| this.open_env_editor(window, cx)),

@@ -24,6 +24,7 @@ command line runs the same requests in a terminal or CI.
 - [WebSocket and server-sent events](#websocket-and-server-sent-events)
 - [Socket.IO](#socketio)
 - [MQTT](#mqtt)
+- [SOAP](#soap)
 - [gRPC](#grpc)
 - [Scripts and tests](#scripts-and-tests)
 - [Runner](#runner)
@@ -411,6 +412,43 @@ subscription, or hung up without answering one or confirming a message.
 `apix run` skips MQTT requests. Not yet: MQTT 5, a last will,
 and MQTT over WebSocket.
 
+## SOAP
+
+A SOAP call is an XML envelope sent with POST, so a SOAP request is an ordinary
+request: scripts, tests, runs and the history work on it as on any other.
+
+**From a WSDL.** Import a WSDL 1.1 file with **File › Import…**, or its address
+with **File › Import from URL…** (`http://host/service?wsdl`). You get a
+collection with a request per operation, and a folder per port when there are
+several, typically one for SOAP 1.1 and one for 1.2. The port's address is the
+`baseUrl` variable (a variable per port when they differ), and documents the
+WSDL imports are read too. What could not be read, and ports that are not SOAP,
+are listed when the import ends.
+
+![A SOAP request from a WSDL, with the fault the server answered](images/soap.png)
+
+- **Headers** follow the version: SOAP 1.1 sends `Content-Type: text/xml` and
+  `SOAPAction`; SOAP 1.2 sends `application/soap+xml` with the action inside.
+- **The body** is an envelope with example values built from the schema: `1`
+  for numbers, `string` for text, the first value of an enumeration, the first
+  option of a choice. Comments say what is optional or repeats and what the
+  other values are. Optional attributes are left out. Replace the values, or
+  put `{{variables}}` in them, and delete what you do not need.
+- A type that contains itself stops at the second level, with a comment.
+
+**Without a WSDL.** Pick **XML** as the body; while it is empty, **SOAP 1.1** and
+**SOAP 1.2** beside it start an envelope and set the headers. Fill in the
+operation and the action (`SOAPAction`, or `action=` in the `Content-Type`).
+
+**Faults.** When an answer holds a SOAP fault, a red line above the response
+shows its code and message, and `apix send` prints it. A request without tests
+fails on a fault even if the status is 200, as some servers send it, in `apix
+send`, `apix run` and the Runner. Test scripts decide for themselves.
+
+Not yet: WSDL 2.0, which is refused with that reason, WS-Security, MTOM
+attachments, and `xsi:type` in examples for SOAP encoding, which the import warns
+about.
+
 ## gRPC
 
 A request whose URL starts with `grpc://` (or `grpcs://` for TLS) calls a
@@ -680,6 +718,7 @@ format is recognised by content, and a folder or zip may mix them:
 |---|---|
 | Insomnia v4 (JSON export) | A collection per workspace, folders with their auth, the base environment as collection variables and every sub-environment as an environment. `{{ _.name }}` becomes `{{name}}`. |
 | OpenAPI 3 / Swagger 2 (JSON or YAML) | A request per operation, a folder per tag. The server becomes the `baseUrl` variable (several servers: an environment each), path parameters become variables with their example values, required query and header parameters are switched on, bodies come from examples or are built from the schema, and security schemes become auth with empty credential variables (`bearerToken`, `apiKey`, …) to fill in an environment. |
+| WSDL 1.1 | A request per operation with an example envelope; see [SOAP](#soap). |
 | HAR (browser DevTools "Save all as HAR") | API calls only, a folder per host. Scripts, styles, images and fonts, `data:` URLs and repeats are left out, and so are `Cookie` headers: they carry the browser's session. |
 
 One collection from one file is imported as a collection; several become a

@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<definitions name="Weather"
+    targetNamespace="urn:apix:weather"
+    xmlns="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:w="urn:apix:weather"
+    xmlns:t="urn:apix:types">
+  <import namespace="urn:apix:more" location="weather-more.wsdl"/>
+  <types>
+    <xsd:schema targetNamespace="urn:apix:weather">
+      <xsd:import namespace="urn:apix:types" schemaLocation="weather-types.xsd"/>
+    </xsd:schema>
+  </types>
+  <message name="ForecastIn">
+    <part name="city" type="xsd:string"/>
+    <part name="place" type="t:Place"/>
+    <part name="missing" type="t:Nowhere"/>
+  </message>
+  <portType name="Weather">
+    <operation name="Forecast"><input message="w:ForecastIn"/></operation>
+  </portType>
+  <binding name="WeatherRpc" type="w:Weather">
+    <soap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <operation name="Forecast">
+      <soap:operation soapAction="urn:forecast"/>
+      <input><soap:body use="encoded" namespace="urn:apix:weather"/></input>
+    </operation>
+  </binding>
+  <service name="WeatherService">
+    <port name="WeatherRpc" binding="w:WeatherRpc">
+      <soap:address location="https://weather.example.com/soap"/>
+    </port>
+  </service>
+</definitions>

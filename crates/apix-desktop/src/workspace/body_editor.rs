@@ -9,7 +9,7 @@ use gpui_kit::component::checkbox::Checkbox;
 use gpui_kit::component::input::{Editor, EditorState, Input, InputEvent, InputState};
 use gpui_kit::component::spinner::Spinner;
 use gpui_kit::component::tab::{Tab, TabBar};
-use gpui_kit::component::{IconName, Sizable, h_flex, v_flex};
+use gpui_kit::component::{Disableable as _, IconName, Sizable, h_flex, v_flex};
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
@@ -100,6 +100,9 @@ pub fn register_graphql() {
 
 /// Ctrl+Enter in one of the body editors, which keep the key for themselves.
 pub(super) struct SendRequested;
+
+/// A SOAP envelope was put in the body; the request needs its headers.
+pub(super) struct SoapTemplate(pub apix_core::soap::SoapVersion);
 
 /// The "Fetch schema" button: the workspace builds the request and asks.
 pub(super) struct FetchSchema;
@@ -196,6 +199,7 @@ pub(super) struct BodyEditor {
 }
 
 impl EventEmitter<SendRequested> for BodyEditor {}
+impl EventEmitter<SoapTemplate> for BodyEditor {}
 impl EventEmitter<FetchSchema> for BodyEditor {}
 
 impl BodyEditor {
@@ -446,6 +450,41 @@ impl BodyEditor {
                 .collect(),
             cx.listener(|this, ix: &usize, _, cx| this.set_kind(BodyKind::ALL[*ix], cx)),
         )
+    }
+
+    /// Starts an empty XML body as a SOAP envelope. A body with something in
+    /// it stays as it is.
+    fn render_soap_row(&self, cx: &mut Context<Self>) -> impl IntoElement + use<> {
+        use apix_core::soap::SoapVersion;
+        let empty = self.text.read(cx).value().trim().is_empty();
+        let button = |id: &'static str, version: SoapVersion, cx: &mut Context<Self>| {
+            Button::new(id)
+                .ghost()
+                .xsmall()
+                .label(version.label())
+                .disabled(!empty)
+                .on_click(cx.listener(move |this, _: &ClickEvent, window, cx| {
+                    let template = version.template();
+                    this.text
+                        .update(cx, |state, cx| state.set_value(template, window, cx));
+                    cx.emit(SoapTemplate(version));
+                    cx.notify();
+                }))
+        };
+        let first = button("soap-11", SoapVersion::V11, cx);
+        let second = button("soap-12", SoapVersion::V12, cx);
+        h_flex()
+            .dir_row()
+            .gap_2()
+            .items_center()
+            .child(
+                div()
+                    .text_xs()
+                    .text_color(crate::theme::current().text_muted)
+                    .child(tr!("soap.template_hint")),
+            )
+            .child(first)
+            .child(second)
     }
 
     /// A form or multipart field, with `{{variable}}` chips like the URL bar.
@@ -833,6 +872,7 @@ impl Render for BodyEditor {
             .size_full()
             .gap_2()
             .child(h_flex().dir_row().w_full().min_w_0().child(self.picker(cx)))
+            .children((self.kind == BodyKind::Xml).then(|| self.render_soap_row(cx)))
             .child(div().flex_1().min_h_0().child(content))
     }
 }

@@ -10,7 +10,7 @@ side.
 crates/
 ├── apix-core       request model, variables, on-disk format, projects, signing (sign.rs), GraphQL schemas
 ├── apix-http       the HTTP engine (reqwest), network trace, OAuth 2.0 tokens, SSE, WebSocket, Socket.IO, GraphQL schema fetch
-├── apix-import     Postman collection and environment import
+├── apix-import     import of Postman, Insomnia, OpenAPI, HAR and WSDL
 ├── apix-codegen    "Copy as" (curl, curl.exe, PowerShell, code in 10 languages) and curl paste
 ├── apix-vault      encrypted collections
 ├── apix-script     pre-request and test scripts (QuickJS)
@@ -135,6 +135,7 @@ cargo run -p apix-http --example ws_server                          # WebSocket 
 cargo run -p apix-http --example graphql_server                     # a GraphQL endpoint (schema and a few users) on :8769
 cargo run -p apix-http --example socketio_server                    # Socket.IO 4: namespaces /, /chat, /ticker, /private (auth) on :8771
 cargo run -p apix-grpc --example grpc_server                        # a gRPC Greeter with reflection on :8770
+cargo run -p apix-http --example soap_server                        # a SOAP calculator on :8773 (WSDL at ?wsdl; faults with 500 and 200)
 cargo run -p apix-proto --example mqtt_broker                       # an MQTT broker on :8772 (`clock` ticks every second)
 ```
 
@@ -192,7 +193,7 @@ so a new commit rebuilds it and an unchanged one reuses it.
 | apix-grpc | addresses, status codes, headers and auth as metadata; against a local Greeter (built from dynamic messages, with and without reflection): listing and describing the service, all four kinds of method, auth reaching the server, a failed status, .proto files with imports, and the errors for no description, an unknown method, a message that does not fit, a list for a unary method, a missing file and no server; example messages; a call as an HTTP response for runs (status mapping, `grpc-status`, a stream as a list); TLS against a server with a certificate from its own authority (refused, trusted with the CA, accepted unchecked) |
 | apix-proto | MQTT addresses, logins and options; against a local broker: every quality of service, wildcards, subscribing and leaving while connected, refused subscriptions and bad topics, retained messages, logins and kept sessions, the broker hanging up, `mqtts://` with an own CA or unchecked |
 | apix-codegen | shell quoting for bash, cmd and PowerShell; curl paste; round trips; every language's URL, headers, bodies, string escaping and settings |
-| apix-import | Postman v2.0/v2.1 fixtures |
+| apix-import | Postman v2.0/v2.1 fixtures; WSDL: both SOAP versions, ports and addresses, document and rpc styles, headers, examples from the schema (extension, enums, choices, `form`, recursion), imports and what could not be read, locations, WSDL 2.0 refused |
 | apix-script | variables and request changes from pre-request scripts, `pm.test` / `pm.expect` results and messages, the older `tests[...]` API, errors naming the file, endless scripts stopped, `setNextRequest`, `atob`/`btoa`, `pm.sendRequest` (callback and `await`, waiting not counted), the built-in libraries against known digests, checks without code, values and expressions for response targets |
 | apix-runner | CSV (quotes, line breaks, `;`, BOM) and JSON data files, dotenv files and `APIX_VAR_*` names, iteration counts and data rows, pause/stop timing, JUnit/JSON/HTML output and escaping, dates; whole runs against a local server (data rows, sidebar order, `bail`, `setNextRequest`) |
 | apix-vault | encryption format, tampering, password change, recovery key, keychain entries (against the real credential store under a test service name; skipped where none exists) |

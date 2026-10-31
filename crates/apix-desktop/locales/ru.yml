@@ -300,6 +300,8 @@ import.project_in: Создать в…
 import.project_summary: "Коллекций %{collections}, запросов %{requests} и окружений %{environments} теперь в %{name}."
 import.prompt: Импорт файла Postman, Insomnia, OpenAPI или HAR
 import.unknown_format: "%{path} — не экспорт, который умеет читать Apix (Postman, Insomnia v4, OpenAPI/Swagger, HAR)."
+import.url_ok: Импортировать
+import.url_title: Импорт по URL
 menu.active_environment: Активное окружение
 menu.cancel: Отменить
 menu.close_tab: Закрыть вкладку
@@ -318,7 +320,8 @@ menu.group_collection: Коллекциям
 menu.group_environment: Окружениям
 menu.help: Справка
 menu.history: История…
-menu.import_postman: Импорт (Postman, Insomnia, OpenAPI, HAR)…
+menu.import_postman: Импорт (Postman, Insomnia, OpenAPI, HAR, WSDL)…
+menu.import_url: Импорт по URL…
 menu.lock_collections: Заблокировать зашифрованные коллекции
 menu.method: Метод
 menu.move_into_project: Переместить в проект…
@@ -630,6 +633,8 @@ sio.path: Путь
 sio.send_hint: "Ctrl+Enter отправляет; JSON — один аргумент, другой текст — строка"
 sio.unreadable: "Нечитаемый кадр: %{text}"
 sio.wants_ack: "ждёт ack %{id}"
+soap.fault: "Ошибка SOAP: %{fault}"
+soap.template_hint: "Начать конверт SOAP:"
 stream.all_types: Все %{count}
 stream.count: "Событий: %{count}"
 stream.dropped_reconnecting: Соединение оборвалось (%{error}); переподключение через %{seconds} с
