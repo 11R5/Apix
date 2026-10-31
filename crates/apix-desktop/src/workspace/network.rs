@@ -203,7 +203,7 @@ impl Workspace {
             for hop in &trace.redirects {
                 body = body.child(row(
                     tr!("network.redirect.followed"),
-                    format!("{} → {}", hop.status, hop.to).into(),
+                    format!("{} → {}", hop.status, apix_core::display_url(&hop.to)).into(),
                 ));
             }
         }

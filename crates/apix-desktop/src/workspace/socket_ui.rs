@@ -261,7 +261,7 @@ impl Workspace {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
-        let url = request.url.clone();
+        let url = apix_core::display_url(&request.url);
         let (incoming, commands, running) = net::ws_connect(request);
         self.follow_socket(
             url,
@@ -282,7 +282,7 @@ impl Workspace {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
-        let url = request.url.clone();
+        let url = apix_core::display_url(&request.url);
         let (incoming, commands, running) = net::sio_connect(request);
         self.follow_socket(
             url,
@@ -302,7 +302,7 @@ impl Workspace {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
-        let url = apix_proto::mqtt::display_url(&request.url);
+        let url = apix_core::display_url(&request.url);
         let (incoming, commands, running) = net::mqtt_connect(request);
         self.follow_socket(
             url,

@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:63f4174369ee0a4c -->
+<!-- translated from en/user-guide.md sha256:9143a3a8eaeaa913 -->
 
 # Apix kullanım kılavuzu
 
@@ -574,6 +574,10 @@ Koşu bitince **Raporu kaydet** onu **JUnit XML** (CI test görünümleri için)
 **JSON** (olan her şey) ya da **HTML** (her tarayıcıda açılan, açık ve koyu
 temalı bir sayfa) olarak yazar. `apix run` aynısını terminalden yapar; bkz.
 [Koleksiyonu CI'da çalıştırma](workflows.md#koleksiyonu-cida-çalıştırma).
+URL'ye yazılan şifre (`https://kullanici:sifre@host`) raporlarda, komut satırı
+çıktısında, günlüklerde ve hata mesajlarında gösterilmez. İstek dosyası ve URL
+çubuğu onu tutmaya devam eder; gerçek şifreler için değişken ya da Yetkilendirme
+sekmesini tercih edin.
 
 ## Sekmeler
 

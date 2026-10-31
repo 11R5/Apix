@@ -869,6 +869,25 @@ impl Assertion {
     }
 }
 
+/// A URL for logs, messages and reports: without the password it may hold
+/// (`scheme://user:password@host`). Works on the text, so it also covers a URL
+/// that does not parse.
+pub fn display_url(url: &str) -> String {
+    let Some(start) = url.find("://").map(|i| i + 3) else {
+        return url.to_owned();
+    };
+    let authority = url[start..]
+        .find(['/', '?', '#'])
+        .map_or(url.len(), |end| start + end);
+    match url[start..authority].rfind('@').map(|at| start + at) {
+        Some(at) => match url[start..at].find(':') {
+            Some(colon) => format!("{}{}", &url[..start + colon], &url[at..]),
+            None => url.to_owned(),
+        },
+        None => url.to_owned(),
+    }
+}
+
 impl Request {
     pub fn new(method: Method, url: impl Into<String>) -> Self {
         Self {
@@ -1098,6 +1117,26 @@ subprotocols = ["graphql-transport-ws", "graphql-ws"]
         };
         assert_eq!(long.label().chars().count(), 41);
         assert!(long.label().ends_with('…'));
+    }
+
+    #[test]
+    fn urls_for_display_lose_their_password() {
+        for (url, shown) in [
+            ("mqtt://ann:s3cret@b:1883", "mqtt://ann@b:1883"),
+            ("wss://ann:s3cret@h/chat?a=1", "wss://ann@h/chat?a=1"),
+            ("http://:s3cret@h", "http://@h"),
+            // An @ in the password; one after the host is not a login.
+            ("http://ann:s3@cret@h/", "http://ann@h/"),
+            ("http://h/a:b@c", "http://h/a:b@c"),
+            ("http://h?u=a:b@c", "http://h?u=a:b@c"),
+            // Nothing to hide, or nothing to read.
+            ("https://ann@h", "https://ann@h"),
+            ("https://h:8080/x", "https://h:8080/x"),
+            ("not a url", "not a url"),
+            ("", ""),
+        ] {
+            assert_eq!(display_url(url), shown);
+        }
     }
 
     #[test]

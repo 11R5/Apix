@@ -557,6 +557,9 @@ When the run is over, **Save report** writes it as **JUnit XML** (for CI
 test views), **JSON** (everything that happened) or **HTML** (a page that
 opens in any browser, light or dark). `apix run` does the same from a
 terminal; see [Run a collection in CI](workflows.md#run-a-collection-in-ci).
+A password written in a URL (`https://user:password@host`) is left out of
+reports, command-line output, logs and error messages. The request file and
+the URL bar still hold it, so prefer a variable or the Auth tab for real ones.
 
 ## Tabs
 

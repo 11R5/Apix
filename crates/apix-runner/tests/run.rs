@@ -176,6 +176,50 @@ fn bail_stops_at_the_first_failure() {
 }
 
 #[test]
+fn passwords_in_urls_stay_out_of_reports() {
+    let rt = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap();
+    let client = HttpClient::new().unwrap();
+    // A server that answers, and an address nobody listens on.
+    let listening = serve();
+    let closed = TcpListener::bind("127.0.0.1:0").unwrap();
+    let closed_addr = closed.local_addr().unwrap();
+    drop(closed);
+    for (tag, base) in [
+        ("pass", listening),
+        ("gone", format!("http://{closed_addr}")),
+    ] {
+        let base = base.replace("http://", "http://ann:s3cret@");
+        let root = collection(tag, &base);
+        let scope = Scope::find(&root).unwrap();
+        let mut plan = plan(&root, &scope);
+        plan.data = data::parse_csv("id\n7\n").unwrap();
+        plan.requests.truncate(1);
+        let report = rt.block_on(apix_runner::run(
+            &scope,
+            &plan,
+            &client,
+            sender(),
+            &Control::default(),
+            |_| {},
+        ));
+        if tag == "pass" {
+            assert!(report.items[0].url.starts_with("http://ann@"), "{report:?}");
+        }
+        for text in [
+            format!("{report:?}"),
+            report.to_junit(),
+            report.to_json(),
+            report.to_html(),
+        ] {
+            assert!(!text.contains("s3cret"), "{tag}: {text}");
+        }
+    }
+}
+
+#[test]
 fn set_next_request_ends_the_iteration() {
     let base = serve();
     let root = collection("next", &base);

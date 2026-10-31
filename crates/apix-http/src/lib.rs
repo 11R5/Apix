@@ -603,7 +603,7 @@ async fn execute(
         }
         match recorder.take().redirects.pop() {
             Some(last) => HttpError::Redirected {
-                to: last.to,
+                to: apix_core::display_url(&last.to),
                 source,
             },
             None => HttpError::Request(source),
@@ -688,7 +688,7 @@ fn header_value(value: &str) -> Result<reqwest::header::HeaderValue, HttpError> 
 /// The reqwest request for `req` on `client`.
 fn build(client: &reqwest::Client, req: &Request) -> Result<reqwest::RequestBuilder, HttpError> {
     let mut url = reqwest::Url::parse(&req.url).map_err(|e| HttpError::InvalidUrl {
-        url: req.url.clone(),
+        url: apix_core::display_url(&req.url),
         reason: e.to_string(),
     })?;
 

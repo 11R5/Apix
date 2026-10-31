@@ -63,15 +63,15 @@ fn endpoint_uri(url: &str) -> Result<(String, bool), GrpcError> {
     let trimmed = url.trim();
     let (scheme, rest) = trimmed
         .split_once("://")
-        .ok_or_else(|| GrpcError::Url(url.into()))?;
+        .ok_or_else(|| GrpcError::Url(apix_core::display_url(url)))?;
     let tls = match scheme.to_ascii_lowercase().as_str() {
         "grpc" | "http" => false,
         "grpcs" | "https" => true,
-        _ => return Err(GrpcError::Url(url.into())),
+        _ => return Err(GrpcError::Url(apix_core::display_url(url))),
     };
     let authority = rest.split(['/', '?', '#']).next().unwrap_or_default();
     if authority.is_empty() {
-        return Err(GrpcError::Url(url.into()));
+        return Err(GrpcError::Url(apix_core::display_url(url)));
     }
     let scheme = if tls { "https" } else { "http" };
     Ok((format!("{scheme}://{authority}"), tls))
@@ -90,7 +90,7 @@ fn read(path: &str) -> Result<Vec<u8>, GrpcError> {
 /// verification off.
 pub async fn connect(req: &Request) -> Result<Channel, GrpcError> {
     let (uri, tls) = endpoint_uri(&req.url)?;
-    let target = uri.clone();
+    let target = apix_core::display_url(&uri);
     let fail = |reason: String| GrpcError::Connect {
         target: target.clone(),
         reason,
@@ -116,13 +116,15 @@ pub async fn connect(req: &Request) -> Result<Channel, GrpcError> {
         uri.clone()
     };
     let mut endpoint = Endpoint::from_shared(plain)
-        .map_err(|_| GrpcError::Url(req.url.clone()))?
+        .map_err(|_| GrpcError::Url(apix_core::display_url(&req.url)))?
         .connect_timeout(Duration::from_secs(10));
     if let Some(timeout) = settings.timeout {
         endpoint = endpoint.timeout(timeout).connect_timeout(timeout);
     }
     if insecure {
-        let origin = uri.parse().map_err(|_| GrpcError::Url(req.url.clone()))?;
+        let origin = uri
+            .parse()
+            .map_err(|_| GrpcError::Url(apix_core::display_url(&req.url)))?;
         let config = apix_http::tls::client_config(&settings, &[b"h2"])
             .map_err(|e| GrpcError::Tls(e.to_string()))?;
         let connector = insecure::Connector::new(config);

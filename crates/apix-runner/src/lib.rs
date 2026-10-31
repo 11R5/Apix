@@ -100,7 +100,7 @@ impl Exchange {
             name: request.name.clone(),
             path,
             method: request.method.to_string(),
-            url: request.url.clone(),
+            url: apix_core::display_url(&request.url),
             status: response.map(|r| r.status),
             reason: response
                 .and_then(|r| r.reason)
@@ -471,7 +471,9 @@ pub async fn run(
                             .as_ref()
                             .map(|r| r.method.to_string())
                             .unwrap_or_default(),
-                        url: request.map(|r| r.url).unwrap_or_default(),
+                        url: request
+                            .map(|r| apix_core::display_url(&r.url))
+                            .unwrap_or_default(),
                         error: Some(format!("{err:#}")),
                         ..Default::default()
                     }
