@@ -1,2 +1,5 @@
 # Request files are TOML; let GitHub highlight them as such.
 *.apix linguist-language=TOML
+
+# What real code generators wrote, byte for byte; some of it is binary.
+crates/apix-grpc/tests/fixtures/generated/* -text

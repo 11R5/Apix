@@ -459,9 +459,11 @@ gRPC method: the URL bar shows **gRPC**, and the Body tab becomes
 
 1. Write the address, such as `grpc://localhost:50051`.
 2. **Load methods** asks the server what it offers (gRPC server reflection).
-   If the server has no reflection, **Add .proto** picks the service's
-   `.proto` files; imports are looked up next to them, and Google's
-   well-known types are built in. Nothing needs `protoc`.
+   If the server has no reflection, **Add file** picks the service's
+   `.proto` files or descriptor sets (`protoc --descriptor_set_out`, `buf
+   build`, binary or JSON); imports are looked up next to them, and Google's
+   well-known types are built in. Nothing needs `protoc`. With no such file,
+   see [Without a .proto file](#without-a-proto-file).
 3. Pick the method. Its kind is shown beside it: unary, server streaming,
    client streaming or bidirectional.
 4. Write the message as JSON, or press **Example message** for one with every
@@ -494,6 +496,61 @@ without running its scripts.
 
 Every call is kept in the **History** (Ctrl+H) with its log, status and
 metadata; picking it shows the call again as it ended.
+
+### Without a .proto file
+
+On the wire, gRPC sends field numbers, not names, and calls
+`package.Service/Method`. So whatever you start from, those have to end up right.
+The **Definition** tab, next to **Message**, makes a definition from what you
+have. Paste it (or **Read a file**, or **Use the message**), give the **Method to
+call** if the source does not say, and press **Convert**. The result is `.proto`
+text you can edit, kept in the request; **Save as a file** writes it out.
+
+![A definition made from a JSON example, and the warning when it does not match](images/grpc-definition.png)
+
+| You have | What comes of it |
+|---|---|
+| `.proto` text, a descriptor set (binary or JSON) | Exact. |
+| Generated code that holds the description: `_pb2.py`, Java's outer class, Kotlin through it, `.cs`, `.pb.cc`, `.pb.go`, `_pb.rb`, PHP's `GPBMetadata`, protobuf-es `_pb.ts` | Exact: the description inside is read, whatever the language. |
+| Code with numbers but no description: Go `protobuf:"…"` tags, Rust `#[prost(…)]`, ts-proto, betterproto, `[ProtoMember(n)]`, `@ProtoNumber(n)` | Numbers and types are right; check the calls when the source does not list them. |
+| Types written by hand: TypeScript, Go, Rust, C#, Java, Kotlin, Python, Swift, Dart, C++ | **A guess.** Fields are numbered in order of appearance. |
+| An example message in JSON (the optional second box takes the answer) | **A guess.** Types come from the values; a JSON list makes a stream. |
+
+A guess is only as good as its numbers, and **wrong numbers do not fail: they
+fill the wrong fields.** So Apix never hides that:
+
+- If the server offers reflection, its description is used instead of a guess,
+  and each difference is listed (`number 1 here, 7 on the server`).
+- If it does not, every call says the numbers are unchecked. Fields of the answer
+  that the definition does not know are shown with their numbers and values
+  (`1:"o-1"`), which is also how to work out an answer you have no type for. An
+  answer that does not fit at all fails with a line saying the definition is the
+  likely cause.
+
+Other files `protoc` generates only use the description (`.pb.h`, Kotlin's
+builders, `.pyi`), and gRPC stubs hold only the calls; Apix says which file to use
+instead. Not read: Protobuf editions as `.proto` text (they stay a descriptor set),
+oneofs from tags or types (their fields become plain fields, which go the same on
+the wire), and generics.
+
+From the command line:
+
+```bash
+apix proto service_pb2.py
+```
+
+```bash
+apix proto order.json --method shop.v1.Orders/Create --response answer.json --out orders.proto
+```
+
+```bash
+apix proto types.ts --method shop.v1.Orders/Create --into create.apix
+```
+
+The `.proto` goes to standard output or `--out`, `--into` keeps it in a request,
+and what had to be chosen goes to standard error. `apix send`, `apix run` and
+`apix schema` use a definition the same way, and `apix send` prints the same
+warnings; a run's report does not include them.
 
 ## Scripts and tests
 

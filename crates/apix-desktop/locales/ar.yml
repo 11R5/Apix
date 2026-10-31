@@ -246,30 +246,51 @@ extract.path: "القيمة (كما في الفحوص: body.data.token و header
 extract.saved_collection: "حُفظ %{name} = %{value} في متغيرات المجموعة."
 extract.saved_env: "حُفظ %{name} = %{value} في «%{env}»."
 extract.title: حفظ قيمة كمتغير
-grpc.add_protos: إضافة .proto
+grpc.add_protos: إضافة ملف
 grpc.calling: جارٍ الاستدعاء…
-grpc.choose_protos: اختر ملفات .proto
+grpc.choose_protos: اختر ملفات ‎.proto أو مجموعات الواصفات
+grpc.def_choose: اختر ملفًا لتحويله
+grpc.def_clear: إزالة
+grpc.def_convert: تحويل
+grpc.def_exact: "دقيق، المصدر: %{format}."
+grpc.def_from_file: قراءة ملف
+grpc.def_from_message: استخدام الرسالة
+grpc.def_guessed: "تخمين من %{format}: يجب أن تطابق أرقام الحقول أرقام الخادم، والأرقام الخاطئة تملأ الحقول الخطأ دون أي خطأ."
+grpc.def_method: الطريقة المراد استدعاؤها
+grpc.def_none: "لا يوجد تعريف: تصف الملفات أو الخادم الخدمة."
+grpc.def_numbers: "أرقام الحقول من المصدر (%{format})؛ تحقق من صحة الاستدعاءات."
+grpc.def_response: الرد، إذا كان ما سبق هو الطلب فقط (اختياري)
+grpc.def_result: التعريف المحفوظ في الطلب
+grpc.def_save: حفظ كملف
+grpc.def_saved: "تم الحفظ في %{path}"
+grpc.def_source: التحويل من
+grpc.def_source_hint: Protobuf أو مجموعة واصفات أو شيفرة مولدة أو أنواع بلغة برمجة أو مثال JSON
+grpc.def_unverified: قد تكون أرقام حقول هذا التعريف خاطئة؛ أعد تحميل الطرق لمقارنته بالخادم.
 grpc.example: رسالة مثال
 grpc.headers: بيانات الاستجابة الوصفية
-grpc.hint_protos: حمّل الطرق من ملفات .proto.
-grpc.hint_reflection: حمّل الطرق من الخادم (reflection)، أو أضف ملفات .proto الخاصة بالخدمة.
+grpc.hint_definition: حمّل الطرق من التعريف.
+grpc.hint_protos: حمّل الطرق من الملفات.
+grpc.hint_reflection: "حمّل الطرق من الخادم (reflection) أو أعطِ وصف الخدمة: ملفات أو علامة التبويب «التعريف»."
 grpc.kind_bidi: ثنائي الاتجاه
 grpc.kind_client: تدفق من العميل
 grpc.kind_server: تدفق من الخادم
 grpc.kind_unary: أحادي
 grpc.load_methods: تحميل الطرق
-grpc.loaded_protos: "%{count} طريقة، من ملفات .proto"
+grpc.loaded_definition: "%{count} طرق، من التعريف"
+grpc.loaded_protos: "%{count} طرق، من الملفات"
 grpc.loaded_reflection: "%{count} طريقة، من الخادم (reflection)"
 grpc.loading: جارٍ تحميل الطرق…
 grpc.message: الرسالة (JSON)
 grpc.method: الطريقة
 grpc.pick_method: اختر طريقة
-grpc.protos: ملفات Proto
+grpc.protos: الملفات
 grpc.protos_none: لا شيء، يُسأل الخادم
 grpc.reload_methods: إعادة تحميل الطرق
 grpc.search_methods: ابحث في الطرق
 grpc.stopped: أُوقف
 grpc.stream_hint: قائمة JSON ترسل عدة رسائل
+grpc.tab_definition: التعريف
+grpc.tab_message: الرسالة
 grpc.trailers: المقطورات
 history.ago_days: منذ %{count} يوم
 history.ago_hours: منذ %{count} ساعة

@@ -248,30 +248,51 @@ extract.path: "Value (same as in Checks: body.data.token, header.X-Token, status
 extract.saved_collection: "%{name} = %{value} saved in the collection’s variables."
 extract.saved_env: "%{name} = %{value} saved in “%{env}”."
 extract.title: Save a value as a variable
-grpc.add_protos: Add .proto
+grpc.add_protos: Add file
 grpc.calling: Calling…
-grpc.choose_protos: Choose .proto files
+grpc.choose_protos: Choose .proto files or descriptor sets
+grpc.def_choose: Choose a file to convert
+grpc.def_clear: Remove
+grpc.def_convert: Convert
+grpc.def_exact: "Exact, from %{format}."
+grpc.def_from_file: Read a file
+grpc.def_from_message: Use the message
+grpc.def_guessed: "A guess from %{format}: field numbers must match the server's, and wrong ones fill the wrong fields without an error."
+grpc.def_method: Method to call
+grpc.def_none: "No definition: the files or the server describe the service."
+grpc.def_numbers: "Field numbers from the source (%{format}); check that the calls are right."
+grpc.def_response: The answer, if the above is only the request (optional)
+grpc.def_result: Definition kept in the request
+grpc.def_save: Save as a file
+grpc.def_saved: "Saved to %{path}"
+grpc.def_source: Convert from
+grpc.def_source_hint: Protobuf, a descriptor set, generated code, types in a programming language, or a JSON example
+grpc.def_unverified: The field numbers of this definition may be wrong; reload the methods to check it against the server.
 grpc.example: Example message
 grpc.headers: Response metadata
-grpc.hint_protos: Load the methods from the .proto files.
-grpc.hint_reflection: Load the methods from the server (reflection), or add the service's .proto files.
+grpc.hint_definition: Load the methods from the definition.
+grpc.hint_protos: Load the methods from the files.
+grpc.hint_reflection: "Load the methods from the server (reflection), or give the service's description: files, or the Definition tab."
 grpc.kind_bidi: bidirectional
 grpc.kind_client: client streaming
 grpc.kind_server: server streaming
 grpc.kind_unary: unary
 grpc.load_methods: Load methods
-grpc.loaded_protos: "%{count} methods, from the .proto files"
+grpc.loaded_definition: "%{count} methods, from the definition"
+grpc.loaded_protos: "%{count} methods, from the files"
 grpc.loaded_reflection: "%{count} methods, from the server (reflection)"
 grpc.loading: Loading the methods…
 grpc.message: Message (JSON)
 grpc.method: Method
 grpc.pick_method: Pick a method
-grpc.protos: Proto files
+grpc.protos: Files
 grpc.protos_none: none, the server is asked
 grpc.reload_methods: Reload methods
 grpc.search_methods: Search methods
 grpc.stopped: Stopped
 grpc.stream_hint: a JSON list sends several messages
+grpc.tab_definition: Definition
+grpc.tab_message: Message
 grpc.trailers: Trailers
 history.ago_days: "%{count} d ago"
 history.ago_hours: "%{count} h ago"

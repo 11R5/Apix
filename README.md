@@ -133,6 +133,9 @@ Measurements of the other tools on the same machine are planned.
   server reflection or `.proto` files (no `protoc` needed), with messages as
   JSON, an example message for any method, and a live log of what goes both
   ways; `apix send`, `apix schema`, runs and test scripts work on them too.
+  No `.proto` at hand? A definition can be made from a descriptor set, the code
+  generated from it, types in a programming language or a JSON example; what is
+  only a guess says so, and is checked against the server's reflection.
 - **History** of sent requests with their responses (Ctrl+H): search it and
   send any of them again.
 - **Command palette** (Ctrl+K) and a menu bar that holds every command.

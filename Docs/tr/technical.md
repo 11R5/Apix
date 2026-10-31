@@ -1,4 +1,4 @@
-<!-- translated from en/technical.md sha256:9a2ff38f0ba97b7c -->
+<!-- translated from en/technical.md sha256:86b614e97d3156ce -->
 
 # Teknik notlar
 
@@ -16,7 +16,7 @@ crates/
 ├── apix-vault      şifreli koleksiyonlar
 ├── apix-script     istek öncesi ve test scriptleri (QuickJS)
 ├── apix-runner     koleksiyon koşuları, veri dosyaları, JUnit/JSON/HTML raporlar
-├── apix-grpc       gRPC çağrıları: .proto dosyaları ya da sunucu reflection'ı, JSON mesajlar
+├── apix-grpc       gRPC çağrıları: .proto dosyaları, sunucu reflection'ı ya da koddan ve JSON'dan tanım, JSON mesajlar
 ├── apix-proto      diğer protokoller: MQTT
 ├── apix-cli        `apix` komutu
 └── apix-desktop    masaüstü uygulaması (GPUI); arayüz metinleri locales/ içinde
@@ -70,7 +70,7 @@ Masaüstü uygulamasının tam bir release derlemesi birkaç dakika sürer.
 |---|---|
 | Arayüz | `gpui-kit` 0.7 (GPUI ve bileşen kütüphanesi), JSON ve GraphQL için tree-sitter gramerleri |
 | HTTP | rustls ile `reqwest` 0.12, `tokio`, `hyper-util`, zamanlama için `tower` katmanları |
-| gRPC | `tonic` 0.14 (istemci, aynı hyper ve rustls üzerinde), `prost-reflect` (çalışma anında bilinen mesajlar, JSON), `protox` (.proto dosyalarını `protoc` olmadan okur), `tonic-reflection` (reflection istemcisi), sertifika denetimi kapalı gRPC için `rustls` ve `tokio-rustls`; `rcgen` test sertifikaları üretir (yalnızca testlerde) |
+| gRPC | `tonic` 0.14 (istemci, aynı hyper ve rustls üzerinde), `prost-reflect` (çalışma anında bilinen mesajlar, JSON), `protox` (.proto dosyalarını `protoc` olmadan okur), `regex` (üretilmiş kod ve tipleri okuma), `tonic-reflection` (reflection istemcisi), sertifika denetimi kapalı gRPC için `rustls` ve `tokio-rustls`; `rcgen` test sertifikaları üretir (yalnızca testlerde) |
 | Ağ ayrıntıları | `x509-parser` (sertifikalar), `netdev` (ağ arayüzleri, ağ geçidi, DNS sunucuları) |
 | İmzalama | `sha2`, `sha1`, `hmac`, `md-5`, `base64`, `rand_core` (AWS SigV4, OAuth 1.0, Digest, PKCE) |
 | Şifreleme | `chacha20poly1305` (XChaCha20-Poly1305), `argon2`, `zeroize`, `keyring` (işletim sistemi kimlik bilgisi deposu) |
@@ -192,7 +192,7 @@ alır; yeni bir commit yeniden derler, değişmeyen kaynak öncekini kullanır.
 |---|---|
 | apix-core | model ve dosya formatı için gidiş-dönüş (round trip) testleri, değişkenler, anahtarlıktaki ortam gizli değerleri (kimlik bilgisi deposu yoksa atlanır), AWS test paketine, RFC 7616'ya (Digest), RFC 7636'ya (PKCE) ve OAuth 1.0 örneğine karşı imzalama; GraphQL şemaları (introspection okuma, SDL) ve bir sorgunun her yerinde neyin önerilip açıklandığı (alanlar, takma adlar, argümanlar, enum değerleri, girdi nesneleri, listeler, fragment'ler, değişken türleri, yorumlar ve metinler); `[grpc]` tablosu; gRPC çağrıları dahil geçmiş kayıtları; GraphQL değişken tanımları ve değişkenler (JSON) içinde tamamlama; güvenilen CA ayarı |
 | apix-http | istek oluşturma, her gövde türü, OAuth 2.0, Digest, AWS ve OAuth 1.0 için yerel bir sunucu, ağ izi; SSE ayrıştırıcı (parçaların her yerden bölünmesi dahil), yavaş gönderen bir sunucuya karşı akış, WebSocket (yankı, el sıkışmada auth ve parametreler, iki taraftan kapanış, reddedilen el sıkışma), isteğin yetkilendirmesiyle GraphQL şeması çekme ve şema yokken verilen hatalar, kendi sertifika yetkilisiyle HTTPS; WebSocket alt protokolleri ve ikili mesajlar, kendi CA'sıyla ya da denetimsiz `wss://`; bir olay akışının yeniden bağlanmaya taşıdıkları; Socket.IO paketleri, el sıkışma adresleri ve ikili ekler, yerel bir Socket.IO 4 sunucusuna karşı: olaylar, iki yönde ack'ler, ping'ler, auth'lu ad alanları ve retler, ikili ekler, sunucunun istemciyi çıkarması, düz WebSocket sunucusunun ayırt edilmesi |
-| apix-grpc | adresler, durum kodları, metadata olarak başlıklar ve yetkilendirme; yerel bir Greeter'a karşı (dinamik mesajlarla kurulmuş, reflection'lı ve reflection'sız): servisi listeleme ve tanımlama, dört metot türünün hepsi, yetkilendirmenin sunucuya ulaşması, başarısız bir durum, import'lu .proto dosyaları ve tanım yokken, bilinmeyen metotta, türüne uymayan mesajda, tekli metoda liste verilince, eksik dosyada ve sunucu yokken verilen hatalar; örnek mesajlar; koşular için HTTP yanıtı olarak çağrı (durum eşlemesi, `grpc-status`, liste olarak akış); kendi sertifika yetkilisinden sertifikalı bir sunucuya karşı TLS (reddedilir, CA ile güvenilir, denetlenmeden kabul edilir) |
+| apix-grpc | adresler, durum kodları, metadata olarak başlıklar ve yetkilendirme; yerel bir Greeter'a karşı (dinamik mesajlarla kurulmuş, reflection'lı ve reflection'sız): servisi listeleme ve tanımlama, dört metot türünün hepsi, yetkilendirmenin sunucuya ulaşması, başarısız bir durum, import'lu .proto dosyaları ve tanım yokken, bilinmeyen metotta, türüne uymayan mesajda, tekli metoda liste verilince, eksik dosyada ve sunucu yokken verilen hatalar; örnek mesajlar; koşular için HTTP yanıtı olarak çağrı (durum eşlemesi, `grpc-status`, liste olarak akış); kendi sertifika yetkilisinden sertifikalı bir sunucuya karşı TLS (reddedilir, CA ile güvenilir, denetlenmeden kabul edilir); tanımlar: `tests/fixtures/generated` içinde saklanan gerçek üretici çıktıları (Python, Java, C#, C++, PHP için protoc 3.19; protoc-gen-es; ts-proto) özgün servisi geri vermeli, Go, Rust, betterproto ve işaretlemeler numara ve türü verir, aynı tip 10 dilden okunur, örnek JSON, sunucuyla karşılaştırma, tahminin reflection'a yol vermesi, bilinmeyen alanların bildirilmesi, yanlış yanıt türünün açıklanması |
 | apix-proto | MQTT adresleri, girişler ve seçenekler; yerel bir broker'a karşı: her QoS, joker konular, bağlıyken abone olma ve bırakma, reddedilen abonelikler ve geçersiz konular, retained mesajlar, girişler ve saklanan oturumlar, broker'ın bağlantıyı kesmesi, kendi CA'sıyla ya da denetimsiz `mqtts://` |
 | apix-codegen | bash, cmd ve PowerShell için kabuk tırnaklama; curl yapıştırma; gidiş-dönüş testleri; her dilde URL, başlıklar, gövdeler, dize kaçışları ve ayarlar |
 | apix-import | Postman v2.0/v2.1 fixture'ları; WSDL: iki SOAP sürümü, portlar ve adresler, document ve rpc stilleri, başlıklar, şemadan örnekler (extension, enum, choice, `form`, özyineleme), içe aktarılanlar ve okunamayanlar, konumlar, reddedilen WSDL 2.0 |

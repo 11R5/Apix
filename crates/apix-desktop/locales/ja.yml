@@ -246,30 +246,51 @@ extract.path: "値（チェックと同じ: body.data.token、header.X-Token、s
 extract.saved_collection: "%{name} = %{value} をコレクションの変数に保存しました。"
 extract.saved_env: "%{name} = %{value} を「%{env}」に保存しました。"
 extract.title: 値を変数として保存
-grpc.add_protos: .proto を追加
+grpc.add_protos: ファイルを追加
 grpc.calling: 呼び出し中…
-grpc.choose_protos: .proto ファイルを選択
+grpc.choose_protos: .proto ファイルまたはディスクリプタセットを選択
+grpc.def_choose: 変換するファイルを選択
+grpc.def_clear: 削除
+grpc.def_convert: 変換
+grpc.def_exact: "正確です (元: %{format})。"
+grpc.def_from_file: ファイルを読み込む
+grpc.def_from_message: メッセージを使用
+grpc.def_guessed: "%{format} からの推測です: フィールド番号はサーバーと一致する必要があり、誤っているとエラーなしで別のフィールドに入ります。"
+grpc.def_method: 呼び出すメソッド
+grpc.def_none: "定義なし: ファイルまたはサーバーがサービスを記述します。"
+grpc.def_numbers: "フィールド番号はソース由来です (%{format})。呼び出しが正しいか確認してください。"
+grpc.def_response: 上がリクエストのみの場合の応答 (任意)
+grpc.def_result: リクエストに保存される定義
+grpc.def_save: ファイルとして保存
+grpc.def_saved: "%{path} に保存しました"
+grpc.def_source: 変換元
+grpc.def_source_hint: Protobuf、ディスクリプタセット、生成コード、プログラミング言語の型、または JSON の例
+grpc.def_unverified: この定義のフィールド番号は誤っている可能性があります。メソッドを再読み込みしてサーバーと照合してください。
 grpc.example: サンプルメッセージ
 grpc.headers: レスポンスメタデータ
-grpc.hint_protos: .proto ファイルからメソッドを読み込んでください。
-grpc.hint_reflection: サーバーからメソッドを読み込むか (リフレクション)、サービスの .proto ファイルを追加してください。
+grpc.hint_definition: 定義からメソッドを読み込みます。
+grpc.hint_protos: ファイルからメソッドを読み込みます。
+grpc.hint_reflection: サーバーからメソッドを読み込む (リフレクション) か、サービスの記述 (ファイルまたは定義タブ) を指定してください。
 grpc.kind_bidi: 双方向
 grpc.kind_client: クライアントストリーミング
 grpc.kind_server: サーバーストリーミング
 grpc.kind_unary: 単項
 grpc.load_methods: メソッドを読み込む
-grpc.loaded_protos: "%{count} 個のメソッド (.proto ファイル)"
+grpc.loaded_definition: "%{count} 個のメソッド (定義より)"
+grpc.loaded_protos: "%{count} 個のメソッド (ファイルより)"
 grpc.loaded_reflection: "%{count} 個のメソッド (サーバーのリフレクション)"
 grpc.loading: メソッドを読み込み中…
 grpc.message: メッセージ (JSON)
 grpc.method: メソッド
 grpc.pick_method: メソッドを選択
-grpc.protos: Proto ファイル
+grpc.protos: ファイル
 grpc.protos_none: なし (サーバーに問い合わせ)
 grpc.reload_methods: メソッドを再読み込み
 grpc.search_methods: メソッドを検索
 grpc.stopped: 停止しました
 grpc.stream_hint: JSON の配列で複数のメッセージを送信
+grpc.tab_definition: 定義
+grpc.tab_message: メッセージ
 grpc.trailers: トレーラー
 history.ago_days: "%{count}日前"
 history.ago_hours: "%{count}時間前"

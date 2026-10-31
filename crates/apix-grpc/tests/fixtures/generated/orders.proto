@@ -1,0 +1,53 @@
+// A service with enough in it to show whether a conversion is faithful.
+syntax = "proto3";
+
+package shop.v1;
+
+import "google/protobuf/timestamp.proto";
+
+service Orders {
+  rpc Create(CreateOrder) returns (Order);
+  rpc Watch(WatchOrder) returns (stream Order);
+  rpc Upload(stream Item) returns (Order);
+  rpc Chat(stream Item) returns (stream Item);
+}
+
+message CreateOrder {
+  string customer = 7;
+  repeated Item items = 3;
+  map<string, int32> stock = 12;
+  optional string note = 15;
+  Priority priority = 20;
+  oneof payment {
+    string card = 30;
+    Bank bank = 31;
+  }
+  message Bank {
+    string iban = 1;
+    sint32 branch = 2;
+  }
+}
+
+message Item {
+  string sku = 2;
+  int64 quantity = 5;
+  double price = 9;
+  bytes picture = 11;
+  fixed32 crc = 13;
+}
+
+message WatchOrder { string id = 4; }
+
+message Order {
+  string id = 1;
+  string customer = 7;
+  repeated Item items = 3;
+  google.protobuf.Timestamp created = 8;
+  Priority priority = 20;
+}
+
+enum Priority {
+  PRIORITY_UNSPECIFIED = 0;
+  PRIORITY_LOW = 1;
+  PRIORITY_HIGH = 9;
+}

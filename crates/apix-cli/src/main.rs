@@ -128,6 +128,25 @@ enum Command {
         #[command(flatten)]
         net: NetArgs,
     },
+    /// Make a gRPC definition from what you have: protobuf text, a descriptor
+    /// set, generated code, types in a programming language or a JSON example.
+    /// Prints it as .proto; what it had to choose goes to stderr
+    Proto {
+        /// A file, or `-` for standard input
+        source: PathBuf,
+        /// What to call, as package.Service/Method, when the source does not say
+        #[arg(long)]
+        method: Option<String>,
+        /// An example of the answer, or its type, when the source is the request
+        #[arg(long, value_name = "FILE")]
+        response: Option<PathBuf>,
+        /// Write it to this file instead of printing it
+        #[arg(long, value_name = "FILE")]
+        out: Option<PathBuf>,
+        /// Keep it in this request's [grpc] table (and its method, if given)
+        #[arg(long, value_name = "REQUEST")]
+        into: Option<PathBuf>,
+    },
     /// Import a Postman collection or environment, an Insomnia v4 export, an
     /// OpenAPI 3 / Swagger 2 spec (JSON or YAML), a HAR file or a WSDL; or a
     /// whole folder / "Export data" zip of them as a project
@@ -772,10 +791,9 @@ async fn run(cli: Cli) -> Result<bool> {
                     bail!("--json is for GraphQL; a gRPC service is printed as .proto text");
                 }
                 let request = relative_to_file(resolved.request, &file);
-                let metadata = apix_grpc::metadata(&request).await?;
-                let channel = apix_grpc::connect(&request).await?;
-                let pool = apix_grpc::descriptors(&request, &channel, &metadata).await?;
-                print!("{}", apix_grpc::describe(&pool));
+                let described = apix_grpc::load_description(&request).await?;
+                print_notes(&style, &described.notes);
+                print!("{}", apix_grpc::describe(&described.pool));
                 return Ok(true);
             }
             let fetched = apix_http::graphql::fetch_schema(&client, &resolved.request).await?;
@@ -785,6 +803,18 @@ async fn run(cli: Cli) -> Result<bool> {
                 print!("{}", fetched.schema.to_sdl());
             }
             Ok(true)
+        }
+        Command::Proto {
+            source,
+            method,
+            response,
+            out,
+            into,
+        } => {
+            if let Some(request) = &into {
+                unlock_around(request, &var)?;
+            }
+            proto(&style, &source, method, response, out, into)
         }
         Command::Import { file, out, into } => import(&style, &client, &file, out, into).await,
         Command::Export { dir, out } => {
@@ -900,6 +930,101 @@ async fn fetch_text(client: &HttpClient, location: &str) -> Result<String, Strin
 fn is_web_address(location: &str) -> bool {
     let lower = location.to_ascii_lowercase();
     lower.starts_with("http://") || lower.starts_with("https://")
+}
+
+/// What a gRPC description or answer gave reason to say, for stderr.
+fn print_notes(style: &Style, notes: &[String]) {
+    for note in notes {
+        eprintln!("{}{note}{}", style.yellow, style.reset);
+    }
+}
+
+/// `apix proto`: a definition from whatever describes the service.
+fn proto(
+    style: &Style,
+    source: &Path,
+    method: Option<String>,
+    response: Option<PathBuf>,
+    out: Option<PathBuf>,
+    into: Option<PathBuf>,
+) -> Result<bool> {
+    let bytes = if source == Path::new("-") {
+        let mut bytes = Vec::new();
+        std::io::Read::read_to_end(&mut std::io::stdin(), &mut bytes)
+            .context("cannot read standard input")?;
+        bytes
+    } else {
+        std::fs::read(source).with_context(|| format!("cannot read {}", source.display()))?
+    };
+    let response = response
+        .map(|path| {
+            std::fs::read_to_string(&path)
+                .with_context(|| format!("cannot read {}", path.display()))
+        })
+        .transpose()?;
+    let scope_and_request = into
+        .as_ref()
+        .map(|path| {
+            let request = apix_core::store::load_request(path)?;
+            Ok::<_, anyhow::Error>((path, request))
+        })
+        .transpose()?;
+    // A request's own method says what to call, unless told otherwise.
+    let known_method = method.clone().or_else(|| {
+        scope_and_request
+            .as_ref()
+            .and_then(|(_, request)| request.grpc.as_ref())
+            .map(|call| call.method.clone())
+            .filter(|m| !m.trim().is_empty())
+    });
+    let conversion =
+        apix_grpc::convert_bytes(&bytes, response.as_deref(), known_method.as_deref())?;
+    let how = match conversion.certainty {
+        apix_grpc::Certainty::Exact => "exact",
+        apix_grpc::Certainty::NumbersFromSource => {
+            "field numbers from the source; check that the calls are right"
+        }
+        apix_grpc::Certainty::Guessed => {
+            "a guess: field numbers must match the server's, and wrong ones fill the wrong fields without an error"
+        }
+    };
+    eprintln!(
+        "{}From {}: {how}{}",
+        style.dim, conversion.format, style.reset
+    );
+    print_notes(style, &conversion.notes);
+    if let Some((path, mut request)) = scope_and_request {
+        let mut call = request.grpc.take().unwrap_or_default();
+        call.definition = conversion.definition.clone();
+        call.guessed = conversion.is_guess();
+        if let Some(method) = method.or_else(|| {
+            call.method
+                .trim()
+                .is_empty()
+                .then(|| {
+                    apix_grpc::methods(&conversion.pool)
+                        .first()
+                        .map(|m| m.name.clone())
+                })
+                .flatten()
+        }) {
+            call.method = method;
+        }
+        request.grpc = Some(call);
+        apix_core::store::save_request(path, &request)
+            .with_context(|| format!("cannot write {}", path.display()))?;
+        eprintln!("Kept in {}", path.display());
+    }
+    match out {
+        Some(path) => {
+            std::fs::write(&path, &conversion.definition)
+                .with_context(|| format!("cannot write {}", path.display()))?;
+            eprintln!("Written to {}", path.display());
+        }
+        None if into.is_none() => print!("{}", conversion.definition),
+        None => {}
+    }
+    Ok(true)
 }
 
 async fn import(
@@ -1543,9 +1668,10 @@ async fn grpc(style: &Style, request: &apix_core::Request, include_headers: bool
         .ok_or(apix_grpc::GrpcError::NoMethod)?;
     let metadata = apix_grpc::metadata(request).await?;
     let channel = apix_grpc::connect(request).await?;
-    let pool = apix_grpc::descriptors(request, &channel, &metadata).await?;
-    let method =
-        apix_grpc::find_method(&pool, &name).ok_or(apix_grpc::GrpcError::UnknownMethod(name))?;
+    let described = apix_grpc::described(request, &channel, &metadata).await?;
+    print_notes(style, &described.notes);
+    let method = apix_grpc::find_method(&described.pool, &name)
+        .ok_or(apix_grpc::GrpcError::UnknownMethod(name))?;
     let messages = apix_grpc::messages(request, &method)?;
     let streaming = method.is_client_streaming() || method.is_server_streaming();
     let started = std::time::Instant::now();
@@ -1579,6 +1705,9 @@ async fn grpc(style: &Style, request: &apix_core::Request, include_headers: bool
                     println!("{}{k}{}: {v}", style.dim, style.reset);
                 }
                 println!();
+            }
+            CallEvent::Note(note) => {
+                eprintln!("{}{note}{}", style.yellow, style.reset);
             }
             _ => {}
         }

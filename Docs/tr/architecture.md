@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:ee911c38d6a81a05 -->
+<!-- translated from en/architecture.md sha256:80c9fd666b596a11 -->
 
 # Apix mimarisi
 
@@ -39,7 +39,7 @@ crates/
 ├── apix-vault    şifreli koleksiyonlar: dosya başına XChaCha20-Poly1305, Argon2id, kurtarma anahtarı
 ├── apix-script   istek öncesi ve test scriptleri: pm.* uyumlu API ile QuickJS
 ├── apix-runner   koleksiyon koşuları: sıra, tekrar, veri dosyaları, bekleme, bail, raporlar
-├── apix-grpc     gRPC çağrıları: tonic, JSON mesajlar (prost-reflect), .proto dosyaları (protox)
+├── apix-grpc     gRPC çağrıları: tonic, JSON mesajlar (prost-reflect), .proto dosyaları (protox), koddan ya da JSON'dan tanım
 │                 ya da sunucu reflection'ı
 ├── apix-proto    diğer protokoller: MQTT (rumqttc)
 ├── apix-cli      `apix` binary'si: terminalden ve CI'dan send / run / schema / import / shell
@@ -222,6 +222,24 @@ json = '{"name": "Ada"}'
 method = "helloworld.Greeter/SayHello"
 protos = ["../protos/helloworld.proto"]   # isteğe bağlı
 import_paths = ["../protos"]              # isteğe bağlı
+```
+
+Dosyalar yerine `definition` tanımı isteğin içinde tutar: `.proto` metni ya da JSON
+olarak descriptor set. `protos`'tan önce gelir. `guessed = true`, tiplerden ya da
+JSON'dan çıkarılmış tanımı işaretler: sunucu reflection'ı ondan önce gelir ve farklar
+söylenir. `protos` ikili ya da `.json` descriptor set de kabul eder.
+
+```toml
+[grpc]
+method = "shop.v1.Orders/Create"
+guessed = true
+definition = """
+syntax = "proto3";
+package shop.v1;
+service Orders { rpc Create(CreateRequest) returns (CreateResponse); }
+message CreateRequest { string customer = 1; }
+message CreateResponse {}
+"""
 ```
 
 Açık sorular:
@@ -548,6 +566,20 @@ bunları tonic'e bağlar; böylece `tonic::client::Grpc` dört metot türünü d
 (tekli, sunucu akışı, istemci akışı, çift yönlü) tek bir `Channel` üzerinde
 çalıştırır (HTTP motorunun zaten kullandığı hyper ve rustls üzerinde HTTP/2).
 
+`apix_grpc::convert` elde başka ne varsa ondan tanım üretir ve sırayla dener: JSON
+descriptor set; `.proto` metni; üretilmiş kodun gömdüğü `FileDescriptorProto`
+(`embedded.rs` her üreticinin bu baytları nasıl yazdığını bilir; PHP'ninki geçerli metin
+bile olmayabilir); sonra programlama dilindeki bildirimler (`source.rs`: yorumlar atılır,
+bloklar bulunur, üyeler dil ailesine göre okunur, türler normalleştirilir, numaralar
+işaretlemelerden ve ts-proto'nun kodlayıcılarından alınır) ya da örnek JSON (`json.rs`,
+`serde_json::Value`'nun kaybedeceği anahtar sırasını korur). Son ikisi `.proto`'ya
+çevrilen küçük bir `Schema`'dan geçer. `printer.rs` kesin tanımı `.proto` metni olarak geri
+yazar ve yalnızca bu metin aynı tanıma derlenirse ona güvenilir; yoksa ya da birden çok
+dosyada tanım JSON descriptor set olarak kalır. `compare` tanımı sunucununkiyle karşılaştırır;
+mesaj adları tele çıkmadığı için alanları adla eşler. `described` sırayı tutar: isteğin tanımı,
+dosyaları, reflection; tahmin önce reflection'ı dener ve ona yol verir. `call`, bir
+`DynamicMessage`'ın yerleştiremediği alanları bildirir (`CallEvent::Note`), çünkü başka hiçbir
+şey bildirmez.
 İsteğin başlıkları ve yetkilendirmesi metadata olur (Bearer, Basic, başlıkta
 API anahtarı, `apix_http::oauth2` ile OAuth 2.0; `-bin` anahtarları
 base64'tür); HTTP isteğini imzalayan yetkilendirme türleri gerekçesiyle
