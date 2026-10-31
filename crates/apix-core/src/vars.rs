@@ -241,6 +241,14 @@ impl Request {
             messages: self.messages.clone(),
             grpc: self.grpc.clone(),
             websocket: self.websocket.clone(),
+            socketio: self
+                .socketio
+                .as_ref()
+                .map(|o| crate::model::SocketIoOptions {
+                    namespace: s(&o.namespace),
+                    path: s(&o.path),
+                    auth: s(&o.auth),
+                }),
         };
         Resolved { request, missing }
     }

@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:f539f3218cf0d208 -->
+<!-- translated from en/user-guide.md sha256:61baab8350114e6a -->
 
 # Apix kullanım kılavuzu
 
@@ -25,6 +25,7 @@ veya CI'da çalıştırır.
 - [Yanıt](#yanıt)
 - [Ağ sekmesi](#ağ-sekmesi)
 - [WebSocket ve sunucu olayları (SSE)](#websocket-ve-sunucu-olayları-sse)
+- [Socket.IO](#socketio)
 - [gRPC](#grpc)
 - [Scriptler ve testler](#scriptler-ve-testler)
 - [Runner](#runner)
@@ -341,6 +342,47 @@ yeniden bağlanır). Bir WebSocket'te bağlanır, kayıtlı mesajları (ya da
 `--format text|base64|hex` ile okunan `--message` metinlerini) gönderir, iki
 yöndekileri yazar ve `--listen` saniye sonra kapatır (varsayılan 3, `0`
 sunucuyu bekler). `apix run` WebSocket isteklerini atlar.
+
+## Socket.IO
+
+Socket.IO isteği, Socket.IO 3 ve 4 sunucularıyla WebSocket üzerinden
+konuşur. İsteğin **Mesajlar** sekmesini açın (sekmenin görünmesi için
+adresi `ws://` ile yazın) ve üstte **Socket.IO**'yu seçin. Bundan sonra
+adres, bir Socket.IO istemcisinde olduğu gibi `http://`, `https://`, `ws://`
+ya da `wss://` olabilir. İstek dosyasına bir `[socketio]` tablosu eklenir;
+Socket.IO isteği Mesajlar sekmesinde açılır.
+
+![Bir Socket.IO bağlantısı: olaylar, ack'ler ve ikili ek](images/socketio.png)
+
+- **Ad alanı:** katılınacak ad alanı, örneğin `/chat`. Boş bırakılırsa URL'nin
+  yolu kullanılır (`http://localhost:3000/chat` `/chat`'e katılır), o da yoksa
+  `/`. **Yol** sunucunun dinlediği yerdir; sunucu değiştirmediyse
+  `/socket.io/`. Tarayıcının ağ sekmesinden kopyalanan adres
+  (`…/socket.io/?EIO=4&transport=websocket`) olduğu gibi çalışır.
+- **Kimlik:** katılırken gönderilen JSON nesnesi (istemcideki `auth`
+  seçeneği); `{{değişkenler}}` doldurulur. Sunucu reddederse verdiği neden
+  hata olarak gösterilir.
+- **Olay**, mesajın hangi adla yayınlanacağıdır (boşsa `message`). Metin tek
+  argümandır: JSON olduğu gibi, başka metin dize olarak gider; boş metin
+  argümansız olaydır. **Base64** ve **Hex** baytları ikili ek olarak
+  gönderir. **Onay (ack) iste** sunucudan onay ister. Kayıtlı mesajlar olay
+  adını ve ack seçimini saklar.
+- Günlük her olayı adıyla gösterir: ↑ yayınlanan (ack istendiyse `ack 0`,
+  `ack 1` …), ↓ gelen (sunucu onay istiyorsa `ack 9 bekliyor`), ✓ sunucunun
+  verdiği onay ve yanıtı. İkili ekler boyutları ve ilk baytlarıyla görünür.
+  El sıkışmadaki başlıklar, parametreler, auth ve TLS ayarları WebSocket'teki
+  gibi çalışır.
+- Apix sunucunun ping'lerini yanıtlar. Sunucu istemciyi ad alanından
+  çıkarırsa günlük bunu yazar ve bağlantı kapanır; **Bağlantıyı kes** (ya da
+  Esc) ad alanından ayrılıp bağlantıyı kapatır.
+
+`apix send` ad alanına katılır, kayıtlı mesajları yayınlar ve olayları,
+ack'leri ve ikili ekleri geldikçe yazar; `--message METİN` (birden çok
+verilebilir) bunların yerine metinleri `--event AD` ile verilen olay olarak
+yayınlar (varsayılan `message`). `apix run` Socket.IO isteklerini atlar.
+Gelen ekler `{"$binary": "<base64>"}` olarak yazılır. Henüz yok: Socket.IO 2
+sunucuları (Engine.IO 3), long-polling taşıması ve sunucunun istediği ack'i
+yanıtlama.
 
 ## gRPC
 

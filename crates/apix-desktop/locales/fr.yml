@@ -601,6 +601,19 @@ sidebar.rename: Renommer…
 sidebar.run: "Exécuter…"
 sidebar.settings: Réglages de requête…
 sidebar.show_in_environment: Afficher dans l'environnement
+sio.ack: Demander un accusé (ack)
+sio.ack_id: "ack %{id}"
+sio.auth: Auth
+sio.auth_placeholder: "JSON envoyé en rejoignant, p. ex. {\"token\": \"{{token}}\"}"
+sio.event: Événement
+sio.joined: "%{namespace} rejoint (id de socket %{sid})"
+sio.left: Le serveur nous a fait quitter l'espace de noms
+sio.namespace: Espace de noms
+sio.namespace_placeholder: "chemin de l'URL"
+sio.path: Chemin
+sio.send_hint: "Ctrl+Entrée émet ; le JSON est un argument, tout autre texte une chaîne"
+sio.unreadable: "Trame illisible : %{text}"
+sio.wants_ack: "attend l'ack %{id}"
 stream.all_types: Tous %{count}
 stream.count: "%{count} événements"
 stream.dropped_reconnecting: La connexion a été perdue (%{error}) ; reconnexion dans %{seconds} s

@@ -603,6 +603,19 @@ sidebar.rename: Rename…
 sidebar.run: "Run…"
 sidebar.settings: Request settings…
 sidebar.show_in_environment: Show in environment
+sio.ack: Ask for an ack
+sio.ack_id: "ack %{id}"
+sio.auth: Auth
+sio.auth_placeholder: "JSON sent when joining, e.g. {\"token\": \"{{token}}\"}"
+sio.event: Event
+sio.joined: "Joined %{namespace} (socket id %{sid})"
+sio.left: The server made us leave the namespace
+sio.namespace: Namespace
+sio.namespace_placeholder: URL path
+sio.path: Path
+sio.send_hint: "Ctrl+Enter emits; JSON is one argument, other text a string"
+sio.unreadable: "Unreadable frame: %{text}"
+sio.wants_ack: "wants ack %{id}"
 stream.all_types: All %{count}
 stream.count: "%{count} events"
 stream.dropped_reconnecting: The connection dropped (%{error}); reconnecting in %{seconds} s

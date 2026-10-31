@@ -29,6 +29,8 @@ tower-service = "0.3"
 x509-parser = "0"
 # WebSocket connections (`ws.rs`), over the same rustls as reqwest.
 tokio-tungstenite = { version = "0.28", features = ["rustls-tls-webpki-roots"] }
+# Socket.IO binary attachments as `{"$binary": "<base64>"}` (socketio.rs).
+base64 = "0.22"
 # Splits a WebSocket into its sending and receiving halves.
 futures-util = { version = "0.3", default-features = false, features = ["sink", "std"] }
 thiserror.workspace = true

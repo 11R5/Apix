@@ -601,6 +601,19 @@ sidebar.rename: Umbenennen…
 sidebar.run: "Ausführen…"
 sidebar.settings: Anfrage-Einstellungen…
 sidebar.show_in_environment: In Umgebung anzeigen
+sio.ack: Bestätigung (Ack) anfordern
+sio.ack_id: "ack %{id}"
+sio.auth: Auth
+sio.auth_placeholder: "JSON, das beim Beitreten gesendet wird, z. B. {\"token\": \"{{token}}\"}"
+sio.event: Ereignis
+sio.joined: "%{namespace} beigetreten (Socket-ID %{sid})"
+sio.left: Der Server hat uns aus dem Namespace entfernt
+sio.namespace: Namespace
+sio.namespace_placeholder: Pfad der URL
+sio.path: Pfad
+sio.send_hint: "Strg+Enter sendet; JSON ist ein Argument, anderer Text eine Zeichenkette"
+sio.unreadable: "Unlesbarer Frame: %{text}"
+sio.wants_ack: "wartet auf ack %{id}"
 stream.all_types: Alle %{count}
 stream.count: "%{count} Ereignisse"
 stream.dropped_reconnecting: Die Verbindung brach ab (%{error}); neue Verbindung in %{seconds} s

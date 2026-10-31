@@ -601,6 +601,19 @@ sidebar.rename: 名前を変更…
 sidebar.run: "実行…"
 sidebar.settings: リクエスト設定…
 sidebar.show_in_environment: 環境で表示
+sio.ack: 確認応答（ack）を求める
+sio.ack_id: "ack %{id}"
+sio.auth: 認証
+sio.auth_placeholder: "参加時に送る JSON（例: {\"token\": \"{{token}}\"}）"
+sio.event: イベント
+sio.joined: "%{namespace} に参加しました（ソケット ID %{sid}）"
+sio.left: サーバーにより名前空間から外されました
+sio.namespace: 名前空間
+sio.namespace_placeholder: URL のパス
+sio.path: パス
+sio.send_hint: "Ctrl+Enter で送信。JSON は 1 つの引数、それ以外のテキストは文字列"
+sio.unreadable: "読めないフレーム: %{text}"
+sio.wants_ack: "ack %{id} を待っています"
 stream.all_types: すべて %{count}
 stream.count: "%{count} 件のイベント"
 stream.dropped_reconnecting: 接続が切れました (%{error})。%{seconds} 秒後に再接続します

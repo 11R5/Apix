@@ -492,7 +492,7 @@ impl Workspace {
                 &ws_editor,
                 window,
                 |this, _, event: &ws_editor::SendMessage, window, cx| {
-                    this.send_socket_message(event.0.clone(), event.1, window, cx)
+                    this.send_socket_message(event.0.clone(), window, cx)
                 },
             ),
             cx.subscribe_in(
@@ -720,8 +720,15 @@ impl Workspace {
             .update(cx, |editor, cx| editor.set_asserts(&asserts, window, cx));
         let messages = request.messages.clone();
         let ws_options = request.websocket.clone();
+        let sio_options = request.socketio.clone();
         self.ws_editor.update(cx, |editor, cx| {
-            editor.set_messages(&messages, ws_options.as_ref(), window, cx)
+            editor.set_messages(
+                &messages,
+                ws_options.as_ref(),
+                sio_options.as_ref(),
+                window,
+                cx,
+            )
         });
         let grpc = request.grpc.clone();
         let body = request.body.clone();
@@ -729,7 +736,8 @@ impl Workspace {
         self.grpc_editor.update(cx, |editor, cx| {
             editor.set_call(grpc.as_ref(), &body, window, cx)
         });
-        if request.is_grpc() {
+        // A gRPC or Socket.IO request opens on what it sends.
+        if request.is_grpc() || request.is_socketio() {
             self.request_tab = 3;
         }
         // A GraphQL endpoint's schema, if it was fetched before.
@@ -784,6 +792,7 @@ impl Workspace {
         request.asserts = self.script_editor.read(cx).asserts(cx);
         request.messages = self.ws_editor.read(cx).messages();
         request.websocket = self.ws_editor.read(cx).options(cx);
+        request.socketio = self.ws_editor.read(cx).socketio_options(cx);
         // A gRPC request's message is its body.
         if self.grpc_mode(cx) {
             let grpc = self.grpc_editor.read(cx);
@@ -867,6 +876,15 @@ impl Workspace {
                 None => resolved.request,
             };
             self.call_grpc(request, record, window, cx);
+            return;
+        }
+        // Socket.IO joins a namespace on a WebSocket, whatever the URL's scheme.
+        if resolved.request.is_socketio() {
+            if !resolved.missing.is_empty() {
+                self.fail(undefined_message(resolved.missing), cx);
+                return;
+            }
+            self.connect_socketio(resolved.request, window, cx);
             return;
         }
         if apix_http::ws::is_websocket_url(&resolved.request.url) {

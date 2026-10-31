@@ -116,6 +116,9 @@ Measurements of the other tools on the same machine are planned.
   or saved messages and log both directions live; `text/event-stream`
   responses show their events as they arrive. `apix send` does both in a
   terminal.
+- **Socket.IO:** join a namespace with auth, emit named events (with acks
+  and binary attachments) and see every event, ack and attachment the
+  server sends, in the app's Messages tab or with `apix send`.
 - **GraphQL schemas:** fetch a schema with the request's own auth, then get
   completion for fields, arguments, enum values and fragments, docs on hover,
   and the whole schema as SDL beside the query; `apix schema` prints it.

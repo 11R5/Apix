@@ -85,7 +85,7 @@ pub struct WsConnection {
     pub headers: Vec<(String, String)>,
     /// The subprotocol the server picked, if it picked one.
     pub protocol: Option<String>,
-    stream: WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>,
+    pub(crate) stream: WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>,
 }
 
 /// Whether `url` (already resolved) is a WebSocket address.
