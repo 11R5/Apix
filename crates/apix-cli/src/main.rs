@@ -38,10 +38,10 @@ enum Command {
         /// Print what happened on the network: DNS, connection, redirects, TLS, local side
         #[arg(short = 'n', long)]
         network: bool,
-        /// WebSocket and Socket.IO: send this text instead of the saved messages (repeatable)
+        /// WebSocket, Socket.IO and MQTT: send this text instead of the saved messages (repeatable)
         #[arg(short = 'm', long = "message", value_name = "TEXT")]
         messages: Vec<String>,
-        /// WebSocket: how --message texts are read: text, or bytes as base64 or hex
+        /// WebSocket, Socket.IO and MQTT: how --message texts are read: text, or bytes as base64 or hex
         #[arg(long = "format", value_name = "FORMAT", default_value = "text")]
         message_format: apix_core::MessageFormat,
         /// Server-sent events: print only events of this type (repeatable). Socket.IO: the
@@ -52,7 +52,19 @@ enum Command {
         /// server's retry time, sending Last-Event-ID (Ctrl+C stops)
         #[arg(long)]
         reconnect: bool,
-        /// WebSocket and Socket.IO: how long to keep listening after sending, in seconds (0: until the server closes)
+        /// MQTT: subscribe to this topic too, at --qos (repeatable)
+        #[arg(long = "subscribe", value_name = "TOPIC")]
+        subscribe: Vec<String>,
+        /// MQTT: the topic --message texts are published to
+        #[arg(long, value_name = "TOPIC")]
+        topic: Option<String>,
+        /// MQTT: the quality of service of --message and --subscribe: 0, 1 or 2
+        #[arg(long, value_name = "QOS", default_value_t = 0, value_parser = clap::value_parser!(u8).range(0..=2))]
+        qos: u8,
+        /// MQTT: ask the broker to keep --message texts for later subscribers
+        #[arg(long)]
+        retain: bool,
+        /// WebSocket, Socket.IO and MQTT: how long to keep listening after sending, in seconds (0: until the server closes)
         #[arg(long, value_name = "SECONDS", default_value_t = 3.0)]
         listen: f64,
         #[command(flatten)]
@@ -417,6 +429,10 @@ async fn run(cli: Cli) -> Result<bool> {
             message_format,
             event_types,
             reconnect,
+            subscribe,
+            topic,
+            qos,
+            retain,
             listen,
             net,
         } => {
@@ -433,6 +449,28 @@ async fn run(cli: Cli) -> Result<bool> {
                 }
                 let request = relative_to_file(resolved.request, &file);
                 return grpc(&style, &request, include_headers).await;
+            }
+            if resolved.request.is_mqtt() {
+                if !resolved.missing.is_empty() {
+                    let names: Vec<_> = resolved.missing.into_iter().collect();
+                    bail!("undefined variable(s): {}", names.join(", "));
+                }
+                let extra = MqttExtra {
+                    messages,
+                    format: message_format,
+                    subscribe,
+                    topic,
+                    qos,
+                    retain,
+                };
+                return mqtt(
+                    &style,
+                    relative_to_file(resolved.request, &file),
+                    &vars,
+                    extra,
+                    listen,
+                )
+                .await;
             }
             if resolved.request.is_socketio() {
                 if !resolved.missing.is_empty() {
@@ -1254,6 +1292,169 @@ async fn socketio(
                     println!("{}closed{code}{reason}{}", style.dim, style.reset);
                 }
                 SioEvent::Error(message) => {
+                    ok = false;
+                    println!("{}error: {message}{}", style.red, style.reset);
+                }
+            }
+        })
+        .await;
+    drop(tx);
+    Ok(ok)
+}
+
+/// What the command line adds to a MQTT request.
+struct MqttExtra {
+    messages: Vec<String>,
+    format: apix_core::MessageFormat,
+    subscribe: Vec<String>,
+    topic: Option<String>,
+    qos: u8,
+    retain: bool,
+}
+
+/// `apix send` on a `mqtt://` or `mqtts://` request: connect, subscribe,
+/// publish the saved messages (or `--message` texts to `--topic`), print what
+/// goes both ways and close after `listen` seconds (0 waits for the broker).
+/// Fails on errors and on anything the broker refuses.
+async fn mqtt(
+    style: &Style,
+    mut request: apix_core::Request,
+    vars: &Variables,
+    extra: MqttExtra,
+    listen: f64,
+) -> Result<bool> {
+    use apix_proto::mqtt::{MqttCommand, MqttEvent, MqttMessage, payload_from_text, show_payload};
+
+    let settings = request.mqtt.get_or_insert_default();
+    settings.subscribe.extend(
+        extra
+            .subscribe
+            .iter()
+            .map(|topic| apix_core::MqttSubscription {
+                topic: topic.clone(),
+                qos: extra.qos,
+            }),
+    );
+    let outgoing: Vec<(String, String, apix_core::MessageFormat, u8, bool)> =
+        if extra.messages.is_empty() {
+            let mut missing = std::collections::BTreeSet::new();
+            let messages = request
+                .messages
+                .iter()
+                .map(|m| {
+                    (
+                        vars.interpolate(&m.topic, &mut missing),
+                        vars.interpolate(&m.body, &mut missing),
+                        m.format,
+                        m.qos,
+                        m.retain,
+                    )
+                })
+                .collect();
+            if !missing.is_empty() {
+                let names: Vec<_> = missing.into_iter().collect();
+                bail!(
+                    "undefined variable(s) in the messages: {}",
+                    names.join(", ")
+                );
+            }
+            messages
+        } else {
+            let Some(topic) = extra.topic.clone() else {
+                bail!("--message needs --topic for a MQTT request");
+            };
+            extra
+                .messages
+                .into_iter()
+                .map(|text| (topic.clone(), text, extra.format, extra.qos, extra.retain))
+                .collect()
+        };
+    let publishes = outgoing
+        .into_iter()
+        .map(|(topic, text, format, qos, retain)| {
+            if topic.trim().is_empty() {
+                return Err("a message has no topic".to_owned());
+            }
+            payload_from_text(&text, format).map(|payload| {
+                MqttCommand::Publish(MqttMessage {
+                    topic,
+                    payload,
+                    qos,
+                    retain,
+                })
+            })
+        })
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| anyhow::anyhow!("cannot send a message: {e}"))?;
+    let started = std::time::Instant::now();
+    let connection = apix_proto::mqtt::connect(&request).await?;
+    let session = if connection.session_present {
+        ", session kept"
+    } else {
+        ""
+    };
+    println!(
+        "{}connected{}  {}{} as {}{session}{}",
+        style.green, style.reset, style.dim, request.url, connection.client_id, style.reset
+    );
+    let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+    for command in publishes {
+        let _ = tx.send(command);
+    }
+    if listen > 0.0 {
+        let closer = tx.clone();
+        tokio::spawn(async move {
+            tokio::time::sleep(std::time::Duration::from_secs_f64(listen)).await;
+            let _ = closer.send(MqttCommand::Close);
+        });
+    }
+    let mut ok = true;
+    connection
+        .run(rx, |event| {
+            let at = format!("{:>8.2}s", started.elapsed().as_secs_f64());
+            let line = |arrow: &str, color: &str, text: String| {
+                println!(
+                    "{}{at}{} {color}{arrow}{} {text}",
+                    style.dim, style.reset, style.reset
+                )
+            };
+            let message = |m: &MqttMessage| {
+                let qos = if m.qos > 0 {
+                    format!("  (QoS {})", m.qos)
+                } else {
+                    String::new()
+                };
+                let retain = if m.retain { "  (retain)" } else { "" };
+                format!("{} {}{qos}{retain}", m.topic, show_payload(&m.payload))
+            };
+            match event {
+                MqttEvent::Sent(m) => line("↑", style.yellow, message(&m)),
+                MqttEvent::Received(m) => line("↓", style.green, message(&m)),
+                MqttEvent::Delivered { topic } => {
+                    line("✓", style.green, format!("delivered {topic}"))
+                }
+                MqttEvent::Subscribed { topic, qos } => {
+                    line("•", style.dim, format!("subscribed to {topic} (QoS {qos})"))
+                }
+                MqttEvent::Unsubscribed { topic } => {
+                    line("•", style.dim, format!("unsubscribed from {topic}"))
+                }
+                MqttEvent::SubscribeRefused { topic } => {
+                    ok = false;
+                    println!(
+                        "{}the broker refused the subscription to {topic}{}",
+                        style.red, style.reset
+                    );
+                }
+                MqttEvent::Rejected(message) => {
+                    ok = false;
+                    println!("{}error: {message}{}", style.red, style.reset);
+                }
+                MqttEvent::Closed { by_broker } => {
+                    let who = if by_broker { " by the broker" } else { "" };
+                    println!("{}closed{who}{}", style.dim, style.reset);
+                }
+                MqttEvent::Error(message) => {
                     ok = false;
                     println!("{}error: {message}{}", style.red, style.reset);
                 }

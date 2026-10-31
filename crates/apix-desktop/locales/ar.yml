@@ -344,6 +344,22 @@ menu.settings: الإعدادات…
 menu.source_code: الشيفرة المصدرية
 menu.variables: المتغيرات والبيئات…
 menu.view: عرض
+mqtt.client_id: معرّف العميل
+mqtt.client_id_placeholder: جديد لكل اتصال
+mqtt.closed_by_broker: أغلق الوسيط الاتصال
+mqtt.delivered: تم التسليم
+mqtt.keep_alive: إبقاء الاتصال
+mqtt.keep_session: الاحتفاظ بالجلسة
+mqtt.retain: احتفاظ
+mqtt.send_hint: "Ctrl+Enter للنشر؛ تُستبدل {{المتغيرات}}"
+mqtt.session: "معرّف العميل %{id}"
+mqtt.session_kept: "معرّف العميل %{id}؛ احتفظ الوسيط بالجلسة"
+mqtt.sub_refused: "رفض الوسيط الاشتراك في %{topic}"
+mqtt.subscribe: اشترك الآن
+mqtt.subscribed: "تم الاشتراك في %{topic} (QoS %{qos})"
+mqtt.subscriptions: الاشتراكات
+mqtt.topic: الموضوع
+mqtt.unsubscribed: "تم إلغاء الاشتراك في %{topic}"
 network.cert.days_left: "الأيام المتبقية: %{count}"
 network.cert.engine_note: يُبلغ محرك HTTP عن شهادة الخادم، لا عن إصدار TLS أو مجموعة التشفير.
 network.cert.expired_days_ago: انتهت الصلاحية منذ %{count} يوم

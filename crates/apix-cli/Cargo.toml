@@ -15,6 +15,7 @@ anyhow.workspace = true
 apix-codegen.workspace = true
 apix-core.workspace = true
 apix-grpc.workspace = true
+apix-proto.workspace = true
 apix-http.workspace = true
 apix-import.workspace = true
 apix-runner.workspace = true

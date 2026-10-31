@@ -249,6 +249,19 @@ impl Request {
                     path: s(&o.path),
                     auth: s(&o.auth),
                 }),
+            mqtt: self.mqtt.as_ref().map(|o| crate::model::MqttSettings {
+                client_id: s(&o.client_id),
+                keep_session: o.keep_session,
+                keep_alive: o.keep_alive,
+                subscribe: o
+                    .subscribe
+                    .iter()
+                    .map(|t| crate::model::MqttSubscription {
+                        topic: s(&t.topic),
+                        qos: t.qos,
+                    })
+                    .collect(),
+            }),
         };
         Resolved { request, missing }
     }

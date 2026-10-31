@@ -344,6 +344,22 @@ menu.settings: 設定…
 menu.source_code: ソースコード
 menu.variables: 変数と環境…
 menu.view: 表示
+mqtt.client_id: クライアント ID
+mqtt.client_id_placeholder: 接続ごとに新規
+mqtt.closed_by_broker: ブローカーが接続を閉じました
+mqtt.delivered: 配信済み
+mqtt.keep_alive: キープアライブ
+mqtt.keep_session: セッションを保持
+mqtt.retain: 保持
+mqtt.send_hint: "Ctrl+Enter で発行。{{変数}} は置き換えられます"
+mqtt.session: "クライアント ID %{id}"
+mqtt.session_kept: "クライアント ID %{id}（ブローカーにセッションが残っていました）"
+mqtt.sub_refused: "ブローカーが %{topic} の購読を拒否しました"
+mqtt.subscribe: 今すぐ購読
+mqtt.subscribed: "%{topic} を購読しました（QoS %{qos}）"
+mqtt.subscriptions: サブスクリプション
+mqtt.topic: トピック
+mqtt.unsubscribed: "%{topic} の購読を解除しました"
 network.cert.days_left: "残り %{count} 日"
 network.cert.engine_note: HTTP エンジンが報告するのはサーバーの証明書のみで、TLS のバージョンや暗号スイートは含まれません。
 network.cert.expired_days_ago: "%{count} 日前に期限切れ"

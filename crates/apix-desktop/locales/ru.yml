@@ -344,6 +344,22 @@ menu.settings: Настройки…
 menu.source_code: Исходный код
 menu.variables: Переменные и окружения…
 menu.view: Вид
+mqtt.client_id: ID клиента
+mqtt.client_id_placeholder: Новый при каждом подключении
+mqtt.closed_by_broker: Брокер закрыл соединение
+mqtt.delivered: доставлено
+mqtt.keep_alive: Keep-alive
+mqtt.keep_session: Сохранять сессию
+mqtt.retain: Retain
+mqtt.send_hint: "Ctrl+Enter публикует; {{переменные}} подставляются"
+mqtt.session: "ID клиента %{id}"
+mqtt.session_kept: "ID клиента %{id}; брокер сохранил сессию"
+mqtt.sub_refused: "Брокер отклонил подписку на %{topic}"
+mqtt.subscribe: Подписаться сейчас
+mqtt.subscribed: "Подписка на %{topic} (QoS %{qos})"
+mqtt.subscriptions: Подписки
+mqtt.topic: Топик
+mqtt.unsubscribed: "Подписка на %{topic} отменена"
 network.cert.days_left: "осталось %{count} дн."
 network.cert.engine_note: HTTP-движок сообщает сертификат сервера, но не версию TLS и не шифр.
 network.cert.expired_days_ago: истёк %{count} дн. назад

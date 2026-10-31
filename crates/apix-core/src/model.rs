@@ -571,6 +571,10 @@ pub struct Request {
     /// `ws(s)://` or `http(s)://`; `[[message]]` then holds events.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub socketio: Option<SocketIoOptions>,
+    /// Options of a `mqtt://` or `mqtts://` request; `[[message]]` then holds
+    /// what can be published.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mqtt: Option<MqttSettings>,
 }
 
 /// What a gRPC request calls, stored as `[grpc]`. The body (JSON) is the
@@ -605,6 +609,19 @@ pub struct WsMessage {
     /// Socket.IO: ask the server to acknowledge the event.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub ack: bool,
+    /// MQTT: the topic the body is published to.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub topic: String,
+    /// MQTT: the quality of service, 0, 1 or 2.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub qos: u8,
+    /// MQTT: ask the broker to keep it for later subscribers.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub retain: bool,
+}
+
+fn is_zero(n: &u8) -> bool {
+    *n == 0
 }
 
 /// How a WebSocket message's text stands for what is sent.
@@ -702,6 +719,31 @@ pub struct SocketIoOptions {
     /// JSON sent when joining the namespace (the client's `auth`).
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub auth: String,
+}
+
+/// MQTT options, stored as `[mqtt]`.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct MqttSettings {
+    /// Empty: a new one for every connection.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub client_id: String,
+    /// Keep the session on the broker (MQTT's clean session flag turned off).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub keep_session: bool,
+    /// Seconds between pings when idle; 60 when unset, 0 for none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub keep_alive: Option<u16>,
+    /// Topics subscribed to on connecting, stored as `[[mqtt.subscribe]]`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub subscribe: Vec<MqttSubscription>,
+}
+
+/// A topic filter (`+` and `#` allowed) and the quality of service asked for.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct MqttSubscription {
+    pub topic: String,
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub qos: u8,
 }
 
 impl WsMessage {
@@ -856,6 +898,12 @@ impl Request {
     /// A Socket.IO request (it has a `[socketio]` table).
     pub fn is_socketio(&self) -> bool {
         self.socketio.is_some()
+    }
+
+    /// A `mqtt://` or `mqtts://` request.
+    pub fn is_mqtt(&self) -> bool {
+        let url = self.url.trim_start().to_ascii_lowercase();
+        url.starts_with("mqtt://") || url.starts_with("mqtts://")
     }
 
     /// A `grpc://` or `grpcs://` request.
@@ -1050,6 +1098,55 @@ subprotocols = ["graphql-transport-ws", "graphql-ws"]
         };
         assert_eq!(long.label().chars().count(), 41);
         assert!(long.label().ends_with('…'));
+    }
+
+    #[test]
+    fn mqtt_requests_round_trip() {
+        let text = r#"
+name = "Sensors"
+url = "mqtts://broker.example.com"
+
+[[message]]
+topic = "sensors/{{room}}"
+body = '{"t": 21}'
+qos = 1
+retain = true
+
+[[message]]
+topic = "plain"
+body = "hi"
+
+[mqtt]
+client_id = "apix-{{room}}"
+keep_session = true
+keep_alive = 30
+
+[[mqtt.subscribe]]
+topic = "sensors/{{room}}/#"
+qos = 2
+
+[[mqtt.subscribe]]
+topic = "alerts"
+"#;
+        let req: Request = toml::from_str(text).unwrap();
+        assert!(req.is_mqtt());
+        assert!(Request::new(Method::Get, " MQTT://x").is_mqtt());
+        assert!(!Request::new(Method::Get, "ws://x").is_mqtt());
+        assert_eq!((req.messages[0].qos, req.messages[0].retain), (1, true));
+        let back: Request = toml::from_str(&toml::to_string_pretty(&req).unwrap()).unwrap();
+        assert_eq!(req, back);
+        // A plain message writes neither field.
+        let plain = toml::to_string(&req.messages[1]).unwrap();
+        assert!(!plain.contains("qos") && !plain.contains("retain"));
+        // Options take variables at once; messages wait until they are sent.
+        let mut vars = crate::Variables::new();
+        vars.set("room", "7");
+        let resolved = req.resolve(&vars).request;
+        let mqtt = resolved.mqtt.unwrap();
+        assert_eq!(mqtt.client_id, "apix-7");
+        assert_eq!(mqtt.subscribe[0].topic, "sensors/7/#");
+        assert_eq!(mqtt.subscribe[1].qos, 0);
+        assert_eq!(resolved.messages[0].topic, "sensors/{{room}}");
     }
 
     #[test]

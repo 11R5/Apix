@@ -1813,8 +1813,15 @@ impl Workspace {
         } else {
             request.is_grpc()
         };
+        let mqtt = if selected {
+            self.mqtt_mode(cx)
+        } else {
+            request.is_mqtt()
+        };
         let (badge, badge_color): (SharedString, Hsla) = if grpc {
             ("gRPC".into(), theme::grpc_color())
+        } else if mqtt {
+            ("MQTT".into(), theme::mqtt_color())
         } else {
             (method.as_str().into(), theme::method_color(method))
         };

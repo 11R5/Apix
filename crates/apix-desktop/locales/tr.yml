@@ -344,6 +344,22 @@ menu.settings: Ayarlar…
 menu.source_code: Kaynak kod
 menu.variables: Değişkenler ve ortamlar…
 menu.view: Görünüm
+mqtt.client_id: İstemci kimliği
+mqtt.client_id_placeholder: Her bağlantıda yeni
+mqtt.closed_by_broker: Broker bağlantıyı kapattı
+mqtt.delivered: iletildi
+mqtt.keep_alive: Keep alive
+mqtt.keep_session: Oturumu koru
+mqtt.retain: Retain
+mqtt.send_hint: "Ctrl+Enter yayınlar; {{değişkenler}} doldurulur"
+mqtt.session: "İstemci kimliği %{id}"
+mqtt.session_kept: "İstemci kimliği %{id}; broker oturumu saklamış"
+mqtt.sub_refused: "Broker %{topic} aboneliğini reddetti"
+mqtt.subscribe: Şimdi abone ol
+mqtt.subscribed: "%{topic} konusuna abone olundu (QoS %{qos})"
+mqtt.subscriptions: Abonelikler
+mqtt.topic: Konu
+mqtt.unsubscribed: "%{topic} aboneliği bırakıldı"
 network.cert.days_left: "%{count} gün kaldı"
 network.cert.engine_note: HTTP motoru TLS sürümünü veya şifre takımını değil, sunucunun sertifikasını bildirir.
 network.cert.expired_days_ago: "%{count} gün önce sona erdi"
