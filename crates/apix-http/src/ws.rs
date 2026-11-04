@@ -67,6 +67,8 @@ pub enum WsEvent {
         code: Option<u16>,
         reason: String,
     },
+    /// The server answered our ping, after this long.
+    Pong(std::time::Duration),
     /// Something went wrong; the connection is over.
     Error(String),
 }
@@ -85,6 +87,8 @@ pub struct WsConnection {
     pub headers: Vec<(String, String)>,
     /// The subprotocol the server picked, if it picked one.
     pub protocol: Option<String>,
+    /// How often to ping, from `[websocket] ping_interval`.
+    pub ping_interval: Option<std::time::Duration>,
     pub(crate) stream: WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>,
 }
 
@@ -172,6 +176,12 @@ pub async fn connect(req: &Request) -> Result<WsConnection, HttpError> {
     let (stream, response) = result.map_err(|e| HttpError::Settings(describe(&e)))?;
     Ok(WsConnection {
         status: response.status().as_u16(),
+        ping_interval: req
+            .websocket
+            .as_ref()
+            .and_then(|o| o.ping_interval)
+            .filter(|s| *s > 0)
+            .map(std::time::Duration::from_secs),
         protocol: response
             .headers()
             .get("sec-websocket-protocol")
@@ -227,15 +237,42 @@ fn describe(err: &tungstenite::Error) -> String {
 
 impl WsConnection {
     /// Sends what `commands` asks and reports everything to `on_event`
-    /// until either side closes. Ping and pong are answered by themselves.
+    /// until either side closes. The server's pings are answered by
+    /// themselves; with a ping interval we ping too, and a ping still
+    /// unanswered when the next is due ends the connection.
     pub async fn run(
         mut self,
         mut commands: mpsc::UnboundedReceiver<WsCommand>,
         mut on_event: impl FnMut(WsEvent) + Send,
     ) {
         let mut closing = false;
+        let mut ticker = self.ping_interval.map(|every| {
+            let mut ticker = tokio::time::interval_at(tokio::time::Instant::now() + every, every);
+            ticker.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
+            ticker
+        });
+        // Our ping not answered yet: its payload and when it went.
+        let mut waiting: Option<(Vec<u8>, std::time::Instant)> = None;
+        let mut pings: u64 = 0;
         loop {
             tokio::select! {
+                () = tick(&mut ticker), if !closing => {
+                    if waiting.is_some() {
+                        let every = self.ping_interval.unwrap_or_default();
+                        on_event(WsEvent::Error(format!(
+                            "the server did not answer a ping within {} s: the connection looks dead",
+                            every.as_secs()
+                        )));
+                        return;
+                    }
+                    pings += 1;
+                    let payload = pings.to_be_bytes().to_vec();
+                    if let Err(e) = self.stream.send(Message::Ping(payload.clone().into())).await {
+                        on_event(WsEvent::Error(e.to_string()));
+                        return;
+                    }
+                    waiting = Some((payload, std::time::Instant::now()));
+                }
                 command = commands.recv(), if !closing => match command {
                     Some(WsCommand::Send(data)) => {
                         let message = match &data {
@@ -283,6 +320,15 @@ impl WsConnection {
                         on_event(WsEvent::Closed { code, reason });
                         return;
                     }
+                    // Only the answer to our own ping counts.
+                    Some(Ok(Message::Pong(data))) => {
+                        if let Some((payload, since)) = &waiting
+                            && data.as_ref() == payload.as_slice()
+                        {
+                            on_event(WsEvent::Pong(since.elapsed()));
+                            waiting = None;
+                        }
+                    }
                     Some(Ok(_)) => {}
                     Some(Err(tungstenite::Error::ConnectionClosed)) | None => {
                         on_event(WsEvent::Closed { code: None, reason: String::new() });
@@ -300,6 +346,16 @@ impl WsConnection {
                 },
             }
         }
+    }
+}
+
+/// The next ping time, or never without an interval.
+async fn tick(ticker: &mut Option<tokio::time::Interval>) {
+    match ticker {
+        Some(ticker) => {
+            ticker.tick().await;
+        }
+        None => std::future::pending().await,
     }
 }
 

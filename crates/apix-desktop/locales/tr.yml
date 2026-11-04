@@ -740,6 +740,9 @@ ws.error: "Hata: %{error}"
 ws.failed: "Bağlantı koptu"
 ws.format_text: Metin
 ws.open: "Bağlı"
+ws.ping: Ping aralığı (sn)
+ws.ping_placeholder: saniye, kapalı
+ws.pong: "pong, %{time} sonra"
 ws.save: "Mesajı kaydet"
 ws.saved: "Kayıtlı mesajlar (%{count})"
 ws.saved_empty: "Buraya kaydettiğin mesajlar istek dosyasında saklanır. Düzenlemek için birine tıkla."

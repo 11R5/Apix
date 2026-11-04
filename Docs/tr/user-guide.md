@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:fa4196e436f2ee67 -->
+<!-- translated from en/user-guide.md sha256:cccda40df01ea79b -->
 
 # Apix kullanım kılavuzu
 
@@ -318,6 +318,13 @@ anahtarı, OAuth 2.0 …) kullanır.
 - **Alt protokoller** (Mesajlar sekmesinin üstünde, virgülle ayrılır) el
   sıkışmada önerilir; günlük sunucunun seçtiğini yazar. Hiçbirini seçmeyen
   bir sunucu, tarayıcılardaki gibi reddedilir.
+- Altındaki **Ping aralığı (sn)**, bağlantı açıkken bu aralıkla ping gönderir
+  (dosyada `[websocket] ping_interval`). Her yanıt günlükte `pong, 2 ms sonra`
+  olarak görünür; bir sonraki ping zamanı geldiğinde hâlâ yanıtlanmamış bir ping
+  bağlantıyı hatayla kapatır, böylece sessizce kopmuş bir bağlantı kopmuş olarak
+  görünür. Sunucunun kendi ping'leri her zaman yanıtlanır. `apix send --ping 30`
+  aynısını yapar (`--ping 0` kayıtlı aralığı kapatır) ve kopmuş bağlantıda sıfırdan
+  farklı kodla çıkar.
 - `wss://` istek ayarlarına uyar: güvenilen CA, istemci sertifikası ya da
   kapatılmış "TLS sertifikasını doğrula".
 

@@ -740,6 +740,9 @@ ws.error: "Fehler: %{error}"
 ws.failed: "Verbindung verloren"
 ws.format_text: Text
 ws.open: "Verbunden"
+ws.ping: Ping alle (s)
+ws.ping_placeholder: Sekunden, aus
+ws.pong: "Pong nach %{time}"
 ws.save: "Nachricht speichern"
 ws.saved: "Gespeicherte Nachrichten (%{count})"
 ws.saved_empty: "Hier gespeicherte Nachrichten stehen in der Anfragedatei. Zum Bearbeiten anklicken."

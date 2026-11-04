@@ -740,6 +740,9 @@ ws.error: "错误：%{error}"
 ws.failed: "连接已断开"
 ws.format_text: 文本
 ws.open: "已连接"
+ws.ping: Ping 间隔 (秒)
+ws.ping_placeholder: 秒,关闭
+ws.pong: "%{time} 后收到 pong"
 ws.save: "保存消息"
 ws.saved: "已保存的消息 (%{count})"
 ws.saved_empty: "在这里保存的消息会存入请求文件。点击一条即可编辑。"

@@ -305,6 +305,12 @@ WebSocket: **Send** becomes **Connect**, and the Body tab becomes
 - **Subprotocols** (top of the Messages tab, comma-separated) are offered in
   the handshake; the log names the one the server picked. A server that
   picks none of them is refused, as browsers do.
+- **Ping every (s)** under them sends a ping at that interval while connected
+  (`[websocket] ping_interval` in the file). Each answer shows in the log as
+  `pong after 2 ms`; a ping still unanswered when the next is due closes the
+  connection with an error, so a connection that died quietly shows as dead.
+  Servers' own pings are always answered. `apix send --ping 30` does the same
+  (`--ping 0` turns a saved interval off) and exits non-zero on a dead connection.
 - `wss://` follows the request settings: a trusted CA, a client certificate,
   or "Verify TLS certificate" turned off.
 
