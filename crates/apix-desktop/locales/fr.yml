@@ -475,7 +475,9 @@ request.error.no_url: Saisissez une URL pour envoyer une requête.
 request.error.undefined_variable: Variable %{name} non définie. Définissez-la avec %{key} (Variables).
 request.error.undefined_variables: "Variables non définies : %{names}. Définissez-les avec %{key} (Variables)."
 request.headers_hint: Content-Type est déduit du type de corps, sauf si vous en ajoutez un ici.
-request.params_hint: Les paramètres sont ajoutés à la fin de l'URL.
+request.params_hint: Paramètres de requête ; ce que vous tapez dans l'URL remplit ce tableau, et le tableau les écrit dans l'URL.
+request.path_vars: Variables de chemin
+request.path_vars_hint: Chaque :nom du chemin de l'URL est remplacé par sa valeur à l'envoi de la requête ; les {{variables}} fonctionnent dans les valeurs.
 request.tab.auth: Auth
 request.tab.auth_api_key: Auth · Clé d'API
 request.tab.auth_kind: Auth · %{kind}

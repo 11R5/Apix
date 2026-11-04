@@ -153,7 +153,9 @@ impl Request {
             name: self.name.clone(),
             description: self.description.clone(),
             method: self.method,
-            url: s(&self.url),
+            // `:name` path segments take their values, variables filled in first.
+            url: crate::urls::fill_path_variables(&s(&self.url), &pairs(&self.path_vars, &mut s)),
+            path_vars: pairs(&self.path_vars, &mut s),
             query: pairs(&self.query, &mut s),
             headers: pairs(&self.headers, &mut s),
             body: match &self.body {

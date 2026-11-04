@@ -356,6 +356,10 @@ fn url_json(request: &Request) -> Value {
     if !request.query.is_empty() {
         url["query"] = json!(kv_list(&request.query));
     }
+    // Postman reads `:name` segments of `raw` and fills them from `variable`.
+    if !request.path_vars.is_empty() {
+        url["variable"] = json!(kv_list(&request.path_vars));
+    }
     url
 }
 
@@ -519,6 +523,11 @@ mod tests {
 
     #[test]
     fn a_collection_survives_export_and_import() {
+        // The fixture has path variables, with a value and without.
+        let first_paths = convert_collection(SHOP)
+            .map(|plan| requests(&plan).iter().any(|(_, r)| !r.path_vars.is_empty()))
+            .unwrap();
+        assert!(first_paths);
         // Postman → Apix → Postman → Apix: the second import equals the first.
         let first = convert_collection(SHOP).unwrap();
         let root = temp("roundtrip");

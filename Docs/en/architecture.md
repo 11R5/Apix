@@ -156,7 +156,15 @@ A request file:
 ```toml
 name = "Create user"
 method = "POST"
-url = "{{base_url}}/users"
+url = "{{base_url}}/orgs/:org/users"   # no query: that is in [[query]]
+
+[[query]]
+key = "notify"
+value = "yes"
+
+[[path]]                 # the value of the :org segment
+key = "org"
+value = "{{org}}"
 
 [[headers]]
 key = "X-Trace"

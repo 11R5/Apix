@@ -477,7 +477,9 @@ request.error.no_url: Enter a URL to send a request.
 request.error.undefined_variable: Undefined variable %{name}. Define it with %{key} (Variables).
 request.error.undefined_variables: "Undefined variables: %{names}. Define them with %{key} (Variables)."
 request.headers_hint: Content-Type is set from the body type unless you add one here.
-request.params_hint: Query parameters are appended to the URL.
+request.params_hint: Query parameters; typing them into the URL fills this table, and the table writes them into the URL.
+request.path_vars: Path variables
+request.path_vars_hint: Each :name in the URL's path is replaced by its value when the request is sent; {{variables}} work in values.
 request.tab.auth: Auth
 request.tab.auth_api_key: Auth · API key
 request.tab.auth_kind: Auth · %{kind}

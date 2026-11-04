@@ -475,7 +475,9 @@ request.error.no_url: Escribe una URL para enviar una solicitud.
 request.error.undefined_variable: La variable %{name} no está definida. Defínela con %{key} (Variables).
 request.error.undefined_variables: "Variables sin definir: %{names}. Defínelas con %{key} (Variables)."
 request.headers_hint: Content-Type se define según el tipo de cuerpo, salvo que añadas uno aquí.
-request.params_hint: Los parámetros de consulta se añaden a la URL.
+request.params_hint: Parámetros de consulta; lo que escribes en la URL llena esta tabla, y la tabla los escribe en la URL.
+request.path_vars: Variables de ruta
+request.path_vars_hint: Cada :nombre de la ruta de la URL se sustituye por su valor al enviar la petición; {{variables}} funcionan en los valores.
 request.tab.auth: Autenticación
 request.tab.auth_api_key: Autenticación · clave de API
 request.tab.auth_kind: Autenticación · %{kind}

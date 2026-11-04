@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:3396a14b9fb28f02 -->
+<!-- translated from en/architecture.md sha256:74fefb638629f096 -->
 
 # Apix mimarisi
 
@@ -166,7 +166,15 @@ Bir istek dosyası:
 ```toml
 name = "Create user"
 method = "POST"
-url = "{{base_url}}/users"
+url = "{{base_url}}/orgs/:org/users"   # sorgu yok: o [[query]] içinde
+
+[[query]]
+key = "notify"
+value = "yes"
+
+[[path]]                 # :org parçasının değeri
+key = "org"
+value = "{{org}}"
 
 [[headers]]
 key = "X-Trace"

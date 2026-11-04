@@ -81,11 +81,26 @@ A dot on the tab and in the sidebar marks unsaved changes.
 
 ## Params and headers
 
-**Params** are added to the URL's query string, **Headers** are sent as they
-are. Untick a row to keep it in the file without sending it. A row without a
-key is ignored. `Content-Type` is set from the body type unless you add your
-own. `{{variables}}` in keys and values show as chips, as in the URL bar; hover
-one to see its value.
+**Params** are the URL's query string, **Headers** are sent as they are.
+Untick a row to keep it in the file without sending it. A row without a key is
+ignored. `Content-Type` is set from the body type unless you add your own.
+`{{variables}}` in keys and values show as chips, as in the URL bar; hover one
+to see its value.
+
+The URL bar and the Params table stay in step: typing `?page=2&sort=name` into
+the URL fills the table, and editing, adding, unticking or deleting a row
+rewrites the URL. Values show decoded (`%20` becomes a space) and are encoded
+when the request is sent. The file keeps the URL without its query, and the
+rows as `[[query]]`.
+
+**Path variables.** A path segment written as `:name`, as in
+`{{base}}/users/:id/posts`, gets a row under **Path variables** on the Params
+tab. Its value replaces the segment when the request is sent, encoded as one
+segment (`a b/c` becomes `a%20b%2Fc`), and `{{variables}}` work in it. A
+variable left empty is sent as written. The values are kept as `[[path]]` in the
+file, and Postman collections bring theirs along (and get them back on export).
+
+![Params and path variables](images/path-variables.png)
 
 ## Body
 

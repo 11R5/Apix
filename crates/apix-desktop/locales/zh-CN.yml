@@ -475,7 +475,9 @@ request.error.no_url: 请输入 URL 以发送请求。
 request.error.undefined_variable: 未定义变量 %{name}。可按 %{key} 定义（变量）。
 request.error.undefined_variables: "未定义的变量：%{names}。可按 %{key} 定义（变量）。"
 request.headers_hint: Content-Type 会根据请求体类型自动设置，除非在此处添加。
-request.params_hint: 查询参数会附加到 URL 后。
+request.params_hint: 查询参数;在 URL 中输入会填入此表,表中的内容也会写入 URL。
+request.path_vars: 路径变量
+request.path_vars_hint: URL 路径中的每个 :name 在发送请求时都会替换为其值;值中可以使用 {{变量}}。
 request.tab.auth: 认证
 request.tab.auth_api_key: 认证 · API 密钥
 request.tab.auth_kind: 认证 · %{kind}

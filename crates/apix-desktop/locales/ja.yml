@@ -475,7 +475,9 @@ request.error.no_url: リクエストを送信するには URL を入力して�
 request.error.undefined_variable: 変数 %{name} は定義されていません。%{key}（変数）で定義してください。
 request.error.undefined_variables: "未定義の変数: %{names}。%{key}（変数）で定義してください。"
 request.headers_hint: ここで追加しない限り、Content-Type はボディの種類から設定されます。
-request.params_hint: クエリパラメーターは URL の末尾に追加されます。
+request.params_hint: クエリパラメータ。URL に入力するとこの表に入り、表の内容は URL に書き込まれます。
+request.path_vars: パス変数
+request.path_vars_hint: URL のパスにある各 :name は、送信時にその値に置き換えられます。値には {{変数}} を使えます。
 request.tab.auth: 認証
 request.tab.auth_api_key: 認証 · API キー
 request.tab.auth_kind: 認証 · %{kind}

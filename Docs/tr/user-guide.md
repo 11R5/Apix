@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:a92558136cec2b9e -->
+<!-- translated from en/user-guide.md sha256:d2de075d092b110d -->
 
 # Apix kullanım kılavuzu
 
@@ -88,12 +88,25 @@ gösterir.
 
 ## Parametreler ve başlıklar
 
-**Parametreler** URL'nin sorgu dizesine eklenir, **Başlıklar** olduğu gibi
-gönderilir. Bir satırı dosyada tutup göndermemek için işaretini kaldırın.
-Anahtarı olmayan satırlar yok sayılır. Kendiniz bir tane eklemediğiniz sürece
-`Content-Type` gövde türünden belirlenir. Anahtar ve değerlerdeki
-`{{değişkenler}}` URL çubuğundaki gibi çip olarak görünür; değerini görmek için
-üzerine gelin.
+**Parametreler** URL'nin sorgu dizesidir, **Başlıklar** olduğu gibi gönderilir.
+Bir satırı dosyada tutup göndermemek için işaretini kaldırın. Anahtarı olmayan
+satırlar yok sayılır. Kendiniz bir tane eklemediğiniz sürece `Content-Type`
+gövde türünden belirlenir. Anahtar ve değerlerdeki `{{değişkenler}}` URL
+çubuğundaki gibi çip olarak görünür; değerini görmek için üzerine gelin.
+
+URL çubuğu ile Parametreler tablosu birlikte değişir: URL'ye `?page=2&sort=name`
+yazmak tabloyu doldurur; bir satırı düzenlemek, eklemek, işaretini kaldırmak ya da
+silmek URL'yi yeniden yazar. Değerler çözülmüş görünür (`%20` boşluk olur) ve istek
+gönderilirken kodlanır. Dosya URL'yi sorgusuz, satırları `[[query]]` olarak tutar.
+
+**Yol değişkenleri.** `{{base}}/users/:id/posts` örneğindeki gibi `:ad` olarak
+yazılan bir yol parçası, Parametreler sekmesinde **Yol değişkenleri** altında bir
+satır alır. İstek gönderilirken değeri o parçanın yerine geçer ve tek bir parça olarak
+kodlanır (`a b/c`, `a%20b%2Fc` olur); değerde `{{değişkenler}}` çalışır. Boş bırakılan
+değişken yazıldığı gibi gönderilir. Değerler dosyada `[[path]]` olarak tutulur; Postman
+koleksiyonları kendi değerlerini getirir (dışa aktarınca da geri verir).
+
+![Parametreler ve yol değişkenleri](images/path-variables.png)
 
 ## Gövde
 

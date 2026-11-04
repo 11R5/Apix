@@ -67,14 +67,15 @@ fn full_url(request: &Request) -> String {
     {
         pairs.push((key, value));
     }
+    let url = apix_core::urls::fill_path_variables(&request.url, &request.path_vars);
     let base = if pairs.is_empty() {
-        request.url.clone()
+        url.clone()
     } else {
         let query = url::form_urlencoded::Serializer::new(String::new())
             .extend_pairs(pairs)
             .finish();
-        let separator = if request.url.contains('?') { '&' } else { '?' };
-        format!("{}{separator}{query}", request.url)
+        let separator = if url.contains('?') { '&' } else { '?' };
+        format!("{url}{separator}{query}")
     };
     // OAuth 1.0 in the URL signs the URL built so far.
     if let Auth::OAuth1(o) = &request.auth

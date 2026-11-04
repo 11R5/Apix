@@ -512,7 +512,7 @@ impl Converter<'_> {
         });
 
         if let Some(url) = &full.url {
-            self.url(url, &mut out, label);
+            self.url(url, &mut out);
         }
 
         out.headers = match &full.header {
@@ -535,7 +535,7 @@ impl Converter<'_> {
         out
     }
 
-    fn url(&mut self, url: &PmUrl, out: &mut Request, label: &str) {
+    fn url(&mut self, url: &PmUrl, out: &mut Request) {
         let (raw, query, variables) = match url {
             PmUrl::Raw(raw) => (raw.clone(), &[][..], &[][..]),
             PmUrl::Parts(parts) => {
@@ -563,7 +563,7 @@ impl Converter<'_> {
         };
 
         // With a query list, the rows carry the enabled flags, so they win over the raw text.
-        let mut url = if query.is_empty() {
+        let url = if query.is_empty() {
             raw
         } else {
             out.query = query
@@ -575,36 +575,16 @@ impl Converter<'_> {
                 .map_or(raw.clone(), |(base, _)| base.to_owned())
         };
 
-        // Path variables (`/users/:id`) have no Apix equivalent yet.
+        // Path variables (`/users/:id`) keep their place; their values become the request's.
         let values: HashMap<String, String> =
             variables.iter().map(|v| (v.key(), v.value())).collect();
-        if url.contains("/:") {
-            url = url
-                .split('/')
-                .map(|segment| match segment.strip_prefix(':') {
-                    Some(name) if !name.is_empty() => {
-                        match values.get(name).filter(|v| !v.is_empty()) {
-                            Some(value) => {
-                                self.report.warn(
-                                    label,
-                                    format!("Path variable :{name} was replaced with its value \"{value}\"."),
-                                );
-                                value.clone()
-                            }
-                            None => {
-                                self.report.warn(
-                                    label,
-                                    format!("Path variable :{name} became {{{{{name}}}}}; define it in an environment."),
-                                );
-                                format!("{{{{{name}}}}}")
-                            }
-                        }
-                    }
-                    _ => segment.to_owned(),
-                })
-                .collect::<Vec<_>>()
-                .join("/");
-        }
+        out.path_vars = apix_core::urls::path_variables(&url)
+            .into_iter()
+            .map(|name| {
+                let value = values.get(&name).cloned().unwrap_or_default();
+                KeyValue::new(name, value)
+            })
+            .collect();
         out.url = url;
     }
 
