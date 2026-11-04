@@ -267,6 +267,30 @@ The **↓** button at the end of the status line saves the body, byte for byte,
 to a file. The suggested name comes from the server's `Content-Disposition`
 or from the URL, with an extension that fits the content.
 
+**Search.** Ctrl+F in the body, or the magnifier on the status line, searches
+**Pretty**, **Raw** and **Hex**, case ignored. Enter (or F3) goes to the next
+match and Shift+Enter (Shift+F3) back; the count shows where you are. The fast
+viewer for very large bodies searches all of it in the background and stops
+counting at 100,000 matches.
+
+**Filter.** A JSON response has a filter box above **Pretty**. An expression
+that starts with `$` is JSONPath (RFC 9535), anything else is jq, so both of
+these work:
+
+```text
+$.users[?@.active].email
+.users[] | select(.active) | {name, email}
+```
+
+![A JSON response filtered with JSONPath](images/response-filter.png)
+
+The result replaces the body on **Pretty** while the box holds an expression
+(the count beside it says how many values); **Raw** and **Hex** still show the
+whole body, and ✕ brings it back. JSONPath gives a list of its matches; jq gives
+its outputs one after another. The filter stays for the next response of the
+same request, so it can be sent again and again while watching one value.
+`apix send --filter '<expression>'` prints only what the filter picks out.
+
 ## The Network tab
 
 The **Network** tab explains where the time went and what the connection was:

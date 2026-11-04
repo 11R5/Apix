@@ -501,6 +501,10 @@ response.binary_title: Binary content
 response.cancelled: Request cancelled.
 response.empty: Send a request to see the response
 response.failed: Request failed
+response.filter_clear: Show the whole body
+response.filter_count: "%{language}: %{count} values"
+response.filter_one: "%{language}: 1 value"
+response.filter_placeholder: "Filter: $.items[*].id (JSONPath) or .items[].id (jq)"
 response.image_title: Image
 response.image_too_big: Image (too large to preview)
 response.lines: "%{count} lines"
@@ -508,6 +512,9 @@ response.preparing_hex: Preparing the hex view…
 response.preparing_raw: Preparing the raw view…
 response.save: Save body to a file…
 response.saved: Saved %{size} to %{path}.
+response.search: Search (Ctrl+F)
+response.search_none: No match
+response.search_placeholder: Find in the body
 response.send_hint: "%{key} send"
 response.sending: Sending…  Esc to cancel
 response.tab.console: Console

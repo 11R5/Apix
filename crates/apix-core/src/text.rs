@@ -228,6 +228,13 @@ impl RowIndex {
         self.widest
     }
 
+    /// The row a byte offset of the text falls in.
+    pub fn row_of(&self, offset: usize) -> usize {
+        self.rows
+            .partition_point(|row| row.start as usize <= offset)
+            .saturating_sub(1)
+    }
+
     /// The row's text without its line break, its 1-based line number, and
     /// whether it continues the previous row.
     pub fn row<'a>(&self, text: &'a str, ix: usize) -> (&'a str, u32, bool) {

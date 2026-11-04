@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:dac9e6ef73d9faca -->
+<!-- translated from en/architecture.md sha256:3396a14b9fb28f02 -->
 
 # Apix mimarisi
 
@@ -735,6 +735,17 @@ Kullanıcı belgeleri plandan ayrı, her dil için bir klasörde durur
   satırı yerleştirir. Fare tekerleğini, kendi kaydırma çubuğunu ve klavyeyi
   (↑ ↓ PgUp PgDn, Ctrl+Home/End) kendisi yönetir.
 - Büyük bir JSON gövdesinin Ham sekmesi yalnızca açıldığında oluşturulur.
+- Ctrl+F metnin tamamını arka plandaki bir iş parçacığında arar (aranan metin
+  için büyük-küçük harf ayırmayan bir `regex`) ve en çok 100.000 bayt aralığı
+  tutar; `RowIndex::row_of` bir eşleşmenin satırını ikili aramayla bulur ve
+  yalnızca ekrandaki satırlar vurgulamak için kendi eşleşmelerine bakar.
+
+Daha küçük gövdeler kod editöründedir; editörün kendi arama paneli açıktır.
+Biçimli'nin üstündeki süzme (`workspace/filter_ui.rs`) `apix_core::filter`'ı son
+tuştan 250 ms sonra arayüz iş parçacığı dışında çalıştırır: `$` ile başlayan ifade
+için `serde_json_path` ile JSONPath, diğerleri için `jaq` ile jq; jq en çok 10.000
+çıktı verir. Sonuç her gövde gibi bir `Document`'tır; böylece süzülmüş büyük bir
+gövde editöre düşebilir, tersi de olabilir.
 
 Windows'ta release derlemede, yerel bir sunucudan gelen 100 MB minify edilmiş
 JSON için ölçülmüştür (`cargo run -p apix-http --release --example big_json_server`):

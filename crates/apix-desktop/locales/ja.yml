@@ -499,6 +499,10 @@ response.binary_title: バイナリデータ
 response.cancelled: リクエストをキャンセルしました。
 response.empty: リクエストを送信するとレスポンスが表示されます
 response.failed: リクエストに失敗しました
+response.filter_clear: 本文全体を表示
+response.filter_count: "%{language}: %{count} 件"
+response.filter_one: "%{language}: 1 件"
+response.filter_placeholder: "絞り込み: $.items[*].id (JSONPath) または .items[].id (jq)"
 response.image_title: 画像
 response.image_too_big: 画像（プレビューするには大きすぎます）
 response.lines: "%{count} 行"
@@ -506,6 +510,9 @@ response.preparing_hex: Hex 表示を準備しています…
 response.preparing_raw: 生データ表示を準備中…
 response.save: 本文をファイルに保存…
 response.saved: "%{size} を %{path} に保存しました。"
+response.search: 検索 (Ctrl+F)
+response.search_none: 一致なし
+response.search_placeholder: 本文を検索
 response.send_hint: "%{key} で送信"
 response.sending: 送信中…  Esc でキャンセル
 response.tab.console: コンソール

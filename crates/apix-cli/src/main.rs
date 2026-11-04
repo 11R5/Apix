@@ -38,6 +38,10 @@ enum Command {
         /// Print what happened on the network: DNS, connection, redirects, TLS, local side
         #[arg(short = 'n', long)]
         network: bool,
+        /// Print only what this picks out of a JSON body: JSONPath when it starts with `$`
+        /// (`$.items[*].id`), jq otherwise (`.items[].id`)
+        #[arg(long, value_name = "EXPRESSION")]
+        filter: Option<String>,
         /// WebSocket, Socket.IO and MQTT: send this text instead of the saved messages (repeatable)
         #[arg(short = 'm', long = "message", value_name = "TEXT")]
         messages: Vec<String>,
@@ -447,6 +451,7 @@ async fn run(cli: Cli) -> Result<bool> {
             vars,
             include_headers,
             network,
+            filter,
             messages,
             message_format,
             event_types,
@@ -645,7 +650,14 @@ async fn run(cli: Cli) -> Result<bool> {
                 if network {
                     print_network(&style, response);
                 }
-                println!("{}", response.pretty_body());
+                match &filter {
+                    Some(expression) => {
+                        let filtered = apix_core::filter::filter(&response.raw_body(), expression)
+                            .map_err(|e| anyhow::anyhow!("--filter: {e}"))?;
+                        println!("{}", filtered.to_pretty());
+                    }
+                    None => println!("{}", response.pretty_body()),
+                }
             }
             // A SOAP fault was already shown, with the response.
             let mut item = done.to_item(0, String::new());

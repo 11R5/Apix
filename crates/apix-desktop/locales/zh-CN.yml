@@ -499,6 +499,10 @@ response.binary_title: 二进制内容
 response.cancelled: 请求已取消。
 response.empty: 发送请求以查看响应
 response.failed: 请求失败
+response.filter_clear: 显示完整正文
+response.filter_count: "%{language}:%{count} 个值"
+response.filter_one: "%{language}:1 个值"
+response.filter_placeholder: 筛选:$.items[*].id(JSONPath)或 .items[].id(jq)
 response.image_title: 图片
 response.image_too_big: 图片（太大，无法预览）
 response.lines: "%{count} 行"
@@ -506,6 +510,9 @@ response.preparing_hex: 正在准备十六进制视图…
 response.preparing_raw: 正在准备原始视图…
 response.save: 将正文保存到文件…
 response.saved: "已将 %{size} 保存到 %{path}。"
+response.search: 搜索 (Ctrl+F)
+response.search_none: 无匹配
+response.search_placeholder: 在正文中查找
 response.send_hint: "%{key} 发送"
 response.sending: 正在发送…  按 Esc 取消
 response.tab.console: 控制台

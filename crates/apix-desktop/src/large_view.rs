@@ -12,10 +12,14 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 use apix_core::text::{RowIndex, json_tokens};
-use gpui_kit::component::{ActiveTheme as _, h_flex, v_flex};
+use gpui_kit::component::button::{Button, ButtonVariants as _};
+use gpui_kit::component::input::{Input, InputEvent, InputState};
+use gpui_kit::component::{
+    ActiveTheme as _, Disableable as _, IconName, Sizable as _, h_flex, v_flex,
+};
 use gpui_kit::*;
 
-use crate::theme;
+use crate::{theme, tr};
 
 /// Bodies at least this large use this viewer instead of the code editor,
 /// which is comfortable up to a few tens of thousands of lines.
@@ -35,8 +39,23 @@ const SCROLLBAR_WIDTH: f32 = 12.;
 
 actions!(
     large_view,
-    [LineUp, LineDown, PageUp, PageDown, Top, Bottom]
+    [
+        LineUp,
+        LineDown,
+        PageUp,
+        PageDown,
+        Top,
+        Bottom,
+        OpenSearch,
+        NextMatch,
+        PreviousMatch,
+        CloseSearch
+    ]
 );
+
+/// Searching stops counting here; a one-letter search in 100 MB would
+/// otherwise hold millions of ranges.
+const MOST_MATCHES: usize = 100_000;
 
 const CONTEXT: &str = "LargeView";
 
@@ -50,6 +69,10 @@ pub fn bind_keys(cx: &mut App) {
         KeyBinding::new("secondary-end", Bottom, Some(CONTEXT)),
         KeyBinding::new("secondary-up", Top, Some(CONTEXT)),
         KeyBinding::new("secondary-down", Bottom, Some(CONTEXT)),
+        KeyBinding::new("secondary-f", OpenSearch, Some(CONTEXT)),
+        KeyBinding::new("f3", NextMatch, Some(CONTEXT)),
+        KeyBinding::new("shift-f3", PreviousMatch, Some(CONTEXT)),
+        KeyBinding::new("escape", CloseSearch, Some(CONTEXT)),
     ]);
 }
 
@@ -84,6 +107,34 @@ impl Document {
     pub fn lines(&self) -> u32 {
         self.rows.lines()
     }
+
+    /// Byte ranges of `query`, case ignored, in order; at most `MOST_MATCHES`.
+    fn find(&self, query: &str) -> Vec<(usize, usize)> {
+        if query.is_empty() {
+            return Vec::new();
+        }
+        let Ok(pattern) = regex::RegexBuilder::new(&regex::escape(query))
+            .case_insensitive(true)
+            .build()
+        else {
+            return Vec::new();
+        };
+        pattern
+            .find_iter(&self.text)
+            .take(MOST_MATCHES)
+            .map(|m| (m.start(), m.end()))
+            .collect()
+    }
+}
+
+/// The search bar: what is looked for and where it was found.
+struct Search {
+    query: Entity<InputState>,
+    matches: Arc<Vec<(usize, usize)>>,
+    /// The match shown, an index into `matches`.
+    current: usize,
+    _task: Option<Task<()>>,
+    _subscription: Subscription,
 }
 
 struct Drag {
@@ -103,6 +154,7 @@ pub struct LargeView {
     /// Where the viewer was painted last frame.
     viewport: Rc<Cell<Bounds<Pixels>>>,
     drag: Option<Drag>,
+    search: Option<Search>,
 }
 
 impl LargeView {
@@ -115,7 +167,129 @@ impl LargeView {
             left: 0.,
             viewport: Rc::new(Cell::new(Bounds::default())),
             drag: None,
+            search: None,
         }
+    }
+
+    /// Ctrl+F: the search bar, focused.
+    pub fn open_search(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        if let Some(search) = &self.search {
+            search.query.update(cx, |state, cx| state.focus(window, cx));
+            return;
+        }
+        let query = cx
+            .new(|cx| InputState::new(window, cx).placeholder(tr!("response.search_placeholder")));
+        let subscription = cx.subscribe_in(
+            &query,
+            window,
+            |this, _, event: &InputEvent, window, cx| match event {
+                InputEvent::Change => this.run_search(cx),
+                InputEvent::PressEnter { shift, .. } => this.step(!*shift, window, cx),
+                _ => {}
+            },
+        );
+        query.update(cx, |state, cx| state.focus(window, cx));
+        self.search = Some(Search {
+            query,
+            matches: Arc::new(Vec::new()),
+            current: 0,
+            _task: None,
+            _subscription: subscription,
+        });
+        cx.notify();
+    }
+
+    fn close_search(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        if self.search.take().is_some() {
+            self.focus.focus(window, cx);
+            cx.notify();
+        }
+    }
+
+    /// Looks again for what the bar holds, off the UI thread.
+    fn run_search(&mut self, cx: &mut Context<Self>) {
+        let Some(search) = &mut self.search else {
+            return;
+        };
+        let query = search.query.read(cx).value().to_string();
+        let doc = self.doc.clone();
+        search._task = Some(cx.spawn(async move |this, cx| {
+            let matches = cx.background_spawn(async move { doc.find(&query) }).await;
+            this.update(cx, |this, cx| {
+                let top = this.top;
+                let rows = &this.doc.rows;
+                let Some(search) = &mut this.search else {
+                    return;
+                };
+                // The first match from where the view is.
+                let first = matches.partition_point(|(start, _)| rows.row_of(*start) < top);
+                search.current = if first < matches.len() { first } else { 0 };
+                search.matches = Arc::new(matches);
+                this.reveal_current(cx);
+                cx.notify();
+            })
+            .ok();
+        }));
+    }
+
+    /// The next (or previous) match, going round at the ends.
+    fn step(&mut self, forward: bool, _: &mut Window, cx: &mut Context<Self>) {
+        let Some(search) = &mut self.search else {
+            return;
+        };
+        let count = search.matches.len();
+        if count == 0 {
+            return;
+        }
+        search.current = if forward {
+            (search.current + 1) % count
+        } else {
+            (search.current + count - 1) % count
+        };
+        self.reveal_current(cx);
+        cx.notify();
+    }
+
+    /// Scrolls so the current match is on screen, a third of the way down.
+    fn reveal_current(&mut self, cx: &mut Context<Self>) {
+        let Some(&(start, _)) = self.search.as_ref().and_then(|s| s.matches.get(s.current)) else {
+            return;
+        };
+        let row = self.doc.rows.row_of(start);
+        let visible = self.visible_rows();
+        if row < self.top || row >= self.top + visible {
+            self.scroll_to(row.saturating_sub(visible / 3), cx);
+        }
+        // Far along a long line: bring it into view too.
+        let (text, _, _) = self.doc.rows.row(&self.doc.text, row);
+        let row_start = text.as_ptr() as usize - self.doc.text.as_ptr() as usize;
+        let column = self.doc.text[row_start..start.max(row_start)]
+            .chars()
+            .count() as f32;
+        let x = column * CHAR_WIDTH;
+        let width = f32::from(self.viewport.get().size.width) - self.gutter_width() - 40.;
+        if x < self.left || x > self.left + width {
+            self.left = (x - width / 3.).clamp(0., self.max_left());
+        }
+    }
+
+    /// Where the search's matches fall in a row, and whether each is the current one.
+    fn row_matches(&self, text: &str) -> Vec<(std::ops::Range<usize>, bool)> {
+        let Some(search) = &self.search else {
+            return Vec::new();
+        };
+        let start = text.as_ptr() as usize - self.doc.text.as_ptr() as usize;
+        let end = start + text.len();
+        let first = search.matches.partition_point(|(_, e)| *e <= start);
+        search.matches[first..]
+            .iter()
+            .enumerate()
+            .take_while(|(_, (s, _))| *s < end)
+            .map(|(ix, (s, e))| {
+                let range = (*s).max(start) - start..(*e).min(end) - start;
+                (range, first + ix == search.current)
+            })
+            .collect()
     }
 
     fn total(&self) -> usize {
@@ -237,13 +411,27 @@ impl LargeView {
     fn row(&self, ix: usize, gutter: f32) -> Div {
         let p = crate::theme::current();
         let (text, line, continuation) = self.doc.rows.row(&self.doc.text, ix);
+        let found = self.row_matches(text);
         let number: SharedString = if continuation {
             SharedString::default()
         } else {
             line.to_string().into()
         };
         let mut styled = StyledText::new(SharedString::from(text.to_owned()));
-        if self.doc.json {
+        if !found.is_empty() {
+            // Highlights must not overlap, so a row with matches shows only them.
+            styled = styled.with_highlights(found.into_iter().map(|(range, current)| {
+                let style = HighlightStyle {
+                    background_color: Some(if current {
+                        p.accent.opacity(0.55)
+                    } else {
+                        p.warn.opacity(0.35)
+                    }),
+                    ..Default::default()
+                };
+                (range, style)
+            }));
+        } else if self.doc.json {
             styled = styled.with_highlights(json_tokens(text).into_iter().map(|(range, token)| {
                 let style = HighlightStyle {
                     color: Some(theme::json_token_color(&p, token)),
@@ -266,6 +454,80 @@ impl LargeView {
                     .child(number),
             )
             .child(div().whitespace_nowrap().child(styled))
+    }
+
+    fn render_search_bar(&self, cx: &mut Context<Self>) -> Option<impl IntoElement> {
+        let search = self.search.as_ref()?;
+        let p = crate::theme::current();
+        let count = search.matches.len();
+        let label: SharedString = if search.query.read(cx).value().is_empty() {
+            SharedString::default()
+        } else if count == 0 {
+            tr!("response.search_none")
+        } else if count == MOST_MATCHES {
+            format!("{} / {}+", search.current + 1, MOST_MATCHES).into()
+        } else {
+            format!("{} / {count}", search.current + 1).into()
+        };
+        Some(
+            h_flex()
+                .id("large-view-search")
+                .absolute()
+                .top(px(6.))
+                .right(px(SCROLLBAR_WIDTH + 8.))
+                .w(px(340.))
+                .gap_1()
+                .p_1()
+                .rounded_md()
+                .border_1()
+                .border_color(p.hairline)
+                .bg(p.surface_raised)
+                .font_family(cx.theme().font_family.clone())
+                .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation())
+                .child(
+                    div()
+                        .flex_1()
+                        .min_w_0()
+                        .child(Input::new(&search.query).small()),
+                )
+                .child(
+                    div()
+                        .flex_none()
+                        .min_w(px(60.))
+                        .text_xs()
+                        .text_color(if count == 0 { p.err } else { p.text_muted })
+                        .child(label),
+                )
+                .child(
+                    Button::new("large-view-prev")
+                        .ghost()
+                        .xsmall()
+                        .icon(IconName::ChevronUp)
+                        .disabled(count == 0)
+                        .on_click(cx.listener(|this, _: &ClickEvent, window, cx| {
+                            this.step(false, window, cx)
+                        })),
+                )
+                .child(
+                    Button::new("large-view-next")
+                        .ghost()
+                        .xsmall()
+                        .icon(IconName::ChevronDown)
+                        .disabled(count == 0)
+                        .on_click(cx.listener(|this, _: &ClickEvent, window, cx| {
+                            this.step(true, window, cx)
+                        })),
+                )
+                .child(
+                    Button::new("large-view-close-search")
+                        .ghost()
+                        .xsmall()
+                        .icon(IconName::Close)
+                        .on_click(cx.listener(|this, _: &ClickEvent, window, cx| {
+                            this.close_search(window, cx)
+                        })),
+                ),
+        )
     }
 
     fn render_scrollbar(&self, cx: &mut Context<Self>) -> Option<impl IntoElement> {
@@ -337,6 +599,14 @@ impl Render for LargeView {
             }))
             .on_action(cx.listener(|this, _: &Top, _, cx| this.scroll_to(0, cx)))
             .on_action(cx.listener(|this, _: &Bottom, _, cx| this.scroll_to(usize::MAX, cx)))
+            .on_action(cx.listener(|this, _: &OpenSearch, window, cx| this.open_search(window, cx)))
+            .on_action(cx.listener(|this, _: &NextMatch, window, cx| this.step(true, window, cx)))
+            .on_action(
+                cx.listener(|this, _: &PreviousMatch, window, cx| this.step(false, window, cx)),
+            )
+            .on_action(
+                cx.listener(|this, _: &CloseSearch, window, cx| this.close_search(window, cx)),
+            )
             .on_scroll_wheel(cx.listener(Self::on_wheel))
             .on_mouse_down(
                 MouseButton::Left,
@@ -378,5 +648,6 @@ impl Render for LargeView {
                     .children((start..end).map(|ix| self.row(ix, gutter))),
             )
             .children(self.render_scrollbar(cx))
+            .children(self.render_search_bar(cx))
     }
 }
