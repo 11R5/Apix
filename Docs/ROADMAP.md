@@ -118,7 +118,7 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [ ] TLS details in the network inspector with our own connector: TLS version, cipher, ALPN, full chain, separate TCP and TLS times, compressed size
 - [ ] Local mock server, docs generation, monitors, visualizer, capture proxy
 - [ ] Git integration, auto-update (the light theme was done in the theme work after M5)
-- [ ] Everyday gaps: ~~search in the response (Ctrl+F), JSONPath/jq filter~~ (done: search in every body tab and the large viewer, a JSONPath/jq filter on JSON responses, `apix send --filter`), ~~params ↔ URL sync, `/users/:id` path variables~~ (done: the URL bar and Params follow each other; `:name` segments filled from `[[path]]`, in the app, CLI, runs and generated code; Postman import and export keep them), header autocomplete, sidebar search, save examples
+- [ ] Everyday gaps: ~~search in the response (Ctrl+F), JSONPath/jq filter~~ (done: search in every body tab and the large viewer, a JSONPath/jq filter on JSON responses, `apix send --filter`), ~~params ↔ URL sync, `/users/:id` path variables~~ (done: the URL bar and Params follow each other; `:name` segments filled from `[[path]]`, in the app, CLI, runs and generated code; Postman import and export keep them), ~~header autocomplete, sidebar search~~ (done: names and usual values suggested under the row; the sidebar narrowed to requests with every word in name, method or URL), save examples
 - [ ] Git-aware CLI: `apix run --changed`, `apix diff`, a run summary as a PR comment
 - [ ] Monitors (scheduled runs), `apix run --parallel`
 - [ ] Theme leftovers: code editor colours from the theme, font size and density

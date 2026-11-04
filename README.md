@@ -88,7 +88,9 @@ Measurements of the other tools on the same machine are planned.
   the command line (`apix send --filter`).
 - **Params and path variables:** the URL bar and the Params table follow each
   other as you type, and `/users/:id` segments take their values from the
-  request (Postman's path variables come along on import and export).
+  request (Postman's path variables come along on import and export); header
+  names and their usual values are suggested while typing, and the sidebar has
+  a search.
 - **Collections and projects:** a sidebar built from the files on disk, tabs that
   keep their edits and responses and come back next time, drag to move and to
   reorder, projects that share environments, a colour per collection, and a

@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:d2de075d092b110d -->
+<!-- translated from en/user-guide.md sha256:8607b91f00b0f261 -->
 
 # Apix kullanım kılavuzu
 
@@ -107,6 +107,14 @@ değişken yazıldığı gibi gönderilir. Değerler dosyada `[[path]]` olarak t
 koleksiyonları kendi değerlerini getirir (dışa aktarınca da geri verir).
 
 ![Parametreler ve yol değişkenleri](images/path-variables.png)
+
+**Başlık önerileri.** Bir başlığın adı yazılırken, satırın altında uyan yaygın
+başlık adları görünür (önce yazılanla başlayanlar; tabloda olanlar gösterilmez);
+değer kutusu da o başlığın yaygın değerlerini önerir, örneğin `Content-Type` için
+`application/json`. Enter ilkini, tıklama istenileni alır; addan sonra sıra değere
+geçer.
+
+![Yazarken önerilen başlık adları](images/header-hints.png)
 
 ## Gövde
 
@@ -726,6 +734,11 @@ sonraki açılışta yeniden gelir (şifreli koleksiyonların sekmeleri hatırla
 çünkü dosya adları da gizlidir).
 
 ## Kenar çubuğunda istekleri düzenleme
+
+Kenar çubuğunun üstündeki **arama**, onu adında, metodunda ya da URL'sinde yazılan
+kelimelerin hepsi geçen isteklere daraltır (`get users`, `/users`'a giden bir GET
+isteğini bulur); onlara giden klasörler açılır. Adı eşleşen klasörün içindekilerin
+hepsi görünür. Esc ya da ✕ aramayı temizler, klasörler eski hâline döner.
 
 İstek ve klasör oluşturmak, yeniden adlandırmak, çoğaltmak veya silmek için
 kenar çubuğuna sağ tıklayın; silinen dosyalar sistemin çöp kutusuna gider. Bir

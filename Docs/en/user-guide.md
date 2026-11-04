@@ -102,6 +102,14 @@ file, and Postman collections bring theirs along (and get them back on export).
 
 ![Params and path variables](images/path-variables.png)
 
+**Header suggestions.** While a header's name is typed in, the usual header
+names that fit it show under the row (those starting with what is typed
+first, and none already in the table); its value gets the usual values of that
+header, such as `application/json` for `Content-Type`. Enter takes the first,
+a click takes any, and after a name the value is next.
+
+![Header names suggested while typing](images/header-hints.png)
+
 ## Body
 
 The Body tab offers:
@@ -711,6 +719,11 @@ project (tabs of encrypted collections are not remembered, as their file names
 are secret too).
 
 ## Organising requests
+
+**Search** at the top of the sidebar narrows it to the requests whose name,
+method or URL hold every word typed (`get users` finds a GET request to
+`/users`), with the folders leading to them opened. A folder whose name matches
+shows all it holds. Esc or ✕ clears it, and the folders are as they were.
 
 Right-click in the sidebar to create, rename, duplicate or delete requests and
 folders; deleted files go to the system trash. Drag a request or folder onto

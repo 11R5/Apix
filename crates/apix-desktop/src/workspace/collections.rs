@@ -1425,6 +1425,17 @@ impl Workspace {
                     rows.push(self.render_locked(ix, root, cx));
                 }
             }
+            if rows.is_empty() && !self.sidebar_words(cx).is_empty() {
+                rows.push(
+                    div()
+                        .px_4()
+                        .py_2()
+                        .text_xs()
+                        .text_color(p.text_muted)
+                        .child(bidi::para(tr!("sidebar.search_none")))
+                        .into_any_element(),
+                );
+            }
             if rows.is_empty() {
                 let hint = if self.project.is_some() && self.collections.is_empty() {
                     tr!("sidebar.no_collections", item = tr!("menu.new_collection"))
@@ -1456,6 +1467,7 @@ impl Workspace {
             .border_e_1()
             .border_color(p.hairline)
             .child(header)
+            .when(open, |d| d.child(self.render_sidebar_search()))
             .children(env_row)
             .child({
                 let list = div()
@@ -1499,7 +1511,15 @@ impl Workspace {
         cx: &mut Context<Self>,
     ) {
         let p = crate::theme::current();
-        let collapsed = self.collapsed.contains(&collection.root);
+        // While searching, a collection shows only with something found in it, opened.
+        let words = self.sidebar_words(cx);
+        if !words.is_empty() {
+            let tree = self.trees.iter().find(|(root, _)| *root == collection.root);
+            if !tree.is_some_and(|(_, nodes)| self.nodes_match(nodes, &words)) {
+                return;
+            }
+        }
+        let collapsed = words.is_empty() && self.collapsed.contains(&collection.root);
         let active = self
             .collection
             .as_ref()
@@ -1792,6 +1812,20 @@ impl Workspace {
         out: &mut Vec<AnyElement>,
         cx: &mut Context<Self>,
     ) {
+        let words = self.sidebar_words(cx);
+        self.render_matching_nodes(nodes, depth, &words, out, cx);
+    }
+
+    /// The nodes that `words` lets through (all of them for none); while
+    /// searching, folders are open whatever they were.
+    fn render_matching_nodes(
+        &self,
+        nodes: &[TreeNode],
+        depth: usize,
+        words: &[String],
+        out: &mut Vec<AnyElement>,
+        cx: &mut Context<Self>,
+    ) {
         for node in nodes {
             match node {
                 TreeNode::Folder {
@@ -1799,16 +1833,28 @@ impl Workspace {
                     path,
                     children,
                 } => {
-                    let collapsed = self.collapsed.contains(path);
+                    if !words.is_empty() && !self.nodes_match(std::slice::from_ref(node), words) {
+                        continue;
+                    }
+                    let collapsed = words.is_empty() && self.collapsed.contains(path);
                     out.push(
                         self.render_folder_row(name, path, depth, collapsed, cx)
                             .into_any_element(),
                     );
                     if !collapsed {
-                        self.render_nodes(children, depth + 1, out, cx);
+                        // A folder found by its name shows all it holds.
+                        let inner = if Self::folder_matches(name, words) {
+                            &[][..]
+                        } else {
+                            words
+                        };
+                        self.render_matching_nodes(children, depth + 1, inner, out, cx);
                     }
                 }
                 TreeNode::Request { path } => {
+                    if !words.is_empty() && !self.request_matches(path, words) {
+                        continue;
+                    }
                     if let Some(request) = self.requests.get(path) {
                         out.push(
                             self.render_request_row(path, request, depth, cx)

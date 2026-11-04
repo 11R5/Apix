@@ -5,6 +5,7 @@
 pub mod dynamic;
 pub mod filter;
 pub mod graphql;
+pub mod headers;
 pub mod history;
 pub mod model;
 pub mod project;

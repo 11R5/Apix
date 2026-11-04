@@ -11,6 +11,7 @@ mod filter_ui;
 mod graphql_ui;
 mod grpc_editor;
 mod grpc_ui;
+mod header_hints;
 mod history_ui;
 mod menu_bar;
 mod network;
@@ -21,6 +22,7 @@ mod script_run;
 mod settings_editor;
 mod settings_ui;
 mod shell_copy;
+mod sidebar_search;
 mod socket_ui;
 mod stream_ui;
 mod tabs;
@@ -429,6 +431,11 @@ pub struct Workspace {
     filter_task: Option<Task<()>>,
     /// The request the filter was written for; another one starts without it.
     filter_owner: Option<PathBuf>,
+    /// The Headers field being typed in, which gets suggestions.
+    header_focus: Option<header_hints::HeaderFocus>,
+    header_blur: Option<Task<()>>,
+    /// Narrows the sidebar to the requests that match.
+    sidebar_search: Entity<InputState>,
     /// When the user last clicked or typed, for auto-lock.
     last_input: std::cell::Cell<std::time::Instant>,
     /// When the `APIX_BENCH=json` request was sent.
@@ -482,7 +489,9 @@ impl Workspace {
         let ws_editor = cx.new(|cx| ws_editor::WsEditor::new(window, cx));
         let grpc_weak = cx.weak_entity();
         let grpc_editor = cx.new(|cx| grpc_editor::GrpcEditor::new(grpc_weak, window, cx));
+        let (sidebar_search, sidebar_search_sub) = Self::new_sidebar_search(window, cx);
         let subscriptions = vec![
+            sidebar_search_sub,
             cx.observe_self(|this, _| this.remember_tabs()),
             // "Follow the system": repaint when the OS switches between light and dark.
             cx.observe_window_appearance(window, |this, _, cx| {
@@ -643,6 +652,9 @@ impl Workspace {
             filter_state: filter_ui::FilterState::Off,
             filter_task: None,
             filter_owner: None,
+            header_focus: None,
+            header_blur: None,
+            sidebar_search,
             task: None,
             schema_task: None,
             grpc_task: None,
@@ -768,8 +780,9 @@ impl Workspace {
         self.headers = request
             .headers
             .iter()
-            .map(|kv| KvRow::new(kv, window, cx))
+            .map(|kv| self.new_header_row(kv, window, cx))
             .collect();
+        self.header_focus = None;
 
         self.body_editor
             .update(cx, |editor, cx| editor.set_body(&request.body, window, cx));
@@ -907,7 +920,8 @@ impl Workspace {
             !key.eq_ignore_ascii_case("content-type") && !key.eq_ignore_ascii_case("soapaction")
         });
         for header in version.headers("") {
-            self.headers.push(KvRow::new(&header, window, cx));
+            let row = self.new_header_row(&header, window, cx);
+            self.headers.push(row);
         }
         cx.notify();
     }
@@ -1496,51 +1510,55 @@ impl Workspace {
         let p = crate::theme::current();
         let (on_id, del_id, add_id) = table.ids();
         let view = cx.entity().downgrade();
-        let rows = self.rows(table).iter().enumerate().map(|(ix, row)| {
-            h_flex()
-                .gap_2()
-                .items_center()
-                .child(
-                    Checkbox::new((on_id, ix))
-                        .checked(row.enabled)
-                        .on_click(cx.listener(move |this, checked: &bool, window, cx| {
-                            if let Some(row) = this.rows_mut(table).get_mut(ix) {
-                                row.enabled = *checked;
-                            }
-                            if table == Table::Params {
-                                this.sync_url_from_params(window, cx);
-                            }
-                            cx.notify();
-                        })),
-                )
-                .child(
-                    div()
-                        .flex_1()
-                        .min_w_0()
-                        .child(self.chip_input(&row.key, view.clone(), cx)),
-                )
-                .child(div().flex_1().min_w_0().child(self.chip_input(
-                    &row.value,
-                    view.clone(),
-                    cx,
-                )))
-                .child(
-                    Button::new((del_id, ix))
-                        .ghost()
-                        .xsmall()
-                        .icon(IconName::Close)
-                        .on_click(cx.listener(move |this, _: &ClickEvent, window, cx| {
-                            let rows = this.rows_mut(table);
-                            if ix < rows.len() {
-                                rows.remove(ix);
-                            }
-                            if table == Table::Params {
-                                this.sync_url_from_params(window, cx);
-                            }
-                            cx.notify();
-                        })),
-                )
-        });
+        let rows =
+            self.rows(table).iter().enumerate().map(|(ix, row)| {
+                let line =
+                    h_flex()
+                        .gap_2()
+                        .items_center()
+                        .child(Checkbox::new((on_id, ix)).checked(row.enabled).on_click(
+                            cx.listener(move |this, checked: &bool, window, cx| {
+                                if let Some(row) = this.rows_mut(table).get_mut(ix) {
+                                    row.enabled = *checked;
+                                }
+                                if table == Table::Params {
+                                    this.sync_url_from_params(window, cx);
+                                }
+                                cx.notify();
+                            }),
+                        ))
+                        .child(div().flex_1().min_w_0().child(self.chip_input(
+                            &row.key,
+                            view.clone(),
+                            cx,
+                        )))
+                        .child(div().flex_1().min_w_0().child(self.chip_input(
+                            &row.value,
+                            view.clone(),
+                            cx,
+                        )))
+                        .child(
+                            Button::new((del_id, ix))
+                                .ghost()
+                                .xsmall()
+                                .icon(IconName::Close)
+                                .on_click(cx.listener(move |this, _: &ClickEvent, window, cx| {
+                                    let rows = this.rows_mut(table);
+                                    if ix < rows.len() {
+                                        rows.remove(ix);
+                                    }
+                                    if table == Table::Params {
+                                        this.sync_url_from_params(window, cx);
+                                    }
+                                    cx.notify();
+                                })),
+                        );
+                let hints = match table {
+                    Table::Headers => self.render_header_hints(ix, cx),
+                    Table::Params => None,
+                };
+                v_flex().child(line).children(hints)
+            });
 
         v_flex()
             .id(add_id)
@@ -1559,7 +1577,7 @@ impl Workspace {
                             let empty = KeyValue::new("", "");
                             let row = match table {
                                 Table::Params => this.new_param_row(&empty, window, cx),
-                                Table::Headers => KvRow::new(&empty, window, cx),
+                                Table::Headers => this.new_header_row(&empty, window, cx),
                             };
                             this.rows_mut(table).push(row);
                             cx.notify();
