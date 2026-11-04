@@ -740,6 +740,9 @@ ws.error: "خطأ: %{error}"
 ws.failed: "انقطع الاتصال"
 ws.format_text: نص
 ws.open: "متصل"
+ws.ping: Ping كل (ث)
+ws.ping_placeholder: ثوانٍ، متوقف
+ws.pong: "pong بعد %{time}"
 ws.save: "حفظ الرسالة"
 ws.saved: "الرسائل المحفوظة (%{count})"
 ws.saved_empty: "تُحفظ الرسائل التي تحفظها هنا في ملف الطلب. انقر على رسالة لتعديلها."

@@ -740,6 +740,9 @@ ws.error: "Error: %{error}"
 ws.failed: "Conexión perdida"
 ws.format_text: Texto
 ws.open: "Conectado"
+ws.ping: Ping cada (s)
+ws.ping_placeholder: segundos, no
+ws.pong: "pong tras %{time}"
 ws.save: "Guardar mensaje"
 ws.saved: "Mensajes guardados (%{count})"
 ws.saved_empty: "Los mensajes que guardes aquí se conservan en el archivo de la petición. Haz clic en uno para editarlo."

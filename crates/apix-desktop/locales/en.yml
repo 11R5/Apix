@@ -742,6 +742,9 @@ ws.error: "Error: %{error}"
 ws.failed: "Connection lost"
 ws.format_text: Text
 ws.open: "Connected"
+ws.ping: Ping every (s)
+ws.ping_placeholder: seconds, off
+ws.pong: "pong after %{time}"
 ws.save: "Save message"
 ws.saved: "Saved messages (%{count})"
 ws.saved_empty: "Messages you save here are kept in the request file. Click one to edit it."

@@ -538,7 +538,7 @@ impl SioConnection {
                     },
                     event = events.recv() => match event {
                         None => return,
-                        Some(WsEvent::Sent(_)) => {}
+                        Some(WsEvent::Sent(_) | WsEvent::Pong(_)) => {}
                         Some(WsEvent::Received(WsData::Text(text))) => match text.as_bytes().first() {
                             Some(b'2') => send("3".into()),
                             Some(b'3' | b'6') => {}

@@ -714,6 +714,10 @@ pub struct WebSocketOptions {
     /// order of preference; the server picks one.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub subprotocols: Vec<String>,
+    /// Seconds between pings while connected, to keep the connection alive
+    /// and see that it is; a ping left unanswered until the next one ends it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ping_interval: Option<u64>,
 }
 
 /// Socket.IO options, stored as `[socketio]`.

@@ -172,6 +172,7 @@ async fn subprotocols_are_offered_and_binary_goes_through() {
     let mut req = Request::new(Method::Get, &url);
     req.websocket = Some(apix_core::WebSocketOptions {
         subprotocols: vec!["v1.chat".into(), "v2.chat".into()],
+        ..Default::default()
     });
     let connection = ws::connect(&req).await.unwrap();
     assert_eq!(connection.protocol.as_deref(), Some("v2.chat"));
@@ -275,4 +276,69 @@ async fn a_refused_handshake_says_why() {
     };
     let message = err.to_string();
     assert!(message.contains("401"), "{message}");
+}
+
+#[tokio::test]
+async fn pings_go_out_at_the_interval_and_their_pongs_are_timed() {
+    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let url = format!("ws://{}/chat", listener.local_addr().unwrap());
+    tokio::spawn(serve(listener, Arc::new(Mutex::new(Vec::new()))));
+    let mut req = request(&url);
+    req.websocket = Some(apix_core::WebSocketOptions {
+        ping_interval: Some(1),
+        ..Default::default()
+    });
+    let connection = ws::connect(&req).await.unwrap();
+    let (tx, rx) = mpsc::unbounded_channel();
+    tokio::spawn(async move {
+        tokio::time::sleep(std::time::Duration::from_millis(2500)).await;
+        let _ = tx.send(WsCommand::Close);
+    });
+    let mut events = Vec::new();
+    connection.run(rx, |event| events.push(event)).await;
+    let pongs = events
+        .iter()
+        .filter(|e| matches!(e, WsEvent::Pong(rtt) if *rtt < std::time::Duration::from_secs(1)))
+        .count();
+    assert_eq!(pongs, 2, "{events:?}");
+    assert!(
+        matches!(events.last(), Some(WsEvent::Closed { .. })),
+        "{events:?}"
+    );
+}
+
+#[tokio::test]
+async fn a_ping_left_unanswered_ends_the_connection() {
+    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let url = format!("ws://{}/", listener.local_addr().unwrap());
+    // A server that accepts, then never reads again, so never answers a ping.
+    tokio::spawn(async move {
+        let (socket, _) = listener.accept().await.unwrap();
+        let _stream = tokio_tungstenite::accept_async(socket).await.unwrap();
+        tokio::time::sleep(std::time::Duration::from_secs(30)).await;
+    });
+    let mut req = Request::new(Method::Get, url);
+    req.websocket = Some(apix_core::WebSocketOptions {
+        ping_interval: Some(1),
+        ..Default::default()
+    });
+    let connection = ws::connect(&req).await.unwrap();
+    let (_tx, rx) = mpsc::unbounded_channel();
+    let mut events = Vec::new();
+    let started = std::time::Instant::now();
+    connection.run(rx, |event| events.push(event)).await;
+    assert!(
+        matches!(events.last(), Some(WsEvent::Error(e)) if e.contains("did not answer a ping within 1 s")),
+        "{events:?}"
+    );
+    assert!(started.elapsed() < std::time::Duration::from_secs(4));
+}
+
+#[test]
+fn the_ping_interval_is_kept_in_the_request_file() {
+    let text = "name = \"chat\"\nurl = \"ws://x\"\n\n[websocket]\nping_interval = 30\n";
+    let req: Request = toml::from_str(text).unwrap();
+    assert_eq!(req.websocket.as_ref().unwrap().ping_interval, Some(30));
+    let back: Request = toml::from_str(&toml::to_string_pretty(&req).unwrap()).unwrap();
+    assert_eq!(req, back);
 }

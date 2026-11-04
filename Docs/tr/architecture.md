@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:80c9fd666b596a11 -->
+<!-- translated from en/architecture.md sha256:dac9e6ef73d9faca -->
 
 # Apix mimarisi
 
@@ -416,7 +416,10 @@ güvenilen CA, istemci sertifikası ya da her sertifikayı kabul eden bir
 doğrulayıcı); gRPC de doğrulamasız bağlantıda aynı modülü kullanır.
 `WsConnection::run` bir `WsCommand` kanalının istediklerini gönderir ve iki
 taraftan biri kapatana kadar `WsEvent`'leri (gönderildi, geldi, kod ve
-nedenle kapandı, hata) bildirir; ping ve pong'u tungstenite yanıtlar. Bir
+nedenle kapandı, hata) bildirir; sunucunun ping'lerini tungstenite yanıtlar.
+`[websocket] ping_interval` varsa kendisi de yükü bir sayaç olan ping'ler
+gönderir, eşleşen pong'un gidiş-dönüş süresini bildirir (`WsEvent::Pong`) ve
+sıradaki ping zamanı geldiğinde hâlâ yanıtlanmamış bir ping varsa hatayla biter. Bir
 mesajın `MessageFormat`'ı (metin, base64, hex), değişkenler doldurulduktan
 sonra metnini `WsData`'ya çevirir.
 

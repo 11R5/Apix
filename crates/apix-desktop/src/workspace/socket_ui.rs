@@ -157,6 +157,9 @@ impl SocketSession {
             WsEvent::Sent(data) => self.push(at, Entry::Sent(data)),
             WsEvent::Received(data) => self.push(at, Entry::Received(data)),
             WsEvent::Closed { code, reason } => self.closed(at, code, reason),
+            WsEvent::Pong(rtt) => {
+                self.push(at, Entry::Note(tr!("ws.pong", time = human_duration(rtt))))
+            }
             WsEvent::Error(message) => self.failed(at, message),
         }
     }

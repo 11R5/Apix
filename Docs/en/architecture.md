@@ -395,7 +395,10 @@ trusted CA, a client certificate, or a verifier that accepts any
 certificate), the same module gRPC uses without verification.
 `WsConnection::run` sends what a channel of `WsCommand`s asks and reports
 `WsEvent`s (sent, received, closed with code and reason, error) until either
-side closes; ping and pong are answered by tungstenite. A message's
+side closes; the server's pings are answered by tungstenite. With
+`[websocket] ping_interval` it pings too, with a counter as the payload, reports
+the matching pong's round trip (`WsEvent::Pong`), and ends with an error when a
+ping is still unanswered as the next one falls due. A message's
 `MessageFormat` (text, base64, hex) turns its text into `WsData` after the
 variables are filled in.
 

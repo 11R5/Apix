@@ -43,6 +43,8 @@ pub(super) struct WsEditor {
     composer: Entity<EditorState>,
     format: MessageFormat,
     subprotocols: Entity<InputState>,
+    /// Seconds between pings; empty is none.
+    ping: Entity<InputState>,
     /// Socket.IO instead of plain WebSocket messages.
     socketio: bool,
     namespace: Entity<InputState>,
@@ -89,6 +91,7 @@ impl WsEditor {
     pub(super) fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
         let composer = cx.new(|cx| EditorState::new(window, cx).language("json"));
         let subprotocols = input(tr!("ws.subprotocols_placeholder"), window, cx);
+        let ping = input(tr!("ws.ping_placeholder"), window, cx);
         let namespace = input(tr!("sio.namespace_placeholder"), window, cx);
         let path = input("/socket.io/".into(), window, cx);
         let auth = input(tr!("sio.auth_placeholder"), window, cx);
@@ -112,6 +115,7 @@ impl WsEditor {
         )];
         for state in [
             &subprotocols,
+            &ping,
             &namespace,
             &path,
             &auth,
@@ -130,6 +134,7 @@ impl WsEditor {
             composer,
             format: MessageFormat::Text,
             subprotocols,
+            ping,
             socketio: false,
             namespace,
             path,
@@ -153,6 +158,7 @@ impl WsEditor {
     pub(super) fn retranslate(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         for (state, text) in [
             (&self.subprotocols, tr!("ws.subprotocols_placeholder")),
+            (&self.ping, tr!("ws.ping_placeholder")),
             (&self.namespace, tr!("sio.namespace_placeholder")),
             (&self.auth, tr!("sio.auth_placeholder")),
             (&self.client_id, tr!("mqtt.client_id_placeholder")),
@@ -177,6 +183,12 @@ impl WsEditor {
             .unwrap_or_default();
         self.subprotocols
             .update(cx, |state, cx| state.set_value(protocols, window, cx));
+        let ping = options
+            .and_then(|o| o.ping_interval)
+            .map(|s| s.to_string())
+            .unwrap_or_default();
+        self.ping
+            .update(cx, |state, cx| state.set_value(ping, window, cx));
         self.socketio = socketio.is_some();
         let sio = socketio.cloned().unwrap_or_default();
         for (state, value) in [
@@ -280,7 +292,19 @@ impl WsEditor {
             .map(|p| p.trim().to_owned())
             .filter(|p| !p.is_empty())
             .collect();
-        (!subprotocols.is_empty()).then_some(WebSocketOptions { subprotocols })
+        // Anything but a whole number of seconds is no ping.
+        let ping_interval = self
+            .ping
+            .read(cx)
+            .value()
+            .trim()
+            .parse::<u64>()
+            .ok()
+            .filter(|s| *s > 0);
+        (!subprotocols.is_empty() || ping_interval.is_some()).then_some(WebSocketOptions {
+            subprotocols,
+            ping_interval,
+        })
     }
 
     /// The `[socketio]` options of a Socket.IO request.
@@ -648,11 +672,23 @@ impl Render for WsEditor {
                 .child(self.field(tr!("sio.auth"), &self.auth))
                 .into_any_element()
         } else {
-            h_flex()
-                .dir_row()
-                .gap_3()
-                .child(protocol)
-                .child(self.field(tr!("ws.subprotocols"), &self.subprotocols))
+            v_flex()
+                .gap_2()
+                .child(
+                    h_flex()
+                        .dir_row()
+                        .gap_3()
+                        .child(protocol)
+                        .child(self.field(tr!("ws.subprotocols"), &self.subprotocols)),
+                )
+                .child(
+                    h_flex().dir_row().child(
+                        div()
+                            .flex_none()
+                            .w(px(240.))
+                            .child(self.field(tr!("ws.ping"), &self.ping)),
+                    ),
+                )
                 .into_any_element()
         };
         let hint = if mqtt {

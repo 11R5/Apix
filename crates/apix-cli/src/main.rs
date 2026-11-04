@@ -67,6 +67,9 @@ enum Command {
         /// WebSocket, Socket.IO and MQTT: how long to keep listening after sending, in seconds (0: until the server closes)
         #[arg(long, value_name = "SECONDS", default_value_t = 3.0)]
         listen: f64,
+        /// WebSocket: ping every this many seconds while connected, and fail if a ping goes unanswered (0: off; default from [websocket] ping_interval)
+        #[arg(long, value_name = "SECONDS")]
+        ping: Option<u64>,
         #[command(flatten)]
         net: NetArgs,
     },
@@ -453,6 +456,7 @@ async fn run(cli: Cli) -> Result<bool> {
             qos,
             retain,
             listen,
+            ping,
             net,
         } => {
             unlock_around(&file, &var)?;
@@ -512,9 +516,16 @@ async fn run(cli: Cli) -> Result<bool> {
                     let names: Vec<_> = resolved.missing.into_iter().collect();
                     bail!("undefined variable(s): {}", names.join(", "));
                 }
+                let mut request = relative_to_file(resolved.request, &file);
+                if let Some(ping) = ping {
+                    request
+                        .websocket
+                        .get_or_insert_with(Default::default)
+                        .ping_interval = (ping > 0).then_some(ping);
+                }
                 return websocket(
                     &style,
-                    relative_to_file(resolved.request, &file),
+                    request,
                     &vars,
                     messages,
                     message_format,
@@ -1322,6 +1333,12 @@ async fn websocket(
                     };
                     println!("{}closed{code}{reason}{}", style.dim, style.reset);
                 }
+                WsEvent::Pong(rtt) => println!(
+                    "{}{at} pong {}{}",
+                    style.dim,
+                    apix_http::human_duration(rtt),
+                    style.reset
+                ),
                 WsEvent::Error(message) => {
                     ok = false;
                     println!("{}error: {message}{}", style.red, style.reset);
