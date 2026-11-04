@@ -107,10 +107,21 @@ fn converts_collection_metadata_and_counts() {
     assert_eq!(plan.meta.vars["baseUrl"], "https://shop.example.com/api");
 
     let r = &plan.report;
+    assert_eq!((r.requests, r.folders, r.scripts, r.examples), (9, 2, 2, 1));
+    let list = plan
+        .files
+        .iter()
+        .find_map(|f| match f {
+            PlannedFile::Request { request, .. } if !request.examples.is_empty() => Some(request),
+            _ => None,
+        })
+        .unwrap();
+    assert_eq!(list.examples.len(), 1);
     assert_eq!(
-        (r.requests, r.folders, r.scripts, r.examples_skipped),
-        (9, 2, 2, 1)
+        (list.examples[0].name.as_str(), list.examples[0].status),
+        ("200", 200)
     );
+    assert_eq!(list.examples[0].body, "[]");
     assert_eq!(plan.request_count(), 9);
 }
 
@@ -459,4 +470,53 @@ fn writes_a_collection_apix_can_open() {
     // Never import over existing files.
     assert!(matches!(plan.write(&root), Err(ImportError::NotEmpty(_))));
     fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn saved_responses_become_examples() {
+    let collection = r#"{
+      "info": { "name": "Ex", "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json" },
+      "item": [{
+        "name": "Get user",
+        "request": { "method": "GET", "url": "https://x.io/users/1" },
+        "response": [{
+          "name": "Found",
+          "originalRequest": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "https://x.io/users/1?full=1" }
+          },
+          "status": "OK",
+          "code": 200,
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "body": "{\"id\": 1}"
+        }, {
+          "name": "Missing",
+          "code": 404,
+          "body": ""
+        }]
+      }]
+    }"#;
+    let plan = convert_collection(collection).unwrap();
+    assert_eq!(plan.report.examples, 2);
+    let request = plan
+        .files
+        .iter()
+        .find_map(|f| match f {
+            PlannedFile::Request { request, .. } => Some(request),
+            _ => None,
+        })
+        .unwrap();
+    let found = &request.examples[0];
+    assert_eq!((found.name.as_str(), found.status), ("Found", 200));
+    assert_eq!(
+        found.headers,
+        [kv("Content-Type", "application/json", true)]
+    );
+    assert_eq!(found.body_bytes(), b"{\"id\": 1}");
+    let sent = found.request.as_ref().unwrap();
+    assert_eq!(sent.url, "https://x.io/users/1?full=1");
+    assert_eq!(sent.headers, [kv("Accept", "application/json", true)]);
+    assert_eq!(request.examples[1].status, 404);
+    assert!(request.examples[1].request.is_none());
 }

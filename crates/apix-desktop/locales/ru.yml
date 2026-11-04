@@ -233,6 +233,14 @@ env.title.collection: "Переменные %{name}"
 env.title.environment: Окружение
 env.title.project: Переменные проекта
 env.undo_delete: Отменить удаление
+example.delete: Удалить пример
+example.hint: Примеры хранятся в файле запроса как [[example]]; сохранённые ответы Postman приходят как примеры и уходят обратно при экспорте.
+example.none: Примеров пока нет. Кнопка в строке состояния ответа сохраняет ответ здесь вместе с тем, что было отправлено.
+example.open: Показать в панели ответа
+example.save: Сохранить ответ как пример
+example.saved: "Сохранено как пример «%{name}» на вкладке «Примеры»; Ctrl+S записывает его в запрос."
+example.shown: "Пример: %{name}"
+example.too_big: "Тело (%{size}) больше, чем хранит пример (%{most}); сохраните его в файл."
 export.done: "Записано файлов: %{count} в %{path}."
 export.done_title: Экспортировано в Postman
 export.prompt: Сохранить файлы Postman в…
@@ -484,6 +492,8 @@ request.tab.auth_kind: Авторизация · %{kind}
 request.tab.auth_none: Авторизация · нет
 request.tab.body: Тело
 request.tab.body_kind: Тело · %{kind}
+request.tab.examples: Примеры
+request.tab.examples_count: "Примеры %{count}"
 request.tab.headers: Заголовки
 request.tab.headers_count: Заголовки %{count}
 request.tab.message: Сообщение

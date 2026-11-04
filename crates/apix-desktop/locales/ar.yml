@@ -233,6 +233,14 @@ env.title.collection: "متغيرات %{name}"
 env.title.environment: البيئة
 env.title.project: متغيرات المشروع
 env.undo_delete: التراجع عن الحذف
+example.delete: إزالة المثال
+example.hint: تُحفظ الأمثلة في ملف الطلب كـ [[example]]؛ وتأتي ردود Postman المحفوظة كأمثلة وتعود عند التصدير.
+example.none: لا توجد أمثلة بعد. يحتفظ الزر في سطر حالة الرد بالرد هنا مع ما أُرسل للحصول عليه.
+example.open: عرض في لوحة الرد
+example.save: حفظ الرد كمثال
+example.saved: "احتُفظ به كمثال «%{name}» في علامة التبويب «أمثلة»؛ ويكتبه Ctrl+S في الطلب."
+example.shown: "مثال: %{name}"
+example.too_big: "المحتوى (%{size}) أكبر مما يحفظه المثال (%{most})؛ احفظه في ملف بدلًا من ذلك."
 export.done: "كُتب %{count} ملفًا في %{path}."
 export.done_title: صُدّر إلى Postman
 export.prompt: احفظ ملفات Postman في…
@@ -484,6 +492,8 @@ request.tab.auth_kind: المصادقة · %{kind}
 request.tab.auth_none: المصادقة · بلا
 request.tab.body: المتن
 request.tab.body_kind: المتن · %{kind}
+request.tab.examples: أمثلة
+request.tab.examples_count: "أمثلة %{count}"
 request.tab.headers: الترويسات
 request.tab.headers_count: الترويسات %{count}
 request.tab.message: الرسالة

@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:8607b91f00b0f261 -->
+<!-- translated from en/user-guide.md sha256:45a9a45cebe14fe4 -->
 
 # Apix kullanım kılavuzu
 
@@ -321,6 +321,20 @@ devam eder, ✕ gövdeyi geri getirir. JSONPath eşleşmelerinin listesini, jq i
 çıktılarını art arda verir. Süzme, aynı isteğin bir sonraki yanıtında da kalır;
 böylece istek tekrar tekrar gönderilip tek bir değer izlenebilir.
 `apix send --filter '<ifade>'` yalnızca süzmenin seçtiğini yazar.
+
+**Örnekler.** Durum satırındaki tepsi düğmesi yanıtı isteğin bir örneği olarak tutar:
+durumu, başlıkları ve gövdesiyle, geldiği isteğin yazıldığı hâliyle birlikte
+(`{{değişkenler}}` olduğu gibi kalır, böylece dosyaya token girmez). Sunucunun
+koyduğu çerezler alınmaz, 2 MB'tan büyük gövdeler kabul edilmez. İsteğin **Örnekler**
+sekmesi onları listeler: adı yerinde değiştirilir, ▷ yanıt panelinde gösterir ("Örnek: …"
+etiketiyle), çöp kutusu kaldırır. Örnekler isteğin parçasıdır; Ctrl+S onları dosyaya
+`[[example]]` olarak yazar. Postman'in kayıtlı yanıtları içe aktarmada örnek olarak gelir,
+dışa aktarmada geri gider. `apix send --save-example '<ad>'` yanıtı komut satırından tutar.
+
+![Yanıt panelinde gösterilen bir örnek](images/examples.png)
+
+Panel bütün istek sekmelerine dar geldiğinde, sekme çubuğunun sonundaki ok hepsini
+listeler.
 
 ## Ağ sekmesi
 

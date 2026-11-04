@@ -233,6 +233,14 @@ env.title.collection: "%{name} 变量"
 env.title.environment: 环境
 env.title.project: 项目变量
 env.undo_delete: 撤销删除
+example.delete: 移除示例
+example.hint: 示例以 [[example]] 保存在请求文件中;Postman 保存的响应会作为示例导入,导出时也会带回。
+example.none: 还没有示例。响应状态行上的 按钮会将响应连同发送内容保存在这里。
+example.open: 在响应面板中显示
+example.save: 将响应保存为示例
+example.saved: "已在“示例”选项卡中保留为示例“%{name}”;按 Ctrl+S 写入请求。"
+example.shown: "示例:%{name}"
+example.too_big: "正文(%{size})超过示例能保存的大小(%{most});请改为保存到文件。"
 export.done: "已将 %{count} 个文件写入 %{path}。"
 export.done_title: 已导出到 Postman
 export.prompt: 将 Postman 文件保存到…
@@ -484,6 +492,8 @@ request.tab.auth_kind: 认证 · %{kind}
 request.tab.auth_none: 认证 · 无
 request.tab.body: 请求体
 request.tab.body_kind: 请求体 · %{kind}
+request.tab.examples: 示例
+request.tab.examples_count: "示例 %{count}"
 request.tab.headers: 请求头
 request.tab.headers_count: 请求头 %{count}
 request.tab.message: 消息

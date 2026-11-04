@@ -6,6 +6,7 @@ mod collections;
 mod cookies_ui;
 mod drag;
 mod env_editor;
+mod examples_ui;
 mod extract_ui;
 mod filter_ui;
 mod graphql_ui;
@@ -208,6 +209,8 @@ struct Finished {
     events: Option<Vec<stream_ui::TimedEvent>>,
     /// The stream was stopped before the server ended it.
     stopped: bool,
+    /// The example this is, when one is shown.
+    example: Option<SharedString>,
 }
 
 /// Images bigger than this are not previewed (save them instead).
@@ -271,6 +274,7 @@ impl Finished {
             soap_fault,
             events,
             stopped: false,
+            example: None,
         }
     }
 }
@@ -413,6 +417,8 @@ pub struct Workspace {
     /// The query the URL bar and the table last agreed on.
     params_synced: String,
     path_vars: Vec<url_sync::PathVarRow>,
+    /// The request's examples, names as edited.
+    examples: Vec<examples_ui::ExampleRow>,
     headers: Vec<KvRow>,
     request_tab: usize,
     response_tab: usize,
@@ -638,6 +644,7 @@ impl Workspace {
             params: Vec::new(),
             params_synced: String::new(),
             path_vars: Vec::new(),
+            examples: Vec::new(),
             headers: Vec::new(),
             request_tab: 0,
             response_tab: 0,
@@ -783,6 +790,7 @@ impl Workspace {
             .map(|kv| self.new_header_row(kv, window, cx))
             .collect();
         self.header_focus = None;
+        self.show_examples(&request.examples, window, cx);
 
         self.body_editor
             .update(cx, |editor, cx| editor.set_body(&request.body, window, cx));
@@ -871,6 +879,7 @@ impl Workspace {
             .filter_map(|r| r.to_key_value(cx))
             .collect();
         request.path_vars = self.path_var_values(cx);
+        request.examples = self.example_values(cx);
         request.headers = self
             .headers
             .iter()
@@ -1460,6 +1469,11 @@ impl Workspace {
             tr!("request.tab.scripts_set")
         };
 
+        let examples_label = match self.examples.len() {
+            0 => tr!("request.tab.examples"),
+            n => tr!("request.tab.examples_count", count = n),
+        };
+
         let content = match self.request_tab {
             0 => self.render_table(Table::Params, cx).into_any_element(),
             1 => self.render_table(Table::Headers, cx).into_any_element(),
@@ -1475,6 +1489,7 @@ impl Workspace {
                 .overflow_y_scroll()
                 .child(self.settings_editor.clone())
                 .into_any_element(),
+            examples_ui::EXAMPLES_TAB => self.render_examples(cx),
             _ if grpc => self.grpc_editor.clone().into_any_element(),
             _ if websocket => self.ws_editor.clone().into_any_element(),
             _ => self.body_editor.clone().into_any_element(),
@@ -1487,22 +1502,27 @@ impl Workspace {
             .border_1()
             .border_color(p.hairline)
             .overflow_hidden()
-            .child(bidi::tab_bar(
-                "request-tabs",
-                self.request_tab,
-                vec![
-                    Tab::new().label(params_label),
-                    Tab::new().label(headers_label),
-                    Tab::new().label(auth_label),
-                    Tab::new().label(body_label),
-                    Tab::new().label(scripts_label),
-                    Tab::new().label(settings_label),
-                ],
-                cx.listener(|this, ix: &usize, _, cx| {
-                    this.request_tab = *ix;
-                    cx.notify();
-                }),
-            ))
+            .child(
+                bidi::tab_bar(
+                    "request-tabs",
+                    self.request_tab,
+                    vec![
+                        Tab::new().label(params_label),
+                        Tab::new().label(headers_label),
+                        Tab::new().label(auth_label),
+                        Tab::new().label(body_label),
+                        Tab::new().label(scripts_label),
+                        Tab::new().label(settings_label),
+                        Tab::new().label(examples_label),
+                    ],
+                    cx.listener(|this, ix: &usize, _, cx| {
+                        this.request_tab = *ix;
+                        cx.notify();
+                    }),
+                )
+                // Seven tabs do not fit a narrow pane in every language.
+                .menu(true),
+            )
             .child(div().flex_1().min_h_0().p_2().child(content))
     }
 
@@ -1759,10 +1779,28 @@ impl Workspace {
                                                 response.reason.unwrap_or("")
                                             )),
                                     )
-                                    .child(human_duration(response.timing.total))
-                                    .child(format!("TTFB {}", human_duration(response.timing.ttfb)))
+                                    // An example was not timed: what it is says more.
+                                    .children(done.example.as_ref().map(|name| {
+                                        div()
+                                            .flex_shrink_0()
+                                            .px_2()
+                                            .rounded_full()
+                                            .bg(p.accent.opacity(0.15))
+                                            .text_color(p.accent)
+                                            .child(tr!("example.shown", name = name.clone()))
+                                    }))
+                                    .when(done.example.is_none(), |d| {
+                                        d.child(human_duration(response.timing.total)).child(
+                                            format!(
+                                                "TTFB {}",
+                                                human_duration(response.timing.ttfb)
+                                            ),
+                                        )
+                                    })
                                     .child(human_size(response.body.len()))
-                                    .child(response.version.clone())
+                                    .when(done.example.is_none(), |d| {
+                                        d.child(response.version.clone())
+                                    })
                                     .children(viewer_note)
                                     .children(
                                         done.events.as_ref().map(|events| {
@@ -1785,6 +1823,16 @@ impl Workspace {
                                         )),
                                 )
                             })
+                            .child(
+                                Button::new("save-example")
+                                    .ghost()
+                                    .xsmall()
+                                    .icon(IconName::Inbox)
+                                    .tooltip(tr!("example.save"))
+                                    .on_click(cx.listener(|this, _: &ClickEvent, window, cx| {
+                                        this.save_example(window, cx)
+                                    })),
+                            )
                             .child(
                                 Button::new("extract-value")
                                     .ghost()

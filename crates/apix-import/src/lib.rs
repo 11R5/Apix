@@ -172,8 +172,8 @@ pub struct Report {
     pub folders: usize,
     /// Pre-request and test scripts saved as `.js` files next to their requests.
     pub scripts: usize,
-    /// Saved example responses, which Apix does not import yet.
-    pub examples_skipped: usize,
+    /// Saved example responses, kept with their requests as `[[example]]`.
+    pub examples: usize,
     pub variables: usize,
     pub warnings: Vec<Warning>,
 }
@@ -208,11 +208,11 @@ impl fmt::Display for Report {
                 self.scripts
             )?;
         }
-        if self.examples_skipped > 0 {
+        if self.examples > 0 {
             writeln!(
                 f,
-                "Saved example responses not imported yet: {}.",
-                self.examples_skipped
+                "Example responses kept with their requests: {}.",
+                self.examples
             )?;
         }
         for w in &self.warnings {

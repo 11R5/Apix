@@ -91,6 +91,9 @@ Measurements of the other tools on the same machine are planned.
   request (Postman's path variables come along on import and export); header
   names and their usual values are suggested while typing, and the sidebar has
   a search.
+- **Examples:** keep a response with its request (status, headers, body and
+  the request as written), show it again, and bring Postman's saved responses
+  along on import and export (`apix send --save-example`).
 - **Collections and projects:** a sidebar built from the files on disk, tabs that
   keep their edits and responses and come back next time, drag to move and to
   reorder, projects that share environments, a colour per collection, and a

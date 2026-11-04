@@ -233,6 +233,14 @@ env.title.collection: "%{name} の変数"
 env.title.environment: 環境
 env.title.project: プロジェクトの変数
 env.undo_delete: 削除を元に戻す
+example.delete: 例を削除
+example.hint: 例はリクエストのファイルに [[example]] として保存されます。Postman の保存済み応答は例として取り込まれ、エクスポート時に戻ります。
+example.none: まだ例はありません。応答のステータス行にある ボタンで、送信内容とともに応答をここに保持できます。
+example.open: 応答ペインに表示
+example.save: 応答を例として保存
+example.saved: "例タブに例「%{name}」として保持しました。Ctrl+S でリクエストに書き込みます。"
+example.shown: "例: %{name}"
+example.too_big: "本文 (%{size}) は例が保持できるサイズ (%{most}) を超えています。代わりにファイルに保存してください。"
 export.done: "%{count} 個のファイルを %{path} に書き出しました。"
 export.done_title: Postman にエクスポートしました
 export.prompt: Postman ファイルの保存先…
@@ -484,6 +492,8 @@ request.tab.auth_kind: 認証 · %{kind}
 request.tab.auth_none: 認証 · なし
 request.tab.body: ボディ
 request.tab.body_kind: ボディ · %{kind}
+request.tab.examples: 例
+request.tab.examples_count: "例 %{count}"
 request.tab.headers: ヘッダー
 request.tab.headers_count: ヘッダー %{count}
 request.tab.message: メッセージ

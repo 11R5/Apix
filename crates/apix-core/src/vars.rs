@@ -242,6 +242,8 @@ impl Request {
             // Filled in one by one when each is sent.
             messages: self.messages.clone(),
             grpc: self.grpc.clone(),
+            // Examples are what came back, kept as they were.
+            examples: self.examples.clone(),
             websocket: self.websocket.clone(),
             socketio: self
                 .socketio

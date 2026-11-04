@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 
 use apix_core::store::{self, Collection, EnvironmentParts, TreeNode, VarMap};
 use apix_core::{
-    ApiKeyLocation, Auth, Body, ClientAuth, KeyValue, OAuth2Grant, Project, Request,
+    ApiKeyLocation, Auth, Body, ClientAuth, Example, KeyValue, OAuth2Grant, Project, Request,
     RequestSettings, vfs,
 };
 use serde_json::{Map, Value, json};
@@ -489,9 +489,62 @@ impl Exporter {
             item.insert("protocolProfileBehavior".into(), ppb);
         }
         item.insert("request".into(), Value::Object(request));
-        item.insert("response".into(), json!([]));
+        item.insert(
+            "response".into(),
+            json!(r.examples.iter().map(example_json).collect::<Vec<_>>()),
+        );
         Ok(Value::Object(item))
     }
+}
+
+/// An example as Postman keeps a saved response. A body that is not text is
+/// left out: Postman has no place for one.
+fn example_json(example: &Example) -> Value {
+    let mut out = json!({
+        "name": example.name,
+        "code": example.status,
+        "header": kv_list(&example.headers),
+        "body": example.body,
+    });
+    if let Some(reason) = status_words(example.status) {
+        out["status"] = json!(reason);
+    }
+    if let Some(request) = &example.request {
+        let mut original = json!({
+            "method": request.method.as_str(),
+            "header": kv_list(&request.headers),
+            "url": { "raw": request.url },
+        });
+        if let Some(body) = body_json(&request.body) {
+            original["body"] = body;
+        }
+        out["originalRequest"] = original;
+    }
+    out
+}
+
+/// The usual words for a status, which Postman shows beside the code.
+fn status_words(status: u16) -> Option<&'static str> {
+    Some(match status {
+        200 => "OK",
+        201 => "Created",
+        202 => "Accepted",
+        204 => "No Content",
+        301 => "Moved Permanently",
+        302 => "Found",
+        304 => "Not Modified",
+        400 => "Bad Request",
+        401 => "Unauthorized",
+        403 => "Forbidden",
+        404 => "Not Found",
+        409 => "Conflict",
+        422 => "Unprocessable Entity",
+        429 => "Too Many Requests",
+        500 => "Internal Server Error",
+        502 => "Bad Gateway",
+        503 => "Service Unavailable",
+        _ => return None,
+    })
 }
 
 #[cfg(test)]

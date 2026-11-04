@@ -233,6 +233,14 @@ env.title.collection: "%{name} değişkenleri"
 env.title.environment: Ortam
 env.title.project: Proje değişkenleri
 env.undo_delete: Silmeyi geri al
+example.delete: Örneği kaldır
+example.hint: Örnekler isteğin dosyasında [[example]] olarak tutulur; Postman'in kayıtlı yanıtları örnek olarak gelir, dışa aktarınca geri gider.
+example.none: Henüz örnek yok. Yanıtın durum satırındaki tepsi düğmesi yanıtı, onun için gönderilenle birlikte burada tutar.
+example.open: Yanıt panelinde göster
+example.save: Yanıtı örnek olarak kaydet
+example.saved: "Örnekler sekmesinde “%{name}” örneği olarak tutuldu; Ctrl+S onu isteğe yazar."
+example.shown: "Örnek: %{name}"
+example.too_big: "Gövde (%{size}), bir örneğin tuttuğundan büyük (%{most}); bunun yerine dosyaya kaydedin."
 export.done: "%{count} dosya %{path} klasörüne yazıldı."
 export.done_title: Postman'a aktarıldı
 export.prompt: Postman dosyalarının kaydedileceği klasör…
@@ -484,6 +492,8 @@ request.tab.auth_kind: Yetkilendirme · %{kind}
 request.tab.auth_none: Yetkilendirme · yok
 request.tab.body: Gövde
 request.tab.body_kind: Gövde · %{kind}
+request.tab.examples: Örnekler
+request.tab.examples_count: "Örnekler %{count}"
 request.tab.headers: Başlıklar
 request.tab.headers_count: Başlıklar %{count}
 request.tab.message: Mesaj

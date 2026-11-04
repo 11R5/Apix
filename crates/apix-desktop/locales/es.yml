@@ -233,6 +233,14 @@ env.title.collection: "Variables de %{name}"
 env.title.environment: Entorno
 env.title.project: Variables del proyecto
 env.undo_delete: Deshacer eliminación
+example.delete: Quitar el ejemplo
+example.hint: Los ejemplos se guardan en el archivo de la petición como [[example]]; las respuestas guardadas de Postman llegan como ejemplos y vuelven al exportar.
+example.none: Aún no hay ejemplos. El botón de la línea de estado de una respuesta la guarda aquí, con lo que se envió para obtenerla.
+example.open: Mostrar en el panel de respuesta
+example.save: Guardar la respuesta como ejemplo
+example.saved: "Guardado como el ejemplo «%{name}» en la pestaña Ejemplos; Ctrl+S lo escribe en la petición."
+example.shown: "Ejemplo: %{name}"
+example.too_big: "El cuerpo (%{size}) es mayor de lo que guarda un ejemplo (%{most}); guárdelo en un archivo."
 export.done: "%{count} archivos escritos en %{path}."
 export.done_title: Exportado a Postman
 export.prompt: Guardar los archivos de Postman en…
@@ -484,6 +492,8 @@ request.tab.auth_kind: Autenticación · %{kind}
 request.tab.auth_none: Autenticación · ninguna
 request.tab.body: Cuerpo
 request.tab.body_kind: Cuerpo · %{kind}
+request.tab.examples: Ejemplos
+request.tab.examples_count: "Ejemplos %{count}"
 request.tab.headers: Encabezados
 request.tab.headers_count: Encabezados %{count}
 request.tab.message: Mensaje

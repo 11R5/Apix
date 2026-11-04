@@ -235,6 +235,14 @@ env.title.collection: "%{name} variables"
 env.title.environment: Environment
 env.title.project: Project variables
 env.undo_delete: Undo delete
+example.delete: Remove the example
+example.hint: Examples are kept in the request's file as [[example]]; Postman's saved responses come in as examples and go back out on export.
+example.none: No examples yet. The tray button on a response's status line keeps the response here, with what was sent for it.
+example.open: Show in the response pane
+example.save: Save the response as an example
+example.saved: "Kept as the example “%{name}” on the Examples tab; Ctrl+S writes it to the request."
+example.shown: "Example: %{name}"
+example.too_big: "The body (%{size}) is larger than an example keeps (%{most}); save it to a file instead."
 export.done: "%{count} files written to %{path}."
 export.done_title: Exported to Postman
 export.prompt: Save the Postman files in…
@@ -486,6 +494,8 @@ request.tab.auth_kind: Auth · %{kind}
 request.tab.auth_none: Auth · none
 request.tab.body: Body
 request.tab.body_kind: Body · %{kind}
+request.tab.examples: Examples
+request.tab.examples_count: "Examples %{count}"
 request.tab.headers: Headers
 request.tab.headers_count: Headers %{count}
 request.tab.message: Message

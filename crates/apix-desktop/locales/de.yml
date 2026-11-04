@@ -233,6 +233,14 @@ env.title.collection: "Variablen von %{name}"
 env.title.environment: Umgebung
 env.title.project: Projektvariablen
 env.undo_delete: Löschen rückgängig machen
+example.delete: Beispiel entfernen
+example.hint: Beispiele stehen in der Datei der Anfrage als [[example]]; die gespeicherten Antworten von Postman kommen als Beispiele herein und gehen beim Export zurück.
+example.none: Noch keine Beispiele. Die Schaltfläche in der Statuszeile einer Antwort behält die Antwort hier, mit dem, was dafür gesendet wurde.
+example.open: Im Antwortbereich zeigen
+example.save: Antwort als Beispiel speichern
+example.saved: "Als Beispiel „%{name}“ im Reiter Beispiele behalten; Strg+S schreibt es in die Anfrage."
+example.shown: "Beispiel: %{name}"
+example.too_big: "Der Inhalt (%{size}) ist größer, als ein Beispiel aufnimmt (%{most}); speichern Sie ihn stattdessen in eine Datei."
 export.done: "%{count} Dateien nach %{path} geschrieben."
 export.done_title: Nach Postman exportiert
 export.prompt: Postman-Dateien speichern in…
@@ -484,6 +492,8 @@ request.tab.auth_kind: Auth · %{kind}
 request.tab.auth_none: Auth · keine
 request.tab.body: Body
 request.tab.body_kind: Body · %{kind}
+request.tab.examples: Beispiele
+request.tab.examples_count: "Beispiele %{count}"
 request.tab.headers: Header
 request.tab.headers_count: Header %{count}
 request.tab.message: Nachricht

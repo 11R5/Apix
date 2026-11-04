@@ -314,6 +314,21 @@ its outputs one after another. The filter stays for the next response of the
 same request, so it can be sent again and again while watching one value.
 `apix send --filter '<expression>'` prints only what the filter picks out.
 
+**Examples.** The tray button on the status line keeps the response as an
+example of the request: its status, headers and body, and the request it came
+from as written (`{{variables}}` stay, so no token lands in the file). Cookies
+the server sets are left out, and bodies over 2 MB are refused. The request's
+**Examples** tab lists them: rename one in place, ▷ shows it in the response pane
+(marked "Example: …"), and the bin removes it. They are part of the request, so
+Ctrl+S writes them to its file as `[[example]]`, and Postman's saved responses
+come in as examples on import and go back out on export.
+`apix send --save-example '<name>'` keeps the response from the command line.
+
+![An example shown in the response pane](images/examples.png)
+
+When the pane is too narrow for all the request tabs, the arrow at the end of
+the tab bar lists them all.
+
 ## The Network tab
 
 The **Network** tab explains where the time went and what the connection was:

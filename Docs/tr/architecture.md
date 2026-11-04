@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:74fefb638629f096 -->
+<!-- translated from en/architecture.md sha256:74d9d609ab2b9552 -->
 
 # Apix mimarisi
 
@@ -175,6 +175,14 @@ value = "yes"
 [[path]]                 # :org parçasının değeri
 key = "org"
 value = "{{org}}"
+
+[[example]]              # istekle birlikte tutulan bir yanıt
+name = "Created"
+status = 201
+body = '{ "id": 7 }'
+[example.request]        # geldiği istek, yazıldığı hâliyle
+method = "POST"
+url = "{{base_url}}/orgs/:org/users?notify=yes"
 
 [[headers]]
 key = "X-Trace"

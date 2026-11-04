@@ -578,6 +578,104 @@ pub struct Request {
     /// what can be published.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mqtt: Option<MqttSettings>,
+    /// Responses kept with the request (Postman's examples), stored as `[[example]]`.
+    #[serde(default, rename = "example", skip_serializing_if = "Vec::is_empty")]
+    pub examples: Vec<Example>,
+}
+
+/// A response kept with its request, as an example of what it gets back.
+/// A text body is kept as it is; one that is not text, in base64.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Example {
+    pub name: String,
+    #[serde(default)]
+    pub status: u16,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub headers: Vec<KeyValue>,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub body: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub body_base64: String,
+    /// What was sent to get it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub request: Option<ExampleRequest>,
+}
+
+/// The request an example came from, as written: `{{variables}}` stay, so
+/// no token or password lands in the file.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ExampleRequest {
+    #[serde(default)]
+    pub method: Method,
+    pub url: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub headers: Vec<KeyValue>,
+    #[serde(default, skip_serializing_if = "Body::is_none")]
+    pub body: Body,
+}
+
+/// Bodies larger than this are not kept in an example: it lives in the
+/// request's file.
+pub const MAX_EXAMPLE_BODY: usize = 2 * 1024 * 1024;
+
+impl Example {
+    /// An example of a response with this status, headers and body; the
+    /// request is the one it was sent from, as written. Cookies the server
+    /// sets are left out: they would put a session into the file.
+    pub fn new(
+        name: impl Into<String>,
+        status: u16,
+        headers: &[(String, String)],
+        body: &[u8],
+        sent: Option<&Request>,
+    ) -> Self {
+        let (body, body_base64) = match std::str::from_utf8(body) {
+            Ok(text) => (text.to_owned(), String::new()),
+            Err(_) => {
+                use base64::Engine as _;
+                (
+                    String::new(),
+                    base64::engine::general_purpose::STANDARD.encode(body),
+                )
+            }
+        };
+        Self {
+            name: name.into(),
+            status,
+            headers: headers
+                .iter()
+                .filter(|(k, _)| !k.eq_ignore_ascii_case("set-cookie"))
+                .map(|(k, v)| KeyValue::new(k.clone(), v.clone()))
+                .collect(),
+            body,
+            body_base64,
+            request: sent.map(|r| ExampleRequest {
+                method: r.method,
+                url: crate::urls::with_query(&r.url, &r.query),
+                headers: r.headers.iter().filter(|h| h.enabled).cloned().collect(),
+                body: r.body.clone(),
+            }),
+        }
+    }
+
+    /// The body's bytes.
+    pub fn body_bytes(&self) -> Vec<u8> {
+        if self.body_base64.is_empty() {
+            return self.body.clone().into_bytes();
+        }
+        use base64::Engine as _;
+        base64::engine::general_purpose::STANDARD
+            .decode(self.body_base64.trim())
+            .unwrap_or_default()
+    }
+
+    /// The headers as pairs, as a response has them.
+    pub fn header_pairs(&self) -> Vec<(String, String)> {
+        self.headers
+            .iter()
+            .map(|h| (h.key.clone(), h.value.clone()))
+            .collect()
+    }
 }
 
 /// What a gRPC request calls, stored as `[grpc]`. The body (JSON) is the
@@ -1043,6 +1141,43 @@ proxy = ""
         let text = toml::to_string_pretty(&req).unwrap();
         let back: Request = toml::from_str(&text).unwrap();
         assert_eq!(req, back);
+    }
+
+    #[test]
+    fn examples_keep_text_and_bytes() {
+        let mut sent = Request::new(Method::Get, "https://x.io/users");
+        sent.query.push(KeyValue::new("page", "2"));
+        let mut off = KeyValue::new("X-Debug", "1");
+        off.enabled = false;
+        sent.headers = vec![KeyValue::new("Accept", "application/json"), off];
+        let text = Example::new(
+            "OK",
+            200,
+            &[
+                ("content-type".into(), "application/json".into()),
+                ("Set-Cookie".into(), "session=s3cret".into()),
+            ],
+            b"[{\"id\": 1}]",
+            Some(&sent),
+        );
+        let image = Example::new("Avatar", 200, &[], &[0x89, b'P', 0xff], None);
+        let mut req = Request::new(Method::Get, "https://x.io/users");
+        req.examples = vec![text.clone(), image.clone()];
+        let written = toml::to_string_pretty(&req).unwrap();
+        assert!(written.contains("[[example]]"), "{written}");
+        assert!(written.contains("body_base64"));
+        // A session cookie would end up in a shared file.
+        assert!(!written.contains("s3cret"), "{written}");
+        let back: Request = toml::from_str(&written).unwrap();
+        assert_eq!(back.examples, [text.clone(), image.clone()]);
+        assert_eq!(back.examples[0].body_bytes(), b"[{\"id\": 1}]");
+        assert_eq!(back.examples[1].body_bytes(), [0x89, b'P', 0xff]);
+        let request = text.request.unwrap();
+        assert_eq!(request.url, "https://x.io/users?page=2");
+        assert_eq!(
+            request.headers,
+            [KeyValue::new("Accept", "application/json")]
+        );
     }
 
     #[test]

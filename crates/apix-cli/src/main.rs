@@ -42,6 +42,9 @@ enum Command {
         /// (`$.items[*].id`), jq otherwise (`.items[].id`)
         #[arg(long, value_name = "EXPRESSION")]
         filter: Option<String>,
+        /// Keep the response in the request's file as an example with this name
+        #[arg(long, value_name = "NAME")]
+        save_example: Option<String>,
         /// WebSocket, Socket.IO and MQTT: send this text instead of the saved messages (repeatable)
         #[arg(short = 'm', long = "message", value_name = "TEXT")]
         messages: Vec<String>,
@@ -452,6 +455,7 @@ async fn run(cli: Cli) -> Result<bool> {
             include_headers,
             network,
             filter,
+            save_example,
             messages,
             message_format,
             event_types,
@@ -657,6 +661,31 @@ async fn run(cli: Cli) -> Result<bool> {
                         println!("{}", filtered.to_pretty());
                     }
                     None => println!("{}", response.pretty_body()),
+                }
+                if let Some(name) = &save_example {
+                    if response.body.len() > apix_core::model::MAX_EXAMPLE_BODY {
+                        bail!(
+                            "--save-example: the body ({}) is larger than an example keeps ({})",
+                            human_size(response.body.len()),
+                            human_size(apix_core::model::MAX_EXAMPLE_BODY)
+                        );
+                    }
+                    let mut saved = apix_core::store::load_request(&file)?;
+                    saved.examples.push(apix_core::Example::new(
+                        name.clone(),
+                        response.status,
+                        &response.headers,
+                        &response.body,
+                        Some(&request),
+                    ));
+                    apix_core::store::save_request(&file, &saved)
+                        .with_context(|| format!("cannot write {}", file.display()))?;
+                    eprintln!(
+                        "{}Kept as the example \"{name}\" in {}{}",
+                        style.dim,
+                        file.display(),
+                        style.reset
+                    );
                 }
             }
             // A SOAP fault was already shown, with the response.

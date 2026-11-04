@@ -166,6 +166,14 @@ value = "yes"
 key = "org"
 value = "{{org}}"
 
+[[example]]              # a response kept with the request
+name = "Created"
+status = 201
+body = '{ "id": 7 }'
+[example.request]        # what it was sent from, as written
+method = "POST"
+url = "{{base_url}}/orgs/:org/users?notify=yes"
+
 [[headers]]
 key = "X-Trace"
 value = "on"

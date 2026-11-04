@@ -10,8 +10,8 @@ use std::path::{Path, PathBuf};
 
 use apix_core::store::{self, CollectionMeta, FolderMeta, VarMap};
 use apix_core::{
-    ApiKeyLocation, Auth, AwsSigV4, Body, ClientAuth, FormPart, GraphQl, KeyValue, Method, OAuth1,
-    OAuth1Method, OAuth2, OAuth2Grant, Request, RequestSettings,
+    ApiKeyLocation, Auth, AwsSigV4, Body, ClientAuth, Example, ExampleRequest, FormPart, GraphQl,
+    KeyValue, Method, OAuth1, OAuth1Method, OAuth2, OAuth2Grant, Request, RequestSettings,
 };
 use serde::Deserialize;
 use serde_json::Value;
@@ -318,6 +318,82 @@ fn joined(value: Option<&Value>, sep: &str) -> String {
     }
 }
 
+/// `[{"key", "value", "disabled"}]` as rows; anything else as none.
+fn key_values(value: Option<&Value>) -> Vec<KeyValue> {
+    let Some(Value::Array(items)) = value else {
+        return Vec::new();
+    };
+    items
+        .iter()
+        .filter_map(|item| {
+            let key = value_text(item.get("key"));
+            (!key.is_empty()).then(|| KeyValue {
+                key,
+                value: value_text(item.get("value")),
+                enabled: !item
+                    .get("disabled")
+                    .and_then(Value::as_bool)
+                    .unwrap_or(false),
+            })
+        })
+        .collect()
+}
+
+/// A saved response of a Postman item ("examples"), and the request it
+/// was saved from as far as it says.
+fn example(value: &Value) -> Example {
+    let body = value_text(value.get("body"));
+    let request = value.get("originalRequest").map(|original| {
+        let url = match original.get("url") {
+            Some(Value::String(raw)) => raw.clone(),
+            Some(url) => value_text(url.get("raw")),
+            None => String::new(),
+        };
+        let body = original.get("body").map_or(Body::None, |b| {
+            let raw = value_text(b.get("raw"));
+            match value_text(b.get("mode")).as_str() {
+                "raw" if raw.is_empty() => Body::None,
+                "raw" => {
+                    let language = b
+                        .pointer("/options/raw/language")
+                        .and_then(Value::as_str)
+                        .unwrap_or_default();
+                    match language {
+                        "json" => Body::Json(raw),
+                        "xml" => Body::Xml(raw),
+                        "html" => Body::Html(raw),
+                        _ => Body::Text(raw),
+                    }
+                }
+                "urlencoded" => Body::Form(key_values(b.get("urlencoded"))),
+                _ => Body::None,
+            }
+        });
+        ExampleRequest {
+            method: value_text(original.get("method"))
+                .parse()
+                .unwrap_or_default(),
+            url,
+            headers: key_values(original.get("header")),
+            body,
+        }
+    });
+    Example {
+        name: Some(value_text(value.get("name")))
+            .filter(|n| !n.is_empty())
+            .unwrap_or_else(|| "Example".into()),
+        status: value
+            .get("code")
+            .and_then(Value::as_u64)
+            .and_then(|c| u16::try_from(c).ok())
+            .unwrap_or(0),
+        headers: key_values(value.get("header")),
+        body,
+        body_base64: String::new(),
+        request,
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Collection conversion
 // ---------------------------------------------------------------------------
@@ -439,7 +515,9 @@ impl Converter<'_> {
                 written.push((name, true));
             } else if let Some(request) = &item.request {
                 let stem = unique(slug(&item.name, "request"), &mut used);
-                let request = self.request(item, request, &label);
+                let mut request = self.request(item, request, &label);
+                request.examples = item.response.iter().map(example).collect();
+                self.report.examples += request.examples.len();
                 let file = request_file(&stem);
                 self.files.push(PlannedFile::Request {
                     path: dir.join(&file),
@@ -447,7 +525,6 @@ impl Converter<'_> {
                 });
                 written.push((file, false));
                 self.report.requests += 1;
-                self.report.examples_skipped += item.response.len();
                 self.scripts(&item.event, dir, &stem, &label);
             }
         }
