@@ -699,7 +699,9 @@ fn header_value(value: &str) -> Result<reqwest::header::HeaderValue, HttpError> 
 
 /// The reqwest request for `req` on `client`.
 fn build(client: &reqwest::Client, req: &Request) -> Result<reqwest::RequestBuilder, HttpError> {
-    let mut url = reqwest::Url::parse(&req.url).map_err(|e| HttpError::InvalidUrl {
+    // Resolving fills path variables already; a request sent as it is gets them here.
+    let filled = apix_core::urls::fill_path_variables(&req.url, &req.path_vars);
+    let mut url = reqwest::Url::parse(&filled).map_err(|e| HttpError::InvalidUrl {
         url: apix_core::display_url(&req.url),
         reason: e.to_string(),
     })?;

@@ -24,6 +24,7 @@ mod shell_copy;
 mod socket_ui;
 mod stream_ui;
 mod tabs;
+mod url_sync;
 mod var_chips;
 mod vault_ui;
 mod ws_editor;
@@ -129,6 +130,8 @@ struct KvRow {
     value: Entity<InputState>,
     enabled: bool,
     _chips: [Subscription; 2],
+    /// A Params row writes itself into the URL as it is typed.
+    _sync: Vec<Subscription>,
 }
 
 impl KvRow {
@@ -141,6 +144,7 @@ impl KvRow {
             value,
             enabled: kv.enabled,
             _chips: [key_chips, value_chips],
+            _sync: Vec::new(),
         }
     }
 
@@ -404,6 +408,9 @@ pub struct Workspace {
     method: Entity<MethodSelect>,
     url: Entity<InputState>,
     params: Vec<KvRow>,
+    /// The query the URL bar and the table last agreed on.
+    params_synced: String,
+    path_vars: Vec<url_sync::PathVarRow>,
     headers: Vec<KvRow>,
     request_tab: usize,
     response_tab: usize,
@@ -549,6 +556,7 @@ impl Workspace {
                     InputEvent::PressEnter { .. } => this.send(window, cx),
                     InputEvent::Change => {
                         this.on_url_changed(window, cx);
+                        this.sync_params_from_url(window, cx);
                         this.chip_url(window, cx);
                     }
                     _ => {}
@@ -619,6 +627,8 @@ impl Workspace {
             method,
             url,
             params: Vec::new(),
+            params_synced: String::new(),
+            path_vars: Vec::new(),
             headers: Vec::new(),
             request_tab: 0,
             response_tab: 0,
@@ -697,6 +707,9 @@ impl Workspace {
     /// Opens `request` in the editor as the saved state (no unsaved changes).
     fn show_request(&mut self, request: Request, window: &mut Window, cx: &mut Context<Self>) {
         self.forget_filter_of_other(window, cx);
+        // Kept the way the editor builds it, so opening is not a change.
+        let mut request = request;
+        apix_core::urls::tidy(&mut request);
         self.fill_editor(&request, window, cx);
         self.base = request;
         let scripts = self
@@ -734,17 +747,24 @@ impl Workspace {
         self.method.update(cx, |state, cx| {
             state.set_selected_index(Some(IndexPath::new(method_ix)), window, cx)
         });
-        let url = var_chips::chip_content(&request.url);
-        self.last_url_len = request.url.chars().count();
+        // The URL bar shows the query too; the table holds it.
+        let mut tidy = request.clone();
+        apix_core::urls::tidy(&mut tidy);
+        let shown = apix_core::urls::with_query(&tidy.url, &tidy.query);
+        self.params_synced = apix_core::urls::query_text(&tidy.query);
+        self.params = tidy
+            .query
+            .iter()
+            .map(|kv| self.new_param_row(kv, window, cx))
+            .collect();
+        self.path_vars.clear();
+        self.sync_path_vars(&shown, &tidy.path_vars, window, cx);
+        let url = var_chips::chip_content(&shown);
+        self.last_url_len = shown.chars().count();
         self.last_chipped = None;
         self.hovered_var = None;
         self.url
             .update(cx, |state, cx| state.set_value(url, window, cx));
-        self.params = request
-            .query
-            .iter()
-            .map(|kv| KvRow::new(kv, window, cx))
-            .collect();
         self.headers = request
             .headers
             .iter()
@@ -828,12 +848,16 @@ impl Workspace {
         let mut request = self.base.clone();
         request.auth = self.auth_editor.read(cx).auth(cx);
         request.method = self.current_method(cx);
-        request.url = self.url.read(cx).value().trim().to_string();
+        // The query is in the table; the file keeps the URL without it.
+        let typed = self.url.read(cx).value().trim().to_string();
+        let (base, _, fragment) = apix_core::urls::split(&typed);
+        request.url = format!("{base}{fragment}");
         request.query = self
             .params
             .iter()
             .filter_map(|r| r.to_key_value(cx))
             .collect();
+        request.path_vars = self.path_var_values(cx);
         request.headers = self
             .headers
             .iter()
@@ -1479,9 +1503,12 @@ impl Workspace {
                 .child(
                     Checkbox::new((on_id, ix))
                         .checked(row.enabled)
-                        .on_click(cx.listener(move |this, checked: &bool, _, cx| {
+                        .on_click(cx.listener(move |this, checked: &bool, window, cx| {
                             if let Some(row) = this.rows_mut(table).get_mut(ix) {
                                 row.enabled = *checked;
+                            }
+                            if table == Table::Params {
+                                this.sync_url_from_params(window, cx);
                             }
                             cx.notify();
                         })),
@@ -1502,10 +1529,13 @@ impl Workspace {
                         .ghost()
                         .xsmall()
                         .icon(IconName::Close)
-                        .on_click(cx.listener(move |this, _: &ClickEvent, _, cx| {
+                        .on_click(cx.listener(move |this, _: &ClickEvent, window, cx| {
                             let rows = this.rows_mut(table);
                             if ix < rows.len() {
                                 rows.remove(ix);
+                            }
+                            if table == Table::Params {
+                                this.sync_url_from_params(window, cx);
                             }
                             cx.notify();
                         })),
@@ -1526,12 +1556,19 @@ impl Workspace {
                         .icon(IconName::Plus)
                         .label(tr!("table.add"))
                         .on_click(cx.listener(move |this, _: &ClickEvent, window, cx| {
-                            let row = KvRow::new(&KeyValue::new("", ""), window, cx);
+                            let empty = KeyValue::new("", "");
+                            let row = match table {
+                                Table::Params => this.new_param_row(&empty, window, cx),
+                                Table::Headers => KvRow::new(&empty, window, cx),
+                            };
                             this.rows_mut(table).push(row);
                             cx.notify();
                         })),
                 ),
             )
+            .when(table == Table::Params, |d| {
+                d.children(self.render_path_vars(cx))
+            })
             .when(self.rows(table).is_empty(), |d| {
                 d.child(
                     div()

@@ -147,21 +147,19 @@ fn keeps_query_headers_and_auth_where_postman_set_it() {
 #[test]
 fn handles_path_variables() {
     let plan = convert_collection(SHOP).unwrap();
-    assert_eq!(
-        request(&plan, "users/get-user.apix").url,
-        "{{baseUrl}}/users/42"
-    );
-    assert!(warned(&plan, "Users / Get user", ":userId was replaced"));
+    let get = request(&plan, "users/get-user.apix");
+    assert_eq!(get.url, "{{baseUrl}}/users/:userId");
+    assert_eq!(get.path_vars, [kv("userId", "42", true)]);
 
     let delete = request(&plan, "users/delete-user.apix");
-    assert_eq!(delete.url, "{{baseUrl}}/users/{{id}}");
+    assert_eq!(delete.url, "{{baseUrl}}/users/:id");
+    assert_eq!(delete.path_vars, [kv("id", "", true)]);
     assert_eq!(delete.method, Method::Delete);
     assert_eq!(
         delete.auth,
         Auth::None,
         "noauth overrides the collection's bearer"
     );
-    assert!(warned(&plan, "Users / Delete user", "became {{id}}"));
 }
 
 #[test]

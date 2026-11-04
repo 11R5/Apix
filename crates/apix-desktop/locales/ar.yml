@@ -475,7 +475,9 @@ request.error.no_url: أدخل عنوان URL لإرسال طلب.
 request.error.undefined_variable: المتغير %{name} غير معرَّف. عرّفه باستخدام %{key} (المتغيرات).
 request.error.undefined_variables: "متغيرات غير معرَّفة: %{names}. عرّفها باستخدام %{key} (المتغيرات)."
 request.headers_hint: تُعيَّن Content-Type حسب نوع المتن ما لم تضف واحدة هنا.
-request.params_hint: تُلحق معاملات الاستعلام بعنوان URL.
+request.params_hint: معاملات الاستعلام؛ ما تكتبه في الرابط يملأ هذا الجدول، والجدول يكتبها في الرابط.
+request.path_vars: متغيرات المسار
+request.path_vars_hint: يُستبدل كل ‎:name في مسار الرابط بقيمته عند إرسال الطلب؛ وتعمل {{المتغيرات}} في القيم.
 request.tab.auth: المصادقة
 request.tab.auth_api_key: المصادقة · مفتاح API
 request.tab.auth_kind: المصادقة · %{kind}

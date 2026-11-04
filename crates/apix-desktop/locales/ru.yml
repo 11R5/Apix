@@ -475,7 +475,9 @@ request.error.no_url: Введите URL, чтобы отправить запр
 request.error.undefined_variable: Переменная %{name} не задана. Задайте её через %{key} (Переменные).
 request.error.undefined_variables: "Не заданы переменные: %{names}. Задайте их через %{key} (Переменные)."
 request.headers_hint: Content-Type определяется типом тела, если вы не добавите его здесь.
-request.params_hint: Параметры запроса добавляются к URL.
+request.params_hint: "Параметры запроса: набранное в URL попадает в эту таблицу, а таблица записывает их в URL."
+request.path_vars: Переменные пути
+request.path_vars_hint: Каждый :name в пути URL при отправке заменяется своим значением; в значениях работают {{переменные}}.
 request.tab.auth: Авторизация
 request.tab.auth_api_key: Авторизация · API-ключ
 request.tab.auth_kind: Авторизация · %{kind}

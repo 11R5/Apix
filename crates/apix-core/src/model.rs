@@ -546,6 +546,9 @@ pub struct Request {
     pub url: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub query: Vec<KeyValue>,
+    /// Values of the URL's `:name` path segments, stored as `[[path]]`.
+    #[serde(default, rename = "path", skip_serializing_if = "Vec::is_empty")]
+    pub path_vars: Vec<KeyValue>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub headers: Vec<KeyValue>,
     #[serde(default, skip_serializing_if = "Body::is_none")]

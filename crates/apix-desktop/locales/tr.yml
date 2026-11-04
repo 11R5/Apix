@@ -475,7 +475,9 @@ request.error.no_url: İstek göndermek için bir URL girin.
 request.error.undefined_variable: Tanımsız değişken %{name}. %{key} ile tanımlayın (Değişkenler).
 request.error.undefined_variables: "Tanımsız değişkenler: %{names}. %{key} ile tanımlayın (Değişkenler)."
 request.headers_hint: Buraya bir tane eklemediğiniz sürece Content-Type gövde türünden belirlenir.
-request.params_hint: Sorgu parametreleri URL'ye eklenir.
+request.params_hint: Sorgu parametreleri; URL'ye yazdıkların bu tabloyu doldurur, tablo da onları URL'ye yazar.
+request.path_vars: Yol değişkenleri
+request.path_vars_hint: URL yolundaki her :ad, istek gönderilirken değeriyle değiştirilir; değerlerde {{değişkenler}} çalışır.
 request.tab.auth: Yetkilendirme
 request.tab.auth_api_key: Yetkilendirme · API anahtarı
 request.tab.auth_kind: Yetkilendirme · %{kind}

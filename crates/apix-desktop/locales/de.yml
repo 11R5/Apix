@@ -475,7 +475,9 @@ request.error.no_url: Geben Sie eine URL ein, um eine Anfrage zu senden.
 request.error.undefined_variable: Undefinierte Variable %{name}. Definieren Sie sie mit %{key} (Variablen).
 request.error.undefined_variables: "Undefinierte Variablen: %{names}. Definieren Sie sie mit %{key} (Variablen)."
 request.headers_hint: Content-Type wird aus dem Body-Typ gesetzt, sofern Sie hier keinen hinzufügen.
-request.params_hint: Query-Parameter werden an die URL angehängt.
+request.params_hint: Query-Parameter; in die URL Getipptes füllt diese Tabelle, und die Tabelle schreibt sie in die URL.
+request.path_vars: Pfadvariablen
+request.path_vars_hint: Jedes :name im Pfad der URL wird beim Senden durch seinen Wert ersetzt; {{Variablen}} funktionieren in Werten.
 request.tab.auth: Auth
 request.tab.auth_api_key: Auth · API-Schlüssel
 request.tab.auth_kind: Auth · %{kind}
