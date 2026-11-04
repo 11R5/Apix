@@ -32,6 +32,8 @@ rust-i18n = "4"
 notify = "8.2.0"
 serde.workspace = true
 serde_json.workspace = true
+# Searching large response bodies (Ctrl+F), case ignored.
+regex = "1"
 # The system language, for the first start (already built by gpui).
 sys-locale = "0.3"
 tokio = { workspace = true, features = ["sync"] }

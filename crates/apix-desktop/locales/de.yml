@@ -499,6 +499,10 @@ response.binary_title: Binärer Inhalt
 response.cancelled: Anfrage abgebrochen.
 response.empty: Senden Sie eine Anfrage, um die Antwort zu sehen
 response.failed: Anfrage fehlgeschlagen
+response.filter_clear: Den ganzen Inhalt zeigen
+response.filter_count: "%{language}: %{count} Werte"
+response.filter_one: "%{language}: 1 Wert"
+response.filter_placeholder: "Filtern: $.items[*].id (JSONPath) oder .items[].id (jq)"
 response.image_title: Bild
 response.image_too_big: Bild (zu groß für die Vorschau)
 response.lines: "%{count} Zeilen"
@@ -506,6 +510,9 @@ response.preparing_hex: Hex-Ansicht wird vorbereitet…
 response.preparing_raw: Rohansicht wird vorbereitet…
 response.save: Inhalt in Datei speichern…
 response.saved: "%{size} in %{path} gespeichert."
+response.search: Suchen (Strg+F)
+response.search_none: Kein Treffer
+response.search_placeholder: Im Inhalt suchen
 response.send_hint: "%{key} Senden"
 response.sending: Wird gesendet…  Esc zum Abbrechen
 response.tab.console: Konsole

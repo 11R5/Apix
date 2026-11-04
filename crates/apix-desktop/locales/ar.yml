@@ -499,6 +499,10 @@ response.binary_title: محتوى ثنائي
 response.cancelled: أُلغي الطلب.
 response.empty: أرسل طلبًا لرؤية الاستجابة
 response.failed: فشل الطلب
+response.filter_clear: عرض المحتوى كاملًا
+response.filter_count: "%{language}: %{count} قيم"
+response.filter_one: "%{language}: قيمة واحدة"
+response.filter_placeholder: "تصفية: $.items[*].id (JSONPath) أو .items[].id (jq)"
 response.image_title: صورة
 response.image_too_big: صورة (أكبر من أن تُعاين)
 response.lines: "الأسطر: %{count}"
@@ -506,6 +510,9 @@ response.preparing_hex: جارٍ تحضير عرض Hex…
 response.preparing_raw: جارٍ تجهيز العرض الخام…
 response.save: حفظ الجسم في ملف…
 response.saved: حُفظ %{size} في %{path}.
+response.search: بحث (Ctrl+F)
+response.search_none: لا توجد نتائج
+response.search_placeholder: ابحث في المحتوى
 response.send_hint: "%{key} للإرسال"
 response.sending: جارٍ الإرسال…  Esc للإلغاء
 response.tab.console: وحدة التحكم

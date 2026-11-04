@@ -83,7 +83,9 @@ Measurements of the other tools on the same machine are planned.
   manager to list, delete and clear.
 - **Responses:** status, timing, size, highlighted and foldable JSON,
   indented and coloured XML and HTML, image preview, a Hex view for binary
-  bodies, save the body to a file, raw and headers views, and the Network tab.
+  bodies, save the body to a file, raw and headers views, and the Network tab;
+  Ctrl+F search in any body (100 MB too) and a JSONPath or jq filter, also on
+  the command line (`apix send --filter`).
 - **Collections and projects:** a sidebar built from the files on disk, tabs that
   keep their edits and responses and come back next time, drag to move and to
   reorder, projects that share environments, a colour per collection, and a

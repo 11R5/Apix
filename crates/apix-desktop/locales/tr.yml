@@ -499,6 +499,10 @@ response.binary_title: İkili içerik
 response.cancelled: İstek iptal edildi.
 response.empty: Yanıtı görmek için bir istek gönderin
 response.failed: İstek başarısız oldu
+response.filter_clear: Gövdenin tamamını göster
+response.filter_count: "%{language}: %{count} değer"
+response.filter_one: "%{language}: 1 değer"
+response.filter_placeholder: "Süz: $.items[*].id (JSONPath) ya da .items[].id (jq)"
 response.image_title: Resim
 response.image_too_big: Resim (önizleme için çok büyük)
 response.lines: "%{count} satır"
@@ -506,6 +510,9 @@ response.preparing_hex: Hex görünümü hazırlanıyor…
 response.preparing_raw: Ham görünüm hazırlanıyor…
 response.save: Gövdeyi dosyaya kaydet…
 response.saved: "%{size} %{path} dosyasına kaydedildi."
+response.search: Ara (Ctrl+F)
+response.search_none: Bulunamadı
+response.search_placeholder: Gövdede ara
 response.send_hint: "%{key} gönder"
 response.sending: Gönderiliyor…  İptal için Esc
 response.tab.console: Konsol

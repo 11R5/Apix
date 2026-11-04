@@ -499,6 +499,10 @@ response.binary_title: Двоичные данные
 response.cancelled: Запрос отменён.
 response.empty: Отправьте запрос, чтобы увидеть ответ
 response.failed: Ошибка запроса
+response.filter_clear: Показать всё тело
+response.filter_count: "%{language}: значений: %{count}"
+response.filter_one: "%{language}: 1 значение"
+response.filter_placeholder: "Фильтр: $.items[*].id (JSONPath) или .items[].id (jq)"
 response.image_title: Изображение
 response.image_too_big: Изображение (слишком большое для предпросмотра)
 response.lines: "Строк: %{count}"
@@ -506,6 +510,9 @@ response.preparing_hex: Подготовка шестнадцатеричног�
 response.preparing_raw: Подготовка исходного вида…
 response.save: Сохранить тело в файл…
 response.saved: "%{size} сохранено в %{path}."
+response.search: Поиск (Ctrl+F)
+response.search_none: Не найдено
+response.search_placeholder: Найти в теле ответа
 response.send_hint: "%{key} отправить"
 response.sending: Отправка…  Esc для отмены
 response.tab.console: Консоль

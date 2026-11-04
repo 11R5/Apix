@@ -704,6 +704,17 @@ Bodies of 512 KB and up use `large_view.rs` instead of the code editor:
   screen. It handles the wheel, its own scrollbar and the keyboard
   (↑ ↓ PgUp PgDn, Ctrl+Home/End).
 - The Raw tab of a large JSON body is built only when it is opened.
+- Ctrl+F searches the whole text on a background thread (a case-insensitive
+  `regex` over the literal query) and keeps up to 100,000 byte ranges;
+  `RowIndex::row_of` finds a match's row by binary search, and only the rows on
+  screen look up their matches to highlight them.
+
+Smaller bodies are in the code editor, whose own search panel is turned on. The
+filter above Pretty (`workspace/filter_ui.rs`) runs `apix_core::filter` off the
+UI thread, 250 ms after the last keystroke: JSONPath through `serde_json_path`
+for an expression starting with `$`, jq through `jaq` otherwise, at most 10,000
+jq outputs. Its result is a `Document` like any body, so a filtered large body
+can land in the editor and the other way round.
 
 Measured on Windows in a release build, for 100 MB of minified JSON from a
 local server (`cargo run -p apix-http --release --example big_json_server`):

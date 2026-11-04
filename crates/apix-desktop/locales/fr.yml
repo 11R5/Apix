@@ -499,6 +499,10 @@ response.binary_title: Contenu binaire
 response.cancelled: Requête annulée.
 response.empty: Envoyez une requête pour voir la réponse
 response.failed: Échec de la requête
+response.filter_clear: Afficher tout le corps
+response.filter_count: "%{language} : %{count} valeurs"
+response.filter_one: "%{language} : 1 valeur"
+response.filter_placeholder: "Filtrer : $.items[*].id (JSONPath) ou .items[].id (jq)"
 response.image_title: Image
 response.image_too_big: Image (trop grande pour l’aperçu)
 response.lines: "%{count} lignes"
@@ -506,6 +510,9 @@ response.preparing_hex: Préparation de la vue hexadécimale…
 response.preparing_raw: Préparation de la vue brute…
 response.save: Enregistrer le corps dans un fichier…
 response.saved: "%{size} enregistrés dans %{path}."
+response.search: Rechercher (Ctrl+F)
+response.search_none: Aucun résultat
+response.search_placeholder: Rechercher dans le corps
 response.send_hint: "%{key} envoyer"
 response.sending: Envoi…  Esc pour annuler
 response.tab.console: Console

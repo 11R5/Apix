@@ -7,6 +7,7 @@ mod cookies_ui;
 mod drag;
 mod env_editor;
 mod extract_ui;
+mod filter_ui;
 mod graphql_ui;
 mod grpc_editor;
 mod grpc_ui;
@@ -415,6 +416,12 @@ pub struct Workspace {
     /// The Hex tab's dump, with the response it was made for.
     hex_doc: Option<(usize, Arc<Document>)>,
     hex_task: Option<Task<()>>,
+    /// JSONPath or jq over a JSON response; kept for the next response.
+    filter: Entity<InputState>,
+    filter_state: filter_ui::FilterState,
+    filter_task: Option<Task<()>>,
+    /// The request the filter was written for; another one starts without it.
+    filter_owner: Option<PathBuf>,
     /// When the user last clicked or typed, for auto-lock.
     last_input: std::cell::Cell<std::time::Instant>,
     /// When the `APIX_BENCH=json` request was sent.
@@ -452,8 +459,11 @@ impl Workspace {
         let body_editor = cx.new(|cx| body_editor::BodyEditor::new(workspace, window, cx));
         let env_select = cx
             .new(|cx| SelectState::new(vec![tr!("env.none")], Some(IndexPath::new(0)), window, cx));
+        let filter = Self::new_filter_input(window, cx);
         let response_body = cx.new(|cx| {
-            let mut state = EditorState::new(window, cx).language("json");
+            let mut state = EditorState::new(window, cx)
+                .language("json")
+                .searchable(true);
             state.set_readonly(true, cx);
             state
         });
@@ -481,6 +491,15 @@ impl Workspace {
             cx.observe(&script_editor, |_, _, cx| cx.notify()),
             cx.observe(&ws_editor, |_, _, cx| cx.notify()),
             cx.observe(&grpc_editor, |_, _, cx| cx.notify()),
+            cx.subscribe_in(
+                &filter,
+                window,
+                |this, _, event: &InputEvent, window, cx| {
+                    if matches!(event, InputEvent::Change) {
+                        this.run_filter(window, cx)
+                    }
+                },
+            ),
             cx.subscribe_in(
                 &grpc_editor,
                 window,
@@ -610,6 +629,10 @@ impl Workspace {
             raw_task: None,
             hex_doc: None,
             hex_task: None,
+            filter,
+            filter_state: filter_ui::FilterState::Off,
+            filter_task: None,
+            filter_owner: None,
             task: None,
             schema_task: None,
             grpc_task: None,
@@ -673,6 +696,7 @@ impl Workspace {
 
     /// Opens `request` in the editor as the saved state (no unsaved changes).
     fn show_request(&mut self, request: Request, window: &mut Window, cx: &mut Context<Self>) {
+        self.forget_filter_of_other(window, cx);
         self.fill_editor(&request, window, cx);
         self.base = request;
         let scripts = self
@@ -1023,7 +1047,10 @@ impl Workspace {
         match result {
             Ok(finished) => {
                 self.response = ResponseState::Done(Rc::new(finished));
+                // A filter left in the box applies to the new response too.
+                self.filter_state = filter_ui::FilterState::Off;
                 self.set_response_tab(0, window, cx);
+                self.run_filter(window, cx);
             }
             Err(message) => self.fail(message, cx),
         }
@@ -1058,7 +1085,7 @@ impl Workspace {
                 cx.notify();
                 return;
             }
-            0 => Some(done.pretty.clone()),
+            0 => Some(self.filtered_doc().unwrap_or_else(|| done.pretty.clone())),
             1 => done.raw.clone().or_else(|| self.raw_doc.clone()),
             4 => return self.show_hex(&done, window, cx),
             _ => {
@@ -1068,7 +1095,8 @@ impl Workspace {
         };
 
         match doc {
-            Some(doc) if done.large => {
+            // What a filter picked out of a large body may be small, and the other way round.
+            Some(doc) if doc.text().len() >= LARGE_BODY_BYTES => {
                 self.large_view = Some(cx.new(|cx| LargeView::new(doc, cx)));
             }
             Some(doc) => {
@@ -1619,6 +1647,10 @@ impl Workspace {
                             .into_any_element(),
                     )
                     .into_any_element(),
+                    // What a filter picked out of a large body is in the editor.
+                    (None, 0) if self.filtered_doc().is_some() => {
+                        Editor::new(&self.response_body).h_full().into_any_element()
+                    }
                     (None, _) if done.large => centered(
                         h_flex()
                             .gap_2()
@@ -1648,32 +1680,56 @@ impl Workspace {
                             .py_2()
                             .text_xs()
                             .text_color(p.text_muted)
+                            // The facts give way before the buttons do.
                             .child(
-                                div()
-                                    .px_2()
-                                    .py_0p5()
-                                    .rounded_full()
-                                    .bg(status.opacity(0.15))
-                                    .text_color(status)
-                                    .font_weight(FontWeight::BOLD)
-                                    .child(format!(
-                                        "{} {}",
-                                        response.status,
-                                        response.reason.unwrap_or("")
-                                    )),
+                                h_flex()
+                                    .dir_row()
+                                    .flex_1()
+                                    .min_w_0()
+                                    .overflow_hidden()
+                                    .gap_3()
+                                    .items_center()
+                                    .child(
+                                        div()
+                                            .flex_none()
+                                            .px_2()
+                                            .py_0p5()
+                                            .rounded_full()
+                                            .bg(status.opacity(0.15))
+                                            .text_color(status)
+                                            .font_weight(FontWeight::BOLD)
+                                            .child(format!(
+                                                "{} {}",
+                                                response.status,
+                                                response.reason.unwrap_or("")
+                                            )),
+                                    )
+                                    .child(human_duration(response.timing.total))
+                                    .child(format!("TTFB {}", human_duration(response.timing.ttfb)))
+                                    .child(human_size(response.body.len()))
+                                    .child(response.version.clone())
+                                    .children(viewer_note)
+                                    .children(
+                                        done.events.as_ref().map(|events| {
+                                            tr!("stream.count", count = events.len())
+                                        }),
+                                    )
+                                    .children(done.stopped.then(|| tr!("stream.stopped"))),
                             )
-                            .child(human_duration(response.timing.total))
-                            .child(format!("TTFB {}", human_duration(response.timing.ttfb)))
-                            .child(human_size(response.body.len()))
-                            .child(response.version.clone())
-                            .children(viewer_note)
-                            .children(
-                                done.events
-                                    .as_ref()
-                                    .map(|events| tr!("stream.count", count = events.len())),
-                            )
-                            .children(done.stopped.then(|| tr!("stream.stopped")))
-                            .child(div().flex_1())
+                            .when(matches!(self.response_tab, 0 | 1 | 4) && !binary, |d| {
+                                d.child(
+                                    Button::new("search-body")
+                                        .ghost()
+                                        .xsmall()
+                                        .icon(IconName::Search)
+                                        .tooltip(tr!("response.search"))
+                                        .on_click(cx.listener(
+                                            |this, _: &ClickEvent, window, cx| {
+                                                this.search_response(window, cx)
+                                            },
+                                        )),
+                                )
+                            })
                             .child(
                                 Button::new("extract-value")
                                     .ghost()
@@ -1730,6 +1786,7 @@ impl Workspace {
                             this.set_response_tab(*ix, window, cx)
                         }),
                     ))
+                    .children(self.render_filter(done, cx))
                     .child(div().flex_1().min_h_0().p_2().child(content))
             }
         }

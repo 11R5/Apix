@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:cccda40df01ea79b -->
+<!-- translated from en/user-guide.md sha256:a92558136cec2b9e -->
 
 # Apix kullanım kılavuzu
 
@@ -277,6 +277,29 @@ yeniden biçimlendirilmez, geldiği gibi gösterilir.
 Durum satırının sonundaki **↓** düğmesi gövdeyi bayt bayt bir dosyaya kaydeder.
 Önerilen ad sunucunun `Content-Disposition` başlığından ya da URL'den gelir;
 uzantı içeriğe göre seçilir.
+
+**Arama.** Gövdede Ctrl+F ya da durum satırındaki büyüteç **Biçimli**, **Ham** ve
+**Hex** içinde büyük-küçük harf ayırmadan arar. Enter (ya da F3) sonraki eşleşmeye,
+Shift+Enter (Shift+F3) öncekine gider; sayaç nerede olduğunu gösterir. Çok büyük
+gövdelerin hızlı görüntüleyicisi gövdenin tamamını arka planda arar ve 100.000
+eşleşmede saymayı bırakır.
+
+**Süzme.** JSON yanıtta **Biçimli**'nin üstünde bir süzme kutusu var. `$` ile
+başlayan ifade JSONPath'tir (RFC 9535), diğerleri jq; yani ikisi de çalışır:
+
+```text
+$.users[?@.active].email
+.users[] | select(.active) | {name, email}
+```
+
+![JSONPath ile süzülmüş bir JSON yanıt](images/response-filter.png)
+
+Kutuda ifade olduğu sürece sonuç **Biçimli**'de gövdenin yerine geçer (yanındaki
+sayı kaç değer olduğunu söyler); **Ham** ve **Hex** gövdenin tamamını göstermeye
+devam eder, ✕ gövdeyi geri getirir. JSONPath eşleşmelerinin listesini, jq ise
+çıktılarını art arda verir. Süzme, aynı isteğin bir sonraki yanıtında da kalır;
+böylece istek tekrar tekrar gönderilip tek bir değer izlenebilir.
+`apix send --filter '<ifade>'` yalnızca süzmenin seçtiğini yazar.
 
 ## Ağ sekmesi
 
