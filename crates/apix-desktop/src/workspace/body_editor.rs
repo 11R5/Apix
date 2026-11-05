@@ -6,7 +6,8 @@ use std::rc::Rc;
 use apix_core::{Body, FormPart, GraphQl, KeyValue};
 use gpui_kit::component::button::{Button, ButtonVariants as _};
 use gpui_kit::component::checkbox::Checkbox;
-use gpui_kit::component::input::{Editor, EditorState, Input, InputEvent, InputState};
+use gpui_kit::component::highlighter::{Diagnostic, DiagnosticSeverity};
+use gpui_kit::component::input::{Editor, EditorState, Input, InputEvent, InputState, Position};
 use gpui_kit::component::spinner::Spinner;
 use gpui_kit::component::tab::{Tab, TabBar};
 use gpui_kit::component::{Disableable as _, IconName, Sizable, h_flex, v_flex};
@@ -195,6 +196,8 @@ pub(super) struct BodyEditor {
     show_schema: bool,
     /// The SDL editor still shows an older schema (it is filled while drawing).
     sdl_stale: bool,
+    /// What is wrong with the JSON in the editor, shown under it.
+    json_error: Option<SharedString>,
     _subscriptions: Vec<Subscription>,
 }
 
@@ -235,6 +238,13 @@ impl BodyEditor {
             cx.new(|cx| InputState::new(window, cx).placeholder(tr!("body.binary_placeholder")));
 
         let mut subscriptions = Vec::new();
+        for editor in [&text, &variables] {
+            subscriptions.push(cx.subscribe(editor, |this, _, event: &InputEvent, cx| {
+                if matches!(event, InputEvent::Change) {
+                    this.check_json(cx);
+                }
+            }));
+        }
         for editor in [&text, &query, &variables] {
             subscriptions.push(
                 cx.subscribe(editor, |_, _, event: &InputEvent, cx| match event {
@@ -266,6 +276,7 @@ impl BodyEditor {
             sdl,
             show_schema: false,
             sdl_stale: false,
+            json_error: None,
             _subscriptions: subscriptions,
         }
     }
@@ -356,6 +367,18 @@ impl BodyEditor {
         self.kind = kind;
         self.text
             .update(cx, |state, cx| state.set_highlighter(kind.language(), cx));
+        self.check_json(cx);
+        cx.notify();
+    }
+
+    /// Underlines the first mistake in the JSON being edited: the body, and
+    /// a GraphQL request's variables.
+    fn check_json(&mut self, cx: &mut Context<Self>) {
+        let text = self.kind == BodyKind::Json;
+        let variables = self.kind == BodyKind::GraphQl;
+        let error = mark_json(&self.text.clone(), text, cx);
+        let in_variables = mark_json(&self.variables.clone(), variables, cx);
+        self.json_error = error.or(in_variables);
         cx.notify();
     }
 
@@ -877,7 +900,128 @@ impl Render for BodyEditor {
             .child(h_flex().dir_row().w_full().min_w_0().child(self.picker(cx)))
             .children((self.kind == BodyKind::Xml).then(|| self.render_soap_row(cx)))
             .child(div().flex_1().min_h_0().child(content))
+            .children(self.json_error.clone().map(|error| {
+                div()
+                    .flex_none()
+                    .text_xs()
+                    .text_color(crate::theme::current().err)
+                    .child(bidi::para(error))
+            }))
     }
+}
+
+/// Marks the first JSON mistake in `editor`, or clears the mark when `check`
+/// is off (another body type), and says what it is.
+fn mark_json(
+    editor: &Entity<EditorState>,
+    check: bool,
+    cx: &mut Context<BodyEditor>,
+) -> Option<SharedString> {
+    let text = editor.read(cx).value().to_string();
+    let mistake = check.then(|| json_mistake(&text)).flatten();
+    editor.update(cx, |state, cx| {
+        if let Some(marks) = state.diagnostics_mut() {
+            marks.clear();
+            if let Some(m) = &mistake {
+                let range = Position::new(m.line, m.start)..Position::new(m.line, m.end);
+                marks.push(
+                    Diagnostic::new(range, m.message.clone())
+                        .with_severity(DiagnosticSeverity::Error),
+                );
+            }
+        }
+        cx.notify();
+    });
+    mistake.map(|m| format!("{}:{}  {}", m.line + 1, m.start + 1, m.message).into())
+}
+
+#[derive(Debug, PartialEq, Eq)]
+struct JsonMistake {
+    /// From 0, as the editor counts them; columns are UTF-16 units.
+    line: u32,
+    start: u32,
+    end: u32,
+    message: String,
+}
+
+/// `{{variable}}` is valid wherever a value goes, so each reads as a number of
+/// the same length and the positions in the error stay right.
+fn hide_variables(text: &str) -> Vec<u8> {
+    let mut bytes = text.as_bytes().to_vec();
+    let mut from = 0;
+    while let Some(open) = text[from..].find("{{").map(|i| i + from) {
+        let Some(close) = text[open..].find("}}").map(|i| i + open + 2) else {
+            break;
+        };
+        if text[open..close].contains('\n') {
+            from = open + 2;
+            continue;
+        }
+        bytes[open..close].fill(b'0');
+        bytes[open] = b'1';
+        from = close;
+    }
+    bytes
+}
+
+/// The first mistake in `text`, if it is not empty and not valid JSON.
+fn json_mistake(text: &str) -> Option<JsonMistake> {
+    if text.trim().is_empty() {
+        return None;
+    }
+    let error = serde_json::from_slice::<serde::de::IgnoredAny>(&hide_variables(text)).err()?;
+    // At the end of the text the mistake is what came last: mark that.
+    let at = if error.is_eof() {
+        text.trim_end().len().saturating_sub(1)
+    } else {
+        let line_start: usize = text
+            .split_inclusive('\n')
+            .take(error.line().saturating_sub(1))
+            .map(str::len)
+            .sum();
+        (line_start + error.column().saturating_sub(1)).min(text.len().saturating_sub(1))
+    };
+    let at = (0..=at).rev().find(|i| text.is_char_boundary(*i))?;
+    // A missing comma shows up at the next token, but it is the value before
+    // it that lacks one: mark that, which may well be on the line above.
+    let missing_comma = error.to_string().starts_with("expected `,`");
+    let at = match text[..at].trim_end().char_indices().next_back() {
+        Some((last, _)) if missing_comma => last,
+        _ => at,
+    };
+    let line_start = text[..at].rfind('\n').map_or(0, |i| i + 1);
+    // The parser stops inside a misspelt word (`nope`): mark all of it.
+    let before: usize = text[line_start..at]
+        .chars()
+        .rev()
+        .take_while(|c| c.is_alphanumeric())
+        .map(char::len_utf8)
+        .sum();
+    let after: usize = text[at..]
+        .chars()
+        .take_while(|c| c.is_alphanumeric())
+        .map(char::len_utf8)
+        .sum();
+    let end = at + after.max(text[at..].chars().next().map_or(0, char::len_utf8));
+    let at = at - before;
+    // A string is marked whole, from its opening quote.
+    let at = match missing_comma && text[end - 1..].starts_with('"') {
+        true => text[line_start..end - 1]
+            .rfind('"')
+            .map_or(at, |q| line_start + q),
+        false => at,
+    };
+    let column = |to: usize| text[line_start..to].encode_utf16().count() as u32;
+    let message = error.to_string();
+    let message = message
+        .rsplit_once(" at line ")
+        .map_or(message.as_str(), |m| m.0);
+    Some(JsonMistake {
+        line: text[..at].matches('\n').count() as u32,
+        start: column(at),
+        end: column(end),
+        message: message.to_owned(),
+    })
 }
 
 fn remove_button(
@@ -949,7 +1093,51 @@ fn relative_to(path: &Path, dir: &Path) -> Option<PathBuf> {
 
 #[cfg(test)]
 mod tests {
-    use super::{Path, stored_path};
+    use super::{Path, json_mistake, stored_path};
+
+    #[test]
+    fn valid_json_and_variables_have_no_mistake() {
+        assert_eq!(json_mistake(""), None);
+        assert_eq!(json_mistake("  \n"), None);
+        assert_eq!(json_mistake("{\"a\": 1}"), None);
+        assert_eq!(
+            json_mistake("{\"id\": {{id}}, \"name\": \"{{name}}\", \"é\": {{ü}}}"),
+            None
+        );
+        assert_eq!(json_mistake("{{whole_body}}"), None);
+    }
+
+    #[test]
+    fn a_mistake_is_marked_where_it_is() {
+        let m = json_mistake("{\n  \"a\": 1,\n  \"b\" 2\n}").unwrap();
+        assert_eq!((m.line, m.start, m.end), (2, 6, 7));
+        assert_eq!(m.message, "expected `:`");
+        assert!(!m.message.contains("line"));
+    }
+
+    #[test]
+    fn a_word_is_marked_whole_and_columns_are_utf16() {
+        let m = json_mistake("{\"😀\": nope}").unwrap();
+        assert_eq!(m.line, 0);
+        assert_eq!(m.end - m.start, 4);
+        assert_eq!(m.start, 7);
+    }
+
+    #[test]
+    fn a_missing_comma_marks_the_value_before_it() {
+        let m = json_mistake("{\n  \"name\": \"Ada\"\n  \"email\": 1\n}").unwrap();
+        assert_eq!((m.line, m.start, m.end), (1, 10, 15));
+        let m = json_mistake("[1\n  2]").unwrap();
+        assert_eq!((m.line, m.start, m.end), (0, 1, 2));
+        let m = json_mistake("{\"a\": true \"b\": 1}").unwrap();
+        assert_eq!((m.line, m.start, m.end), (0, 6, 10));
+    }
+
+    #[test]
+    fn unfinished_json_marks_the_last_character() {
+        let m = json_mistake("{\n  \"a\": 1\n\n").unwrap();
+        assert_eq!((m.line, m.start, m.end), (1, 7, 8));
+    }
 
     #[test]
     fn graphql_highlight_query_compiles() {
