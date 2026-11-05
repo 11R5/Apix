@@ -3,6 +3,7 @@
 
 mod decode;
 pub mod graphql;
+pub mod load;
 mod local;
 pub mod oauth2;
 pub mod socketio;

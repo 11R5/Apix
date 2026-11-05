@@ -368,6 +368,31 @@ import.prompt: Import a Postman, Insomnia, OpenAPI or HAR file
 import.unknown_format: "%{path} is not an export Apix reads (Postman, Insomnia v4, OpenAPI/Swagger, HAR)."
 import.url_ok: Import
 import.url_title: Import from URL
+load.about: Sends this request from many workers at once over kept connections and measures how the server holds up. Scripts do not run. Only load-test servers you are allowed to.
+load.bad_concurrency: "At once: a number from 1 to 10000."
+load.bad_duration: "For: a length of time like 30s, 2m or 1500ms."
+load.bad_rate: "Per second: a number, or empty for no limit."
+load.bad_requests: "Requests: a whole number, or empty for no limit."
+load.concurrency: At once
+load.details: "%{elapsed} s · fastest %{min} · mean %{mean} · p90 %{p90} · status %{statuses}"
+load.duration: For
+load.failed: Failed
+load.http_only: Load tests send HTTP requests; this one is not.
+load.idle: Set how hard and how long, then Start.
+load.legend_failed: failed
+load.legend_latency: "mean latency (top %{slowest} ms)"
+load.legend_requests: "requests a second (top %{most})"
+load.max: Slowest
+load.no_limit: no limit
+load.per_second: Per second
+load.rate: Per second
+load.requests: Requests
+load.running: Running… Stop ends it; requests in flight finish.
+load.start: Start
+load.starting: Starting…
+load.title: Load test
+load.total: Requests
+load.undefined: "Undefined variables: %{names}"
 menu.active_environment: Active environment
 menu.cancel: Cancel
 menu.capture: Capture proxy…
@@ -392,6 +417,7 @@ menu.help: Help
 menu.history: History…
 menu.import_postman: Import (Postman, Insomnia, OpenAPI, HAR, WSDL)…
 menu.import_url: Import from URL…
+menu.load_test: Load test…
 menu.lock_collections: Lock encrypted collections
 menu.method: Method
 menu.mock: Mock server…

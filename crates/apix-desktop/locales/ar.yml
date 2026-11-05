@@ -366,6 +366,31 @@ import.prompt: استيراد ملف Postman أو Insomnia أو OpenAPI أو HAR
 import.unknown_format: "%{path} ليس تصديرًا يقرؤه Apix (Postman وInsomnia v4 وOpenAPI/Swagger وHAR)."
 import.url_ok: استيراد
 import.url_title: استيراد من عنوان URL
+load.about: "يرسل هذا الطلب من عدة عمّال في آن واحد عبر اتصالات مُبقاة مفتوحة ويقيس مدى تحمّل الخادم. لا تعمل البرامج النصية. اختبر فقط الخوادم المسموح لك باختبارها."
+load.bad_concurrency: "في آن واحد: رقم من 1 إلى 10000."
+load.bad_duration: "المدة: مدة مثل 30s أو 2m أو 1500ms."
+load.bad_rate: "في الثانية: رقم، أو فارغ لبلا حد."
+load.bad_requests: "الطلبات: عدد صحيح، أو فارغ لبلا حد."
+load.concurrency: في آن واحد
+load.details: "%{elapsed} ث · الأسرع %{min} · المتوسط %{mean} · p90 %{p90} · الحالات %{statuses}"
+load.duration: المدة
+load.failed: فاشلة
+load.http_only: ترسل اختبارات الحمل طلبات HTTP؛ وهذا الطلب ليس كذلك.
+load.idle: حدّد الشدة والمدة ثم اضغط ابدأ.
+load.legend_failed: فاشلة
+load.legend_latency: "متوسط زمن الاستجابة (الأعلى %{slowest} مللي ثانية)"
+load.legend_requests: "طلبات في الثانية (الأعلى %{most})"
+load.max: الأبطأ
+load.no_limit: بلا حد
+load.per_second: في الثانية
+load.rate: في الثانية
+load.requests: الطلبات
+load.running: قيد التشغيل… الإيقاف ينهيه؛ تكتمل الطلبات الجارية.
+load.start: ابدأ
+load.starting: جارٍ البدء…
+load.title: اختبار الحمل
+load.total: الطلبات
+load.undefined: "متغيرات غير معرّفة: %{names}"
 menu.active_environment: البيئة النشطة
 menu.cancel: إلغاء
 menu.capture: وكيل الالتقاط…
@@ -390,6 +415,7 @@ menu.help: تعليمات
 menu.history: السجل…
 menu.import_postman: استيراد (Postman وInsomnia وOpenAPI وHAR وWSDL)…
 menu.import_url: استيراد من عنوان URL…
+menu.load_test: اختبار الحمل…
 menu.lock_collections: قفل المجموعات المشفّرة
 menu.method: الطريقة
 menu.mock: خادم المحاكاة…

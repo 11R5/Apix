@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:15e5125d294b1e0e -->
+<!-- translated from en/user-guide.md sha256:68c18bb0a1f0133b -->
 
 # Apix kullanım kılavuzu
 
@@ -31,6 +31,7 @@ veya CI'da çalıştırır.
 - [gRPC](#grpc)
 - [Scriptler ve testler](#scriptler-ve-testler)
 - [Runner](#runner)
+- [Yük testi](#yük-testi)
 - [Monitörler](#monitörler)
 - [Mock sunucu](#mock-sunucu)
 - [API dokümantasyonu](#api-dokümantasyonu)
@@ -801,6 +802,41 @@ URL'ye yazılan şifre (`https://kullanici:sifre@host`) raporlarda, komut satır
 çıktısında, günlüklerde ve hata mesajlarında gösterilmez. İstek dosyası ve URL
 çubuğu onu tutmaya devam eder; gerçek şifreler için değişken ya da Yetkilendirme
 sekmesini tercih edin.
+
+## Yük testi
+
+**İstek › Yük testi…** (ya da komut paleti) açık isteği birçok işçiyle aynı
+anda gönderir ve sunucunun nasıl dayandığını gösterir: istek sayısı ve
+saniyedeki istek, başarısızlar, 50., 95. ve 99. yüzdelik ile en yavaş süre,
+ayrıca saniye saniye bir istek grafiği (başarısızlar kırmızı), ortalama
+gecikme sarı bir çizgiyle.
+
+![Bir yük testi](images/load-test.png)
+
+- **Aynı anda**: aynı anda yolda olan istek (1 ile 10 000 arası).
+- **İstek**: bu kadar istekten sonra durur; boşsa sınır yok.
+- **Süre**: bu kadar süre sonra durur (`30s`, `2m`, `1500ms`); ikisi de
+  yoksa 10 sn.
+- **Saniyede**: saniyede en çok bu kadar istek, eşit aralıklarla; boşsa
+  sunucunun yanıtladığı hızda.
+
+Bağlantılar, gerçek istemcilerin yük altında yaptığı gibi açık tutulur ve
+yeniden kullanılır (tek bir gönderim, Ağ sekmesi el sıkışmayı göstersin diye
+yeni bağlantı açar). Değişkenler bir kez doldurulur; scriptler çalışmaz,
+OAuth 2.0 tokenını bir kez alır, Digest desteklenmez. Yanıt gelmeyen ya da
+durumu 400 ve üstü olan istek başarısız sayılır. **Durdur** testi bitirir;
+pencereyi kapatmak da durdurur. Yalnızca izniniz olan sunuculara yük testi
+yapın.
+
+Terminalde `apix bench` aynısını yapar ve bir CI işini düşürebilir:
+
+```bash
+apix bench my-api/users/list.apix -c 50 -d 30s --max-p95 300 --max-failed 1 --json bench.json
+```
+
+95. yüzdelik `--max-p95` milisaniyeyi aşarsa, isteklerin `--max-failed`
+yüzdesinden fazlası başarısız olursa ya da hiçbiri başarılı olmazsa 1 ile
+çıkar.
 
 ## Monitörler
 

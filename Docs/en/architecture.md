@@ -706,6 +706,24 @@ runs with `GIT_TERMINAL_PROMPT=0`, so a remote that needs a password fails
 with git's message instead of waiting for input; credential helpers still
 work. Each operation runs in the background and refreshes the status bar.
 
+## Load testing
+
+`apix_http::load::Load` builds one reqwest client for a resolved request (the
+request's TLS settings through `tls::client_config`, its proxy, timeout and
+redirect policy, an unlimited idle pool) and `hit()` sends it, counting the
+body's bytes without decoding; OAuth 2.0 becomes a bearer token once, Digest
+is refused. `apix_runner::bench::Bench::run` starts `concurrency` workers in
+one `FuturesUnordered`; each takes the next request number from an atomic
+counter until the count, the deadline or `stop()` says no, and with a rate
+waits until `start + n / rate`. Every hit is recorded under a mutex: its
+latency in microseconds (a `u32` per request, so a million requests is 4 MB),
+the status, the error by kind ("could not connect", "timed out", …), the
+bytes and a per-second bucket. `summary()` can be called while it runs: it
+sorts a copy of the latencies for nearest-rank percentiles. The CLI runs the
+test on a runtime of its own with a thread per core and prints a line a
+second; the app runs it on its network runtime and repaints four times a
+second.
+
 ## Route and map
 
 `apix-route` starts the system's tool, like `apix_core::git` starts git:

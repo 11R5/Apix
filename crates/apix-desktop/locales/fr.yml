@@ -366,6 +366,31 @@ import.prompt: Importer un fichier Postman, Insomnia, OpenAPI ou HAR
 import.unknown_format: "%{path} n’est pas un export qu’Apix sait lire (Postman, Insomnia v4, OpenAPI/Swagger, HAR)."
 import.url_ok: Importer
 import.url_title: Importer depuis une URL
+load.about: Envoie cette requête depuis de nombreux travailleurs à la fois sur des connexions maintenues et mesure la tenue du serveur. Les scripts ne s’exécutent pas. Ne testez que des serveurs pour lesquels vous avez l’autorisation.
+load.bad_concurrency: "En même temps : un nombre de 1 à 10000."
+load.bad_duration: "Pendant : une durée comme 30s, 2m ou 1500ms."
+load.bad_rate: "Par seconde : un nombre, ou vide pour sans limite."
+load.bad_requests: "Requêtes : un nombre entier, ou vide pour sans limite."
+load.concurrency: En même temps
+load.details: "%{elapsed} s · la plus rapide %{min} · moyenne %{mean} · p90 %{p90} · statut %{statuses}"
+load.duration: Pendant
+load.failed: Échecs
+load.http_only: Les tests de charge envoient des requêtes HTTP ; celle-ci n’en est pas une.
+load.idle: Réglez l’intensité et la durée, puis Démarrer.
+load.legend_failed: échecs
+load.legend_latency: "latence moyenne (max %{slowest} ms)"
+load.legend_requests: "requêtes par seconde (max %{most})"
+load.max: La plus lente
+load.no_limit: sans limite
+load.per_second: Par seconde
+load.rate: Par seconde
+load.requests: Requêtes
+load.running: En cours… Arrêter le termine ; les requêtes en vol se terminent.
+load.start: Démarrer
+load.starting: Démarrage…
+load.title: Test de charge
+load.total: Requêtes
+load.undefined: "Variables non définies : %{names}"
 menu.active_environment: Environnement actif
 menu.cancel: Annuler
 menu.capture: Proxy de capture…
@@ -390,6 +415,7 @@ menu.help: Aide
 menu.history: Historique…
 menu.import_postman: Importer (Postman, Insomnia, OpenAPI, HAR, WSDL)…
 menu.import_url: Importer depuis une URL…
+menu.load_test: Test de charge…
 menu.lock_collections: Verrouiller les collections chiffrées
 menu.method: Méthode
 menu.mock: Serveur fictif…

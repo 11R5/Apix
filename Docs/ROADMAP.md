@@ -129,7 +129,8 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [x] Theme leftovers: code editor colours from the theme (strings, numbers, keywords, accent for types and functions, muted comments), text size (90–150 %), code font size (11–18 px), sidebar density (compact, normal, comfortable), all live from Settings
 
 ## M8 — Beyond Postman
-- [ ] Load testing (`apix bench`), response diff, time-travel history
+- [x] Load testing: `apix bench` (concurrency, count or duration, rate, JSON, `--max-p95` / `--max-failed` for CI) and Request › Load test… (live percentiles and a per-second chart); connections kept and reused (`apix_http::load`), engine in `apix_runner::bench`
+- [ ] Response diff, time-travel history
 - [ ] MCP server mode (`apix mcp`), optional AI assist, WASM plugins, Flows
 
 ## M9 — Release & distribution

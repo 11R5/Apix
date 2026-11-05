@@ -28,6 +28,7 @@ command line runs the same requests in a terminal or CI.
 - [gRPC](#grpc)
 - [Scripts and tests](#scripts-and-tests)
 - [Runner](#runner)
+- [Load testing](#load-testing)
 - [Monitors](#monitors)
 - [Mock server](#mock-server)
 - [API documentation](#api-documentation)
@@ -784,6 +785,38 @@ terminal; see [Run a collection in CI](workflows.md#run-a-collection-in-ci).
 A password written in a URL (`https://user:password@host`) is left out of
 reports, command-line output, logs and error messages. The request file and
 the URL bar still hold it, so prefer a variable or the Auth tab for real ones.
+
+## Load testing
+
+**Request › Load test…** (or the command palette) sends the open request from
+many workers at once and shows how the server holds up: requests and
+requests a second, failures, the 50th, 95th and 99th percentile and the
+slowest time, and a second-by-second chart of requests (failed ones in red)
+with the mean latency as a yellow tick.
+
+![A load test](images/load-test.png)
+
+- **At once**: requests in flight at the same time (1 to 10 000).
+- **Requests**: stop after this many; empty for no limit.
+- **For**: stop after this long (`30s`, `2m`, `1500ms`); with neither, 10 s.
+- **Per second**: at most this many requests a second, spread evenly; empty
+  for as fast as the server answers.
+
+Connections are kept open and reused, as real clients do under load (a
+single send opens a fresh one so its Network tab shows the handshake).
+Variables are filled in once; scripts do not run, OAuth 2.0 fetches its
+token once and Digest auth is not supported. A request counts as failed when
+no answer came or the status is 400 or above. **Stop** ends the test and
+closing the window stops it too. Only load-test servers you are allowed to.
+
+In a terminal, `apix bench` does the same and can fail a CI job:
+
+```bash
+apix bench my-api/users/list.apix -c 50 -d 30s --max-p95 300 --max-failed 1 --json bench.json
+```
+
+It exits with 1 when the 95th percentile is over `--max-p95` milliseconds,
+more than `--max-failed` percent of the requests failed, or none succeeded.
 
 ## Monitors
 

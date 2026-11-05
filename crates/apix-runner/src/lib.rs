@@ -5,6 +5,7 @@
 //! `setNextRequest`, stopping at the first failure (`bail`), and pausing or
 //! stopping from outside.
 
+pub mod bench;
 pub mod data;
 pub mod monitor;
 pub mod report;

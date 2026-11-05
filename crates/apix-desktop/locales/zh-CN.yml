@@ -366,6 +366,31 @@ import.prompt: 导入 Postman、Insomnia、OpenAPI 或 HAR 文件
 import.unknown_format: "%{path} 不是 Apix 能读取的导出（Postman、Insomnia v4、OpenAPI/Swagger、HAR）。"
 import.url_ok: 导入
 import.url_title: 从 URL 导入
+load.about: 通过保持的连接由多个工作者同时发送此请求，并测量服务器的承受能力。脚本不会运行。只对你有权测试的服务器做负载测试。
+load.bad_concurrency: "并发：1 到 10000 之间的数字。"
+load.bad_duration: "时长：如 30s、2m 或 1500ms。"
+load.bad_rate: "每秒：数字，留空表示不限。"
+load.bad_requests: "请求数：整数，留空表示不限。"
+load.concurrency: 并发
+load.details: "%{elapsed} 秒 · 最快 %{min} · 平均 %{mean} · p90 %{p90} · 状态 %{statuses}"
+load.duration: 时长
+load.failed: 失败
+load.http_only: 负载测试发送 HTTP 请求；此请求不是。
+load.idle: 设置强度和时长，然后点击开始。
+load.legend_failed: 失败
+load.legend_latency: "平均延迟（最高 %{slowest} ms）"
+load.legend_requests: "每秒请求数（最高 %{most}）"
+load.max: 最慢
+load.no_limit: 不限
+load.per_second: 每秒
+load.rate: 每秒
+load.requests: 请求数
+load.running: 运行中… 停止即结束；进行中的请求会完成。
+load.start: 开始
+load.starting: 正在开始…
+load.title: 负载测试
+load.total: 请求
+load.undefined: "未定义的变量：%{names}"
 menu.active_environment: 当前环境
 menu.cancel: 取消
 menu.capture: 捕获代理…
@@ -390,6 +415,7 @@ menu.help: 帮助
 menu.history: 历史…
 menu.import_postman: 导入（Postman、Insomnia、OpenAPI、HAR、WSDL）…
 menu.import_url: 从 URL 导入…
+menu.load_test: 负载测试…
 menu.lock_collections: 锁定加密集合
 menu.method: 方法
 menu.mock: 模拟服务器…

@@ -366,6 +366,31 @@ import.prompt: Postman, Insomnia, OpenAPI veya HAR dosyası içe aktar
 import.unknown_format: "%{path} Apix'in okuyabildiği bir dışa aktarım değil (Postman, Insomnia v4, OpenAPI/Swagger, HAR)."
 import.url_ok: İçe aktar
 import.url_title: URL'den içe aktar
+load.about: Bu isteği açık tutulan bağlantılar üzerinden birçok işçiyle aynı anda gönderir ve sunucunun nasıl dayandığını ölçer. Scriptler çalışmaz. Yalnızca izniniz olan sunuculara yük testi yapın.
+load.bad_concurrency: "Aynı anda: 1 ile 10000 arasında bir sayı."
+load.bad_duration: "Süre: 30s, 2m ya da 1500ms gibi bir süre."
+load.bad_rate: "Saniyede: bir sayı ya da sınırsız için boş."
+load.bad_requests: "İstek: bir tam sayı ya da sınırsız için boş."
+load.concurrency: Aynı anda
+load.details: "%{elapsed} sn · en hızlı %{min} · ortalama %{mean} · p90 %{p90} · durum %{statuses}"
+load.duration: Süre
+load.failed: Başarısız
+load.http_only: Yük testi HTTP isteği gönderir; bu istek öyle değil.
+load.idle: Ne kadar yoğun ve ne kadar süreceğini ayarlayıp Başlat'a basın.
+load.legend_failed: başarısız
+load.legend_latency: "ortalama gecikme (en çok %{slowest} ms)"
+load.legend_requests: "saniyedeki istek (en çok %{most})"
+load.max: En yavaş
+load.no_limit: sınırsız
+load.per_second: Saniyede
+load.rate: Saniyede
+load.requests: İstek
+load.running: Çalışıyor… Durdur bitirir; yoldaki istekler tamamlanır.
+load.start: Başlat
+load.starting: Başlıyor…
+load.title: Yük testi
+load.total: İstek
+load.undefined: "Tanımsız değişkenler: %{names}"
 menu.active_environment: Etkin ortam
 menu.cancel: İptal
 menu.capture: Yakalama proxy'si…
@@ -390,6 +415,7 @@ menu.help: Yardım
 menu.history: Geçmiş…
 menu.import_postman: İçe aktar (Postman, Insomnia, OpenAPI, HAR, WSDL)…
 menu.import_url: URL'den içe aktar…
+menu.load_test: Yük testi…
 menu.lock_collections: Şifreli koleksiyonları kilitle
 menu.method: Metot
 menu.mock: Mock sunucu…

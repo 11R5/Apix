@@ -355,6 +355,10 @@ impl Workspace {
             out.push(
                 Entry::command(name!("palette.send_request"), run(Workspace::send)).keys("Enter"),
             );
+            out.push(Entry::command(
+                name!("menu.load_test"),
+                run(Workspace::open_load_test),
+            ));
             out.push(
                 Entry::command(
                     name!("palette.save_request"),

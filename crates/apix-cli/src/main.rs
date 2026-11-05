@@ -153,6 +153,34 @@ enum Command {
         #[arg(long)]
         no_save: bool,
     },
+    /// Load-test a request: send it from many workers at once for a number of
+    /// requests or a time, and print throughput and latency percentiles
+    Bench {
+        file: PathBuf,
+        #[command(flatten)]
+        vars: VarArgs,
+        /// Requests in flight at once
+        #[arg(short, long, default_value_t = 10, value_name = "N")]
+        concurrency: usize,
+        /// Stop after this many requests
+        #[arg(short = 'n', long, value_name = "N")]
+        requests: Option<u64>,
+        /// Stop after this long: 30s, 2m, 1500ms (default 10s unless -n is given)
+        #[arg(short, long, value_name = "TIME")]
+        duration: Option<String>,
+        /// At most this many requests a second
+        #[arg(long, value_name = "PER_SECOND")]
+        rate: Option<f64>,
+        /// Write the results as JSON to this file
+        #[arg(long, value_name = "FILE")]
+        json: Option<PathBuf>,
+        /// Fail (exit 1) when the 95th percentile is slower than this many ms
+        #[arg(long, value_name = "MS")]
+        max_p95: Option<f64>,
+        /// Fail (exit 1) when more than this percentage of requests failed
+        #[arg(long, value_name = "PERCENT")]
+        max_failed: Option<f64>,
+    },
     /// Trace the route to a server with the system's traceroute, with where each
     /// hop is when an IP location database is in <config>/Apix/geo (or --geo)
     Trace {
@@ -1109,6 +1137,124 @@ async fn run(cli: Cli) -> Result<bool> {
             )
             .await?;
             Ok(true)
+        }
+        Command::Bench {
+            file,
+            vars,
+            concurrency,
+            requests,
+            duration,
+            rate,
+            json,
+            max_p95,
+            max_failed,
+        } => {
+            unlock_around(&file, &var)?;
+            let scope = Scope::find(&file)?;
+            let Resolved { vars, .. } = vars.resolve(&scope)?;
+            let request = scope.load(&file)?;
+            let resolved = request.resolve(&vars);
+            if !resolved.missing.is_empty() {
+                let names: Vec<_> = resolved.missing.into_iter().collect();
+                bail!("undefined variable(s): {}", names.join(", "));
+            }
+            let request = relative_to_file(resolved.request, &file);
+            let scheme = request.url.trim_start().to_ascii_lowercase();
+            if request.is_grpc()
+                || request.is_mqtt()
+                || request.is_socketio()
+                || scheme.starts_with("ws")
+            {
+                bail!("load tests send HTTP requests; this one is not");
+            }
+            let duration = match duration {
+                Some(text) => Some(
+                    apix_runner::bench::parse_duration(&text)
+                        .with_context(|| format!("--duration: not a length of time: {text}"))?,
+                ),
+                None if requests.is_none() => Some(std::time::Duration::from_secs(10)),
+                None => None,
+            };
+            let plan = apix_runner::bench::Plan {
+                concurrency: concurrency.max(1),
+                requests,
+                duration,
+                rate,
+            };
+            println!(
+                "{} {} · {} at once{}{}{}",
+                request.method.as_str(),
+                request.url,
+                plan.concurrency,
+                plan.requests
+                    .map(|n| format!(" · {n} requests"))
+                    .unwrap_or_default(),
+                plan.duration
+                    .map(|d| format!(" · {:.1} s", d.as_secs_f64()))
+                    .unwrap_or_default(),
+                plan.rate
+                    .map(|r| format!(" · at most {r}/s"))
+                    .unwrap_or_default(),
+            );
+            // Its own runtime with a thread per core, so the workers are not
+            // held back by this one's single thread.
+            let summary = std::thread::spawn(move || -> Result<apix_runner::bench::Summary> {
+                let runtime = tokio::runtime::Builder::new_multi_thread()
+                    .enable_all()
+                    .build()?;
+                runtime.block_on(async move {
+                    let load = apix_http::load::Load::new(&request).await?;
+                    let bench = apix_runner::bench::Bench::new();
+                    let watcher = bench.clone();
+                    let ticker = tokio::spawn(async move {
+                        loop {
+                            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+                            let s = watcher.summary();
+                            eprint!(
+                                "\r  {} requests · {:.0}/s · p95 {:.1} ms · {} failed   ",
+                                s.requests, s.per_second, s.p95_ms, s.failed
+                            );
+                        }
+                    });
+                    let summary = bench.run(&load, &plan).await;
+                    ticker.abort();
+                    eprint!("\r{}\r", " ".repeat(70));
+                    Ok(summary)
+                })
+            })
+            .join()
+            .map_err(|_| anyhow::anyhow!("the load test stopped unexpectedly"))??;
+            print!("{}", summary.to_text());
+            if let Some(path) = json {
+                std::fs::write(&path, summary.to_json())
+                    .with_context(|| format!("writing {}", path.display()))?;
+                println!("{}Wrote {}{}", style.dim, path.display(), style.reset);
+            }
+            let mut passed = true;
+            if let Some(limit) = max_p95
+                && summary.p95_ms > limit
+            {
+                println!(
+                    "{}p95 {:.1} ms is over --max-p95 {limit} ms{}",
+                    style.red, summary.p95_ms, style.reset
+                );
+                passed = false;
+            }
+            let failed_pct = if summary.requests == 0 {
+                0.0
+            } else {
+                summary.failed as f64 * 100.0 / summary.requests as f64
+            };
+            if let Some(limit) = max_failed
+                && failed_pct > limit
+            {
+                println!(
+                    "{}{failed_pct:.1}% failed, over --max-failed {limit}%{}",
+                    style.red, style.reset
+                );
+                passed = false;
+            }
+            Ok(passed && summary.ok > 0)
         }
         Command::Trace {
             target,

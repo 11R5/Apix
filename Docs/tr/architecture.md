@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:c7f73329a2fd1316 -->
+<!-- translated from en/architecture.md sha256:48b92841cbdb3b2e -->
 
 # Apix mimarisi
 
@@ -733,6 +733,24 @@ Git penceresi (`workspace/git_panel.rs`) aynı `Repo`'yu kullanır: liste için
 `GIT_TERMINAL_PROMPT=0` ile çalışır; parola isteyen bir uzak depo girdi
 beklemek yerine git'in mesajıyla başarısız olur, kimlik bilgisi yardımcıları
 yine çalışır. Her işlem arka planda koşar ve durum çubuğunu yeniler.
+
+## Yük testi
+
+`apix_http::load::Load` çözülmüş bir istek için tek bir reqwest istemcisi
+kurar (isteğin TLS ayarları `tls::client_config` ile, proxy'si, zaman aşımı
+ve yönlendirme kuralı, sınırsız boşta bağlantı havuzu); `hit()` onu gönderir
+ve gövdenin baytlarını açmadan sayar. OAuth 2.0 bir kez bearer token olur,
+Digest reddedilir. `apix_runner::bench::Bench::run`, `concurrency` kadar
+işçiyi tek bir `FuturesUnordered` içinde başlatır; her biri sıradaki istek
+numarasını atomik bir sayaçtan alır, sayı, süre ya da `stop()` hayır diyene
+kadar sürer; hız verilmişse `başlangıç + n / hız` anına kadar bekler. Her
+gönderim bir mutex altında kaydedilir: mikrosaniye cinsinden gecikmesi
+(istek başına bir `u32`, yani bir milyon istek 4 MB), durumu, türüne göre
+hatası ("could not connect", "timed out", …), baytları ve saniyelik bir
+kova. `summary()` çalışırken de çağrılabilir: en yakın sıra yüzdelikleri için
+gecikmelerin bir kopyasını sıralar. CLI testi çekirdek başına bir iş
+parçacıklı kendi çalışma zamanında koşturur ve saniyede bir satır yazar;
+uygulama onu ağ çalışma zamanında koşturur ve saniyede dört kez yeniden çizer.
 
 ## Rota ve harita
 

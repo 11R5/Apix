@@ -17,6 +17,7 @@ mod grpc_editor;
 mod grpc_ui;
 mod header_hints;
 mod history_ui;
+mod load_ui;
 mod menu_bar;
 mod mock_ui;
 mod monitors_ui;
@@ -91,6 +92,7 @@ actions!(
         OpenGit,
         CheckForUpdates,
         OpenRoute,
+        OpenLoadTest,
         CloseTab,
         NextTab,
         PrevTab,
@@ -2212,6 +2214,9 @@ impl Render for Workspace {
             )
             .on_action(cx.listener(|this, _: &OpenGit, window, cx| this.open_git(window, cx)))
             .on_action(cx.listener(|this, _: &OpenRoute, window, cx| this.open_route(window, cx)))
+            .on_action(
+                cx.listener(|this, _: &OpenLoadTest, window, cx| this.open_load_test(window, cx)),
+            )
             .on_action(cx.listener(|this, _: &CheckForUpdates, window, cx| {
                 this.check_updates(true, window, cx)
             }))

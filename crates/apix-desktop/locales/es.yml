@@ -366,6 +366,31 @@ import.prompt: Importar un archivo de Postman, Insomnia, OpenAPI o HAR
 import.unknown_format: "%{path} no es una exportación que Apix pueda leer (Postman, Insomnia v4, OpenAPI/Swagger, HAR)."
 import.url_ok: Importar
 import.url_title: Importar desde URL
+load.about: Envía esta solicitud desde muchos trabajadores a la vez sobre conexiones mantenidas y mide cómo aguanta el servidor. Los scripts no se ejecutan. Pruebe solo servidores para los que tenga permiso.
+load.bad_concurrency: "A la vez: un número de 1 a 10000."
+load.bad_duration: "Durante: un tiempo como 30s, 2m o 1500ms."
+load.bad_rate: "Por segundo: un número, o vacío para sin límite."
+load.bad_requests: "Solicitudes: un número entero, o vacío para sin límite."
+load.concurrency: A la vez
+load.details: "%{elapsed} s · más rápida %{min} · media %{mean} · p90 %{p90} · estado %{statuses}"
+load.duration: Durante
+load.failed: Fallidas
+load.http_only: Las pruebas de carga envían solicitudes HTTP; esta no lo es.
+load.idle: Indique la intensidad y la duración y pulse Iniciar.
+load.legend_failed: fallidas
+load.legend_latency: "latencia media (máx. %{slowest} ms)"
+load.legend_requests: "solicitudes por segundo (máx. %{most})"
+load.max: Más lenta
+load.no_limit: sin límite
+load.per_second: Por segundo
+load.rate: Por segundo
+load.requests: Solicitudes
+load.running: En marcha… Detener la termina; las solicitudes en curso acaban.
+load.start: Iniciar
+load.starting: Iniciando…
+load.title: Prueba de carga
+load.total: Solicitudes
+load.undefined: "Variables no definidas: %{names}"
 menu.active_environment: Entorno activo
 menu.cancel: Cancelar
 menu.capture: Proxy de captura…
@@ -390,6 +415,7 @@ menu.help: Ayuda
 menu.history: Historial…
 menu.import_postman: Importar (Postman, Insomnia, OpenAPI, HAR, WSDL)…
 menu.import_url: Importar desde URL…
+menu.load_test: Prueba de carga…
 menu.lock_collections: Bloquear colecciones cifradas
 menu.method: Método
 menu.mock: Servidor simulado…

@@ -366,6 +366,31 @@ import.prompt: Postman、Insomnia、OpenAPI、HAR ファイルをインポート
 import.unknown_format: "%{path} は Apix が読めるエクスポートではありません（Postman、Insomnia v4、OpenAPI/Swagger、HAR）。"
 import.url_ok: インポート
 import.url_title: URL からインポート
+load.about: このリクエストを、維持した接続上で多数のワーカーから同時に送り、サーバーの持ちこたえ方を測定します。スクリプトは実行されません。許可されたサーバーにのみ負荷テストを行ってください。
+load.bad_concurrency: "同時数: 1 から 10000 の数値。"
+load.bad_duration: "時間: 30s、2m、1500ms のような長さ。"
+load.bad_rate: "毎秒: 数値、または制限なしなら空。"
+load.bad_requests: "リクエスト数: 整数、または制限なしなら空。"
+load.concurrency: 同時数
+load.details: "%{elapsed} 秒 · 最速 %{min} · 平均 %{mean} · p90 %{p90} · ステータス %{statuses}"
+load.duration: 時間
+load.failed: 失敗
+load.http_only: 負荷テストは HTTP リクエストを送ります。このリクエストは HTTP ではありません。
+load.idle: 負荷と時間を設定して「開始」を押してください。
+load.legend_failed: 失敗
+load.legend_latency: "平均レイテンシ (最大 %{slowest} ms)"
+load.legend_requests: "毎秒のリクエスト (最大 %{most})"
+load.max: 最遅
+load.no_limit: 制限なし
+load.per_second: 毎秒
+load.rate: 毎秒
+load.requests: リクエスト数
+load.running: 実行中… 「停止」で終了します。送信中のリクエストは完了します。
+load.start: 開始
+load.starting: 開始しています…
+load.title: 負荷テスト
+load.total: リクエスト
+load.undefined: "未定義の変数: %{names}"
 menu.active_environment: アクティブな環境
 menu.cancel: キャンセル
 menu.capture: キャプチャ プロキシ…
@@ -390,6 +415,7 @@ menu.help: ヘルプ
 menu.history: 履歴…
 menu.import_postman: インポート（Postman、Insomnia、OpenAPI、HAR、WSDL）…
 menu.import_url: URL からインポート…
+menu.load_test: 負荷テスト…
 menu.lock_collections: 暗号化されたコレクションをロック
 menu.method: メソッド
 menu.mock: モックサーバー…
