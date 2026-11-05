@@ -3,7 +3,7 @@
 
 use apix_core::store::TreeNode;
 use gpui_kit::component::input::{Input, InputEvent, InputState};
-use gpui_kit::component::{IconName, Sizable as _, h_flex};
+use gpui_kit::component::{IconName, Sizable as _};
 use gpui_kit::*;
 
 use super::Workspace;
@@ -74,7 +74,7 @@ impl Workspace {
     }
 
     pub(super) fn render_sidebar_search(&self) -> impl IntoElement {
-        h_flex().px_3().pb_2().child(
+        div().flex_1().min_w_0().child(
             Input::new(&self.sidebar_search)
                 .small()
                 .prefix(gpui_kit::component::Icon::new(IconName::Search).xsmall())

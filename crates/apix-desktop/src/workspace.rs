@@ -1352,38 +1352,40 @@ impl Workspace {
         // In RTL the window controls move to the left, as in native RTL apps.
         // macOS draws its own controls on the left, so there only the content mirrors.
         let rtl = bidi::rtl();
+        let mac = cfg!(target_os = "macos");
         TitleBar::new()
             .bg(transparent_black())
-            .border_color(p.hairline)
-            .when(rtl && !cfg!(target_os = "macos"), |bar| {
-                bar.flex_row_reverse().pl_0().pr_3()
+            .border_color(if mac { transparent_black() } else { p.hairline })
+            .when(rtl && !mac, |bar| bar.flex_row_reverse().pl_0().pr_3())
+            // On a Mac this bar sits right of the sidebar and holds the tabs,
+            // and the menus are in the system menu bar (native_menu.rs).
+            .when(mac, |bar| bar.pl_2().children(self.render_tabs(cx)))
+            .when(!mac, |bar| {
+                bar.child(
+                    h_flex()
+                        .when(rtl, |row| row.flex_1())
+                        .dir_row()
+                        .gap_2()
+                        .items_center()
+                        .child(img(theme::app_icon()).size(px(16.)).flex_none())
+                        .child(
+                            div()
+                                .text_sm()
+                                .font_weight(FontWeight::BOLD)
+                                .text_color(p.accent)
+                                .child("apix"),
+                        )
+                        .child(div().w(px(6.)))
+                        .child(self.render_menu_bar(cx))
+                        .child(div().w(px(10.)))
+                        .child(
+                            div()
+                                .text_xs()
+                                .text_color(p.text_muted)
+                                .child(crate::i18n::display(&name)),
+                        ),
+                )
             })
-            .child(
-                h_flex()
-                    .when(rtl, |row| row.flex_1())
-                    .dir_row()
-                    .gap_2()
-                    .items_center()
-                    .child(img(theme::app_icon()).size(px(16.)).flex_none())
-                    .child(
-                        div()
-                            .text_sm()
-                            .font_weight(FontWeight::BOLD)
-                            .text_color(p.accent)
-                            .child("apix"),
-                    )
-                    // On a Mac the menus are in the system menu bar (native_menu.rs).
-                    .when(cfg!(not(target_os = "macos")), |bar| {
-                        bar.child(div().w(px(6.))).child(self.render_menu_bar(cx))
-                    })
-                    .child(div().w(px(10.)))
-                    .child(
-                        div()
-                            .text_xs()
-                            .text_color(p.text_muted)
-                            .child(crate::i18n::display(&name)),
-                    ),
-            )
     }
 
     fn render_url_bar(&self, cx: &mut Context<Self>) -> impl IntoElement {
@@ -1421,17 +1423,26 @@ impl Workspace {
         // A gRPC or MQTT request has no HTTP method to pick.
         let grpc = self.grpc_mode(cx);
         let mqtt = self.mqtt_mode(cx);
-        h_flex()
-            .gap_2()
+        let p = crate::theme::current();
+        // The method, the address and Copy as read as one field.
+        let field = h_flex()
+            .flex_1()
+            .min_w_0()
+            .h(px(30.))
+            .ps(px(10.))
+            .pe(px(2.))
+            .gap_1()
             .items_center()
-            .child(div().w(px(4.)).h(px(20.)).rounded_full().bg(if grpc {
+            .rounded_lg()
+            .bg(p.input)
+            .child(div().size(px(7.)).flex_none().rounded_full().bg(if grpc {
                 theme::grpc_color()
             } else if mqtt {
                 theme::mqtt_color()
             } else {
                 theme::method_color(method)
             }))
-            .child(div().w(px(112.)).flex_none().child(if grpc {
+            .child(div().w(px(84.)).flex_none().child(if grpc {
                 div()
                     .px_2()
                     .text_sm()
@@ -1448,9 +1459,18 @@ impl Workspace {
                     .child("MQTT")
                     .into_any_element()
             } else {
-                Select::new(&self.method).small().into_any_element()
+                Select::new(&self.method)
+                    .small()
+                    .appearance(false)
+                    .into_any_element()
             }))
-            .child(div().flex_1().min_w_0().child(self.url_input(cx)))
+            .child(div().w_px().h(px(14.)).flex_none().bg(p.hairline))
+            .child(
+                div()
+                    .flex_1()
+                    .min_w_0()
+                    .child(self.url_input(cx).appearance(false)),
+            )
             .child(
                 Button::new("copy-as")
                     .ghost()
@@ -1463,12 +1483,17 @@ impl Workspace {
                             shell_copy::copy_items(menu, view.clone(), Workspace::copy_current_as)
                         }
                     }),
-            )
-            .child(div().min_w(px(92.)).flex_none().child(action))
+            );
+        h_flex()
+            .px_3()
+            .py_2()
+            .gap_2()
+            .items_center()
+            .child(field)
+            .child(div().min_w(px(64.)).flex_none().child(action))
     }
 
     fn render_request_pane(&self, cx: &mut Context<Self>) -> impl IntoElement {
-        let p = crate::theme::current();
         let params = self.active_count(Table::Params, cx);
         let headers = self.active_count(Table::Headers, cx);
         let params_label = match params {
@@ -1556,33 +1581,31 @@ impl Workspace {
 
         v_flex()
             .size_full()
-            .rounded_lg()
-            .bg(p.surface)
-            .border_1()
-            .border_color(p.hairline)
             .overflow_hidden()
             .child(
-                bidi::tab_bar(
-                    "request-tabs",
-                    self.request_tab,
-                    vec![
-                        Tab::new().label(params_label),
-                        Tab::new().label(headers_label),
-                        Tab::new().label(auth_label),
-                        Tab::new().label(body_label),
-                        Tab::new().label(scripts_label),
-                        Tab::new().label(settings_label),
-                        Tab::new().label(examples_label),
-                    ],
-                    cx.listener(|this, ix: &usize, _, cx| {
-                        this.request_tab = *ix;
-                        cx.notify();
-                    }),
-                )
-                // Seven tabs do not fit a narrow pane in every language.
-                .menu(true),
+                div().px_3().child(
+                    bidi::tab_bar(
+                        "request-tabs",
+                        self.request_tab,
+                        vec![
+                            Tab::new().label(params_label),
+                            Tab::new().label(headers_label),
+                            Tab::new().label(auth_label),
+                            Tab::new().label(body_label),
+                            Tab::new().label(scripts_label),
+                            Tab::new().label(settings_label),
+                            Tab::new().label(examples_label),
+                        ],
+                        cx.listener(|this, ix: &usize, _, cx| {
+                            this.request_tab = *ix;
+                            cx.notify();
+                        }),
+                    )
+                    // Seven tabs do not fit a narrow pane in every language.
+                    .menu(true),
+                ),
             )
-            .child(div().flex_1().min_h_0().p_2().child(content))
+            .child(div().flex_1().min_h_0().px_3().py_2().child(content))
     }
 
     fn render_table(&self, table: Table, cx: &mut Context<Self>) -> impl IntoElement {
@@ -1682,13 +1705,7 @@ impl Workspace {
 
     fn render_response_pane(&self, cx: &mut Context<Self>) -> impl IntoElement {
         let p = crate::theme::current();
-        let shell = v_flex()
-            .size_full()
-            .rounded_lg()
-            .bg(p.surface)
-            .border_1()
-            .border_color(p.hairline)
-            .overflow_hidden();
+        let shell = v_flex().size_full().overflow_hidden();
 
         let centered = |child: AnyElement| {
             div()
@@ -1789,9 +1806,10 @@ impl Workspace {
                     )
                     .into_any_element(),
                     // What a filter picked out of a large body is in the editor.
-                    (None, 0) if self.filtered_doc().is_some() => {
-                        Editor::new(&self.response_body).h_full().into_any_element()
-                    }
+                    (None, 0) if self.filtered_doc().is_some() => Editor::new(&self.response_body)
+                        .bordered(false)
+                        .h_full()
+                        .into_any_element(),
                     (None, _) if done.large => centered(
                         h_flex()
                             .gap_2()
@@ -1803,7 +1821,10 @@ impl Workspace {
                             .into_any_element(),
                     )
                     .into_any_element(),
-                    (None, _) => Editor::new(&self.response_body).h_full().into_any_element(),
+                    (None, _) => Editor::new(&self.response_body)
+                        .bordered(false)
+                        .h_full()
+                        .into_any_element(),
                 };
                 let viewer_note = (done.large && !binary).then(|| {
                     tr!(
@@ -1973,31 +1994,33 @@ impl Workspace {
                             .text_color(p.err)
                             .child(bidi::para(tr!("soap.fault", fault = fault.to_string())))
                     }))
-                    .child(bidi::tab_bar(
-                        "response-tabs",
-                        self.response_tab,
-                        [
-                            Tab::new().label(tr!("response.tab.pretty")),
-                            Tab::new().label(tr!("response.tab.raw")),
-                            Tab::new().label(headers_label),
-                            Tab::new().label(tr!("response.tab.network")),
-                            Tab::new().label("Hex"),
-                        ]
-                        .into_iter()
-                        .chain(
-                            done.scripts
-                                .as_ref()
-                                .map(script_run::tests_tab)
-                                .into_iter()
-                                .flatten(),
-                        )
-                        .collect(),
-                        cx.listener(|this, ix: &usize, window, cx| {
-                            this.set_response_tab(*ix, window, cx)
-                        }),
-                    ))
+                    .child(
+                        div().px_3().child(bidi::tab_bar(
+                            "response-tabs",
+                            self.response_tab,
+                            [
+                                Tab::new().label(tr!("response.tab.pretty")),
+                                Tab::new().label(tr!("response.tab.raw")),
+                                Tab::new().label(headers_label),
+                                Tab::new().label(tr!("response.tab.network")),
+                                Tab::new().label("Hex"),
+                            ]
+                            .into_iter()
+                            .chain(
+                                done.scripts
+                                    .as_ref()
+                                    .map(script_run::tests_tab)
+                                    .into_iter()
+                                    .flatten(),
+                            )
+                            .collect(),
+                            cx.listener(|this, ix: &usize, window, cx| {
+                                this.set_response_tab(*ix, window, cx)
+                            }),
+                        )),
+                    )
                     .children(self.render_filter(done, cx))
-                    .child(div().flex_1().min_h_0().p_2().child(content))
+                    .child(div().flex_1().min_h_0().px_3().py_2().child(content))
             }
         }
     }
@@ -2096,18 +2119,9 @@ impl Workspace {
         let request = resizable_panel()
             .size(px(520.))
             .size_range(px(300.)..px(1400.))
-            .child(
-                div()
-                    .size_full()
-                    .pe(px(4.))
-                    .child(self.render_request_pane(cx)),
-            );
-        let response = resizable_panel().child(
-            div()
-                .size_full()
-                .ps(px(4.))
-                .child(self.render_response_pane(cx)),
-        );
+            .child(div().size_full().child(self.render_request_pane(cx)));
+        let response =
+            resizable_panel().child(div().size_full().child(self.render_response_pane(cx)));
         // The group remembers panel sizes by position, so each direction keeps its own.
         if bidi::rtl() {
             h_resizable("response-request")
@@ -2120,21 +2134,39 @@ impl Workspace {
         }
     }
 
+    /// The sidebar and the rest of the window, with a handle between them.
+    fn render_panels(&self, mac: bool, cx: &mut Context<Self>) -> impl IntoElement {
+        let sidebar = resizable_panel()
+            .size(px(220.))
+            .size_range(px(180.)..px(420.))
+            .child(self.render_sidebar(cx));
+        let main = resizable_panel().child(
+            v_flex()
+                .size_full()
+                .when(mac, |d| d.child(self.render_title_bar(cx)))
+                .when(!mac, |d| d.px_1().children(self.render_tabs(cx)))
+                .child(self.render_url_bar(cx))
+                .child(div().flex_1().min_h_0().child(self.render_split(cx))),
+        );
+        // The group remembers panel sizes by position, so each direction keeps its own.
+        if bidi::rtl() {
+            h_resizable("main-sidebar").child(main).child(sidebar)
+        } else {
+            h_resizable("sidebar-main").child(sidebar).child(main)
+        }
+    }
+
     fn render_status_bar(&self, cx: &App) -> impl IntoElement {
         let p = crate::theme::current();
         let location = match &self.collection {
             Some(c) => {
                 // Separate facts joined by dots, so each is translated whole.
                 let mut parts: Vec<String> = Vec::new();
-                match &self.project {
-                    Some(project) => {
-                        parts.push(project.meta.name.clone());
-                        parts.push(match self.collections.len() {
-                            1 => tr!("app.status.one_collection").into(),
-                            n => tr!("app.status.collections", count = n).into(),
-                        });
-                    }
-                    None => parts.push(c.meta.name.clone()),
+                if self.project.is_some() {
+                    parts.push(match self.collections.len() {
+                        1 => tr!("app.status.one_collection").into(),
+                        n => tr!("app.status.collections", count = n).into(),
+                    });
                 }
                 parts.push(match self.requests.len() {
                     1 => tr!("app.status.one_request").into(),
@@ -2173,7 +2205,7 @@ impl Workspace {
             .justify_between()
             .gap_3()
             .px_3()
-            .h(px(26.))
+            .h(px(22.))
             .flex_none()
             .border_t_1()
             .border_color(p.hairline)
@@ -2216,6 +2248,7 @@ impl Render for Workspace {
         let p = crate::theme::current();
         #[cfg(target_os = "macos")]
         native_menu::refresh(self, window, cx);
+        let mac = cfg!(target_os = "macos");
         // Shortcuts dispatch along the focus path. When a dialog closes, focus
         // is left nowhere, so take it back or Ctrl+S / Ctrl+N would stop working.
         if window.focused(cx).is_none() && !window.has_active_dialog(cx) {
@@ -2314,29 +2347,12 @@ impl Render for Workspace {
             .bg(p.background())
             .text_color(p.text)
             .text_start()
-            .child(self.render_title_bar(cx))
+            .when(!mac, |d| d.child(self.render_title_bar(cx)))
             // Hard to miss: requests in a production environment touch real data.
             .when(self.is_prod(), |d| {
                 d.child(div().h(px(2.)).flex_none().bg(p.err))
             })
-            .child(
-                h_flex()
-                    .dir_row()
-                    .flex_1()
-                    .min_h_0()
-                    .child(self.render_sidebar(cx))
-                    .child(
-                        v_flex()
-                            .flex_1()
-                            .min_w_0()
-                            .h_full()
-                            .p_3()
-                            .gap_3()
-                            .children(self.render_tabs(cx))
-                            .child(self.render_url_bar(cx))
-                            .child(div().flex_1().min_h_0().child(self.render_split(cx))),
-                    ),
-            )
+            .child(div().flex_1().min_h_0().child(self.render_panels(mac, cx)))
             .child(self.render_status_bar(cx))
             .children(self.render_var_card(cx))
     }

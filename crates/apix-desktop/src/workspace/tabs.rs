@@ -426,17 +426,12 @@ impl Workspace {
                 .flex_none()
                 .gap_2()
                 .items_center()
-                .ps(px(12.))
+                .ps(px(10.))
                 .pe(px(4.))
-                .h(px(30.))
-                .rounded_t_md()
-                .border_b_2()
-                .border_color(if front {
-                    p.accent
-                } else {
-                    gpui_kit::transparent_black()
-                })
-                .when(front, |t| t.bg(p.surface))
+                .h(px(26.))
+                .rounded_md()
+                .occlude()
+                .when(front, |t| t.bg(p.input))
                 .hover(|t| t.bg(crate::theme::current().hover))
                 .cursor_pointer()
                 .on_click(cx.listener(move |this, _: &ClickEvent, window, cx| {
@@ -462,7 +457,7 @@ impl Workspace {
                 .child(
                     div()
                         .text_xs()
-                        .font_weight(FontWeight::BOLD)
+                        .font_weight(FontWeight::SEMIBOLD)
                         .text_color(if grpc {
                             theme::grpc_color()
                         } else if mqtt {
@@ -510,9 +505,8 @@ impl Workspace {
             .w_full()
             .flex_none()
             .gap_1()
-            .overflow_x_scroll()
-            .border_b_1()
-            .border_color(p.hairline);
+            .items_center()
+            .overflow_x_scroll();
         // A reversed row would overflow to the left, out of scroll reach, so in
         // RTL the tabs sit in a row at least as wide as the strip that grows rightwards.
         Some(if bidi::rtl() {
@@ -531,7 +525,7 @@ impl Workspace {
 }
 
 /// Short method names keep tabs narrow.
-fn short(method: Method) -> &'static str {
+pub(super) fn short(method: Method) -> &'static str {
     match method {
         Method::Delete => "DEL",
         Method::Options => "OPT",

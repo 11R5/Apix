@@ -440,9 +440,9 @@ impl BodyEditor {
 
     fn picker(&self, cx: &mut Context<Self>) -> impl IntoElement {
         let selected = BodyKind::ALL.iter().position(|k| *k == self.kind);
-        // Small, so all nine fit a wide pane; on a narrow one the strip scrolls.
+        // Extra small under the request tabs, so all nine fit a wide pane; on a narrow one the strip scrolls.
         bidi::fill_tabs(
-            TabBar::new("body-kind").segmented().small(),
+            TabBar::new("body-kind").segmented().xsmall(),
             selected,
             BodyKind::ALL
                 .iter()
@@ -754,7 +754,7 @@ impl BodyEditor {
                     .flex_grow(1.)
                     .flex_basis(relative(0.65))
                     .min_h_0()
-                    .child(Editor::new(&self.query).h_full()),
+                    .child(Editor::new(&self.query).bordered(false).h_full()),
             )
             .child(
                 h_flex()
@@ -776,7 +776,7 @@ impl BodyEditor {
                     .flex_grow(1.)
                     .flex_basis(relative(0.35))
                     .min_h_0()
-                    .child(Editor::new(&self.variables).h_full()),
+                    .child(Editor::new(&self.variables).bordered(false).h_full()),
             );
         if !self.show_schema {
             return editors.into_any_element();
@@ -796,7 +796,7 @@ impl BodyEditor {
                         div()
                             .flex_1()
                             .min_h_0()
-                            .child(Editor::new(&self.sdl).h_full()),
+                            .child(Editor::new(&self.sdl).bordered(false).h_full()),
                     ),
             )
             .into_any_element()
@@ -861,7 +861,10 @@ impl Render for BodyEditor {
         let content = match self.kind {
             BodyKind::None => self.hint(tr!("body.none_hint")).into_any_element(),
             BodyKind::Json | BodyKind::Text | BodyKind::Xml | BodyKind::Html => {
-                Editor::new(&self.text).h_full().into_any_element()
+                Editor::new(&self.text)
+                    .bordered(false)
+                    .h_full()
+                    .into_any_element()
             }
             BodyKind::Form => self.render_form(cx),
             BodyKind::Multipart => self.render_multipart(cx),
