@@ -917,8 +917,10 @@ settings.secrets: القيم السرية للبيئات
 settings.secrets_description: مكان حفظ القيم السرية للبيئات على هذا الحاسوب. كلاهما يبقى خارج git، وسلسلة المفاتيح لا تتركها على القرص نصًا واضحًا.
 settings.secrets_file: ملف .local.toml
 settings.secrets_keychain: سلسلة مفاتيح النظام
+settings.search: بحث
+settings.section_ai: الذكاء الاصطناعي
 settings.section_general: "عام"
-settings.section_look: "المظهر"
+settings.section_security: الأمان
 settings.text_size: حجم النص
 settings.text_size_description: يكبّر نص النافذة كلها أو يصغّره.
 settings.text_size_value: "%{value}٪"

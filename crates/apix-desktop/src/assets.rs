@@ -1,6 +1,6 @@
 //! The asset source: gpui-kit's default icons plus the few extra Lucide
 //! icons Apix uses (ISC licence, see assets/icons/LICENSE-LUCIDE). Shipping
-//! the whole catalogue would add ~1500 SVGs to the binary for two icons.
+//! the whole catalogue would add ~1500 SVGs to the binary for a handful of icons.
 
 use std::borrow::Cow;
 
@@ -8,6 +8,18 @@ use gpui_kit::{AssetSource, Result, SharedString};
 
 const EXTRA: &[(&str, &[u8])] = &[
     ("icons/lock.svg", include_bytes!("../assets/icons/lock.svg")),
+    (
+        "icons/palette.svg",
+        include_bytes!("../assets/icons/palette.svg"),
+    ),
+    (
+        "icons/shield.svg",
+        include_bytes!("../assets/icons/shield.svg"),
+    ),
+    (
+        "icons/sparkles.svg",
+        include_bytes!("../assets/icons/sparkles.svg"),
+    ),
     (
         "icons/lock-open.svg",
         include_bytes!("../assets/icons/lock-open.svg"),

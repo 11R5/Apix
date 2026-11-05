@@ -917,8 +917,10 @@ settings.secrets: 环境机密值
 settings.secrets_description: 环境的机密值在这台电脑上的存放位置。两者都不会进入 git；钥匙串还能避免它们以明文留在磁盘上。
 settings.secrets_file: .local.toml 文件
 settings.secrets_keychain: 系统钥匙串
+settings.search: 搜索
+settings.section_ai: AI
 settings.section_general: "常规"
-settings.section_look: "外观"
+settings.section_security: 安全
 settings.text_size: 文字大小
 settings.text_size_description: 缩放整个窗口的文字。
 settings.text_size_value: "%{value}%"

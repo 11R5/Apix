@@ -919,8 +919,10 @@ settings.secrets: Environment secrets
 settings.secrets_description: Where secret environment values are kept on this computer. Both stay out of git; the keychain also keeps them off disk in plain text.
 settings.secrets_file: .local.toml file
 settings.secrets_keychain: System keychain
+settings.search: Search
+settings.section_ai: AI
 settings.section_general: "General"
-settings.section_look: "Theme"
+settings.section_security: Security
 settings.text_size: Text size
 settings.text_size_description: Scales the text of the whole window.
 settings.text_size_value: "%{value}%"

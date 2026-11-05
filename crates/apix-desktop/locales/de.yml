@@ -917,8 +917,10 @@ settings.secrets: Geheime Umgebungswerte
 settings.secrets_description: Wo geheime Umgebungswerte auf diesem Computer liegen. Beides bleibt außerhalb von git; der Schlüsselbund speichert sie zudem nicht als Klartext auf der Festplatte.
 settings.secrets_file: .local.toml-Datei
 settings.secrets_keychain: Schlüsselbund des Systems
+settings.search: Suchen
+settings.section_ai: KI
 settings.section_general: "Allgemein"
-settings.section_look: "Theme"
+settings.section_security: Sicherheit
 settings.text_size: Textgröße
 settings.text_size_description: Skaliert den Text des ganzen Fensters.
 settings.text_size_value: "%{value} %"

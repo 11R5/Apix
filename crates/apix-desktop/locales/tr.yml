@@ -917,8 +917,10 @@ settings.secrets: Ortam gizli değerleri
 settings.secrets_description: Gizli ortam değerlerinin bu bilgisayarda nerede tutulacağı. İkisi de git'e girmez; anahtarlık ayrıca onları diskte düz metin olarak bırakmaz.
 settings.secrets_file: .local.toml dosyası
 settings.secrets_keychain: Sistem anahtarlığı
+settings.search: Ara
+settings.section_ai: Yapay zekâ
 settings.section_general: "Genel"
-settings.section_look: "Tema"
+settings.section_security: Güvenlik
 settings.text_size: Yazı boyutu
 settings.text_size_description: Tüm penceredeki yazıları büyütür ya da küçültür.
 settings.text_size_value: "%%{value}"

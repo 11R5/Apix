@@ -917,8 +917,10 @@ settings.secrets: 環境のシークレット
 settings.secrets_description: 環境のシークレット値をこのコンピューターのどこに保存するか。どちらも git には含まれません。キーチェーンではディスク上に平文で残りません。
 settings.secrets_file: .local.toml ファイル
 settings.secrets_keychain: システムキーチェーン
+settings.search: 検索
+settings.section_ai: AI
 settings.section_general: "一般"
-settings.section_look: "外観"
+settings.section_security: セキュリティ
 settings.text_size: 文字サイズ
 settings.text_size_description: ウィンドウ全体の文字を拡大・縮小します。
 settings.text_size_value: "%{value}%"

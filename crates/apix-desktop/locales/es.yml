@@ -917,8 +917,10 @@ settings.secrets: Valores secretos de los entornos
 settings.secrets_description: Dónde se guardan en este equipo los valores secretos de los entornos. Ambos quedan fuera de git; el llavero además no los deja en texto plano en el disco.
 settings.secrets_file: Archivo .local.toml
 settings.secrets_keychain: Llavero del sistema
+settings.search: Buscar
+settings.section_ai: IA
 settings.section_general: "General"
-settings.section_look: "Tema"
+settings.section_security: Seguridad
 settings.text_size: Tamaño del texto
 settings.text_size_description: Escala el texto de toda la ventana.
 settings.text_size_value: "%{value} %"

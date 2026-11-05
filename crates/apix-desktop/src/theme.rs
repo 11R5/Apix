@@ -375,6 +375,16 @@ pub const ACCENTS: [(&str, u32, u32); 8] = [
     ("green", 0x34D399, 0x059669),
 ];
 
+/// The colour a settings dot shows for an accent; muted for "the theme's own".
+pub fn accent_swatch(id: &str, light: bool) -> Hsla {
+    ACCENTS
+        .iter()
+        .find(|(accent, _, _)| *accent == id)
+        .map(|(_, dark, deep)| hex(if light { *deep } else { *dark }, 1.0))
+        .or_else(|| parse_color(id))
+        .unwrap_or_else(|| current().text_muted)
+}
+
 pub fn accent_label(id: &str) -> SharedString {
     match id {
         "" => tr!("settings.accent_theme"),

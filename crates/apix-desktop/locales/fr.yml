@@ -917,8 +917,10 @@ settings.secrets: Valeurs secrètes des environnements
 settings.secrets_description: Où les valeurs secrètes des environnements sont conservées sur cet ordinateur. Les deux restent hors de git ; le trousseau évite en plus de les garder en clair sur le disque.
 settings.secrets_file: Fichier .local.toml
 settings.secrets_keychain: Trousseau du système
+settings.search: Rechercher
+settings.section_ai: IA
 settings.section_general: "Général"
-settings.section_look: "Thème"
+settings.section_security: Sécurité
 settings.text_size: Taille du texte
 settings.text_size_description: Agrandit ou réduit le texte de toute la fenêtre.
 settings.text_size_value: "%{value} %"

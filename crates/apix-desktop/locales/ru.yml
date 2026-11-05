@@ -917,8 +917,10 @@ settings.secrets: Секреты окружений
 settings.secrets_description: Где на этом компьютере хранятся секретные значения окружений. Оба варианта не попадают в git; хранилище ключей к тому же не держит их на диске открытым текстом.
 settings.secrets_file: Файл .local.toml
 settings.secrets_keychain: Системное хранилище ключей
+settings.search: Поиск
+settings.section_ai: ИИ
 settings.section_general: "Общие"
-settings.section_look: "Внешний вид"
+settings.section_security: Безопасность
 settings.text_size: Размер текста
 settings.text_size_description: Масштабирует текст во всём окне.
 settings.text_size_value: "%{value} %"
