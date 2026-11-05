@@ -2,6 +2,8 @@
 # Builds the Linux release files into dist/:
 #   apix_<version>_amd64.deb            Debian, Ubuntu, Mint, Pop!_OS, …
 #   apix-<version>-linux-x64.tar.gz     any distribution: unpack, ./install.sh
+#   apix-cli-<version>-linux-x64.tar.gz the command line alone (for the GitHub Action)
+#   Apix-<version>-x86_64.AppImage      any distribution: one file to run
 #   PKGBUILD                            Arch (makepkg, or the AUR) from that tarball
 # The Arch package itself (.pkg.tar.zst) is made from the PKGBUILD by
 # scripts/package-arch.sh in an Arch system or container.
@@ -28,6 +30,8 @@ mkdir -p "$dist"
 name="apix-$version-linux-x64"
 stage="$dist/$name"
 rm -rf "$stage"
+# The command line alone, for the GitHub Action.
+tar -C "$bin" -czf "$dist/apix-cli-$version-linux-x64.tar.gz" apix
 mkdir -p "$stage"
 install -m755 "$bin/apix-desktop" "$bin/apix" packaging/linux/install.sh "$stage/"
 install -m644 packaging/linux/apix.desktop packaging/linux/apix.xml LICENSE "$stage/"
@@ -72,6 +76,35 @@ Description: Fast, native API client
 EOF
 dpkg-deb --build --root-owner-group "$root" "$dist/apix_${version}_amd64.deb"
 rm -rf "$root"
+
+# --- AppImage -----------------------------------------------------------------
+# One file that runs on most distributions; needs appimagetool (APPIMAGETOOL,
+# or on the PATH) and is skipped without it. `Apix-….AppImage cli …` runs
+# the command line.
+tool="${APPIMAGETOOL:-$(command -v appimagetool || true)}"
+if [ -n "$tool" ]; then
+    appdir="$dist/Apix.AppDir"
+    rm -rf "$appdir"
+    install -Dm755 "$bin/apix-desktop" "$appdir/usr/bin/apix-desktop"
+    install -Dm755 "$bin/apix" "$appdir/usr/bin/apix"
+    install -Dm644 packaging/linux/apix.desktop "$appdir/apix.desktop"
+    install -Dm644 packaging/linux/icons/hicolor/256x256/apps/apix.png "$appdir/apix.png"
+    cp -R packaging/linux/icons "$appdir/usr/share/"
+    cat > "$appdir/AppRun" <<'RUN'
+#!/bin/sh
+here="$(dirname "$(readlink -f "$0")")"
+if [ "${1:-}" = cli ]; then
+    shift
+    exec "$here/usr/bin/apix" "$@"
+fi
+exec "$here/usr/bin/apix-desktop" "$@"
+RUN
+    chmod 755 "$appdir/AppRun"
+    ARCH=x86_64 "$tool" --no-appstream "$appdir" "$dist/Apix-$version-x86_64.AppImage"
+    rm -rf "$appdir"
+else
+    echo "appimagetool not found: no AppImage" >&2
+fi
 
 # --- PKGBUILD for Arch -----------------------------------------------------------
 sum="$(sha256sum "$dist/$name.tar.gz" | cut -d' ' -f1)"

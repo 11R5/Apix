@@ -186,14 +186,16 @@ APIX_VAR_TOKEN="$API_TOKEN" apix run api --env staging
 
 ### GitHub Actions
 
-The repository is also a GitHub Action. It builds `apix` the first time
-(cached afterwards), runs the collection and writes JUnit and HTML reports:
+The repository is also a GitHub Action. It runs the collection and writes
+JUnit and HTML reports. Used at a release tag, it downloads that release's
+`apix` (seconds); at a branch or commit it builds `apix` the first time and
+caches it, and `apix-version: latest` (or `0.1.1`) downloads a release instead:
 
 ```yaml
-- uses: 11R5/Apix@main          # better: a tag or commit
+- uses: 11R5/Apix@v0.1.1        # a release: apix is downloaded, not built
   with:
     path: api
-    environment: staging        # also: data, iterations, delay, bail, env-file, junit, html, json, markdown, changed, diff, comment, args
+    environment: staging        # also: data, iterations, delay, bail, env-file, junit, html, json, markdown, changed, diff, comment, args, apix-version
   env:
     APIX_VAR_TOKEN: ${{ secrets.API_TOKEN }}
 ```

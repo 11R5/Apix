@@ -6,7 +6,7 @@ members = ["crates/*", "tools/*"]
 default-members = ["crates/apix-core", "crates/apix-http", "crates/apix-import", "crates/apix-codegen", "crates/apix-vault", "crates/apix-script", "crates/apix-runner", "crates/apix-grpc", "crates/apix-proto", "crates/apix-mock", "crates/apix-capture", "crates/apix-route", "crates/apix-plugins", "crates/apix-cli", "tools/docs-check"]
 
 [workspace.package]
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 license = "Apache-2.0"
 repository = "https://github.com/11R5/Apix"

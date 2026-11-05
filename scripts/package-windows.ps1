@@ -1,6 +1,7 @@
 # Builds the Windows release files into dist/:
 #   Apix-<version>-windows-x64-setup.exe  the installer (Inno Setup 6)
 #   Apix-<version>-windows-x64.zip        the same two programs, unpacked
+#   apix-cli-<version>-windows-x64.zip    the command line alone (for the GitHub Action)
 # Usage (from the repository root): scripts\package-windows.ps1 [-Version 1.2.3] [-NoBuild]
 param(
     [string]$Version = "",
@@ -41,4 +42,9 @@ $zip = Join-Path $dist "$name.zip"
 if (Test-Path $zip) { Remove-Item $zip }
 Compress-Archive -Path "$stage\*" -DestinationPath $zip
 Remove-Item -Recurse -Force $stage
-Get-ChildItem $dist -Filter "Apix-$Version-windows-*" | ForEach-Object { "{0}  {1:N1} MB" -f $_.Name, ($_.Length / 1MB) }
+
+# The command line alone, for the GitHub Action.
+$cli = Join-Path $dist "apix-cli-$Version-windows-x64.zip"
+if (Test-Path $cli) { Remove-Item $cli }
+Compress-Archive -Path (Join-Path $bin "apix.exe") -DestinationPath $cli
+Get-ChildItem $dist -Filter "*-$Version-windows-*" | ForEach-Object { "{0}  {1:N1} MB" -f $_.Name, ($_.Length / 1MB) }

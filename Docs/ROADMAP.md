@@ -139,15 +139,16 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 
 ## M9 — Release & distribution
 - [x] GitHub Actions: test on Windows, macOS and Linux (CI foundation); build on version tags
-- [ ] Prebuilt binaries on GitHub Releases, which the GitHub Action downloads instead of building
+- [x] Prebuilt binaries on GitHub Releases, which the GitHub Action downloads instead of building (at a release tag, or with `apix-version`)
 - [ ] Build, try and publish the Docker image (ghcr.io)
 - [ ] A small `apix-action` repository for the GitHub Marketplace (it does not list repositories that have workflow files)
 - [ ] Meet the start-up (150 ms) and idle memory (60 MB) budgets
 - [x] Installers and packages, using the M3 icons: Windows setup `.exe` (Inno Setup, per-user, optional PATH and `.apix` association) and portable `.zip`, a universal macOS `.dmg`, `.deb`, an Arch package and `PKGBUILD`, a Linux tarball with `install.sh`; built by `release.yml` on version tags
 - [x] Download page on GitHub Pages (`site/`): the right file for the visitor's system, from the latest release, in English and Turkish
-- [ ] winget, Homebrew cask, AppImage/Flatpak, the AUR
+- [x] AppImage (one file for any Linux; `… cli` runs the command line)
+- [ ] winget, Homebrew cask, Flatpak, the AUR
 - [ ] Keep the release binary under 100 MB (38.9 MB today); speed and smoothness come first
-- [ ] Signed Windows builds (so Smart App Control allows them) and notarized macOS builds
+- ~~Signed Windows builds and notarized macOS builds~~: dropped (5 Nov), they cost money every year; the download page and the user guide explain how to open the unsigned builds
 - [ ] Documentation in all nine languages, an illustrated user guide with screenshots taken from each language's UI, a docs site with a language picker
 - [ ] Side-by-side performance numbers against Postman, Insomnia, Bruno and Hoppscotch, measured on one machine with one script
 - [ ] Launch post (r/rust, Hacker News)

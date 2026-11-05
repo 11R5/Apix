@@ -66,8 +66,10 @@ desktop app and the `apix` command line.
 | Debian, Ubuntu, Mint, … | `apix_<version>_amd64.deb` | `sudo apt install ./apix_<version>_amd64.deb` |
 | Arch, Manjaro, EndeavourOS, … | `apix-<version>-1-x86_64.pkg.tar.zst` | `sudo pacman -U ./apix-<version>-1-x86_64.pkg.tar.zst`, or `makepkg -si` with the release's `PKGBUILD` |
 | Other Linux (glibc 2.35+) | `apix-<version>-linux-x64.tar.gz` | Unpack it and run `./install.sh` (for your user; `--system` for everyone, `--uninstall` to remove) |
+| Any Linux, one file | `Apix-<version>-x86_64.AppImage` | `chmod +x` it and run it; `Apix-….AppImage cli …` runs the command line |
 
-The builds are not code-signed yet. On Windows, SmartScreen may stop the
+The builds are not code-signed (signing costs money every year, so it is not
+planned for now). On Windows, SmartScreen may stop the
 installer: **More info › Run anyway**. On macOS, open Apix the first time with
 right-click › **Open**, or run `xattr -dr com.apple.quarantine
 /Applications/Apix.app`. On Linux, Apix draws with Vulkan, so the graphics

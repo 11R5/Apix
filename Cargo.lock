@@ -264,7 +264,7 @@ checksum = "330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470"
 
 [[package]]
 name = "apix-capture"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "apix-core",
  "apix-http",
@@ -282,7 +282,7 @@ dependencies = [
 
 [[package]]
 name = "apix-cli"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "apix-capture",
@@ -305,7 +305,7 @@ dependencies = [
 
 [[package]]
 name = "apix-codegen"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "apix-core",
  "markdown",
@@ -315,7 +315,7 @@ dependencies = [
 
 [[package]]
 name = "apix-core"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "apix-vault",
  "base64 0.22.1",
@@ -339,7 +339,7 @@ dependencies = [
 
 [[package]]
 name = "apix-desktop"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "apix-capture",
  "apix-codegen",
@@ -372,7 +372,7 @@ dependencies = [
 
 [[package]]
 name = "apix-grpc"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "apix-core",
  "apix-http",
@@ -399,7 +399,7 @@ dependencies = [
 
 [[package]]
 name = "apix-http"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "apix-core",
  "apix-plugins",
@@ -431,7 +431,7 @@ dependencies = [
 
 [[package]]
 name = "apix-import"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "apix-core",
  "apix-plugins",
@@ -447,7 +447,7 @@ dependencies = [
 
 [[package]]
 name = "apix-mock"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "apix-core",
  "apix-http",
@@ -462,7 +462,7 @@ dependencies = [
 
 [[package]]
 name = "apix-plugin-sdk"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "base64 0.22.1",
  "hmac",
@@ -472,7 +472,7 @@ dependencies = [
 
 [[package]]
 name = "apix-plugins"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "base64 0.22.1",
  "dirs 6.0.0",
@@ -485,7 +485,7 @@ dependencies = [
 
 [[package]]
 name = "apix-proto"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "apix-core",
  "apix-http",
@@ -502,7 +502,7 @@ dependencies = [
 
 [[package]]
 name = "apix-route"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "dirs 6.0.0",
  "flate2",
@@ -512,7 +512,7 @@ dependencies = [
 
 [[package]]
 name = "apix-runner"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "apix-core",
@@ -528,7 +528,7 @@ dependencies = [
 
 [[package]]
 name = "apix-script"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "apix-core",
  "hmac",
@@ -543,7 +543,7 @@ dependencies = [
 
 [[package]]
 name = "apix-vault"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "argon2",
  "base64 0.22.1",

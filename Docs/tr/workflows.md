@@ -1,4 +1,4 @@
-<!-- translated from en/workflows.md sha256:6cce28b908fa9937 -->
+<!-- translated from en/workflows.md sha256:92715a1963bc19dd -->
 
 # İş akışları
 
@@ -192,15 +192,16 @@ APIX_VAR_TOKEN="$API_TOKEN" apix run api --env staging
 
 ### GitHub Actions
 
-Depo aynı zamanda bir GitHub Action'dır. `apix`'i ilk seferde derler
-(sonra önbellekten alır), koleksiyonu çalıştırır ve JUnit ile HTML raporlarını
-yazar:
+Depo aynı zamanda bir GitHub Action'dır. Koleksiyonu çalıştırır ve JUnit ile
+HTML raporlarını yazar. Bir sürüm etiketinde kullanılırsa o sürümün `apix`'ini
+indirir (saniyeler); bir dal ya da commit'te `apix`'i ilk seferde derleyip
+önbelleğe alır, `apix-version: latest` (ya da `0.1.1`) ise bir sürümü indirir:
 
 ```yaml
-- uses: 11R5/Apix@main          # daha iyisi: bir etiket ya da commit
+- uses: 11R5/Apix@v0.1.1        # bir sürüm: apix indirilir, derlenmez
   with:
     path: api
-    environment: staging        # ayrıca: data, iterations, delay, bail, env-file, junit, html, json, markdown, changed, diff, comment, args
+    environment: staging        # ayrıca: data, iterations, delay, bail, env-file, junit, html, json, markdown, changed, diff, comment, args, apix-version
   env:
     APIX_VAR_TOKEN: ${{ secrets.API_TOKEN }}
 ```

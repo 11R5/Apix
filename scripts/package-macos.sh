@@ -38,4 +38,6 @@ dmg="$dist/Apix-$version-macos-universal.dmg"
 rm -f "$dmg"
 hdiutil create -volname "Apix $version" -srcfolder "$dist/dmg" -ov -format UDZO "$dmg"
 rm -rf "$dist/dmg"
-ls -lh "$dmg"
+# The command line alone, for the GitHub Action.
+tar -C "$app/Contents/MacOS" -czf "$dist/apix-cli-$version-macos-universal.tar.gz" apix
+ls -lh "$dmg" "$dist/apix-cli-$version-macos-universal.tar.gz"

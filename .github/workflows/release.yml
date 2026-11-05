@@ -53,7 +53,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: windows
-          path: dist/Apix-*
+          path: |
+            dist/Apix-*
+            dist/apix-cli-*
           if-no-files-found: error
 
   macos:
@@ -71,7 +73,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: macos
-          path: dist/*.dmg
+          path: |
+            dist/*.dmg
+            dist/apix-cli-*
           if-no-files-found: error
 
   linux:
@@ -93,18 +97,28 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           key: release
+      - name: appimagetool
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/appimagetool" https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x "$RUNNER_TEMP/appimagetool"
       - run: bash scripts/package-linux.sh ${{ needs.version.outputs.version }}
+        env:
+          APPIMAGETOOL: ${{ runner.temp }}/appimagetool
+          # Runners have no FUSE: AppImages unpack themselves instead.
+          APPIMAGE_EXTRACT_AND_RUN: "1"
       - name: The package installs and both programs start
         run: |
           sudo apt-get install -y ./dist/apix_*_amd64.deb
           apix --version
           ldd /usr/bin/apix-desktop | (! grep "not found")
+          APPIMAGE_EXTRACT_AND_RUN=1 ./dist/Apix-*-x86_64.AppImage cli --version
       - uses: actions/upload-artifact@v4
         with:
           name: linux
           path: |
             dist/*.deb
             dist/*.tar.gz
+            dist/*.AppImage
             dist/PKGBUILD
           if-no-files-found: error
 

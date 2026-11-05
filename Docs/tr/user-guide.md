@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:1a48d72911134fb5 -->
+<!-- translated from en/user-guide.md sha256:f643156eab06e433 -->
 
 # Apix kullanım kılavuzu
 
@@ -68,8 +68,10 @@ da vardır. Her birinde masaüstü uygulaması ve `apix` komut satırı bulunur.
 | Debian, Ubuntu, Mint, … | `apix_<sürüm>_amd64.deb` | `sudo apt install ./apix_<sürüm>_amd64.deb` |
 | Arch, Manjaro, EndeavourOS, … | `apix-<sürüm>-1-x86_64.pkg.tar.zst` | `sudo pacman -U ./apix-<sürüm>-1-x86_64.pkg.tar.zst` ya da sürümdeki `PKGBUILD` ile `makepkg -si` |
 | Diğer Linux (glibc 2.35+) | `apix-<sürüm>-linux-x64.tar.gz` | Açın ve `./install.sh` çalıştırın (kullanıcınız için; herkes için `--system`, kaldırmak için `--uninstall`) |
+| Her Linux, tek dosya | `Apix-<sürüm>-x86_64.AppImage` | `chmod +x` yapıp çalıştırın; `Apix-….AppImage cli …` komut satırını çalıştırır |
 
-Derlemeler henüz kod imzalı değildir. Windows'ta SmartScreen kurulumu
+Derlemeler kod imzalı değildir (imzalamanın her yıl bir ücreti var; şimdilik
+planlanmıyor). Windows'ta SmartScreen kurulumu
 durdurabilir: **Ek bilgi › Yine de çalıştır**. macOS'te Apix'i ilk seferde
 sağ tık › **Aç** ile açın ya da `xattr -dr com.apple.quarantine
 /Applications/Apix.app` çalıştırın. Linux'ta Apix Vulkan ile çizer; ekran

@@ -17,8 +17,10 @@
 #     - uses: 11R5/Apix@main
 #       with: { path: api, changed: "true", diff: "true", comment: "true" }
 #
-# The first run builds `apix` from this repository at the action's version
-# (a few minutes); later runs take it from the cache.
+# At a release tag (`uses: 11R5/Apix@v0.1.0`) the action downloads that
+# release's `apix`, in seconds. At a branch or commit it builds `apix` from
+# that source the first time (a few minutes) and caches it; `apix-version`
+# picks a release instead ("latest" or "0.1.0").
 name: Apix run
 description: Send an Apix collection's requests, run its tests and write JUnit / HTML reports
 author: Ahmet Demir
@@ -86,14 +88,64 @@ inputs:
   args:
     description: More arguments for apix run (or apix monitor), e.g. "--timeout 10 --var region=eu"
     required: false
+  apix-version:
+    description: >-
+      The apix release to download: "latest" or a version ("0.1.0"). Empty: the
+      action's own release when it is used at a release tag, else built from source
+    required: false
 
 runs:
   using: composite
   steps:
+    # Which release to download, if any.
+    - name: Pick apix
+      id: pick
+      shell: bash
+      env:
+        WANTED: ${{ inputs.apix-version }}
+        ACTION_REF: ${{ github.action_ref }}
+        ACTION_REPO: ${{ github.action_repository }}
+      run: |
+        version="$WANTED"
+        if [ -z "$version" ] && [[ "$ACTION_REF" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          version="${ACTION_REF#v}"
+        fi
+        echo "version=$version" >> "$GITHUB_OUTPUT"
+        echo "repo=${ACTION_REPO:-11R5/Apix}" >> "$GITHUB_OUTPUT"
+
+    - name: Download apix
+      if: steps.pick.outputs.version != ''
+      shell: bash
+      env:
+        VERSION: ${{ steps.pick.outputs.version }}
+        REPO: ${{ steps.pick.outputs.repo }}
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        if [ "$VERSION" = latest ]; then
+          VERSION="$(gh release view --repo "$REPO" --json tagName --jq .tagName)"
+          VERSION="${VERSION#v}"
+        fi
+        case "$RUNNER_OS" in
+          Linux) file="apix-cli-$VERSION-linux-x64.tar.gz" ;;
+          macOS) file="apix-cli-$VERSION-macos-universal.tar.gz" ;;
+          Windows) file="apix-cli-$VERSION-windows-x64.zip" ;;
+        esac
+        dir="$RUNNER_TEMP/apix-bin"
+        mkdir -p "$dir"
+        curl -fsSL -o "$dir/$file" "https://github.com/$REPO/releases/download/v$VERSION/$file"
+        case "$file" in
+          *.zip) unzip -oq "$dir/$file" -d "$dir" ;;
+          *) tar -xzf "$dir/$file" -C "$dir" ;;
+        esac
+        rm "$dir/$file"
+        echo "$dir" >> "$GITHUB_PATH"
+        "$dir/apix" --version
+
     # The cache key is a hash of the sources, so `@main` (or `./`) rebuilds
     # when Apix changes and reuses the build when it does not.
     - name: Fingerprint the sources
       id: source
+      if: steps.pick.outputs.version == ''
       shell: bash
       run: |
         cd "$GITHUB_ACTION_PATH"
@@ -103,6 +155,7 @@ runs:
 
     - name: Restore apix
       id: cache
+      if: steps.pick.outputs.version == ''
       uses: actions/cache@v4
       with:
         path: |
@@ -111,7 +164,7 @@ runs:
         key: apix-${{ runner.os }}-${{ steps.source.outputs.hash }}
 
     - name: Build apix
-      if: steps.cache.outputs.cache-hit != 'true'
+      if: steps.pick.outputs.version == '' && steps.cache.outputs.cache-hit != 'true'
       shell: bash
       run: cargo install --locked --path "$GITHUB_ACTION_PATH/crates/apix-cli"
 
