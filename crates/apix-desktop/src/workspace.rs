@@ -24,6 +24,8 @@ mod load_ui;
 mod menu_bar;
 mod mock_ui;
 mod monitors_ui;
+#[cfg(target_os = "macos")]
+pub mod native_menu;
 mod network;
 mod palette;
 mod plugins_ui;
@@ -1370,8 +1372,10 @@ impl Workspace {
                             .text_color(p.accent)
                             .child("apix"),
                     )
-                    .child(div().w(px(6.)))
-                    .child(self.render_menu_bar(cx))
+                    // On a Mac the menus are in the system menu bar (native_menu.rs).
+                    .when(cfg!(not(target_os = "macos")), |bar| {
+                        bar.child(div().w(px(6.))).child(self.render_menu_bar(cx))
+                    })
                     .child(div().w(px(10.)))
                     .child(
                         div()
@@ -2210,6 +2214,8 @@ fn send_hint() -> SharedString {
 impl Render for Workspace {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let p = crate::theme::current();
+        #[cfg(target_os = "macos")]
+        native_menu::refresh(self, window, cx);
         // Shortcuts dispatch along the focus path. When a dialog closes, focus
         // is left nowhere, so take it back or Ctrl+S / Ctrl+N would stop working.
         if window.focused(cx).is_none() && !window.has_active_dialog(cx) {

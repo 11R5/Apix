@@ -58,6 +58,8 @@ fn main() {
         workspace::bind_keys(cx);
         workspace::register_graphql();
         large_view::bind_keys(cx);
+        #[cfg(target_os = "macos")]
+        workspace::native_menu::init(cx);
         bench::phase("ready_to_open");
 
         let options = WindowOptions {
@@ -83,6 +85,8 @@ fn main() {
             cx.new(|cx| Workspace::new(dir, window, cx))
         })
         .expect("failed to open the Apix window");
+        #[cfg(target_os = "macos")]
+        cx.activate(true);
         bench::phase("window_open");
     });
 }
