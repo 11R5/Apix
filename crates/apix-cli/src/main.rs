@@ -153,6 +153,16 @@ enum Command {
         #[arg(long)]
         no_save: bool,
     },
+    /// Send a request in two environments and compare the answers: status,
+    /// headers and the body field by field (exit 1 when they differ)
+    Compare {
+        file: PathBuf,
+        #[command(flatten)]
+        vars: VarArgs,
+        /// The other environment (--env is the first; without it, no environment)
+        #[arg(long, value_name = "ENV")]
+        against: String,
+    },
     /// Load-test a request: send it from many workers at once for a number of
     /// requests or a time, and print throughput and latency percentiles
     Bench {
@@ -1137,6 +1147,53 @@ async fn run(cli: Cli) -> Result<bool> {
             )
             .await?;
             Ok(true)
+        }
+        Command::Compare {
+            file,
+            vars,
+            against,
+        } => {
+            unlock_around(&file, &var)?;
+            let scope = Scope::find(&file)?;
+            let mut sides = Vec::new();
+            for env in [vars.env.clone(), Some(against.clone())] {
+                let label = env.clone().unwrap_or_else(|| "no environment".to_owned());
+                let side = VarArgs {
+                    env,
+                    vars: vars.vars.clone(),
+                    env_file: vars.env_file.clone(),
+                };
+                let Resolved { vars, .. } = side.resolve(&scope)?;
+                let resolved = scope.load(&file)?.resolve(&vars);
+                if !resolved.missing.is_empty() {
+                    let names: Vec<_> = resolved.missing.into_iter().collect();
+                    bail!("{label}: undefined variable(s): {}", names.join(", "));
+                }
+                let request = relative_to_file(resolved.request, &file);
+                let response = client
+                    .send(&request)
+                    .await
+                    .with_context(|| format!("{label}: {}", request.url))?;
+                println!(
+                    "{}{label}: {} {} · {} · {:.0} ms{}",
+                    style.dim,
+                    request.method.as_str(),
+                    request.url,
+                    response.status,
+                    response.timing.total.as_secs_f64() * 1000.0,
+                    style.reset
+                );
+                sides.push(apix_core::compare::Snapshot {
+                    label,
+                    status: response.status,
+                    headers: response.headers.clone(),
+                    body: response.body.to_vec(),
+                    total_ms: response.timing.total.as_secs_f64() * 1000.0,
+                });
+            }
+            let comparison = apix_core::compare::compare(&sides[0], &sides[1]);
+            print!("{}", comparison.to_text());
+            Ok(comparison.is_same())
         }
         Command::Bench {
             file,

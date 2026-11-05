@@ -171,6 +171,7 @@ impl MenuState {
             .menu(tr!("menu.send"), Box::new(SendRequest))
             .menu(tr!("menu.cancel"), Box::new(CancelRequest))
             .menu(tr!("menu.load_test"), Box::new(OpenLoadTest))
+            .menu(tr!("menu.compare"), Box::new(CompareResponses))
             .separator()
             .submenu(tr!("menu.method"), window, cx, move |menu, _, _| {
                 menu.action_context(focus.clone())

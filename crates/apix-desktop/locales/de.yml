@@ -195,6 +195,27 @@ color.purple: Lila
 color.red: Rot
 color.teal: Türkis
 color.yellow: Gelb
+compare.about: Die aktuelle Antwort im Vergleich mit einer früheren dieser Anfrage aus dem Verlauf oder mit derselben Anfrage in einer anderen Umgebung. Header, die sich bei jeder Antwort ändern (Date, Anfrage-IDs, Übertragungsart), werden ausgelassen.
+compare.binary: Die Bodys sind kein Text und unterscheiden sich.
+compare.body: Body
+compare.copy: Als Text kopieren
+compare.differences: "%{count} Unterschiede"
+compare.earlier: Frühere Antworten
+compare.environments: Andere Umgebungen
+compare.gone: Diese Antwort ist nicht mehr im Verlauf.
+compare.headers: Header
+compare.ignored: "Ausgelassen: %{names}"
+compare.more: "… und %{count} weitere"
+compare.no_environments: Keine andere Umgebung.
+compare.no_history: Keine früheren Antworten dieser Anfrage im Verlauf.
+compare.now: jetzt
+compare.pick: Wählen Sie eine frühere Antwort oder eine Umgebung.
+compare.same: Gleich
+compare.send_first: Senden Sie die Anfrage zuerst; vergleichen Sie dann ihre Antwort.
+compare.sending: Wird in dieser Umgebung gesendet…
+compare.sides: "%{old} (%{old_ms} ms, %{old_size} Bytes) → %{new} (%{new_ms} ms, %{new_size} Bytes)"
+compare.status: Status
+compare.title: Antworten vergleichen
 console.empty: Nichts ausgegeben. console.log(…) in einem Skript schreibt hierher.
 cookies.clear_all: Alle entfernen
 cookies.empty: Noch keine Cookies. Set-Cookie-Antworten landen automatisch hier.
@@ -399,6 +420,7 @@ menu.close_tab: Tab schließen
 menu.collection_auth: Sammlungs-Authentifizierung…
 menu.collection_settings: Anfrage-Einstellungen der Sammlung…
 menu.command_palette: Befehlspalette…
+menu.compare: Antworten vergleichen…
 menu.cookies: Cookies…
 menu.copy_as: Kopieren als
 menu.documentation: Dokumentation

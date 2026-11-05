@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:48b92841cbdb3b2e -->
+<!-- translated from en/architecture.md sha256:28240cbb78930ebf -->
 
 # Apix mimarisi
 
@@ -733,6 +733,21 @@ Git penceresi (`workspace/git_panel.rs`) aynı `Repo`'yu kullanır: liste için
 `GIT_TERMINAL_PROMPT=0` ile çalışır; parola isteyen bir uzak depo girdi
 beklemek yerine git'in mesajıyla başarısız olur, kimlik bilgisi yardımcıları
 yine çalışır. Her işlem arka planda koşar ve durum çubuğunu yeniler.
+
+## Yanıtları karşılaştırma
+
+`apix_core::compare` iki `Snapshot` alır (etiket, durum, başlıklar, gövde,
+süre). Başlıklar küçük harfli adla karşılaştırılır, aynı adlılar birleştirilir;
+`VOLATILE` içindekiler (tarihler, önbellek, istek ve iz kimlikleri, hız
+sınırları, gövdenin nasıl gönderildiği) yalnızca dışarıda bırakılanlar olarak
+sayılır. İki JSON gövde önce `by_id`'den geçer: ayrı `id` / `_id` / `uuid` /
+`key` değerli kayıt listelerini `[id=…]` anahtarlı tablolara çevirir; sonra
+`diff::fields_as_they_are` (istek farkının yürüyüşü, istek dosyalarına uyan
+ama veriye uymayan anahtar/ad eşlemesi olmadan). Öteki metinler satır satır,
+geri kalan yalnızca boyutla karşılaştırılır. Uygulamanın Karşılaştır penceresi
+(`workspace/compare_ui.rs`) önceki tarafı geçmişten alır (aynı istek dosyalı
+ya da aynı yöntem ve URL'li kayıtlar) ya da isteği başka bir ortamın
+değişkenleriyle çözüp gönderir; `apix compare` iki ortamda gönderir.
 
 ## Yük testi
 

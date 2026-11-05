@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:68c18bb0a1f0133b -->
+<!-- translated from en/user-guide.md sha256:552aa6444522455a -->
 
 # Apix kullanım kılavuzu
 
@@ -45,6 +45,7 @@ veya CI'da çalıştırır.
 - [Postman'dan içe aktarma](#postmandan-içe-aktarma)
 - [Insomnia, OpenAPI ve HAR'dan içe aktarma](#insomnia-openapi-ve-hardan-içe-aktarma)
 - [Geçmiş](#geçmiş)
+- [Yanıtları karşılaştırma](#yanıtları-karşılaştırma)
 - [Komut paleti](#komut-paleti)
 - [Ayarlar ve dil](#ayarlar-ve-dil)
 - [Klavye kısayolları](#klavye-kısayolları)
@@ -1142,6 +1143,33 @@ değerler geçmişe kopyalanmaz. Son 300 istek, her birinin yanıt gövdesi en �
 256 KB olarak tutulur. Şifreli koleksiyonlardaki istekler geçmişe hiç
 yazılmaz. Penceredeki **Geçmişi temizle** onu boşaltır; **Dosya › Ayarlar… ›
 Geçmiş** kapatır.
+
+## Yanıtları karşılaştırma
+
+Yanıtın yanındaki **⇄** (ya da **İstek › Yanıtları karşılaştır…**) şu anki
+yanıtı aynı isteğin başka bir yanıtıyla yan yana koyar:
+
+- **Önceki yanıtlar**: isteğin geçmişteki yanıtları, en yenisi önce. Birini
+  seçince o zamandan beri neyin değiştiğini görürsünüz; dünkü yanıta zamanda
+  geri gitmek budur.
+- **Diğer ortamlar**: istek başka bir ortamda yeniden gönderilir (üretime
+  karşı staging, gerçek API'ye karşı mock).
+
+Önce kaç şeyin farklı olduğunu, sonra durumu, başlıkları adıyla ve gövdeyi
+gösterir: JSON alan alan (listelerdeki kayıtlar `id`, `_id`, `uuid` ya da
+`key` alanıyla eşleşir; başka sırada gelen liste değişiklik sayılmaz ve alan
+`[id=1].email` diye adlandırılır), öteki metinler satır satır. Her yanıtta
+değişen başlıklar (Date, istek kimlikleri, önbellek, gövdenin nasıl
+gönderildiği) dışarıda bırakılır ve sonda listelenir. **Metin olarak
+kopyala** sonucu kopyalar.
+
+![Önceki bir yanıtla karşılaştırma](images/compare.png)
+
+Terminalde `apix compare <istek> --env staging --against production` isteği
+ikisinde de gönderir ve farkları yazar; farklıysa 1 ile çıkar, böylece bir
+işlem hattı iki ortamın aynı yanıtı verdiğini denetleyebilir. Geçmiş
+gövdeleri 256 KB'a kadar saklar; daha uzunlar saklandıkları kadarıyla
+karşılaştırılır.
 
 ## Komut paleti
 

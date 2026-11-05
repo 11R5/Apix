@@ -122,6 +122,14 @@ pub fn fields(old: &Value, new: &Value) -> Vec<FieldChange> {
     out
 }
 
+/// The fields that differ, without matching named rows first (for values
+/// that are not request files, such as response bodies).
+pub fn fields_as_they_are(old: &Value, new: &Value) -> Vec<FieldChange> {
+    let mut out = Vec::new();
+    walk(String::new(), Some(old), Some(new), &mut out);
+    out
+}
+
 /// Lists of named rows (`headers`, `query`, `[[example]]` …) become tables
 /// keyed by their name, so rows are matched by name rather than position,
 /// and a row that is only a value becomes that value.

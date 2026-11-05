@@ -195,6 +195,27 @@ color.purple: Mor
 color.red: Kırmızı
 color.teal: Turkuaz
 color.yellow: Sarı
+compare.about: Şu anki yanıtı bu isteğin geçmişteki daha eski bir yanıtıyla ya da aynı isteğin başka bir ortamda gönderilişiyle karşılaştırır. Her yanıtta değişen başlıklar (Date, istek kimlikleri, gövdenin nasıl gönderildiği) dışarıda bırakılır.
+compare.binary: Gövdeler metin değil ve farklı.
+compare.body: Gövde
+compare.copy: Metin olarak kopyala
+compare.differences: "%{count} fark"
+compare.earlier: Önceki yanıtlar
+compare.environments: Diğer ortamlar
+compare.gone: O yanıt artık geçmişte değil.
+compare.headers: Başlıklar
+compare.ignored: "Dışarıda bırakılanlar: %{names}"
+compare.more: "… ve %{count} tane daha"
+compare.no_environments: Başka ortam yok.
+compare.no_history: Geçmişte bu isteğin önceki bir yanıtı yok.
+compare.now: şimdi
+compare.pick: Önceki bir yanıt ya da bir ortam seçin.
+compare.same: Aynı
+compare.send_first: Önce isteği gönderin; sonra yanıtını karşılaştırın.
+compare.sending: O ortamda gönderiliyor…
+compare.sides: "%{old} (%{old_ms} ms, %{old_size} bayt) → %{new} (%{new_ms} ms, %{new_size} bayt)"
+compare.status: Durum
+compare.title: Yanıtları karşılaştır
 console.empty: Hiçbir şey yazılmadı. Bir scriptteki console.log(…) buraya yazar.
 cookies.clear_all: Tümünü sil
 cookies.empty: Henüz çerez yok. Set-Cookie yanıtları buraya kendiliğinden eklenir.
@@ -399,6 +420,7 @@ menu.close_tab: Sekmeyi kapat
 menu.collection_auth: Koleksiyon yetkilendirmesi…
 menu.collection_settings: Koleksiyon istek ayarları…
 menu.command_palette: Komut paleti…
+menu.compare: Yanıtları karşılaştır…
 menu.cookies: Çerezler…
 menu.copy_as: Komut veya kod olarak kopyala
 menu.documentation: Belgeler

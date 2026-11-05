@@ -195,6 +195,27 @@ color.purple: 紫
 color.red: 赤
 color.teal: ティール
 color.yellow: 黄
+compare.about: 現在のレスポンスを、履歴にあるこのリクエストの以前のレスポンス、または別の環境で送った同じリクエストと比較します。毎回変わるヘッダー (Date、リクエスト ID、本文の送り方) は除きます。
+compare.binary: 本文はテキストではなく、異なります。
+compare.body: 本文
+compare.copy: テキストとしてコピー
+compare.differences: "%{count} 件の違い"
+compare.earlier: 以前のレスポンス
+compare.environments: 他の環境
+compare.gone: そのレスポンスはもう履歴にありません。
+compare.headers: ヘッダー
+compare.ignored: "除外: %{names}"
+compare.more: "… ほか %{count} 件"
+compare.no_environments: 他の環境はありません。
+compare.no_history: 履歴にこのリクエストの以前のレスポンスはありません。
+compare.now: 現在
+compare.pick: 以前のレスポンスか環境を選んでください。
+compare.same: 同じです
+compare.send_first: 先にリクエストを送信してから比較してください。
+compare.sending: その環境で送信しています…
+compare.sides: "%{old} (%{old_ms} ms, %{old_size} バイト) → %{new} (%{new_ms} ms, %{new_size} バイト)"
+compare.status: ステータス
+compare.title: レスポンスを比較
 console.empty: 出力はありません。スクリプトの console.log(…) がここに書き込みます。
 cookies.clear_all: すべて削除
 cookies.empty: まだCookieはありません。Set-Cookie応答は自動的にここに入ります。
@@ -399,6 +420,7 @@ menu.close_tab: タブを閉じる
 menu.collection_auth: コレクションの認証…
 menu.collection_settings: コレクションのリクエスト設定…
 menu.command_palette: コマンドパレット…
+menu.compare: レスポンスを比較…
 menu.cookies: Cookie…
 menu.copy_as: 形式を指定してコピー
 menu.documentation: ドキュメント

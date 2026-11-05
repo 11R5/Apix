@@ -195,6 +195,27 @@ color.purple: 紫色
 color.red: 红色
 color.teal: 青色
 color.yellow: 黄色
+compare.about: 将当前响应与历史中此请求的较早响应比较，或与在另一个环境中发送的同一请求比较。每次都会变化的标头（Date、请求 ID、正文的传输方式）不计入。
+compare.binary: 正文不是文本且不同。
+compare.body: 正文
+compare.copy: 复制为文本
+compare.differences: "%{count} 处差异"
+compare.earlier: 较早的响应
+compare.environments: 其他环境
+compare.gone: 该响应已不在历史中。
+compare.headers: 标头
+compare.ignored: "未计入：%{names}"
+compare.more: "… 还有 %{count} 处"
+compare.no_environments: 没有其他环境。
+compare.no_history: 历史中没有此请求的较早响应。
+compare.now: 现在
+compare.pick: 选择一个较早的响应或一个环境。
+compare.same: 相同
+compare.send_first: 请先发送请求，再比较其响应。
+compare.sending: 正在该环境中发送…
+compare.sides: "%{old}（%{old_ms} ms，%{old_size} 字节）→ %{new}（%{new_ms} ms，%{new_size} 字节）"
+compare.status: 状态
+compare.title: 比较响应
 console.empty: 没有输出。脚本中的 console.log(…) 会写到这里。
 cookies.clear_all: 全部删除
 cookies.empty: 还没有 Cookie。Set-Cookie 响应会自动出现在这里。
@@ -399,6 +420,7 @@ menu.close_tab: 关闭标签页
 menu.collection_auth: 集合认证…
 menu.collection_settings: 集合请求设置…
 menu.command_palette: 命令面板…
+menu.compare: 比较响应…
 menu.cookies: Cookie…
 menu.copy_as: 复制为
 menu.documentation: 文档

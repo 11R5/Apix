@@ -42,6 +42,7 @@ command line runs the same requests in a terminal or CI.
 - [Importing from Postman](#importing-from-postman)
 - [Importing from Insomnia, OpenAPI and HAR](#importing-from-insomnia-openapi-and-har)
 - [History](#history)
+- [Comparing responses](#comparing-responses)
 - [Command palette](#command-palette)
 - [Settings and language](#settings-and-language)
 - [Keyboard shortcuts](#keyboard-shortcuts)
@@ -1112,6 +1113,32 @@ unresolved, so environment secrets are not copied into it. The last 300
 requests are kept, response bodies up to 256 KB each. Requests from encrypted
 collections are never written to the history. **Clear history** in the window
 empties it; **File › Settings… › History** turns it off.
+
+## Comparing responses
+
+**⇄** next to the response (or **Request › Compare responses…**) puts the
+response you have now next to another one of the same request:
+
+- **Earlier responses**: the request's responses from the history, newest
+  first. Pick one to see what changed since then; this is how you travel
+  back in time to yesterday's answer.
+- **Other environments**: the request sent again in another environment
+  (staging against production, a mock against the real API).
+
+It shows how many things differ, then the status, the headers by name and the
+body: JSON field by field (records in lists are matched by their `id`,
+`_id`, `uuid` or `key`, so a list in another order is not a change, and
+`[id=1].email` names the field), other text line by line. Headers that change
+on every response (Date, request ids, caching, how the body was sent) are
+left out and listed at the end. **Copy as text** copies the result.
+
+![Comparing with an earlier response](images/compare.png)
+
+In a terminal, `apix compare <request> --env staging --against production`
+sends the request in both and prints the differences; it exits with 1 when
+they differ, so a pipeline can check that two environments answer alike.
+History keeps bodies up to 256 KB, so longer ones are compared as far as they
+were kept.
 
 ## Command palette
 

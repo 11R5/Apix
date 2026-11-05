@@ -195,6 +195,27 @@ color.purple: Фиолетовый
 color.red: Красный
 color.teal: Бирюзовый
 color.yellow: Жёлтый
+compare.about: Текущий ответ в сравнении с более ранним ответом этого запроса из истории или с тем же запросом в другом окружении. Заголовки, меняющиеся в каждом ответе (Date, идентификаторы запроса, способ передачи тела), не учитываются.
+compare.binary: Тела не текстовые и различаются.
+compare.body: Тело
+compare.copy: Копировать как текст
+compare.differences: "Различий: %{count}"
+compare.earlier: Прежние ответы
+compare.environments: Другие окружения
+compare.gone: Этого ответа больше нет в истории.
+compare.headers: Заголовки
+compare.ignored: "Не учтены: %{names}"
+compare.more: "… и ещё %{count}"
+compare.no_environments: Других окружений нет.
+compare.no_history: В истории нет прежних ответов этого запроса.
+compare.now: сейчас
+compare.pick: Выберите прежний ответ или окружение.
+compare.same: Одинаковы
+compare.send_first: Сначала отправьте запрос, затем сравните ответ.
+compare.sending: Отправка в этом окружении…
+compare.sides: "%{old} (%{old_ms} мс, %{old_size} байт) → %{new} (%{new_ms} мс, %{new_size} байт)"
+compare.status: Статус
+compare.title: Сравнить ответы
 console.empty: Ничего не выведено. console.log(…) в скрипте пишет сюда.
 cookies.clear_all: Удалить все
 cookies.empty: Пока нет cookie. Ответы Set-Cookie попадают сюда автоматически.
@@ -399,6 +420,7 @@ menu.close_tab: Закрыть вкладку
 menu.collection_auth: Авторизация коллекции…
 menu.collection_settings: Настройки запросов коллекции…
 menu.command_palette: Палитра команд…
+menu.compare: Сравнить ответы…
 menu.cookies: Cookie…
 menu.copy_as: Копировать как
 menu.documentation: Документация

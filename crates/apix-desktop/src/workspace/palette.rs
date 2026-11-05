@@ -359,6 +359,10 @@ impl Workspace {
                 name!("menu.load_test"),
                 run(Workspace::open_load_test),
             ));
+            out.push(Entry::command(
+                name!("menu.compare"),
+                run(Workspace::open_compare),
+            ));
             out.push(
                 Entry::command(
                     name!("palette.save_request"),

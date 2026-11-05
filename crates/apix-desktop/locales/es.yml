@@ -195,6 +195,27 @@ color.purple: Morado
 color.red: Rojo
 color.teal: Turquesa
 color.yellow: Amarillo
+compare.about: La respuesta actual frente a una anterior de esta solicitud en el historial, o frente a la misma solicitud enviada en otro entorno. Se omiten los encabezados que cambian en cada respuesta (Date, ids de solicitud, cómo se envió el cuerpo).
+compare.binary: Los cuerpos no son texto y difieren.
+compare.body: Cuerpo
+compare.copy: Copiar como texto
+compare.differences: "%{count} diferencias"
+compare.earlier: Respuestas anteriores
+compare.environments: Otros entornos
+compare.gone: Esa respuesta ya no está en el historial.
+compare.headers: Encabezados
+compare.ignored: "Omitidos: %{names}"
+compare.more: "… y %{count} más"
+compare.no_environments: No hay otro entorno.
+compare.no_history: No hay respuestas anteriores de esta solicitud en el historial.
+compare.now: ahora
+compare.pick: Elija una respuesta anterior o un entorno.
+compare.same: Iguales
+compare.send_first: Envíe primero la solicitud; luego compare su respuesta.
+compare.sending: Enviando en ese entorno…
+compare.sides: "%{old} (%{old_ms} ms, %{old_size} bytes) → %{new} (%{new_ms} ms, %{new_size} bytes)"
+compare.status: Estado
+compare.title: Comparar respuestas
 console.empty: No se escribió nada. console.log(…) en un script escribe aquí.
 cookies.clear_all: Eliminar todo
 cookies.empty: Aún no hay cookies. Las respuestas Set-Cookie llegan aquí automáticamente.
@@ -399,6 +420,7 @@ menu.close_tab: Cerrar pestaña
 menu.collection_auth: Autenticación de la colección…
 menu.collection_settings: Ajustes de petición de la colección…
 menu.command_palette: Paleta de comandos…
+menu.compare: Comparar respuestas…
 menu.cookies: Cookies…
 menu.copy_as: Copiar como
 menu.documentation: Documentación

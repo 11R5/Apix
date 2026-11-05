@@ -278,7 +278,7 @@ impl GitView {
 }
 
 /// Changed lines with two lines around them; `None` for lines left out.
-fn context(lines: &[Line]) -> Vec<Option<&Line>> {
+pub(super) fn context(lines: &[Line]) -> Vec<Option<&Line>> {
     let changed: Vec<usize> = lines
         .iter()
         .enumerate()
@@ -301,7 +301,7 @@ fn context(lines: &[Line]) -> Vec<Option<&Line>> {
     out
 }
 
-fn field_row(field: &FieldChange) -> AnyElement {
+pub(super) fn field_row(field: &FieldChange) -> AnyElement {
     let p = crate::theme::current();
     let mono = |text: String, colour: Hsla| {
         div()

@@ -4,6 +4,7 @@ mod auth_editor;
 mod body_editor;
 mod capture_ui;
 mod collections;
+mod compare_ui;
 mod cookies_ui;
 mod drag;
 mod env_editor;
@@ -93,6 +94,7 @@ actions!(
         CheckForUpdates,
         OpenRoute,
         OpenLoadTest,
+        CompareResponses,
         CloseTab,
         NextTab,
         PrevTab,
@@ -1892,6 +1894,16 @@ impl Workspace {
                                     })),
                             )
                             .child(
+                                Button::new("compare-responses")
+                                    .ghost()
+                                    .xsmall()
+                                    .label("⇄")
+                                    .tooltip(tr!("compare.title"))
+                                    .on_click(cx.listener(|this, _: &ClickEvent, window, cx| {
+                                        this.open_compare(window, cx)
+                                    })),
+                            )
+                            .child(
                                 Button::new("save-body")
                                     .ghost()
                                     .xsmall()
@@ -2216,6 +2228,9 @@ impl Render for Workspace {
             .on_action(cx.listener(|this, _: &OpenRoute, window, cx| this.open_route(window, cx)))
             .on_action(
                 cx.listener(|this, _: &OpenLoadTest, window, cx| this.open_load_test(window, cx)),
+            )
+            .on_action(
+                cx.listener(|this, _: &CompareResponses, window, cx| this.open_compare(window, cx)),
             )
             .on_action(cx.listener(|this, _: &CheckForUpdates, window, cx| {
                 this.check_updates(true, window, cx)

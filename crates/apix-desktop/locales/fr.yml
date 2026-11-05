@@ -195,6 +195,27 @@ color.purple: Violet
 color.red: Rouge
 color.teal: Turquoise
 color.yellow: Jaune
+compare.about: La réponse actuelle face à une réponse antérieure de cette requête dans l’historique, ou à la même requête envoyée dans un autre environnement. Les en-têtes qui changent à chaque réponse (Date, identifiants de requête, mode d’envoi du corps) sont ignorés.
+compare.binary: Les corps ne sont pas du texte et diffèrent.
+compare.body: Corps
+compare.copy: Copier en texte
+compare.differences: "%{count} différences"
+compare.earlier: Réponses antérieures
+compare.environments: Autres environnements
+compare.gone: Cette réponse n’est plus dans l’historique.
+compare.headers: En-têtes
+compare.ignored: "Ignorés : %{names}"
+compare.more: "… et %{count} de plus"
+compare.no_environments: Aucun autre environnement.
+compare.no_history: Aucune réponse antérieure de cette requête dans l’historique.
+compare.now: maintenant
+compare.pick: Choisissez une réponse antérieure ou un environnement.
+compare.same: Identiques
+compare.send_first: Envoyez d’abord la requête, puis comparez sa réponse.
+compare.sending: Envoi dans cet environnement…
+compare.sides: "%{old} (%{old_ms} ms, %{old_size} octets) → %{new} (%{new_ms} ms, %{new_size} octets)"
+compare.status: Statut
+compare.title: Comparer les réponses
 console.empty: Rien n’a été écrit. console.log(…) dans un script écrit ici.
 cookies.clear_all: Tout supprimer
 cookies.empty: Pas encore de cookies. Les réponses Set-Cookie arrivent ici automatiquement.
@@ -399,6 +420,7 @@ menu.close_tab: Fermer l'onglet
 menu.collection_auth: Authentification de la collection…
 menu.collection_settings: Réglages de requête de la collection…
 menu.command_palette: Palette de commandes…
+menu.compare: Comparer les réponses…
 menu.cookies: Cookies…
 menu.copy_as: Copier en
 menu.documentation: Documentation

@@ -195,6 +195,27 @@ color.purple: بنفسجي
 color.red: أحمر
 color.teal: أزرق مخضر
 color.yellow: أصفر
+compare.about: "يقارن الاستجابة الحالية باستجابة سابقة لهذا الطلب من السجل، أو بالطلب نفسه مُرسلًا في بيئة أخرى. تُستبعد الترويسات التي تتغير في كل استجابة (Date ومعرّفات الطلب وطريقة إرسال المحتوى)."
+compare.binary: المحتويان ليسا نصًا ومختلفان.
+compare.body: المحتوى
+compare.copy: نسخ كنص
+compare.differences: "%{count} اختلافات"
+compare.earlier: استجابات سابقة
+compare.environments: بيئات أخرى
+compare.gone: لم تعد تلك الاستجابة في السجل.
+compare.headers: الترويسات
+compare.ignored: "مستبعدة: %{names}"
+compare.more: "… و%{count} أخرى"
+compare.no_environments: لا توجد بيئة أخرى.
+compare.no_history: لا توجد استجابات سابقة لهذا الطلب في السجل.
+compare.now: الآن
+compare.pick: اختر استجابة سابقة أو بيئة.
+compare.same: متطابقتان
+compare.send_first: أرسل الطلب أولًا ثم قارن استجابته.
+compare.sending: جارٍ الإرسال في تلك البيئة…
+compare.sides: "%{old} (%{old_ms} مللي ثانية، %{old_size} بايت) → %{new} (%{new_ms} مللي ثانية، %{new_size} بايت)"
+compare.status: الحالة
+compare.title: مقارنة الاستجابات
 console.empty: لم يُكتب شيء. console.log(…) في السكربت يكتب هنا.
 cookies.clear_all: حذف الكل
 cookies.empty: لا توجد ملفات تعريف ارتباط بعد. تصل ردود Set-Cookie إلى هنا تلقائيًا.
@@ -399,6 +420,7 @@ menu.close_tab: إغلاق علامة التبويب
 menu.collection_auth: مصادقة المجموعة…
 menu.collection_settings: إعدادات طلبات المجموعة…
 menu.command_palette: لوحة الأوامر…
+menu.compare: مقارنة الاستجابات…
 menu.cookies: ملفات تعريف الارتباط…
 menu.copy_as: نسخ كـ
 menu.documentation: الوثائق

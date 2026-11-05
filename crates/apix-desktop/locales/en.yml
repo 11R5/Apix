@@ -197,6 +197,27 @@ color.purple: Purple
 color.red: Red
 color.teal: Teal
 color.yellow: Yellow
+compare.about: The response you have now against an earlier one of this request from the history, or against the same request sent in another environment. Headers that change on every response (Date, request ids, how the body was sent) are left out.
+compare.binary: The bodies are not text and differ.
+compare.body: Body
+compare.copy: Copy as text
+compare.differences: "%{count} differences"
+compare.earlier: Earlier responses
+compare.environments: Other environments
+compare.gone: That response is no longer in the history.
+compare.headers: Headers
+compare.ignored: "Left out: %{names}"
+compare.more: "… and %{count} more"
+compare.no_environments: No other environment.
+compare.no_history: No earlier responses of this request in the history.
+compare.now: now
+compare.pick: Pick an earlier response or an environment.
+compare.same: The same
+compare.send_first: Send the request first; then compare its response.
+compare.sending: Sending in that environment…
+compare.sides: "%{old} (%{old_ms} ms, %{old_size} bytes) → %{new} (%{new_ms} ms, %{new_size} bytes)"
+compare.status: Status
+compare.title: Compare responses
 console.empty: Nothing logged. console.log(…) in a script writes here.
 cookies.clear_all: Remove all
 cookies.empty: No cookies yet. Set-Cookie answers land here automatically.
@@ -401,6 +422,7 @@ menu.close_tab: Close tab
 menu.collection_auth: Collection auth…
 menu.collection_settings: Collection request settings…
 menu.command_palette: Command palette…
+menu.compare: Compare responses…
 menu.cookies: Cookies…
 menu.copy_as: Copy as
 menu.documentation: Documentation

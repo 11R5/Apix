@@ -706,6 +706,21 @@ runs with `GIT_TERMINAL_PROMPT=0`, so a remote that needs a password fails
 with git's message instead of waiting for input; credential helpers still
 work. Each operation runs in the background and refreshes the status bar.
 
+## Comparing responses
+
+`apix_core::compare` takes two `Snapshot`s (label, status, headers, body,
+time). Headers are compared by lower-case name, several of a name joined;
+those in `VOLATILE` (dates, caching, request and trace ids, rate limits, how
+the body was sent) are only counted as left out. Two JSON bodies go through
+`by_id`, which turns lists of records with distinct `id` / `_id` / `uuid` /
+`key` values into tables keyed `[id=…]`, and then `diff::fields_as_they_are`
+(the request diff's walk without its key/name matching, which suits request
+files but not data); other text is diffed line by line, anything else only by
+size. The app's Compare window (`workspace/compare_ui.rs`) takes the earlier
+side from the history (entries with the same request file, or the same method
+and URL) or sends the request resolved with another environment's variables;
+`apix compare` sends it in two environments.
+
 ## Load testing
 
 `apix_http::load::Load` builds one reqwest client for a resolved request (the
