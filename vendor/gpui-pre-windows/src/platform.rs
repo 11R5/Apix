@@ -57,6 +57,9 @@ pub struct WindowsPlatform {
     initial_windowing: RefCell<Option<WindowingRequest>>,
     /// Set to stop the current `VSyncProvider` thread, which runs while windowed.
     vsync_stop: RefCell<Option<Arc<AtomicBool>>>,
+    /// DirectX devices being created on another thread since `new`: loading the
+    /// graphics driver is most of start-up, and it overlaps the rest this way.
+    early_devices: RefCell<Option<std::thread::JoinHandle<SendDevices>>>,
     // The below members will never change throughout the entire lifecycle of the app.
     /// Created with `headless()`: never windowed, and without a real text system.
     headless: bool,
@@ -177,8 +180,22 @@ impl Drop for PowerRequest {
     }
 }
 
+/// DirectX devices made on another thread. D3D11 devices and DXGI factories
+/// are free-threaded, so moving them to the main thread before first use is safe.
+struct SendDevices(Result<DirectXDevices>);
+// SAFETY: see above; the immediate context is used by one thread at a time.
+unsafe impl Send for SendDevices {}
+
 impl WindowsPlatform {
     pub fn new(headless: bool) -> Result<Self> {
+        let early_devices = (!headless)
+            .then(|| {
+                std::thread::Builder::new()
+                    .name("DirectXDevices".to_owned())
+                    .spawn(|| SendDevices(DirectXDevices::new()))
+                    .ok()
+            })
+            .flatten();
         unsafe {
             OleInitialize(None).context("unable to initialize Windows OLE")?;
         }
@@ -271,6 +288,7 @@ impl WindowsPlatform {
             raw_window_handles,
             initial_windowing: RefCell::new(None),
             vsync_stop: RefCell::new(None),
+            early_devices: RefCell::new(early_devices),
             headless,
             icon,
             background_executor,
@@ -412,7 +430,13 @@ impl WindowsPlatform {
 
     /// Creates the DirectX devices that windows draw with, and starts vsync.
     fn attach_gpu(&self) -> Result<()> {
-        let devices = DirectXDevices::new().context("Creating DirectX devices")?;
+        // The devices started in `new`, the first time; new ones after that.
+        let early = self.early_devices.borrow_mut().take();
+        let devices = match early.map(|thread| thread.join()) {
+            Some(Ok(SendDevices(devices))) => devices,
+            _ => DirectXDevices::new(),
+        }
+        .context("Creating DirectX devices")?;
         if let Some(text_system) = &self.direct_write_text_system {
             text_system.handle_gpu_lost(&devices)?;
         }

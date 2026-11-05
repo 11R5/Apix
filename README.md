@@ -63,14 +63,17 @@ HTTPie is best known for its `http` command; its desktop app (Electron) is in be
 
 ## Performance
 
-| Measure | Apix 0.1.0 |
+| Measure | Apix 0.1.1 |
 |---|---|
-| Release binary | 38.9 MB |
-| Start to first frame | 278 ms |
-| Memory when idle (working set) | 84 MB |
-| 100 MB JSON response on screen | 306 ms |
+| Release binary | 54.4 MB |
+| Start to first frame | 222 ms |
+| Memory when idle (working set) | 88 MB |
+| 100 MB JSON response on screen | 299 ms |
 
-Windows 11 (build 26300), AMD Ryzen 9 7900X, release build, median of 5 runs, 2026-10-24.
+Measured with `scripts/measure.ps1` (7 runs, median) on a Ryzen 9 7900X with an
+NVIDIA RTX 5070, Windows 11. About 150 ms of the start and most of the idle
+memory are the graphics driver loading (Direct3D 11), which Apix now starts
+first, on its own thread, while the rest gets ready.
 
 Reproduce it with `scripts/measure.ps1` (see the [technical notes](Docs/en/technical.md#measuring-performance)).
 Measurements of the other tools on the same machine are planned.

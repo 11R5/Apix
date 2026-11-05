@@ -55,3 +55,11 @@ pub fn report(name: &str, ms: f64) {
         None => print!("{line}"),
     }
 }
+
+/// With `APIX_BENCH_PHASES` set, reports how long after `main` a step of
+/// starting up was reached (`phase_<name>`), to see where start-up time goes.
+pub fn phase(name: &str) {
+    if std::env::var_os("APIX_BENCH_PHASES").is_some() {
+        report(&format!("phase_{name}"), since_start_ms());
+    }
+}

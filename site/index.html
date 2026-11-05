@@ -353,7 +353,9 @@ footer { color: var(--muted); font-size: 14px; padding: 40px 0 50px; display: fl
     }
     return null;
   }
-  function size(bytes) { return (bytes / 1048576).toFixed(1) + " MB"; }
+  function size(bytes) {
+    return bytes < 1048576 ? Math.max(1, Math.round(bytes / 1024)) + " KB" : (bytes / 1048576).toFixed(1) + " MB";
+  }
   function version() { return release ? release.tag_name.replace(/^v/, "") : "X.Y.Z"; }
 
   function fileLink(kind) {

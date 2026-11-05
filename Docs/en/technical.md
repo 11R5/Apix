@@ -126,6 +126,7 @@ collections are never written to disk.
 | `APIX_THEME` | a theme id (`obsidian`, `cyber`, `dracula`, `nord`, `solarized-dark`, `daylight`, `solarized-light` or a theme file's name); shows that theme whatever the settings say. |
 | `APIX_BENCH` | `startup` or `json:<url>`: measure and quit (see below). |
 | `APIX_BENCH_OUT` | File to append the measurements to. |
+| `APIX_BENCH_PHASES` | With `APIX_BENCH=startup`: also report when each step of starting up was reached (`phase_…` lines), to see where the time goes. |
 | `APIX_UPDATE_URL` | Where the update check asks instead of GitHub's latest release (a fork, a mirror, a test server). |
 | `OPENAI_API_KEY`, `GEMINI_API_KEY` (or `GOOGLE_API_KEY`), `ANTHROPIC_API_KEY` | The AI assist key when none is kept in the keychain for that provider. |
 | `APIX_CLAUDE_CONFIG` | The Claude Desktop configuration file that Connect to Claude writes, instead of the real one (for tests). |

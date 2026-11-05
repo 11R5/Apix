@@ -1,4 +1,4 @@
-<!-- translated from en/technical.md sha256:d027ba5585ffd037 -->
+<!-- translated from en/technical.md sha256:5293022084ba27a8 -->
 
 # Teknik notlar
 
@@ -127,6 +127,7 @@ parolaları asla diske yazılmaz.
 | `APIX_THEME` | bir tema kimliği (`obsidian`, `cyber`, `dracula`, `nord`, `solarized-dark`, `daylight`, `solarized-light` ya da bir tema dosyasının adı); ayarlar ne derse desin o temayı gösterir. |
 | `APIX_BENCH` | `startup` veya `json:<url>`: ölç ve çık (aşağıya bakın). |
 | `APIX_BENCH_OUT` | Ölçümlerin sonuna ekleneceği dosya. |
+| `APIX_BENCH_PHASES` | `APIX_BENCH=startup` ile: açılışın her adımına ne zaman varıldığını da bildirir (`phase_…` satırları); zamanın nereye gittiğini görmek için. |
 | `APIX_UPDATE_URL` | Güncelleme denetiminin GitHub'ın son sürümü yerine sorduğu adres (bir çatal, bir ayna, bir test sunucusu). |
 | `OPENAI_API_KEY`, `GEMINI_API_KEY` (ya da `GOOGLE_API_KEY`), `ANTHROPIC_API_KEY` | O sağlayıcı için anahtarlıkta anahtar yoksa AI yardımcısının anahtarı. |
 | `APIX_CLAUDE_CONFIG` | Claude'a bağla'nın gerçeği yerine yazdığı Claude Desktop yapılandırma dosyası (testler için). |

@@ -41,42 +41,48 @@ fn main() {
     };
 
     // The Lucide icons (window controls, inputs, menus, locks) are embedded in the binary.
-    gpui_kit::application()
-        .with_assets(assets::AppAssets)
-        .run(move |cx| {
-            gpui_kit::init(cx);
-            let embedded_fonts = fonts::register(cx);
-            let settings = settings::Settings::load();
-            i18n::set(settings.language_code());
-            apix_core::secrets::use_keychain(settings.secrets_in_keychain);
-            let palette = theme::from_settings(&settings, cx);
-            theme::init(palette, embedded_fonts, cx);
-            workspace::bind_keys(cx);
-            workspace::register_graphql();
-            large_view::bind_keys(cx);
+    bench::phase("main");
+    let app = gpui_kit::application().with_assets(assets::AppAssets);
+    bench::phase("app_built");
+    app.run(move |cx| {
+        bench::phase("app_running");
+        gpui_kit::init(cx);
+        bench::phase("kit_init");
+        let embedded_fonts = fonts::register(cx);
+        bench::phase("fonts");
+        let settings = settings::Settings::load();
+        i18n::set(settings.language_code());
+        apix_core::secrets::use_keychain(settings.secrets_in_keychain);
+        let palette = theme::from_settings(&settings, cx);
+        theme::init(palette, embedded_fonts, cx);
+        workspace::bind_keys(cx);
+        workspace::register_graphql();
+        large_view::bind_keys(cx);
+        bench::phase("ready_to_open");
 
-            let options = WindowOptions {
-                window_bounds: Some(WindowBounds::Windowed(Bounds::centered(
-                    None,
-                    size(px(1280.), px(800.)),
-                    cx,
-                ))),
-                window_min_size: Some(size(px(760.), px(480.))),
-                titlebar: Some(TitlebarOptions {
-                    title: Some("Apix".into()),
-                    ..TitleBar::title_bar_options()
-                }),
-                window_background: if palette.glass {
-                    WindowBackgroundAppearance::Blurred
-                } else {
-                    WindowBackgroundAppearance::Opaque
-                },
-                ..TitleBar::window_options()
-            };
+        let options = WindowOptions {
+            window_bounds: Some(WindowBounds::Windowed(Bounds::centered(
+                None,
+                size(px(1280.), px(800.)),
+                cx,
+            ))),
+            window_min_size: Some(size(px(760.), px(480.))),
+            titlebar: Some(TitlebarOptions {
+                title: Some("Apix".into()),
+                ..TitleBar::title_bar_options()
+            }),
+            window_background: if palette.glass {
+                WindowBackgroundAppearance::Blurred
+            } else {
+                WindowBackgroundAppearance::Opaque
+            },
+            ..TitleBar::window_options()
+        };
 
-            gpui_kit::open_window(options, cx, |window, cx| {
-                cx.new(|cx| Workspace::new(dir, window, cx))
-            })
-            .expect("failed to open the Apix window");
-        });
+        gpui_kit::open_window(options, cx, |window, cx| {
+            cx.new(|cx| Workspace::new(dir, window, cx))
+        })
+        .expect("failed to open the Apix window");
+        bench::phase("window_open");
+    });
 }

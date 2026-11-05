@@ -507,6 +507,7 @@ pub struct Workspace {
 
 impl Workspace {
     pub fn new(dir: Option<PathBuf>, window: &mut Window, cx: &mut Context<Self>) -> Self {
+        crate::bench::phase("workspace_new");
         let methods: Vec<&'static str> = Method::ALL.iter().map(|m| m.as_str()).collect();
         let method = cx.new(|cx| SelectState::new(methods, Some(IndexPath::new(0)), window, cx));
         let url =
@@ -652,6 +653,7 @@ impl Workspace {
             ),
         ];
 
+        crate::bench::phase("workspace_widgets");
         let mut this = Self {
             focus: cx.focus_handle(),
             project: None,

@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:e81fa8184ff30d10 -->
+<!-- translated from en/architecture.md sha256:7c5f04d6b9e2b695 -->
 
 # Apix mimarisi
 
@@ -21,7 +21,7 @@ Apix, Rust ile yazılmış native bir API istemcisidir. Arayüz,
    kaydırılabilmelidir. Yalnızca görünen satırlar yerleştirilir (sanal listeler) ve
    gövde tembel (lazy) ayrıştırılır.
 5. **Hafif ve hızlı açılış.** Hız ve özellikler boyuttan önce gelir. Release
-   binary'si 100 MB'ın altında kalır (bugün 38.9 MB; Electron uygulamaları 300 MB+)
+   binary'si 100 MB'ın altında kalır (bugün 54.4 MB; Electron uygulamaları 300 MB+)
    ve pencereyi 150 ms'den kısa sürede açar.
 
 ## Crate'ler
@@ -1054,9 +1054,9 @@ yüklüyken yaklaşık 407 MB'tır; boştayken 69 MB.
 
 | Metrik                              | Hedef             | Ölçülen (Windows, release)  |
 |-------------------------------------|-------------------|-----------------------------|
-| Soğuk başlangıçtan ilk kareye       | < 150 ms          | 278 ms (`main`'den ilk kareye) |
-| Boştaki RAM                         | < 60 MB           | 84 MB working set, örnek koleksiyon açık |
-| Release binary'si                   | < 100 MB          | 38.9 MB |
+| Soğuk başlangıçtan ilk kareye       | < 150 ms          | 222 ms (`main`'den ilk kareye; yaklaşık 150 ms'si ekran kartı sürücüsünün yüklenmesi) |
+| Boştaki RAM                         | < 60 MB           | 88 MB working set, örnek koleksiyon açık (çoğu ekran kartı sürücüsü) |
+| Release binary'si                   | < 100 MB          | 54.4 MB |
 | Girdiden çizime gecikme             | 1 kare (120 Hz'de ≤ 8 ms) | ölçülmedi |
 | 100 MB JSON gövdesini açma ve kaydırma | kare düşmesi yok | gönderdikten 306 ms sonra ekranda (yerel sunucu); kare süreleri ölçülmedi |
 
