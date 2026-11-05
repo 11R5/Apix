@@ -981,6 +981,26 @@ mod tests {
     }
 
     #[test]
+    fn a_plugin_auth_round_trips() {
+        let root = temp_collection("plugin-auth");
+        let path = root.join("signed.apix");
+        let mut request = Request::new(Method::Post, "https://{{host}}/orders");
+        request.auth = Auth::Plugin {
+            plugin: "hmac-signature".into(),
+            config: [
+                ("key_id".to_owned(), "k1".to_owned()),
+                ("secret".to_owned(), "{{secret}}".to_owned()),
+            ]
+            .into_iter()
+            .collect(),
+        };
+        save_request(&path, &request).unwrap();
+        let text = fs::read_to_string(&path).unwrap();
+        assert!(text.contains("plugin = \"hmac-signature\""), "{text}");
+        assert_eq!(load_request(&path).unwrap().auth, request.auth);
+    }
+
+    #[test]
     fn opens_collection_and_lists_requests() {
         let root = temp_collection("list");
         let path = root.join("users/create.apix");

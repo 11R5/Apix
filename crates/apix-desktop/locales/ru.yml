@@ -26,6 +26,7 @@ auth.describe.consumer_key: "Consumer key: %{key}"
 auth.describe.key_in_header: "%{key} в заголовках"
 auth.describe.key_in_query: "%{key} в строке запроса"
 auth.describe.oauth2: "%{grant}, токен с %{url}"
+auth.describe.plugin: "Подписывается плагином %{name}."
 auth.describe.token: "Токен: %{token}"
 auth.describe.token_set: "Токен: задан"
 auth.describe.username: "Пользователь: %{name}"
@@ -86,6 +87,8 @@ auth.kind.bearer: Bearer-токен
 auth.kind.digest: Digest auth
 auth.kind.inherit: Наследовать от родителя
 auth.kind.none: Без авторизации
+auth.kind.plugin: "%{label} (плагин)"
+auth.kind.plugin_missing: "%{name} (не установлен)"
 auth.no_auth.collection: Авторизация не отправляется, даже если проект задаёт её для этой коллекции.
 auth.no_auth.folder: Авторизация не отправляется, даже если родительская папка или коллекция задаёт её для этой папки.
 auth.no_auth.project: Наследующие запросы отправляются без авторизации.
@@ -95,6 +98,8 @@ auth.note.bearer: "Отправляется как Authorization: Bearer <token>
 auth.note.digest: Apix отвечает на Digest-запрос сервера (MD5 или SHA-256).
 auth.note.oauth1: При каждой отправке подписывается с новыми nonce и временной меткой.
 auth.note.oauth2: Apix сам получает токен и отправляет его как Bearer-токен. Токены хранятся только в памяти и никогда не записываются на диск.
+auth.note.plugin: "Подписывается плагином %{name} при отправке: он получает запрос (метод, URL, заголовки, тело) и эти поля и добавляет заголовки или параметры запроса. Работает изолированно, без сети и файлов."
+auth.note.plugin_missing: "Плагин %{name} не установлен, поэтому запрос нельзя подписать. Установите его в Вид › Плагины…; его поля сохранены."
 auth.note.variables: "В значениях можно использовать {{variables}}."
 auth.signature: Подпись
 auth.token.expired: Срок действия токена истёк; при следующей отправке будет получен новый.
@@ -474,6 +479,7 @@ menu.new_request_with_method: Новый запрос с методом
 menu.next_tab: Следующая вкладка
 menu.open: Открыть…
 menu.open_recent: Открыть недавние
+menu.plugins: Плагины…
 menu.previous_tab: Предыдущая вкладка
 menu.project_auth: Авторизация проекта…
 menu.project_settings: Настройки запросов проекта…
@@ -626,6 +632,20 @@ palette.open_recent: "Открыть недавнее: %{name}"
 palette.placeholder: Поиск запросов и команд…
 palette.save_request: Сохранить запрос
 palette.send_request: Отправить запрос
+plugins.about: "Плагины добавляют типы авторизации, импортёры и представления ответа. Каждый — файл WebAssembly, который может написать кто угодно (на Rust с apix-plugin-sdk или на любом языке, компилируемом в WebAssembly), и работает изолированно: без сети, без файлов, с ограничением времени и памяти."
+plugins.import: Импортировать файл…
+plugins.import_prompt: Выберите файл для импорта
+plugins.install: Установить из файла…
+plugins.installed: "Установлен: %{file}"
+plugins.none: "Плагинов пока нет. Установите файл .wasm или положите его в %{folder}. С Apix в папке plugins идут три примера: подпись HMAC, импорт CSV и статистика полей."
+plugins.note: Типы авторизации появляются в списке вкладки Auth, представления — рядом с Текст, Таблица и График, импортёры — здесь.
+plugins.offers_auth: "авторизация: %{label}"
+plugins.offers_import: "импорт: %{label}"
+plugins.offers_view: "вид: %{label}"
+plugins.reload: Перезагрузить
+plugins.remove: Удалить
+plugins.removed: "%{name} удалён."
+plugins.title: Плагины
 prod.confirm_detail: "Окружение «%{environment}» похоже на продакшен. Всё равно отправить %{method} %{url}?"
 prod.confirm_send: "Отправить %{method}"
 prod.confirm_title: "%{method} в продакшене?"
@@ -1004,6 +1024,9 @@ visual.label: Подпись
 visual.more_columns: "Ещё столбцов не показано: %{count}."
 visual.no_numbers: Ни в одном столбце нет только чисел; строить нечего.
 visual.no_records: В этом теле нет списка записей. Отфильтруйте до него (например, $.items).
+visual.plugin_by: "%{title} · от плагина %{plugin}"
+visual.plugin_gone: Этот плагин больше не установлен.
+visual.plugin_running: Плагин читает ответ…
 visual.summary: "Строк: %{rows} · столбцов: %{columns} · из %{source}"
 visual.table: Таблица
 visual.text: Текст

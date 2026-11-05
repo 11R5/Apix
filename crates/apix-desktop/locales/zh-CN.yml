@@ -26,6 +26,7 @@ auth.describe.consumer_key: "Consumer Key：%{key}"
 auth.describe.key_in_header: "请求头中的 %{key}"
 auth.describe.key_in_query: "查询字符串中的 %{key}"
 auth.describe.oauth2: "%{grant}，令牌来自 %{url}"
+auth.describe.plugin: "由插件 %{name} 签名。"
 auth.describe.token: "令牌：%{token}"
 auth.describe.token_set: "令牌：已设置"
 auth.describe.username: "用户名：%{name}"
@@ -86,6 +87,8 @@ auth.kind.bearer: Bearer 令牌
 auth.kind.digest: Digest 认证
 auth.kind.inherit: 继承上级
 auth.kind.none: 无认证
+auth.kind.plugin: "%{label}（插件）"
+auth.kind.plugin_missing: "%{name}（未安装）"
 auth.no_auth.collection: 不发送认证，即使项目为此集合设置了认证。
 auth.no_auth.folder: 不发送认证，即使上级文件夹或集合为此文件夹设置了认证。
 auth.no_auth.project: 继承设置的请求不发送认证。
@@ -95,6 +98,8 @@ auth.note.bearer: "以 Authorization: Bearer <token> 发送。"
 auth.note.digest: Apix 会响应服务器的 Digest 质询（MD5 或 SHA-256）。
 auth.note.oauth1: 每次发送都使用新的 nonce 和时间戳签名。
 auth.note.oauth2: Apix 会自动获取令牌，并以 Bearer 令牌发送。令牌仅保存在内存中，不会写入磁盘。
+auth.note.plugin: "发送时由插件 %{name} 签名：它获得请求（方法、URL、标头、正文）和这些字段，并添加标头或查询参数。它在沙箱中运行，无网络、无文件。"
+auth.note.plugin_missing: "插件 %{name} 未安装，因此无法签名请求。请在 视图 › 插件… 中安装；其字段会保留。"
 auth.note.variables: "值中可使用 {{variables}}。"
 auth.signature: 签名
 auth.token.expired: 令牌已过期，下次发送时将获取新令牌。
@@ -474,6 +479,7 @@ menu.new_request_with_method: 按方法新建请求
 menu.next_tab: 下一个标签页
 menu.open: 打开…
 menu.open_recent: 最近打开
+menu.plugins: 插件…
 menu.previous_tab: 上一个标签页
 menu.project_auth: 项目认证…
 menu.project_settings: 项目请求设置…
@@ -626,6 +632,20 @@ palette.open_recent: "最近打开：%{name}"
 palette.placeholder: 搜索请求和命令…
 palette.save_request: 保存请求
 palette.send_request: 发送请求
+plugins.about: 插件可添加认证类型、导入器和响应视图。每个插件都是任何人都能编写的 WebAssembly 文件（用 Rust 配合 apix-plugin-sdk，或任何能编译为 WebAssembly 的语言），在沙箱中运行：无网络、无文件、有时间和内存限制。
+plugins.import: 导入文件…
+plugins.import_prompt: 选择要导入的文件
+plugins.install: 从文件安装…
+plugins.installed: "已安装：%{file}"
+plugins.none: "还没有插件。安装一个 .wasm 文件，或将其放入 %{folder}。Apix 的 plugins 文件夹附带三个示例：HMAC 签名、CSV 导入器和字段统计。"
+plugins.note: 认证类型显示在 Auth 标签的列表中，视图显示在文本、表格和图表旁边，导入器显示在这里。
+plugins.offers_auth: "认证：%{label}"
+plugins.offers_import: "导入：%{label}"
+plugins.offers_view: "视图：%{label}"
+plugins.reload: 重新加载
+plugins.remove: 移除
+plugins.removed: "已移除 %{name}。"
+plugins.title: 插件
 prod.confirm_detail: "环境“%{environment}”看起来是生产环境。仍要发送 %{method} %{url} 吗？"
 prod.confirm_send: "发送 %{method}"
 prod.confirm_title: "在生产环境中 %{method}？"
@@ -1004,6 +1024,9 @@ visual.label: 标签
 visual.more_columns: 还有 %{count} 列未显示。
 visual.no_numbers: 没有只含数字的列，无法绘图。
 visual.no_records: 此正文中没有记录列表。请筛选到某个列表（例如 $.items）。
+visual.plugin_by: "%{title} · 来自插件 %{plugin}"
+visual.plugin_gone: 该插件已不再安装。
+visual.plugin_running: 插件正在读取响应…
 visual.summary: "%{rows} 行 · %{columns} 列 · 来自 %{source}"
 visual.table: 表格
 visual.text: 文本

@@ -9,6 +9,7 @@ pub mod bundle;
 pub mod har;
 pub mod insomnia;
 pub mod openapi;
+pub mod plugin;
 pub mod postman;
 pub mod postman_dump;
 pub mod postman_export;

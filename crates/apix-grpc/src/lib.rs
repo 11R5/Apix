@@ -225,7 +225,7 @@ pub async fn metadata(req: &Request) -> Result<MetadataMap, GrpcError> {
                 .map_err(|e| GrpcError::Auth(e.to_string()))?;
             put("authorization", &format!("Bearer {token}"))?
         }
-        Auth::Digest { .. } | Auth::OAuth1(_) | Auth::AwsSigV4(_) => {
+        Auth::Digest { .. } | Auth::OAuth1(_) | Auth::AwsSigV4(_) | Auth::Plugin { .. } => {
             return Err(GrpcError::Auth(
                 "this auth type signs HTTP requests and does not apply to gRPC; use Bearer, Basic, API key or OAuth 2.0".into(),
             ));

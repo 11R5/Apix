@@ -1,4 +1,4 @@
-<!-- translated from en/technical.md sha256:1fdf9e2aa86886eb -->
+<!-- translated from en/technical.md sha256:3698424b837d0943 -->
 
 # Teknik notlar
 
@@ -21,6 +21,8 @@ crates/
 ├── apix-mock       kayıtlı örneklerden yanıt veren yerel mock sunucu
 ├── apix-capture    geçen istekleri kaydeden proxy
 ├── apix-route      sunucuya giden rota ve atlamaların yeri
+├── apix-plugins    WebAssembly eklentileri (wasmi): yükleme, yalıtım, yetkilendirme, içe aktarma ve görünüm kancaları
+├── apix-plugin-sdk Rust'ta eklenti yazmak; examples/ klasörü plugins/ içindeki eklentilerdir
 ├── apix-cli        `apix` komutu
 └── apix-desktop    masaüstü uygulaması (GPUI); arayüz metinleri locales/ içinde
 tools/
@@ -33,6 +35,7 @@ scripts/
 examples/
 ├── jsonplaceholder repodan çalıştırıldığında uygulamanın açtığı küçük bir koleksiyon
 └── ci/             GitHub Actions (zamanlanmış monitörler de), GitLab CI ve Azure Pipelines örnekleri
+plugins/            örnek eklentiler (.wasm), apix-plugin-sdk örneklerinden derlenir
 action.yml          GitHub Action (`uses: 11R5/Apix@…`)
 Dockerfile          konteyner imajı olarak `apix` komutu
 .github/workflows/  üç sistemde CI ve sürüm etiketlerinde imaj yayımı
@@ -64,6 +67,15 @@ cargo build --release -p apix-desktop
 uygulamasını atlar; onu açıkça derleyin. Bağımlılıklar debug derlemelerde bile
 optimize edilir, böylece geliştirme sırasında arayüz akıcı kalır.
 
+`plugins/` içindeki örnek eklentiler için bir kez WebAssembly hedefi gerekir
+(`rustup target add wasm32-unknown-unknown`), sonra
+`cargo build -p apix-plugin-sdk --examples --release --target wasm32-unknown-unknown`;
+`target/wasm32-unknown-unknown/release/examples/*.wasm` dosyalarını `plugins/`
+klasörüne kopyalayın (adlarda `_` yerine `-`). `apix-plugins` testleri bu
+dosyaları yükler. `wasmi` debug derlemelerde de optimize edilir ve debug
+assertion'ları olmadan derlenir (`[profile.dev.package.wasmi]`): yorumlayıcı
+döngüsü, aksi hâlde yığını taşıran kuyruk çağrılarına dayanır.
+
 Release profili fat LTO, tek codegen unit ve strip edilmiş semboller kullanır.
 Masaüstü uygulamasının tam bir release derlemesi birkaç dakika sürer.
 
@@ -80,6 +92,7 @@ Masaüstü uygulamasının tam bir release derlemesi birkaç dakika sürer.
 | Scriptler | `rquickjs` (QuickJS, sistemin C derleyicisiyle derlenir); `require` kütüphaneleri Apix'in kendi JavaScript kodu, özetler `sha1`, `sha2`, `md-5`, `hmac` ile |
 | Dosyalar | `serde`, `toml`, `serde_json`, `notify` (dosya izleme), `trash`; git, kurulu `git` programı üzerinden (kütüphane yok) |
 | Yanıtlar | süzme için `serde_json_path` (JSONPath, RFC 9535) ile `jaq-core`, `jaq-std`, `jaq-json` (jq); büyük gövdelerde arama için `regex` |
+| Eklentiler | `wasmi` 2 (yakıt ve bellek sınırlı bir WebAssembly yorumlayıcısı) |
 | Diller | `rust-i18n` (gpui-kit ile ortak), `sys-locale` |
 
 ## Apix'in koleksiyonlar dışında yazdığı dosyalar
@@ -96,6 +109,7 @@ Masaüstü uygulamasının tam bir release derlemesi birkaç dakika sürer.
 | `<config>/Apix/graphql/*.json` | her uç noktadan en son çekilen GraphQL şeması (sunucunun introspection cevabı), adresin özetiyle adlandırılır |
 | `<config>/Apix/themes/*.toml` | kendi temaların (yalnızca Ayarlar'da **Klasörü aç**'a basıldığında ve klasör boşsa yazılır: bir örnek) |
 | İşletim sistemi kimlik bilgisi deposu, `Apix` servisi | yalnızca istenirse: şifreli koleksiyonların hatırlanan parolaları (`vault:<klasör>`) ve ortam gizli değerleri (`env:<kimlik>`, uzun değerler için ayrıca `env:<kimlik>#1`, …), AI yardımcısı anahtarları (`ai:anthropic-api-key`, `ai:openai-api-key`, `ai:google-api-key`) |
+| `<config>/Apix/plugins/*.wasm` | kurulu eklentiler (Eklentiler penceresi, `apix plugins install`) |
 | `<config>/Apix/history/` | gönderilen istekler (`{{değişkenler}}` çözülmeden) ve yanıtları: `index.jsonl`, her kayıt için bir `<id>.json` ve `<id>.body`; son 300 kayıt, gövdeler 256 KB'ta kesilir; bir gRPC çağrısı gövde olarak günlüğünü tutar |
 
 `<config>`, Windows'ta `%APPDATA%`, macOS'te `~/Library/Application Support`,
@@ -116,6 +130,7 @@ parolaları asla diske yazılmaz.
 | `APIX_CLAUDE_CONFIG` | Claude'a bağla'nın gerçeği yerine yazdığı Claude Desktop yapılandırma dosyası (testler için). |
 | `APIX_AI_URL` | AI yardımcısının Messages API isteklerini Anthropic yerine gönderdiği adres (bir proxy, bir test sunucusu). |
 | `APIX_GEO_URL` | **DB-IP Lite'ı indir**'in DB-IP yerine indirdiği adres. |
+| `APIX_PLUGINS_DIR` | `<config>/Apix/plugins` yerine eklenti klasörü. |
 | `GITHUB_BASE_REF` | GitHub Actions'ın pull request'lerde atadığı değişken: değer verilmeyen `apix run --changed` `origin/<değeri>` ile karşılaştırır. |
 
 ## Performans ölçümü
@@ -217,6 +232,7 @@ alır; yeni bir commit yeniden derler, değişmeyen kaynak öncekini kullanır.
 | apix-mock | yol kalıpları (`{{base_url}}/users/:id`, sunucular, sorgular), en çok sabit parçalı eşleşme, `x-mock-response-name` ve `-code` ile seçim, önce 2xx, `Content-Encoding`'siz açılmış gövdeler, 404 listesi, ön istekler; bir portta HTTP istemcisiyle yanıtlayan gerçek sunucu, CORS ve çalışırken eklenen örneğin sunulması |
 | apix-capture | kaydedilen isteklerde çerez ve kimlik bilgisi olmaması, sunucu süzgeçleri; gerçek yerel sunucularla: düz HTTP'nin kaydı, HTTPS'in yerel yetkiliyle açılması (istemci yalnızca ona güvenirken), HTTPS tünellerinin okunmadan geçmesi |
 | apix-route | tracert (çevrilmiş olanı da), traceroute ve tracepath satırları; yerel adresler; harita izdüşümü ve uzaklıklar; MaxMind DB formatında yazılan bir veritabanı: yerler, bilinmeyen adresler, özel adresler, dosya seçimi; bir indirmenin kurulması (gzip, veritabanı değilse ret, eskisi ancak sonra değişir); sistemin kendi aracıyla 127.0.0.1'e izleme |
+| apix-plugins | örnek eklentilerin manifest'leriyle yüklenmesi; HMAC imzası, ayrıca hesaplanmış olanla karşılaştırılarak; CSV içe aktarma ve alan istatistikleri; metin olarak yazılmış modüller: sonsuz döngünün durdurulması, içe aktarmaların reddi, kötü ad, eksik manifest, bellek dışını gösteren yanıt, WebAssembly olmayan dosya; ayrıca `[auth.plugin]` gidiş-dönüşü (apix-core) ve bir içe aktarıcının yanıtının istek dosyalarına çevrilmesi (apix-import) |
 | apix-vault | şifreleme formatı, kurcalama (tampering), parola değişikliği, kurtarma anahtarı, anahtarlık kayıtları (gerçek kimlik bilgisi deposunda, test servis adıyla; depo yoksa atlanır) |
 | apix-desktop | çevirilerin eksiksizliği, dil yardımcıları, dosya yolları, vurgulama sorgusu, tema dosyaları (okuma, hatalar, gidiş-dönüş), vurgu ve saydamlık renkleri, GraphQL şema dosyası adları, geçmişte bir gRPC çağrısının günlüğü |
 | docs-check | belge yapısı ve damgalar |

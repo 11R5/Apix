@@ -28,6 +28,7 @@ auth.describe.consumer_key: "Consumer key: %{key}"
 auth.describe.key_in_header: "%{key} in the headers"
 auth.describe.key_in_query: "%{key} in the query string"
 auth.describe.oauth2: "%{grant}, token from %{url}"
+auth.describe.plugin: "Signed by the plugin %{name}."
 auth.describe.token: "Token: %{token}"
 auth.describe.token_set: "Token: set"
 auth.describe.username: "Username: %{name}"
@@ -88,6 +89,8 @@ auth.kind.bearer: Bearer token
 auth.kind.digest: Digest auth
 auth.kind.inherit: Inherit from parent
 auth.kind.none: No auth
+auth.kind.plugin: "%{label} (plugin)"
+auth.kind.plugin_missing: "%{name} (not installed)"
 auth.no_auth.collection: No auth is sent, even if the project sets one for this collection.
 auth.no_auth.folder: No auth is sent, even if a parent folder or the collection sets one for this folder.
 auth.no_auth.project: No auth is sent for requests that inherit.
@@ -97,6 +100,8 @@ auth.note.bearer: "Sent as Authorization: Bearer <token>."
 auth.note.digest: Apix answers the server's Digest challenge (MD5 or SHA-256).
 auth.note.oauth1: Signed with a fresh nonce and timestamp on every send.
 auth.note.oauth2: Apix gets the token itself and sends it as a bearer token. Tokens stay in memory and are never written to disk.
+auth.note.plugin: "Signed by the plugin %{name} when the request is sent: it gets the request (method, URL, headers, body) and these fields, and adds headers or query parameters. It runs sandboxed, with no network or files."
+auth.note.plugin_missing: "The plugin %{name} is not installed, so the request cannot be signed. Install it from View › Plugins…; its fields are kept."
 auth.note.variables: "Values can use {{variables}}."
 auth.signature: Signature
 auth.token.expired: The token has expired; the next send gets a new one.
@@ -476,6 +481,7 @@ menu.new_request_with_method: New request with method
 menu.next_tab: Next tab
 menu.open: Open…
 menu.open_recent: Open recent
+menu.plugins: Plugins…
 menu.previous_tab: Previous tab
 menu.project_auth: Project auth…
 menu.project_settings: Project request settings…
@@ -628,6 +634,20 @@ palette.open_recent: "Open recent: %{name}"
 palette.placeholder: Search requests and commands…
 palette.save_request: Save request
 palette.send_request: Send request
+plugins.about: "Plugins add auth types, importers and response views. Each is a WebAssembly file that anyone can write (in Rust with apix-plugin-sdk, or any language that compiles to WebAssembly) and runs sandboxed: no network, no files, a time and memory limit."
+plugins.import: Import a file…
+plugins.import_prompt: Pick a file to import
+plugins.install: Install from a file…
+plugins.installed: "Installed: %{file}"
+plugins.none: "No plugins yet. Install a .wasm file, or put one in %{folder}. Apix comes with three examples in its plugins folder: an HMAC signature, a CSV importer and field statistics."
+plugins.note: Auth types appear in the Auth tab's list, views next to Text, Table and Chart, importers here.
+plugins.offers_auth: "auth: %{label}"
+plugins.offers_import: "import: %{label}"
+plugins.offers_view: "view: %{label}"
+plugins.reload: Reload
+plugins.remove: Remove
+plugins.removed: "%{name} removed."
+plugins.title: Plugins
 prod.confirm_detail: "The environment “%{environment}” looks like production. Send %{method} %{url} anyway?"
 prod.confirm_send: "Send %{method}"
 prod.confirm_title: "%{method} in production?"
@@ -1006,6 +1026,9 @@ visual.label: Label
 visual.more_columns: "%{count} more columns not shown."
 visual.no_numbers: No column holds only numbers, so there is nothing to chart.
 visual.no_records: No list of records in this body. Filter to one (for example $.items).
+visual.plugin_by: "%{title} · by the plugin %{plugin}"
+visual.plugin_gone: That plugin is no longer installed.
+visual.plugin_running: The plugin is reading the response…
 visual.summary: "%{rows} rows · %{columns} columns · from %{source}"
 visual.table: Table
 visual.text: Text

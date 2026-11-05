@@ -26,6 +26,7 @@ auth.describe.consumer_key: "مفتاح المستهلك: %{key}"
 auth.describe.key_in_header: "%{key} في الترويسات"
 auth.describe.key_in_query: "%{key} في سلسلة الاستعلام"
 auth.describe.oauth2: "%{grant}، الرمز المميز من %{url}"
+auth.describe.plugin: "توقّعه الإضافة %{name}."
 auth.describe.token: "الرمز المميز: %{token}"
 auth.describe.token_set: "الرمز المميز: مُعيَّن"
 auth.describe.username: "اسم المستخدم: %{name}"
@@ -86,6 +87,8 @@ auth.kind.bearer: رمز Bearer
 auth.kind.digest: مصادقة Digest
 auth.kind.inherit: الوراثة من الأصل
 auth.kind.none: بلا مصادقة
+auth.kind.plugin: "%{label} (إضافة)"
+auth.kind.plugin_missing: "%{name} (غير مثبّتة)"
 auth.no_auth.collection: لا تُرسل أي مصادقة، حتى لو عيّن المشروع مصادقة لهذه المجموعة.
 auth.no_auth.folder: لا تُرسل أي مصادقة، حتى لو عيّن مجلد أصل أو المجموعة مصادقة لهذا المجلد.
 auth.no_auth.project: لا تُرسل أي مصادقة للطلبات التي ترث.
@@ -95,6 +98,8 @@ auth.note.bearer: "يُرسل بالشكل Authorization: Bearer <token>."
 auth.note.digest: يجيب Apix على تحدي Digest من الخادم (MD5 أو SHA-256).
 auth.note.oauth1: يُوقَّع بقيمة nonce وطابع زمني جديدين في كل إرسال.
 auth.note.oauth2: يحصل Apix على الرمز المميز بنفسه ويرسله كرمز Bearer. تبقى الرموز المميزة في الذاكرة ولا تُكتب على القرص أبدًا.
+auth.note.plugin: "توقّعه الإضافة %{name} عند الإرسال: تتلقى الطلب (الطريقة وURL والترويسات والمحتوى) وهذه الحقول، وتضيف ترويسات أو معاملات استعلام. تعمل معزولة، بلا شبكة ولا ملفات."
+auth.note.plugin_missing: "الإضافة %{name} غير مثبّتة، لذا لا يمكن توقيع الطلب. ثبّتها من عرض › الإضافات…؛ تُحفظ حقولها."
 auth.note.variables: "يمكن أن تستخدم القيم {{variables}}."
 auth.signature: التوقيع
 auth.token.expired: انتهت صلاحية الرمز المميز؛ سيحصل الإرسال التالي على رمز جديد.
@@ -474,6 +479,7 @@ menu.new_request_with_method: طلب جديد بالطريقة
 menu.next_tab: علامة التبويب التالية
 menu.open: فتح…
 menu.open_recent: فتح الأخيرة
+menu.plugins: الإضافات…
 menu.previous_tab: علامة التبويب السابقة
 menu.project_auth: مصادقة المشروع…
 menu.project_settings: إعدادات طلبات المشروع…
@@ -626,6 +632,20 @@ palette.open_recent: "فتح الأخيرة: %{name}"
 palette.placeholder: البحث في الطلبات والأوامر…
 palette.save_request: حفظ الطلب
 palette.send_request: إرسال الطلب
+plugins.about: "تضيف الإضافات أنواع مصادقة ومستوردات وطرق عرض للاستجابة. كلٌّ منها ملف WebAssembly يستطيع أي شخص كتابته (بلغة Rust مع apix-plugin-sdk أو بأي لغة تُترجم إلى WebAssembly) ويعمل معزولًا: لا شبكة ولا ملفات، مع حدّ للوقت والذاكرة."
+plugins.import: استيراد ملف…
+plugins.import_prompt: اختر ملفًا لاستيراده
+plugins.install: تثبيت من ملف…
+plugins.installed: "ثُبّتت: %{file}"
+plugins.none: "لا توجد إضافات بعد. ثبّت ملف ‎.wasm أو ضعه في %{folder}. يأتي Apix بثلاثة أمثلة في مجلد plugins: توقيع HMAC ومستورد CSV وإحصاءات الحقول."
+plugins.note: تظهر أنواع المصادقة في قائمة تبويب Auth، وطرق العرض بجانب نص وجدول ورسم، والمستوردات هنا.
+plugins.offers_auth: "مصادقة: %{label}"
+plugins.offers_import: "استيراد: %{label}"
+plugins.offers_view: "عرض: %{label}"
+plugins.reload: إعادة التحميل
+plugins.remove: إزالة
+plugins.removed: "أُزيلت %{name}."
+plugins.title: الإضافات
 prod.confirm_detail: "تبدو البيئة «%{environment}» بيئة إنتاج. هل تريد إرسال %{method} %{url} على أي حال؟"
 prod.confirm_send: "إرسال %{method}"
 prod.confirm_title: "%{method} في بيئة الإنتاج؟"
@@ -1004,6 +1024,9 @@ visual.label: التسمية
 visual.more_columns: "%{count} أعمدة أخرى غير معروضة."
 visual.no_numbers: لا يوجد عمود يحوي أرقامًا فقط، فلا شيء يُرسم.
 visual.no_records: لا توجد قائمة سجلات في هذا المحتوى. صفِّه إلى قائمة (مثلًا $.items).
+visual.plugin_by: "%{title} · من الإضافة %{plugin}"
+visual.plugin_gone: لم تعد تلك الإضافة مثبّتة.
+visual.plugin_running: الإضافة تقرأ الاستجابة…
 visual.summary: "%{rows} صف · %{columns} عمود · من %{source}"
 visual.table: جدول
 visual.text: نص

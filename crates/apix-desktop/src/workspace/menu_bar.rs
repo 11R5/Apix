@@ -296,6 +296,7 @@ impl MenuState {
             .menu(tr!("menu.capture"), Box::new(OpenCapture))
             .menu(tr!("menu.git"), Box::new(OpenGit))
             .menu(tr!("menu.route"), Box::new(OpenRoute))
+            .menu(tr!("menu.plugins"), Box::new(OpenPlugins))
             .separator()
             .menu(tr!("menu.next_tab"), Box::new(NextTab))
             .menu(tr!("menu.previous_tab"), Box::new(PrevTab))

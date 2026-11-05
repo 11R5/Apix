@@ -26,6 +26,7 @@ auth.describe.consumer_key: "Clé du consommateur : %{key}"
 auth.describe.key_in_header: "%{key} dans les en-têtes"
 auth.describe.key_in_query: "%{key} dans les paramètres d'URL"
 auth.describe.oauth2: "%{grant}, jeton obtenu via %{url}"
+auth.describe.plugin: "Signée par l’extension %{name}."
 auth.describe.token: "Jeton : %{token}"
 auth.describe.token_set: "Jeton : défini"
 auth.describe.username: "Nom d'utilisateur : %{name}"
@@ -86,6 +87,8 @@ auth.kind.bearer: Jeton Bearer
 auth.kind.digest: Authentification Digest
 auth.kind.inherit: Hériter du parent
 auth.kind.none: Aucune authentification
+auth.kind.plugin: "%{label} (extension)"
+auth.kind.plugin_missing: "%{name} (non installée)"
 auth.no_auth.collection: Aucune authentification n'est envoyée, même si le projet en définit une pour cette collection.
 auth.no_auth.folder: Aucune authentification n'est envoyée, même si un dossier parent ou la collection en définit une pour ce dossier.
 auth.no_auth.project: Aucune authentification n'est envoyée pour les requêtes qui héritent.
@@ -95,6 +98,8 @@ auth.note.bearer: "Envoyé sous la forme Authorization: Bearer <token>."
 auth.note.digest: Apix répond au défi Digest du serveur (MD5 ou SHA-256).
 auth.note.oauth1: Signé avec un nonce et un horodatage nouveaux à chaque envoi.
 auth.note.oauth2: Apix obtient le jeton lui-même et l'envoie comme jeton Bearer. Les jetons restent en mémoire et ne sont jamais écrits sur le disque.
+auth.note.plugin: "Signée par l’extension %{name} à l’envoi : elle reçoit la requête (méthode, URL, en-têtes, corps) et ces champs, et ajoute des en-têtes ou des paramètres de requête. Elle tourne isolée, sans réseau ni fichiers."
+auth.note.plugin_missing: "L’extension %{name} n’est pas installée, la requête ne peut donc pas être signée. Installez-la depuis Affichage › Extensions… ; ses champs sont conservés."
 auth.note.variables: "Les valeurs peuvent utiliser des {{variables}}."
 auth.signature: Signature
 auth.token.expired: Le jeton a expiré ; le prochain envoi en obtiendra un nouveau.
@@ -474,6 +479,7 @@ menu.new_request_with_method: Nouvelle requête avec la méthode
 menu.next_tab: Onglet suivant
 menu.open: Ouvrir…
 menu.open_recent: Ouvrir récent
+menu.plugins: Extensions…
 menu.previous_tab: Onglet précédent
 menu.project_auth: Authentification du projet…
 menu.project_settings: Réglages de requête du projet…
@@ -626,6 +632,20 @@ palette.open_recent: "Ouvrir récent : %{name}"
 palette.placeholder: Rechercher des requêtes et des commandes…
 palette.save_request: Enregistrer la requête
 palette.send_request: Envoyer la requête
+plugins.about: "Les extensions ajoutent des types d’auth, des importateurs et des vues de réponse. Chacune est un fichier WebAssembly que tout le monde peut écrire (en Rust avec apix-plugin-sdk ou dans tout langage compilé en WebAssembly) et tourne isolée : pas de réseau, pas de fichiers, limites de temps et de mémoire."
+plugins.import: Importer un fichier…
+plugins.import_prompt: Choisissez un fichier à importer
+plugins.install: Installer depuis un fichier…
+plugins.installed: "Installée : %{file}"
+plugins.none: "Pas encore d’extensions. Installez un fichier .wasm ou placez-le dans %{folder}. Apix est livré avec trois exemples dans son dossier plugins : signature HMAC, importateur CSV et statistiques de champs."
+plugins.note: Les types d’auth apparaissent dans la liste de l’onglet Auth, les vues à côté de Texte, Tableau et Graphique, les importateurs ici.
+plugins.offers_auth: "auth : %{label}"
+plugins.offers_import: "import : %{label}"
+plugins.offers_view: "vue : %{label}"
+plugins.reload: Recharger
+plugins.remove: Retirer
+plugins.removed: "%{name} retirée."
+plugins.title: Extensions
 prod.confirm_detail: "L’environnement « %{environment} » ressemble à la production. Envoyer %{method} %{url} quand même ?"
 prod.confirm_send: "Envoyer %{method}"
 prod.confirm_title: "%{method} en production ?"
@@ -1004,6 +1024,9 @@ visual.label: Libellé
 visual.more_columns: "%{count} colonnes de plus non affichées."
 visual.no_numbers: Aucune colonne ne contient que des nombres ; rien à tracer.
 visual.no_records: Pas de liste d’enregistrements dans ce corps. Filtrez-en une (par exemple $.items).
+visual.plugin_by: "%{title} · par l’extension %{plugin}"
+visual.plugin_gone: Cette extension n’est plus installée.
+visual.plugin_running: L’extension lit la réponse…
 visual.summary: "%{rows} lignes · %{columns} colonnes · depuis %{source}"
 visual.table: Tableau
 visual.text: Texte

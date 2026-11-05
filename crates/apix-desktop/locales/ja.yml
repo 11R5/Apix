@@ -26,6 +26,7 @@ auth.describe.consumer_key: "コンシューマーキー: %{key}"
 auth.describe.key_in_header: "ヘッダー内の %{key}"
 auth.describe.key_in_query: "クエリ文字列内の %{key}"
 auth.describe.oauth2: "%{grant}、トークン取得元 %{url}"
+auth.describe.plugin: "プラグイン %{name} が署名します。"
 auth.describe.token: "トークン: %{token}"
 auth.describe.token_set: "トークン: 設定済み"
 auth.describe.username: "ユーザー名: %{name}"
@@ -86,6 +87,8 @@ auth.kind.bearer: Bearer トークン
 auth.kind.digest: Digest 認証
 auth.kind.inherit: 親から継承
 auth.kind.none: 認証なし
+auth.kind.plugin: "%{label} (プラグイン)"
+auth.kind.plugin_missing: "%{name} (未インストール)"
 auth.no_auth.collection: プロジェクトがこのコレクションに認証を設定していても、認証は送信されません。
 auth.no_auth.folder: 親フォルダーまたはコレクションがこのフォルダーに認証を設定していても、認証は送信されません。
 auth.no_auth.project: 継承するリクエストには認証が送信されません。
@@ -95,6 +98,8 @@ auth.note.bearer: "Authorization: Bearer <token> として送信します。"
 auth.note.digest: Apix がサーバーの Digest チャレンジに応答します（MD5 または SHA-256）。
 auth.note.oauth1: 送信のたびに新しい nonce とタイムスタンプで署名します。
 auth.note.oauth2: Apix がトークンを自動で取得し、Bearer トークンとして送信します。トークンはメモリ上にのみ保持され、ディスクには書き込まれません。
+auth.note.plugin: "送信時にプラグイン %{name} が署名します。リクエスト (メソッド、URL、ヘッダー、本文) とこれらの項目を受け取り、ヘッダーやクエリーパラメーターを追加します。ネットワークやファイルなしの隔離環境で動きます。"
+auth.note.plugin_missing: "プラグイン %{name} がインストールされていないため署名できません。表示 › プラグイン… からインストールしてください。項目は保持されます。"
 auth.note.variables: "値には {{variables}} を使用できます。"
 auth.signature: 署名
 auth.token.expired: トークンの有効期限が切れました。次の送信時に新しいトークンを取得します。
@@ -474,6 +479,7 @@ menu.new_request_with_method: メソッドを指定して新しいリクエス�
 menu.next_tab: 次のタブ
 menu.open: 開く…
 menu.open_recent: 最近使ったものを開く
+menu.plugins: プラグイン…
 menu.previous_tab: 前のタブ
 menu.project_auth: プロジェクトの認証…
 menu.project_settings: プロジェクトのリクエスト設定…
@@ -626,6 +632,20 @@ palette.open_recent: "最近使ったものを開く: %{name}"
 palette.placeholder: リクエストとコマンドを検索…
 palette.save_request: リクエストを保存
 palette.send_request: リクエストを送信
+plugins.about: プラグインは認証タイプ、インポーター、レスポンスビューを追加します。それぞれ誰でも書ける WebAssembly ファイル (apix-plugin-sdk を使う Rust や WebAssembly にコンパイルできる任意の言語) で、隔離された環境で動きます。ネットワークなし、ファイルなし、時間とメモリの上限あり。
+plugins.import: ファイルをインポート…
+plugins.import_prompt: インポートするファイルを選んでください
+plugins.install: ファイルからインストール…
+plugins.installed: "インストールしました: %{file}"
+plugins.none: "まだプラグインはありません。.wasm ファイルをインストールするか %{folder} に置いてください。Apix の plugins フォルダーには HMAC 署名、CSV インポーター、フィールド統計の 3 つの例があります。"
+plugins.note: 認証タイプは Auth タブの一覧に、ビューはテキスト・表・グラフの隣に、インポーターはここに表示されます。
+plugins.offers_auth: "認証: %{label}"
+plugins.offers_import: "インポート: %{label}"
+plugins.offers_view: "ビュー: %{label}"
+plugins.reload: 再読み込み
+plugins.remove: 削除
+plugins.removed: "%{name} を削除しました。"
+plugins.title: プラグイン
 prod.confirm_detail: "環境「%{environment}」は本番環境のようです。それでも %{method} %{url} を送信しますか？"
 prod.confirm_send: "%{method} を送信"
 prod.confirm_title: "本番環境で %{method} しますか？"
@@ -1004,6 +1024,9 @@ visual.label: ラベル
 visual.more_columns: 表示していない列が %{count} 個あります。
 visual.no_numbers: 数値だけの列がないため、グラフにできません。
 visual.no_records: "このボディにはレコードの一覧がありません。一覧にフィルターしてください（例: $.items）。"
+visual.plugin_by: "%{title} · プラグイン %{plugin}"
+visual.plugin_gone: そのプラグインはもうインストールされていません。
+visual.plugin_running: プラグインがレスポンスを読んでいます…
 visual.summary: "%{rows} 行 · %{columns} 列 · %{source} から"
 visual.table: 表
 visual.text: テキスト

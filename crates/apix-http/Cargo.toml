@@ -8,6 +8,8 @@ repository.workspace = true
 
 [dependencies]
 apix-core.workspace = true
+# Auth types from WebAssembly plugins.
+apix-plugins.workspace = true
 bytes.workspace = true
 reqwest = { workspace = true, features = ["rustls-tls", "multipart"] }
 # A cookie jar the cookie manager can list and edit (reqwest's own `Jar`

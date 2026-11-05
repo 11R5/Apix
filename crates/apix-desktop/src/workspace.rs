@@ -25,6 +25,7 @@ mod mock_ui;
 mod monitors_ui;
 mod network;
 mod palette;
+mod plugins_ui;
 mod route_ui;
 mod runner_ui;
 mod script_editor;
@@ -95,6 +96,7 @@ actions!(
         OpenGit,
         CheckForUpdates,
         OpenRoute,
+        OpenPlugins,
         OpenLoadTest,
         CompareResponses,
         OpenSetup,
@@ -1501,6 +1503,7 @@ impl Workspace {
             Auth::OAuth1(_) => auth_kind("OAuth 1.0"),
             Auth::OAuth2(_) => auth_kind("OAuth 2.0"),
             Auth::AwsSigV4(_) => auth_kind("AWS"),
+            Auth::Plugin { plugin, .. } => auth_kind(&plugin),
         };
 
         // The Settings tab is labelled with a dot when the request sets anything.
@@ -2262,6 +2265,9 @@ impl Render for Workspace {
             )
             .on_action(cx.listener(|this, _: &OpenGit, window, cx| this.open_git(window, cx)))
             .on_action(cx.listener(|this, _: &OpenRoute, window, cx| this.open_route(window, cx)))
+            .on_action(
+                cx.listener(|this, _: &OpenPlugins, window, cx| this.open_plugins(window, cx)),
+            )
             .on_action(
                 cx.listener(|this, _: &OpenLoadTest, window, cx| this.open_load_test(window, cx)),
             )

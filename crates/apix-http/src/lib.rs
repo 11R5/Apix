@@ -740,6 +740,47 @@ pub(crate) fn prepare(
                 }
             }
         }
+        Auth::Plugin { plugin, config } => {
+            let found = apix_plugins::find(plugin).ok_or_else(|| {
+                HttpError::Auth(format!(
+                    "the auth plugin {plugin} is not installed (see apix plugins list)"
+                ))
+            })?;
+            let body = request
+                .body()
+                .and_then(|b| b.as_bytes())
+                .map(|b| String::from_utf8_lossy(b).into_owned())
+                .unwrap_or_default();
+            let headers = request
+                .headers()
+                .iter()
+                .map(|(k, v)| {
+                    (
+                        k.to_string(),
+                        String::from_utf8_lossy(v.as_bytes()).into_owned(),
+                    )
+                })
+                .collect();
+            let out = found
+                .auth(&apix_plugins::AuthInput {
+                    method: request.method().to_string(),
+                    url: request.url().to_string(),
+                    headers,
+                    body,
+                    config: config.clone(),
+                })
+                .map_err(|e| HttpError::Auth(format!("{plugin}: {e}")))?;
+            for (name, value) in out.headers {
+                let name =
+                    reqwest::header::HeaderName::from_bytes(name.as_bytes()).map_err(|_| {
+                        HttpError::Auth(format!("{plugin}: `{name}` is not a header name"))
+                    })?;
+                request.headers_mut().insert(name, header_value(&value)?);
+            }
+            if !out.query.is_empty() {
+                request.url_mut().query_pairs_mut().extend_pairs(out.query);
+            }
+        }
         _ => {}
     }
     Ok(request)
@@ -809,7 +850,11 @@ fn build(client: &reqwest::Client, req: &Request) -> Result<reqwest::RequestBuil
             ..
         } => builder,
         // Signed in `prepare`, answered in `send`, or turned into a bearer token first.
-        Auth::Digest { .. } | Auth::OAuth1(_) | Auth::AwsSigV4(_) | Auth::OAuth2(_) => builder,
+        Auth::Digest { .. }
+        | Auth::OAuth1(_)
+        | Auth::AwsSigV4(_)
+        | Auth::OAuth2(_)
+        | Auth::Plugin { .. } => builder,
     };
 
     if let Some(content_type) = req.body.default_content_type()

@@ -198,6 +198,8 @@ fn params(kind: &str, pairs: &[(&str, Value)]) -> Value {
 fn auth_json(auth: &Auth) -> Option<Value> {
     Some(match auth {
         Auth::Inherit => return None,
+        // Postman has no plugins: the request goes without auth there.
+        Auth::Plugin { .. } => return None,
         Auth::None => json!({ "type": "noauth" }),
         Auth::Bearer { token } => params("bearer", &[("token", json!(token))]),
         Auth::Basic { username, password } => params(

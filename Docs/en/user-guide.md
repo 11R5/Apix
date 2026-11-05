@@ -44,6 +44,7 @@ command line runs the same requests in a terminal or CI.
 - [History](#history)
 - [Comparing responses](#comparing-responses)
 - [AI assist](#ai-assist)
+- [Plugins](#plugins)
 - [Command palette](#command-palette)
 - [Setup](#setup)
 - [Settings and language](#settings-and-language)
@@ -1173,6 +1174,106 @@ cookies and headers with key, token, secret or signature in their name are
 masked as •••. The AI can be wrong; nothing is changed or sent anywhere else
 without you. The screenshot was taken against a local test server, not a
 real answer.
+
+## Plugins
+
+Plugins add what Apix does not have built in: an auth type, an importer for
+another file format, or a view of a response. A plugin is one WebAssembly
+(`.wasm`) file, and it runs sandboxed: it gets JSON and answers JSON, with no
+network, no files and no clock, and it is stopped when it runs too long or
+uses too much memory. A plugin from someone else can change the request it
+signs or the collection it imports, and nothing else.
+
+**View › Plugins…** lists what is installed and what each plugin offers.
+**Install from a file…** checks a `.wasm` file and copies it into the plugins
+folder (`<config>/Apix/plugins`), **Remove** deletes it, **Open folder** shows
+the folder and **Reload** reads it again after you copy files there yourself.
+
+![The Plugins window](images/plugins.png)
+
+- **Auth types** appear in the Auth tab's list as "… (plugin)", with the
+  fields the plugin asks for (`{{variables}}` work in them). When the request
+  is sent, the plugin gets the final request (method, URL, headers, body) and
+  adds headers or query parameters. A request whose plugin is not installed
+  says so and is not sent.
+
+  ![A request signed by a plugin](images/plugin-auth.png)
+
+- **Views** appear next to Text, Table and Chart above a JSON response; the
+  plugin reads the status, headers and body and answers with a table or text.
+
+  ![A view from a plugin](images/plugin-view.png)
+
+- **Importers** have an **Import a file…** button in the Plugins window: the
+  file becomes a new collection next to it, which then opens.
+
+In a request file, a plugin auth is:
+
+```toml
+[auth.plugin]
+plugin = "hmac-signature"
+
+[auth.plugin.config]
+key_id = "k1"
+secret = "{{signing_secret}}"
+```
+
+From a terminal:
+
+```sh
+apix plugins list                     # installed plugins and what they offer
+apix plugins install my-plugin.wasm
+apix plugins remove my-plugin
+apix import endpoints.csv --plugin csv-endpoints --out shop
+apix send posts/list-posts.apix --view json-stats
+```
+
+The repository's `plugins/` folder has three examples, built from
+`crates/apix-plugin-sdk/examples`: **hmac-signature** (signs requests with
+HMAC-SHA256 over the method, path and body hash), **csv-endpoints** (a CSV
+list of `method,url,name,folder` becomes requests) and **json-stats** (field
+statistics of a JSON list: types, presence, distinct values, ranges).
+
+### Writing a plugin
+
+In Rust, depend on `apix-plugin-sdk`, implement its `Plugin` trait and call
+`export!`:
+
+```rust
+use apix_plugin_sdk::{Plugin, export, serde_json::{Value, json}};
+
+struct Hello;
+
+impl Plugin for Hello {
+    fn manifest() -> Value {
+        json!({ "name": "hello", "version": "1.0.0",
+                "visualize": { "label": "Hello" } })
+    }
+    fn call(_hook: &str, input: Value) -> Result<Value, String> {
+        let size = input["body"].as_str().unwrap_or("").len();
+        Ok(json!({ "text": format!("{size} bytes") }))
+    }
+}
+
+export!(Hello);
+```
+
+Build the crate as a `cdylib` with `cargo build --release --target
+wasm32-unknown-unknown` and install the `.wasm`. The manifest's `name` (lower
+case letters, digits and `-`) is how requests refer to the plugin; it offers
+any of these:
+
+| Manifest key | The hook gets | It answers |
+|---|---|---|
+| `auth: {label, fields: [{name, label, secret}]}` | `{method, url, headers, body, config}` | `{headers: [[name, value]], query: [[name, value]]}` |
+| `import: {label, extensions}` | `{file_name, content}` | `{name, requests: [{folder, name, method, url, headers, body}]}` |
+| `visualize: {label}` | `{status, headers, body}` | `{title, text}` or `{title, columns, rows}` |
+
+Any language that compiles to WebAssembly works. The module exports `memory`,
+`apix_alloc(len) -> ptr`, `apix_manifest() -> i64` and `apix_call(hook_ptr,
+hook_len, input_ptr, input_len) -> i64`, where the `i64` is `ptr << 32 | len`
+of a UTF-8 JSON answer, `{"ok": …}` or `{"error": "…"}`. It may import
+nothing, and every call runs in a fresh instance.
 
 ## Command palette
 

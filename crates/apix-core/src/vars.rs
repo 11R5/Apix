@@ -229,6 +229,10 @@ impl Request {
                     region: s(&a.region),
                     service: s(&a.service),
                 }),
+                Auth::Plugin { plugin, config } => Auth::Plugin {
+                    plugin: plugin.clone(),
+                    config: config.iter().map(|(k, v)| (k.clone(), s(v))).collect(),
+                },
             },
             settings: crate::model::RequestSettings {
                 proxy: self.settings.proxy.as_deref().map(&mut s),

@@ -134,7 +134,8 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [x] MCP server mode: `apix mcp` (stdio, tools list_requests, list_environments, send_request, run_requests; paths kept inside the collection, variable values never listed, `--list-only`)
 - [x] Optional AI assist: off by default; with the user's Anthropic API key (keychain), AI tests on a successful response and Explain on a failed one (Claude Opus 5.5 over the Messages API, credentials masked, answers in the app's language); providers: Claude, ChatGPT (OpenAI) and Gemini (Google), each with its own key and a model list loaded from the provider
 - [x] Setup: on the first start and from Help, the optional extras explained, each one click: the IP location database (`apix geo download`), AI assist, Connect to Claude (Claude Desktop's configuration or `claude mcp add`; `apix mcp --add-to`)
-- [ ] WASM plugins, Flows
+- [x] WASM plugins: auth types, importers and response views as WebAssembly files run by `wasmi` with no imports, a fuel and a memory limit (`apix-plugins`); `apix-plugin-sdk` and three examples in `plugins/`; View › Plugins…, `apix plugins list|install|remove`, `apix import --plugin`, `apix send --view`
+- [ ] Flows
 
 ## M9 — Release & distribution
 - [x] GitHub Actions: test on Windows, macOS and Linux (CI foundation); build on version tags

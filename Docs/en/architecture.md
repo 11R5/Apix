@@ -45,6 +45,7 @@ crates/
 ├── apix-capture  a recording proxy: plain HTTP, CONNECT tunnels, HTTPS opened with a local CA (rcgen, rustls)
 ├── apix-route    the route to a server (the system's traceroute) and where its hops are (an offline .mmdb database)
 │                 or server reflection
+├── apix-plugins  WebAssembly plugins (wasmi): auth types, importers, response views; apix-plugin-sdk writes them in Rust
 ├── apix-cli      `apix` binary: send / run / diff / schema / import / shell from terminal & CI
 └── apix-desktop  GPUI desktop app (Windows, macOS and Linux from one crate)
 tools/
@@ -759,6 +760,29 @@ the server `apix-<collection>`, points it at the `apix` next to the running
 program (or on the PATH) with `mcp <folder> [--list-only]`, and merges it
 into `mcpServers` keeping everything else (the original copied to `.bak`
 once); `claude_code_command` is `claude mcp add --scope user`.
+
+## Plugins
+
+`apix-plugins` runs WebAssembly plugins with `wasmi` 2, an interpreter: no
+JIT, so no native code is made from a plugin, and it builds wherever Rust
+does. A module may import nothing, so a plugin has no host functions at all
+(no network, files, clock or randomness); it exports `memory`, `apix_alloc`,
+`apix_manifest` and `apix_call`, and answers are JSON passed as
+`ptr << 32 | len`. Every call instantiates the module afresh (no state between
+calls) with 2·10⁹ units of fuel and a 256 MB memory limit, on a thread with a
+64 MB stack; running out of fuel is reported as "ran too long". The manifest
+is read once when the plugin loads; its `name` must be `[a-z0-9-]`.
+`installed()` caches the plugins folder (`<config>/Apix/plugins`, or
+`APIX_PLUGINS_DIR`) until `reload()`.
+
+The hooks meet the rest of Apix in three places: `Auth::Plugin { plugin,
+config }` in the model, resolved like other auth (variables in the config)
+and applied by `apix_http::prepare` to the final request;
+`apix_import::plugin::plan`, which turns an importer's answer into request
+files; and the response's visualizer (`VisualMode::Plugin`), which runs the
+plugin off the UI thread and draws a table or text. wasmi is built with
+`opt-level = 3` and without debug assertions even in debug builds, since its
+dispatch relies on tail calls that otherwise use up the stack.
 
 ## Comparing responses
 

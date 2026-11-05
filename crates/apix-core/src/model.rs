@@ -250,6 +250,13 @@ pub enum Auth {
     /// AWS Signature Version 4.
     #[serde(rename = "aws_sigv4")]
     AwsSigV4(AwsSigV4),
+    /// An auth type from a WebAssembly plugin (`apix-plugins`): the plugin's
+    /// name and the fields it asks for, `{{variables}}` filled in.
+    Plugin {
+        plugin: String,
+        #[serde(default)]
+        config: std::collections::BTreeMap<String, String>,
+    },
 }
 
 fn is_empty(s: &str) -> bool {
@@ -406,6 +413,7 @@ impl Auth {
             Auth::OAuth1(_) => "OAuth 1.0",
             Auth::OAuth2(_) => "OAuth 2.0",
             Auth::AwsSigV4(_) => "AWS Signature",
+            Auth::Plugin { .. } => "Plugin",
         }
     }
 }

@@ -26,6 +26,7 @@ auth.describe.consumer_key: "Consumer key: %{key}"
 auth.describe.key_in_header: "%{key} başlıklarda"
 auth.describe.key_in_query: "%{key} sorgu dizesinde"
 auth.describe.oauth2: "%{grant}, token adresi %{url}"
+auth.describe.plugin: "%{name} eklentisi imzalar."
 auth.describe.token: "Token: %{token}"
 auth.describe.token_set: "Token: ayarlandı"
 auth.describe.username: "Kullanıcı adı: %{name}"
@@ -86,6 +87,8 @@ auth.kind.bearer: Bearer token
 auth.kind.digest: Digest auth
 auth.kind.inherit: Üst öğeden devral
 auth.kind.none: Yetkilendirme yok
+auth.kind.plugin: "%{label} (eklenti)"
+auth.kind.plugin_missing: "%{name} (kurulu değil)"
 auth.no_auth.collection: Proje bu koleksiyon için bir yetkilendirme ayarlasa bile hiçbiri gönderilmez.
 auth.no_auth.folder: Bir üst klasör veya koleksiyon bu klasör için yetkilendirme ayarlasa bile hiçbiri gönderilmez.
 auth.no_auth.project: Devralan istekler için yetkilendirme gönderilmez.
@@ -95,6 +98,8 @@ auth.note.bearer: "Authorization: Bearer <token> olarak gönderilir."
 auth.note.digest: Apix, sunucunun Digest sınamasını (MD5 veya SHA-256) yanıtlar.
 auth.note.oauth1: Her gönderimde yeni bir nonce ve zaman damgasıyla imzalanır.
 auth.note.oauth2: Apix token'ı kendisi alır ve bearer token olarak gönderir. Token'lar bellekte tutulur, asla diske yazılmaz.
+auth.note.plugin: "İstek gönderilirken %{name} eklentisi imzalar: isteği (yöntem, URL, başlıklar, gövde) ve bu alanları alır, başlık ya da sorgu parametresi ekler. Ağ ve dosya erişimi olmadan, yalıtılmış çalışır."
+auth.note.plugin_missing: "%{name} eklentisi kurulu değil, bu yüzden istek imzalanamaz. Görünüm › Eklentiler…'den kurun; alanları korunur."
 auth.note.variables: "Değerlerde {{variables}} kullanılabilir."
 auth.signature: İmza
 auth.token.expired: Token'ın süresi doldu; sonraki gönderimde yenisi alınır.
@@ -474,6 +479,7 @@ menu.new_request_with_method: Metot seçerek yeni istek
 menu.next_tab: Sonraki sekme
 menu.open: Aç…
 menu.open_recent: Son açılanlar
+menu.plugins: Eklentiler…
 menu.previous_tab: Önceki sekme
 menu.project_auth: Proje yetkilendirmesi…
 menu.project_settings: Proje istek ayarları…
@@ -626,6 +632,20 @@ palette.open_recent: "Son açılanı aç: %{name}"
 palette.placeholder: İstek ve komut ara…
 palette.save_request: İsteği kaydet
 palette.send_request: İsteği gönder
+plugins.about: "Eklentiler yetkilendirme türleri, içe aktarıcılar ve yanıt görünümleri ekler. Her biri herkesin yazabileceği bir WebAssembly dosyasıdır (Rust'ta apix-plugin-sdk ile ya da WebAssembly'ye derlenen herhangi bir dilde) ve yalıtılmış çalışır: ağ yok, dosya yok, süre ve bellek sınırı var."
+plugins.import: Dosya içe aktar…
+plugins.import_prompt: İçe aktarılacak dosyayı seçin
+plugins.install: Dosyadan kur…
+plugins.installed: "Kuruldu: %{file}"
+plugins.none: "Henüz eklenti yok. Bir .wasm dosyası kurun ya da %{folder} klasörüne koyun. Apix, plugins klasöründe üç örnekle gelir: HMAC imzası, CSV içe aktarıcı ve alan istatistikleri."
+plugins.note: Yetkilendirme türleri Yetkilendirme sekmesinin listesinde, görünümler Metin, Tablo ve Grafik'in yanında, içe aktarıcılar burada görünür.
+plugins.offers_auth: "yetkilendirme: %{label}"
+plugins.offers_import: "içe aktarma: %{label}"
+plugins.offers_view: "görünüm: %{label}"
+plugins.reload: Yeniden yükle
+plugins.remove: Kaldır
+plugins.removed: "%{name} kaldırıldı."
+plugins.title: Eklentiler
 prod.confirm_detail: "“%{environment}” ortamı üretim ortamına benziyor. %{method} %{url} yine de gönderilsin mi?"
 prod.confirm_send: "%{method} gönder"
 prod.confirm_title: "Üretimde %{method}?"
@@ -1004,6 +1024,9 @@ visual.label: Etiket
 visual.more_columns: "%{count} sütun daha gösterilmiyor."
 visual.no_numbers: Yalnızca sayı tutan bir sütun yok; çizilecek bir şey yok.
 visual.no_records: Bu gövdede bir kayıt listesi yok. Birine süzün (örneğin $.items).
+visual.plugin_by: "%{title} · %{plugin} eklentisinden"
+visual.plugin_gone: O eklenti artık kurulu değil.
+visual.plugin_running: Eklenti yanıtı okuyor…
 visual.summary: "%{rows} satır · %{columns} sütun · %{source} içinden"
 visual.table: Tablo
 visual.text: Metin

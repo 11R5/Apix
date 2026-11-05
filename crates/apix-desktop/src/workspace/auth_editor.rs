@@ -24,7 +24,51 @@ use super::Workspace;
 use crate::bidi::{self, Bidi as _, DialogBidi as _};
 use crate::tr;
 
-/// The picker's entries, in `kind_index` order.
+/// The built-in kinds; plugin kinds follow them.
+const BUILT_IN: usize = 9;
+
+/// An auth type from a plugin, as the form shows it.
+#[derive(Clone)]
+struct PluginKind {
+    name: String,
+    spec: apix_plugins::AuthSpec,
+    installed: bool,
+}
+
+impl PluginKind {
+    fn label(&self) -> SharedString {
+        if self.installed {
+            tr!("auth.kind.plugin", label = self.spec.label.clone())
+        } else {
+            tr!("auth.kind.plugin_missing", name = self.name.clone())
+        }
+    }
+}
+
+/// The installed plugins that add an auth type.
+fn installed_kinds() -> Vec<PluginKind> {
+    apix_plugins::installed()
+        .iter()
+        .filter_map(|p| p.as_ref().ok())
+        .filter_map(|p| {
+            Some(PluginKind {
+                name: p.manifest.name.clone(),
+                spec: p.manifest.auth.clone()?,
+                installed: true,
+            })
+        })
+        .collect()
+}
+
+/// The picker's entries: the built-in kinds in `kind_index` order, then
+/// the plugin kinds.
+fn kinds_with(plugins: &[PluginKind]) -> Vec<SharedString> {
+    let mut out = kinds();
+    out.extend(plugins.iter().map(PluginKind::label));
+    out
+}
+
+/// The built-in picker entries, in `kind_index` order.
 fn kinds() -> Vec<SharedString> {
     vec![
         tr!("auth.kind.inherit"),
@@ -64,6 +108,8 @@ fn kind_index(auth: &Auth) -> usize {
         Auth::OAuth1(_) => 6,
         Auth::OAuth2(_) => 7,
         Auth::AwsSigV4(_) => 8,
+        // Placed among the plugin kinds by `AuthEditor::set_auth`.
+        Auth::Plugin { .. } => BUILT_IN,
     }
 }
 
@@ -196,6 +242,10 @@ pub(super) struct AuthEditor {
     inherited: (Auth, Option<String>),
     /// Where this auth lives, for the hint under the form ("request", "folder" ...).
     owner: &'static str,
+    /// Auth types from plugins, after the built-in ones in the picker.
+    plugins: Vec<PluginKind>,
+    /// Their fields, by plugin and field name.
+    plugin_fields: HashMap<(String, String), Entity<InputState>>,
     _subscriptions: Vec<Subscription>,
 }
 
@@ -209,7 +259,8 @@ impl AuthEditor {
         let picker = |items: Vec<SharedString>, window: &mut Window, cx: &mut Context<Self>| {
             cx.new(|cx| SelectState::new(items, Some(IndexPath::new(0)), window, cx))
         };
-        let kind = picker(kinds(), window, cx);
+        let plugins = installed_kinds();
+        let kind = picker(kinds_with(&plugins), window, cx);
         let signature = picker(
             OAuth1Method::ALL
                 .iter()
@@ -242,7 +293,7 @@ impl AuthEditor {
             }));
             fields.insert(f, input);
         }
-        Self {
+        let mut editor = Self {
             workspace,
             kind,
             fields,
@@ -255,8 +306,100 @@ impl AuthEditor {
             fetch_task: None,
             inherited: (Auth::None, None),
             owner,
+            plugins: Vec::new(),
+            plugin_fields: HashMap::new(),
             _subscriptions: subscriptions,
+        };
+        for kind in plugins {
+            editor.add_plugin_kind(kind, window, cx);
         }
+        editor
+    }
+
+    /// Adds a plugin's auth type and an input for each of its fields.
+    fn add_plugin_kind(&mut self, kind: PluginKind, window: &mut Window, cx: &mut Context<Self>) {
+        for field in &kind.spec.fields {
+            let key = (kind.name.clone(), field.name.clone());
+            if self.plugin_fields.contains_key(&key) {
+                continue;
+            }
+            let label = if field.label.is_empty() {
+                field.name.clone()
+            } else {
+                field.label.clone()
+            };
+            let input = cx.new(|cx| {
+                InputState::new(window, cx)
+                    .placeholder(label)
+                    .masked(field.secret)
+            });
+            self._subscriptions
+                .push(cx.subscribe(&input, |_, _, event: &InputEvent, cx| {
+                    if matches!(event, InputEvent::Change) {
+                        cx.notify();
+                    }
+                }));
+            self.plugin_fields.insert(key, input);
+        }
+        self.plugins.push(kind);
+    }
+
+    /// Picks up plugins installed or removed since: new auth types are added,
+    /// removed ones stay listed as not installed (requests may still name them).
+    pub(super) fn refresh_plugins(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let now = installed_kinds();
+        for kind in &mut self.plugins {
+            kind.installed = now.iter().any(|k| k.name == kind.name);
+        }
+        for kind in now {
+            if !self.plugins.iter().any(|k| k.name == kind.name) {
+                self.add_plugin_kind(kind, window, cx);
+            }
+        }
+        let ix = self.kind.read(cx).selected_index(cx);
+        let items = kinds_with(&self.plugins);
+        self.kind.update(cx, |state, cx| {
+            state.set_items(items, window, cx);
+            state.set_selected_index(ix, window, cx);
+        });
+        cx.notify();
+    }
+
+    /// The picker index of plugin `name`, adding it (as not installed, with
+    /// the fields its saved config names) when no installed plugin has that name.
+    fn plugin_index(
+        &mut self,
+        name: &str,
+        config: &std::collections::BTreeMap<String, String>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> usize {
+        if let Some(i) = self.plugins.iter().position(|k| k.name == name) {
+            return BUILT_IN + i;
+        }
+        self.add_plugin_kind(
+            PluginKind {
+                name: name.to_owned(),
+                spec: apix_plugins::AuthSpec {
+                    label: name.to_owned(),
+                    fields: config
+                        .keys()
+                        .map(|k| apix_plugins::Field {
+                            name: k.clone(),
+                            label: k.clone(),
+                            secret: false,
+                        })
+                        .collect(),
+                },
+                installed: false,
+            },
+            window,
+            cx,
+        );
+        let items = kinds_with(&self.plugins);
+        self.kind
+            .update(cx, |state, cx| state.set_items(items, window, cx));
+        BUILT_IN + self.plugins.len() - 1
     }
 
     /// Relabels the pickers and placeholders after a language change.
@@ -272,7 +415,7 @@ impl AuthEditor {
                 state.set_selected_index(ix, window, cx);
             });
         };
-        keep(&self.kind, kinds(), window, cx);
+        keep(&self.kind, kinds_with(&self.plugins), window, cx);
         keep(&self.grant, grants(), window, cx);
         for f in F::ALL {
             self.fields[&f].update(cx, |state, cx| {
@@ -297,7 +440,20 @@ impl AuthEditor {
                 state.set_selected_index(Some(IndexPath::new(ix)), window, cx)
             });
         };
-        pick(&self.kind, kind_index(auth), window, cx);
+        let index = match auth {
+            Auth::Plugin { plugin, config } => {
+                let index = self.plugin_index(plugin, config, window, cx);
+                for ((owner, field), input) in &self.plugin_fields {
+                    if owner == plugin {
+                        let text = config.get(field).cloned().unwrap_or_default();
+                        input.update(cx, |state, cx| state.set_value(text, window, cx));
+                    }
+                }
+                index
+            }
+            other => kind_index(other),
+        };
+        pick(&self.kind, index, window, cx);
         self.location = ApiKeyLocation::Header;
         self.pkce = true;
         self.client_auth = ClientAuth::Basic;
@@ -305,7 +461,7 @@ impl AuthEditor {
         self.fetch_task = None;
 
         let values: Vec<(F, &str)> = match auth {
-            Auth::Inherit | Auth::None => Vec::new(),
+            Auth::Inherit | Auth::None | Auth::Plugin { .. } => Vec::new(),
             Auth::Bearer { token } => vec![(F::Token, token)],
             Auth::Basic { username, password } | Auth::Digest { username, password } => {
                 vec![(F::Username, username), (F::Password, password)]
@@ -459,14 +615,64 @@ impl AuthEditor {
                     client_auth: self.client_auth,
                 })
             }
-            _ => Auth::AwsSigV4(AwsSigV4 {
+            8 => Auth::AwsSigV4(AwsSigV4 {
                 access_key: trimmed(F::AccessKey),
                 secret_key: text(F::SecretKey),
                 session_token: trimmed(F::SessionToken),
                 region: trimmed(F::Region),
                 service: trimmed(F::Service),
             }),
+            n => match self.plugins.get(n - BUILT_IN) {
+                Some(kind) => Auth::Plugin {
+                    plugin: kind.name.clone(),
+                    config: kind
+                        .spec
+                        .fields
+                        .iter()
+                        .filter_map(|f| {
+                            let input = self
+                                .plugin_fields
+                                .get(&(kind.name.clone(), f.name.clone()))?;
+                            // An empty field is left out, as if never set.
+                            let value = input.read(cx).value().to_string();
+                            (!value.is_empty()).then(|| (f.name.clone(), value))
+                        })
+                        .collect(),
+                },
+                None => Auth::None,
+            },
         }
+    }
+
+    /// The rows of a plugin's auth type.
+    fn render_plugin(&self, n: usize) -> Vec<AnyElement> {
+        let Some(kind) = self.plugins.get(n - BUILT_IN) else {
+            return Vec::new();
+        };
+        let mut out: Vec<AnyElement> = kind
+            .spec
+            .fields
+            .iter()
+            .filter_map(|f| {
+                let input = self
+                    .plugin_fields
+                    .get(&(kind.name.clone(), f.name.clone()))?;
+                let label = if f.label.is_empty() {
+                    f.name.clone()
+                } else {
+                    f.label.clone()
+                };
+                let field = Input::new(input).small();
+                let field = if f.secret { field.mask_toggle() } else { field };
+                Some(self.row(label, field).into_any_element())
+            })
+            .collect();
+        out.push(self.note(if kind.installed {
+            tr!("auth.note.plugin", name = kind.name.clone())
+        } else {
+            tr!("auth.note.plugin_missing", name = kind.name.clone())
+        }));
+        out
     }
 
     /// This form's OAuth 2.0 settings with the workspace's variables filled in.
@@ -758,7 +964,7 @@ fn human_minutes(secs: u64) -> SharedString {
     }
 }
 
-/// "Uses â€¦ from the folder "orders"." The source comes from apix-core as
+/// "Uses … from the folder "orders"." The source comes from apix-core as
 /// `folder "orders"`, `collection "Shop"` or `project "Shop"`.
 fn inherited_note(what: SharedString, from: &str) -> SharedString {
     let (kind, name) = from.split_once(' ').unwrap_or((from, ""));
@@ -785,6 +991,7 @@ impl Render for AuthEditor {
                     Auth::OAuth1(_) => "OAuth 1.0".into(),
                     Auth::OAuth2(_) => "OAuth 2.0".into(),
                     Auth::AwsSigV4(_) => tr!("auth.what.aws"),
+                    Auth::Plugin { plugin, .. } => plugin.clone().into(),
                     Auth::Inherit | Auth::None => tr!("auth.what.none"),
                 };
                 let text = match (from, self.owner) {
@@ -840,6 +1047,7 @@ impl Render for AuthEditor {
                 self.note(tr!("auth.note.oauth1")),
             ],
             7 => self.render_oauth2(cx),
+            n if n >= BUILT_IN => self.render_plugin(n),
             _ => vec![
                 self.field(F::AccessKey),
                 self.field(F::SecretKey),
@@ -892,6 +1100,7 @@ fn describe(auth: &Auth) -> Option<SharedString> {
             service = a.service,
             region = a.region
         )),
+        Auth::Plugin { plugin, .. } => Some(tr!("auth.describe.plugin", name = plugin)),
         Auth::Inherit | Auth::None => None,
     }
 }

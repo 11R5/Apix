@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:00b218be8533e2c8 -->
+<!-- translated from en/user-guide.md sha256:b50f5b4dfd1ee6df -->
 
 # Apix kullanım kılavuzu
 
@@ -47,6 +47,7 @@ veya CI'da çalıştırır.
 - [Geçmiş](#geçmiş)
 - [Yanıtları karşılaştırma](#yanıtları-karşılaştırma)
 - [AI yardımcısı](#ai-yardımcısı)
+- [Eklentiler](#eklentiler)
 - [Komut paleti](#komut-paleti)
 - [Kurulum](#kurulum)
 - [Ayarlar ve dil](#ayarlar-ve-dil)
@@ -1205,6 +1206,109 @@ yanıtın durumu, başlıkları ve gövdesi (12 KB'ta kesilir). Authorization,
 olarak gizlenir. Yapay zekâ yanılabilir; siz istemeden hiçbir şey değişmez ya
 da başka yere gönderilmez. Ekran görüntüsü gerçek bir yanıt değil, yerel bir
 test sunucusuyla alındı.
+
+## Eklentiler
+
+Eklentiler Apix'te yerleşik olmayanı ekler: bir yetkilendirme türü, başka bir
+dosya biçimi için içe aktarıcı ya da bir yanıtın görünümü. Bir eklenti tek bir
+WebAssembly (`.wasm`) dosyasıdır ve yalıtılmış çalışır: JSON alır, JSON ile
+yanıt verir; ağ, dosya ve saat erişimi yoktur, çok uzun sürerse ya da çok
+bellek kullanırsa durdurulur. Başkasının yazdığı bir eklenti, imzaladığı isteği
+ya da içe aktardığı koleksiyonu değiştirebilir; başka hiçbir şeye erişemez.
+
+**Görünüm › Eklentiler…** kurulu olanları ve her birinin ne sunduğunu
+listeler. **Dosyadan kur…** bir `.wasm` dosyasını denetler ve eklenti
+klasörüne (`<config>/Apix/plugins`) kopyalar; **Kaldır** onu siler, **Klasörü
+aç** klasörü gösterir, **Yeniden yükle** oraya kendiniz dosya kopyaladıktan
+sonra klasörü yeniden okur.
+
+![Eklentiler penceresi](images/plugins.png)
+
+- **Yetkilendirme türleri**, Yetkilendirme sekmesinin listesinde "… (eklenti)"
+  olarak, eklentinin istediği alanlarla görünür (alanlarda `{{değişkenler}}`
+  kullanılabilir). İstek gönderilirken eklenti isteği son hâliyle (yöntem,
+  URL, başlıklar, gövde) alır ve başlık ya da sorgu parametresi ekler.
+  Eklentisi kurulu olmayan bir istek bunu söyler ve gönderilmez.
+
+  ![Bir eklentinin imzaladığı istek](images/plugin-auth.png)
+
+- **Görünümler**, bir JSON yanıtın üstünde Metin, Tablo ve Grafik'in yanında
+  görünür; eklenti durumu, başlıkları ve gövdeyi okur, bir tablo ya da metinle
+  yanıt verir.
+
+  ![Bir eklentiden gelen görünüm](images/plugin-view.png)
+
+- **İçe aktarıcıların** Eklentiler penceresinde **Dosya içe aktar…** düğmesi
+  vardır: dosya, yanında yeni bir koleksiyon olur ve bu koleksiyon açılır.
+
+Bir istek dosyasında eklenti yetkilendirmesi şöyledir:
+
+```toml
+[auth.plugin]
+plugin = "hmac-signature"
+
+[auth.plugin.config]
+key_id = "k1"
+secret = "{{signing_secret}}"
+```
+
+Terminalden:
+
+```sh
+apix plugins list                     # kurulu eklentiler ve ne sundukları
+apix plugins install my-plugin.wasm
+apix plugins remove my-plugin
+apix import endpoints.csv --plugin csv-endpoints --out shop
+apix send posts/list-posts.apix --view json-stats
+```
+
+Deponun `plugins/` klasöründe `crates/apix-plugin-sdk/examples`'tan derlenmiş
+üç örnek vardır: **hmac-signature** (istekleri yöntem, yol ve gövde özeti
+üzerinden HMAC-SHA256 ile imzalar), **csv-endpoints** (`method,url,name,folder`
+satırlarından oluşan bir CSV listesi isteklere dönüşür) ve **json-stats** (bir
+JSON listesinin alan istatistikleri: türler, bulunma, farklı değerler,
+aralıklar).
+
+### Eklenti yazmak
+
+Rust'ta `apix-plugin-sdk`'ya bağımlı olun, `Plugin` trait'ini uygulayın ve
+`export!` çağırın:
+
+```rust
+use apix_plugin_sdk::{Plugin, export, serde_json::{Value, json}};
+
+struct Hello;
+
+impl Plugin for Hello {
+    fn manifest() -> Value {
+        json!({ "name": "hello", "version": "1.0.0",
+                "visualize": { "label": "Hello" } })
+    }
+    fn call(_hook: &str, input: Value) -> Result<Value, String> {
+        let size = input["body"].as_str().unwrap_or("").len();
+        Ok(json!({ "text": format!("{size} bytes") }))
+    }
+}
+
+export!(Hello);
+```
+
+Crate'i `cdylib` olarak `cargo build --release --target
+wasm32-unknown-unknown` ile derleyin ve `.wasm` dosyasını kurun. Manifest'teki
+`name` (küçük harf, rakam ve `-`), isteklerin eklentiyi andığı addır; eklenti
+şunlardan herhangi birini sunar:
+
+| Manifest anahtarı | Kancanın aldığı | Verdiği yanıt |
+|---|---|---|
+| `auth: {label, fields: [{name, label, secret}]}` | `{method, url, headers, body, config}` | `{headers: [[ad, değer]], query: [[ad, değer]]}` |
+| `import: {label, extensions}` | `{file_name, content}` | `{name, requests: [{folder, name, method, url, headers, body}]}` |
+| `visualize: {label}` | `{status, headers, body}` | `{title, text}` ya da `{title, columns, rows}` |
+
+WebAssembly'ye derlenen her dil olur. Modül `memory`, `apix_alloc(len) -> ptr`,
+`apix_manifest() -> i64` ve `apix_call(hook_ptr, hook_len, input_ptr,
+input_len) -> i64` dışa aktarır; buradaki `i64`, UTF-8 bir JSON yanıtın
+`ptr << 32 | len` değeridir: `{"ok": …}` ya da `{"error": "…"}`. Modül hiçbir
+şey içe aktaramaz ve her çağrı yeni bir örnekte çalışır.
 
 ## Komut paleti
 

@@ -30,6 +30,16 @@ struct Cli {
 }
 
 #[derive(Subcommand)]
+enum PluginAction {
+    /// The installed plugins and what each offers
+    List,
+    /// Check a .wasm plugin and copy it into the plugins folder
+    Install { file: PathBuf },
+    /// Remove an installed plugin
+    Remove { name: String },
+}
+
+#[derive(Subcommand)]
 enum GeoAction {
     /// Download DB-IP's free city database (about 130 MB, CC BY 4.0) into <config>/Apix/geo
     Download,
@@ -56,6 +66,9 @@ enum Command {
         /// (`$.items[*].id`), jq otherwise (`.items[].id`)
         #[arg(long, value_name = "EXPRESSION")]
         filter: Option<String>,
+        /// Show the body through a visualizer plugin (see apix plugins list)
+        #[arg(long, value_name = "PLUGIN")]
+        view: Option<String>,
         /// Print a JSON body (or what --filter picks) as a table: the list of
         /// records in it, one column per key
         #[arg(long)]
@@ -181,6 +194,12 @@ enum Command {
         /// Instead of serving, remove this collection from Claude Desktop
         #[arg(long)]
         remove_from_claude_desktop: bool,
+    },
+    /// WebAssembly plugins: auth types, importers and visualizers in
+    /// <config>/Apix/plugins
+    Plugins {
+        #[command(subcommand)]
+        action: PluginAction,
     },
     /// The IP location database for `apix trace` and the route map: download
     /// DB-IP's free one, show which one is in use, or remove it
@@ -380,6 +399,9 @@ enum Command {
         /// Collection to add an environment to (default: the collection around the current folder)
         #[arg(long)]
         into: Option<PathBuf>,
+        /// Read the file with an import plugin (see apix plugins list)
+        #[arg(long, value_name = "PLUGIN")]
+        plugin: Option<String>,
     },
     /// Export a collection as Postman v2.1 files (collection and environments)
     Export {
@@ -689,6 +711,7 @@ async fn run(cli: Cli) -> Result<bool> {
             network,
             filter,
             table,
+            view,
             save_example,
             messages,
             message_format,
@@ -895,7 +918,31 @@ async fn run(cli: Cli) -> Result<bool> {
                     ),
                     None => None,
                 };
-                if table {
+                if let Some(name) = &view {
+                    let plugin = apix_plugins::find(name)
+                        .with_context(|| format!("--view: no plugin named {name} is installed"))?;
+                    let shown = plugin
+                        .visualize(response.status, &response.headers, &response.raw_body())
+                        .map_err(|e| anyhow::anyhow!("--view {name}: {e}"))?;
+                    if !shown.title.is_empty() {
+                        println!("{}{}{}", style.dim, shown.title, style.reset);
+                    }
+                    if shown.columns.is_empty() {
+                        println!("{}", shown.text);
+                    } else {
+                        let table = apix_core::table::Table {
+                            columns: shown.columns,
+                            rows: shown
+                                .rows
+                                .into_iter()
+                                .map(|r| r.into_iter().map(serde_json::Value::String).collect())
+                                .collect(),
+                            source: "$".into(),
+                            more_columns: 0,
+                        };
+                        print!("{}", table.to_text(60));
+                    }
+                } else if table {
                     let value = match &filtered {
                         Some(f) if f.values.len() == 1 => f.values[0].clone(),
                         Some(f) => serde_json::Value::Array(f.values.clone()),
@@ -1772,7 +1819,85 @@ async fn run(cli: Cli) -> Result<bool> {
             }
             proto(&style, &source, method, response, out, into)
         }
-        Command::Import { file, out, into } => import(&style, &client, &file, out, into).await,
+        Command::Import {
+            file,
+            out,
+            plugin: Some(name),
+            ..
+        } => {
+            let plugin = apix_plugins::find(&name)
+                .with_context(|| format!("--plugin: no plugin named {name} is installed"))?;
+            anyhow::ensure!(
+                plugin.manifest.import.is_some(),
+                "{name} does not import files"
+            );
+            let content = std::fs::read_to_string(&file)
+                .with_context(|| format!("reading {}", file.display()))?;
+            let file_name = file
+                .file_name()
+                .map(|n| n.to_string_lossy().into_owned())
+                .unwrap_or_default();
+            let imported = plugin
+                .import(&file_name, &content)
+                .map_err(|e| anyhow::anyhow!("{name}: {e}"))?;
+            let plan = apix_import::plugin::plan(&imported, &file_name);
+            let root = out
+                .unwrap_or_else(|| PathBuf::from(apix_import::slug(&plan.meta.name, "imported")));
+            plan.write(&root)?;
+            println!("{}", plan.report);
+            println!("{}Created {}{}", style.green, root.display(), style.reset);
+            Ok(true)
+        }
+        Command::Import {
+            file, out, into, ..
+        } => import(&style, &client, &file, out, into).await,
+        Command::Plugins { action } => {
+            match action {
+                PluginAction::List => {
+                    let dir = apix_plugins::folder().unwrap_or_default();
+                    let installed = apix_plugins::installed();
+                    if installed.is_empty() {
+                        println!("No plugins in {}", dir.display());
+                    }
+                    for entry in installed.iter() {
+                        match entry {
+                            Ok(p) => {
+                                let m = &p.manifest;
+                                let mut offers = Vec::new();
+                                if let Some(a) = &m.auth {
+                                    offers.push(format!("auth: {}", a.label));
+                                }
+                                if let Some(i) = &m.import {
+                                    offers.push(format!("import: {}", i.label));
+                                }
+                                if let Some(v) = &m.visualize {
+                                    offers.push(format!("view: {}", v.label));
+                                }
+                                println!("{:<20} {:<8} {}", m.name, m.version, offers.join(", "));
+                                if !m.description.is_empty() {
+                                    println!("{}  {}{}", style.dim, m.description, style.reset);
+                                }
+                            }
+                            Err((path, e)) => {
+                                println!("{}{}: {e}{}", style.red, path.display(), style.reset)
+                            }
+                        }
+                    }
+                }
+                PluginAction::Install { file } => {
+                    let path = apix_plugins::install(&file).map_err(anyhow::Error::msg)?;
+                    println!("{}Installed {}{}", style.green, path.display(), style.reset);
+                }
+                PluginAction::Remove { name } => {
+                    let plugin = apix_plugins::find(&name)
+                        .with_context(|| format!("no plugin named {name} is installed"))?;
+                    std::fs::remove_file(&plugin.path)?;
+                    apix_plugins::reload();
+                    println!("Removed {}", plugin.path.display());
+                }
+            }
+            Ok(true)
+        }
         Command::Export { dir, out } => {
             unlock_around(&dir, &var)?;
             let scope = Scope::find(&dir)?;

@@ -425,6 +425,10 @@ impl Workspace {
             run(Workspace::open_route),
         ));
         out.push(Entry::command(
+            name!("menu.plugins"),
+            run(Workspace::open_plugins),
+        ));
+        out.push(Entry::command(
             name!("menu.check_updates"),
             run(Workspace::check_updates_now),
         ));

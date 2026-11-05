@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:5404c3e8eb3d2d9f -->
+<!-- translated from en/architecture.md sha256:b96ca883b97555bc -->
 
 # Apix mimarisi
 
@@ -47,6 +47,7 @@ crates/
 ├── apix-mock     kayıtlı örneklerden yanıt veren yerel mock sunucu (hyper)
 ├── apix-capture  kaydeden proxy: düz HTTP, CONNECT tünelleri, yerel CA ile açılan HTTPS (rcgen, rustls)
 ├── apix-route    sunucuya giden rota (sistemin traceroute aracı) ve atlamaların yeri (çevrimdışı .mmdb veritabanı)
+├── apix-plugins  WebAssembly eklentileri (wasmi): yetkilendirme türleri, içe aktarıcılar, yanıt görünümleri; apix-plugin-sdk ile Rust'ta yazılır
 ├── apix-cli      `apix` binary'si: terminalden ve CI'dan send / run / diff / schema / import / shell
 └── apix-desktop  GPUI masaüstü uygulaması (tek crate'ten Windows, macOS ve Linux)
 tools/
@@ -789,6 +790,31 @@ terminalde aynısını yapar ve bir yükleyicinin isteğe bağlı adımı da onu
 PATH'teki) `apix`'e `mcp <klasör> [--list-only]` ile yöneltir ve geri kalan
 her şeyi koruyarak `mcpServers`'a ekler (özgün dosya bir kez `.bak`'a
 kopyalanır); `claude_code_command` `claude mcp add --scope user`'dır.
+
+## Eklentiler
+
+`apix-plugins`, WebAssembly eklentilerini bir yorumlayıcı olan `wasmi` 2 ile
+çalıştırır: JIT yoktur, yani bir eklentiden yerel kod üretilmez ve Rust'ın
+derlendiği her yerde derlenir. Bir modül hiçbir şey içe aktaramaz; bu yüzden
+eklentinin hiç host fonksiyonu yoktur (ağ, dosya, saat ya da rastgelelik
+yok); `memory`, `apix_alloc`, `apix_manifest` ve `apix_call` dışa aktarır ve
+yanıtlar `ptr << 32 | len` olarak geçen JSON'dur. Her çağrı modülü sıfırdan
+örnekler (çağrılar arasında durum kalmaz); 2·10⁹ birim yakıt ve 256 MB bellek
+sınırıyla, 64 MB yığınlı bir thread'de çalışır; yakıtın bitmesi "çok uzun
+sürdü" olarak bildirilir. Manifest, eklenti yüklenirken bir kez okunur;
+`name` `[a-z0-9-]` olmalıdır. `installed()` eklenti klasörünü
+(`<config>/Apix/plugins` ya da `APIX_PLUGINS_DIR`) `reload()`'a kadar
+önbellekte tutar.
+
+Kancalar Apix'in geri kalanıyla üç yerde buluşur: modeldeki `Auth::Plugin {
+plugin, config }`, diğer yetkilendirmeler gibi çözülür (config'te
+değişkenler) ve `apix_http::prepare` tarafından son isteğe uygulanır;
+`apix_import::plugin::plan`, bir içe aktarıcının yanıtını istek dosyalarına
+çevirir; yanıtın görselleştiricisi (`VisualMode::Plugin`) eklentiyi arayüz
+thread'i dışında çalıştırır ve bir tablo ya da metin çizer. wasmi, debug
+derlemelerde bile `opt-level = 3` ile ve debug assertion'ları olmadan
+derlenir; çünkü dağıtımı, aksi hâlde yığını tüketen kuyruk çağrılarına
+dayanır.
 
 ## Yanıtları karşılaştırma
 

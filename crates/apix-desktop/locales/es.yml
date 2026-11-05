@@ -26,6 +26,7 @@ auth.describe.consumer_key: "Clave de consumidor: %{key}"
 auth.describe.key_in_header: "%{key} en los encabezados"
 auth.describe.key_in_query: "%{key} en la cadena de consulta"
 auth.describe.oauth2: "%{grant}, token de %{url}"
+auth.describe.plugin: "Lo firma el complemento %{name}."
 auth.describe.token: "Token: %{token}"
 auth.describe.token_set: "Token: definido"
 auth.describe.username: "Usuario: %{name}"
@@ -86,6 +87,8 @@ auth.kind.bearer: Token Bearer
 auth.kind.digest: Autenticación Digest
 auth.kind.inherit: Heredar del nivel superior
 auth.kind.none: Sin autenticación
+auth.kind.plugin: "%{label} (complemento)"
+auth.kind.plugin_missing: "%{name} (no instalado)"
 auth.no_auth.collection: No se envía autenticación, aunque el proyecto defina una para esta colección.
 auth.no_auth.folder: No se envía autenticación, aunque una carpeta superior o la colección definan una para esta carpeta.
 auth.no_auth.project: No se envía autenticación en las solicitudes que heredan.
@@ -95,6 +98,8 @@ auth.note.bearer: "Se envía como Authorization: Bearer <token>."
 auth.note.digest: Apix responde al desafío Digest del servidor (MD5 o SHA-256).
 auth.note.oauth1: Se firma con un nonce y una marca de tiempo nuevos en cada envío.
 auth.note.oauth2: Apix obtiene el token por sí mismo y lo envía como token Bearer. Los tokens se quedan en memoria y nunca se escriben en disco.
+auth.note.plugin: "Lo firma el complemento %{name} al enviar la solicitud: recibe la solicitud (método, URL, encabezados, cuerpo) y estos campos, y añade encabezados o parámetros de consulta. Se ejecuta aislado, sin red ni archivos."
+auth.note.plugin_missing: "El complemento %{name} no está instalado, así que la solicitud no puede firmarse. Instálelo desde Ver › Complementos…; sus campos se conservan."
 auth.note.variables: "Los valores pueden usar {{variables}}."
 auth.signature: Firma
 auth.token.expired: El token ha caducado; el próximo envío obtendrá uno nuevo.
@@ -474,6 +479,7 @@ menu.new_request_with_method: Nueva solicitud con método
 menu.next_tab: Pestaña siguiente
 menu.open: Abrir…
 menu.open_recent: Abrir recientes
+menu.plugins: Complementos…
 menu.previous_tab: Pestaña anterior
 menu.project_auth: Autenticación del proyecto…
 menu.project_settings: Ajustes de petición del proyecto…
@@ -626,6 +632,20 @@ palette.open_recent: "Abrir reciente: %{name}"
 palette.placeholder: Buscar solicitudes y comandos…
 palette.save_request: Guardar solicitud
 palette.send_request: Enviar solicitud
+plugins.about: "Los complementos añaden tipos de auth, importadores y vistas de respuesta. Cada uno es un archivo WebAssembly que cualquiera puede escribir (en Rust con apix-plugin-sdk o en cualquier lenguaje que compile a WebAssembly) y se ejecuta aislado: sin red, sin archivos, con límite de tiempo y memoria."
+plugins.import: Importar un archivo…
+plugins.import_prompt: Elija un archivo para importar
+plugins.install: Instalar desde un archivo…
+plugins.installed: "Instalado: %{file}"
+plugins.none: "Aún no hay complementos. Instale un archivo .wasm o póngalo en %{folder}. Apix incluye tres ejemplos en su carpeta plugins: firma HMAC, importador CSV y estadísticas de campos."
+plugins.note: Los tipos de auth aparecen en la lista de la pestaña Auth, las vistas junto a Texto, Tabla y Gráfico, los importadores aquí.
+plugins.offers_auth: "auth: %{label}"
+plugins.offers_import: "importar: %{label}"
+plugins.offers_view: "vista: %{label}"
+plugins.reload: Recargar
+plugins.remove: Quitar
+plugins.removed: "%{name} quitado."
+plugins.title: Complementos
 prod.confirm_detail: "El entorno «%{environment}» parece de producción. ¿Enviar %{method} %{url} de todos modos?"
 prod.confirm_send: "Enviar %{method}"
 prod.confirm_title: "¿%{method} en producción?"
@@ -1004,6 +1024,9 @@ visual.label: Etiqueta
 visual.more_columns: "%{count} columnas más sin mostrar."
 visual.no_numbers: Ninguna columna tiene solo números; no hay nada que graficar.
 visual.no_records: No hay una lista de registros en este cuerpo. Filtre una (por ejemplo $.items).
+visual.plugin_by: "%{title} · del complemento %{plugin}"
+visual.plugin_gone: Ese complemento ya no está instalado.
+visual.plugin_running: El complemento está leyendo la respuesta…
 visual.summary: "%{rows} filas · %{columns} columnas · de %{source}"
 visual.table: Tabla
 visual.text: Texto

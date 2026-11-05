@@ -26,6 +26,7 @@ auth.describe.consumer_key: "Consumer Key: %{key}"
 auth.describe.key_in_header: "%{key} in den Headern"
 auth.describe.key_in_query: "%{key} im Query-String"
 auth.describe.oauth2: "%{grant}, Token von %{url}"
+auth.describe.plugin: "Signiert vom Plugin %{name}."
 auth.describe.token: "Token: %{token}"
 auth.describe.token_set: "Token: gesetzt"
 auth.describe.username: "Benutzername: %{name}"
@@ -86,6 +87,8 @@ auth.kind.bearer: Bearer-Token
 auth.kind.digest: Digest Auth
 auth.kind.inherit: Vom übergeordneten Element erben
 auth.kind.none: Keine Authentifizierung
+auth.kind.plugin: "%{label} (Plugin)"
+auth.kind.plugin_missing: "%{name} (nicht installiert)"
 auth.no_auth.collection: Es wird keine Authentifizierung gesendet, auch wenn das Projekt eine für diese Sammlung festlegt.
 auth.no_auth.folder: Es wird keine Authentifizierung gesendet, auch wenn ein übergeordneter Ordner oder die Sammlung eine für diesen Ordner festlegt.
 auth.no_auth.project: Für erbende Anfragen wird keine Authentifizierung gesendet.
@@ -95,6 +98,8 @@ auth.note.bearer: "Gesendet als Authorization: Bearer <token>."
 auth.note.digest: Apix beantwortet die Digest-Challenge des Servers (MD5 oder SHA-256).
 auth.note.oauth1: Bei jedem Senden mit neuer Nonce und neuem Zeitstempel signiert.
 auth.note.oauth2: Apix holt das Token selbst und sendet es als Bearer-Token. Tokens bleiben im Arbeitsspeicher und werden nie auf die Festplatte geschrieben.
+auth.note.plugin: "Beim Senden signiert vom Plugin %{name}: Es erhält die Anfrage (Methode, URL, Header, Body) und diese Felder und fügt Header oder Abfrageparameter hinzu. Es läuft abgeschottet, ohne Netzwerk oder Dateien."
+auth.note.plugin_missing: "Das Plugin %{name} ist nicht installiert, die Anfrage kann nicht signiert werden. Installieren Sie es unter Ansicht › Plugins…; seine Felder bleiben erhalten."
 auth.note.variables: "Werte können {{variables}} enthalten."
 auth.signature: Signatur
 auth.token.expired: Das Token ist abgelaufen; beim nächsten Senden wird ein neues geholt.
@@ -474,6 +479,7 @@ menu.new_request_with_method: Neue Anfrage mit Methode
 menu.next_tab: Nächster Tab
 menu.open: Öffnen…
 menu.open_recent: Zuletzt geöffnet
+menu.plugins: Plugins…
 menu.previous_tab: Vorheriger Tab
 menu.project_auth: Projekt-Authentifizierung…
 menu.project_settings: Anfrage-Einstellungen des Projekts…
@@ -626,6 +632,20 @@ palette.open_recent: "Zuletzt geöffnet: %{name}"
 palette.placeholder: Anfragen und Befehle durchsuchen…
 palette.save_request: Anfrage speichern
 palette.send_request: Anfrage senden
+plugins.about: "Plugins fügen Auth-Typen, Importer und Antwortansichten hinzu. Jedes ist eine WebAssembly-Datei, die jeder schreiben kann (in Rust mit apix-plugin-sdk oder jeder Sprache, die nach WebAssembly kompiliert), und läuft abgeschottet: kein Netzwerk, keine Dateien, Zeit- und Speichergrenze."
+plugins.import: Datei importieren…
+plugins.import_prompt: Datei zum Importieren wählen
+plugins.install: Aus Datei installieren…
+plugins.installed: "Installiert: %{file}"
+plugins.none: "Noch keine Plugins. Installieren Sie eine .wasm-Datei oder legen Sie sie in %{folder}. Apix bringt im Ordner plugins drei Beispiele mit: HMAC-Signatur, CSV-Importer und Feldstatistik."
+plugins.note: Auth-Typen erscheinen in der Liste des Auth-Tabs, Ansichten neben Text, Tabelle und Diagramm, Importer hier.
+plugins.offers_auth: "Auth: %{label}"
+plugins.offers_import: "Import: %{label}"
+plugins.offers_view: "Ansicht: %{label}"
+plugins.reload: Neu laden
+plugins.remove: Entfernen
+plugins.removed: "%{name} entfernt."
+plugins.title: Plugins
 prod.confirm_detail: "Die Umgebung „%{environment}“ sieht nach Produktion aus. %{method} %{url} trotzdem senden?"
 prod.confirm_send: "%{method} senden"
 prod.confirm_title: "%{method} in Produktion?"
@@ -1004,6 +1024,9 @@ visual.label: Beschriftung
 visual.more_columns: "%{count} weitere Spalten nicht angezeigt."
 visual.no_numbers: Keine Spalte enthält nur Zahlen; es gibt nichts darzustellen.
 visual.no_records: Keine Liste von Datensätzen in diesem Body. Filtern Sie auf eine (zum Beispiel $.items).
+visual.plugin_by: "%{title} · vom Plugin %{plugin}"
+visual.plugin_gone: Dieses Plugin ist nicht mehr installiert.
+visual.plugin_running: Das Plugin liest die Antwort…
 visual.summary: "%{rows} Zeilen · %{columns} Spalten · aus %{source}"
 visual.table: Tabelle
 visual.text: Text

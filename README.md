@@ -137,6 +137,8 @@ Measurements of the other tools on the same machine are planned.
   ChatGPT or Gemini, tests are written for a response or a failure explained.
 - **AI agents (MCP):** `apix mcp` lets Claude or any MCP client list, send and
   run a collection's requests with their tests, without seeing its secrets.
+- **Plugins:** auth types, importers and response views as sandboxed
+  WebAssembly files anyone can write (`apix plugins`, View › Plugins…).
 - **Compare responses:** today's answer against yesterday's from the
   history, or staging against production, field by field (`apix compare`,
   ⇄ next to the response).
@@ -220,6 +222,7 @@ apix compare my-api/users/list.apix --env staging --against prod   # do they ans
 apix mcp my-api                              # serve the collection to an AI agent (MCP)
 apix mcp my-api --add-to claude-desktop      # or claude-code: connect Claude to it
 apix geo download                            # the IP location database for the route map
+apix import endpoints.csv --plugin csv-endpoints   # read a file with an import plugin
 apix send chat/socket.apix --message '{"join":"room-1"}' --listen 10   # a ws:// request
 apix send events/live.apix                   # server-sent events, printed as they arrive
 apix schema graphql/users.apix               # a GraphQL endpoint's schema, as SDL

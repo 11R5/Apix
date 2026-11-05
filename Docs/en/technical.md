@@ -20,6 +20,8 @@ crates/
 ├── apix-mock       a local mock server answering from saved examples
 ├── apix-capture    a recording proxy that saves passing requests
 ├── apix-route      the route to a server and where its hops are
+├── apix-plugins    WebAssembly plugins (wasmi): loading, the sandbox, auth, import and view hooks
+├── apix-plugin-sdk writing plugins in Rust; its examples/ are the plugins in plugins/
 ├── apix-cli        the `apix` command
 └── apix-desktop    the desktop app (GPUI); interface texts in locales/
 tools/
@@ -32,6 +34,7 @@ scripts/
 examples/
 ├── jsonplaceholder a small collection the app opens when run from the repo
 └── ci/             GitHub Actions (also scheduled monitors), GitLab CI and Azure Pipelines examples
+plugins/            example plugins (.wasm), built from apix-plugin-sdk's examples
 action.yml          the GitHub Action (`uses: 11R5/Apix@…`)
 Dockerfile          the `apix` command line as a container image
 .github/workflows/  CI on three systems, and the image published on version tags
@@ -63,6 +66,15 @@ cargo build --release -p apix-desktop
 the whole GPU stack; build it explicitly. Dependencies are optimised even in
 debug builds so the UI stays smooth while developing.
 
+The example plugins in `plugins/` need the WebAssembly target once
+(`rustup target add wasm32-unknown-unknown`), then
+`cargo build -p apix-plugin-sdk --examples --release --target wasm32-unknown-unknown`;
+copy `target/wasm32-unknown-unknown/release/examples/*.wasm` into `plugins/`
+(with `-` for `_` in the names). The `apix-plugins` tests load those files.
+`wasmi` is optimised and built without debug assertions in debug builds too
+(`[profile.dev.package.wasmi]`): its interpreter loop relies on tail calls
+that otherwise overflow the stack.
+
 The release profile uses fat LTO, one codegen unit and stripped symbols. A full
 release build of the desktop app takes a few minutes.
 
@@ -79,6 +91,7 @@ release build of the desktop app takes a few minutes.
 | Scripts | `rquickjs` (QuickJS, built from C with the system compiler); `require` libraries are Apix's own JavaScript, hashing through `sha1`, `sha2`, `md-5`, `hmac` |
 | Files | `serde`, `toml`, `serde_json`, `notify` (file watching), `trash`; git through the installed `git` program (no library) |
 | Responses | `serde_json_path` (JSONPath, RFC 9535) and `jaq-core`, `jaq-std`, `jaq-json` (jq) for the filter; `regex` for searching large bodies |
+| Plugins | `wasmi` 2 (a WebAssembly interpreter with fuel and memory limits) |
 | Languages | `rust-i18n` (shared with gpui-kit), `sys-locale` |
 
 ## Files Apix writes outside collections
@@ -95,6 +108,7 @@ release build of the desktop app takes a few minutes.
 | `<config>/Apix/graphql/*.json` | the GraphQL schema last fetched from each endpoint (the server's introspection answer), named by a hash of the URL |
 | `<config>/Apix/themes/*.toml` | your own themes (written only when you press **Open the folder** in Settings and the folder is empty: one example) |
 | OS credential store, service `Apix` | only when asked for: remembered passwords of encrypted collections (`vault:<folder>`) and environment secrets (`env:<id>`, plus `env:<id>#1`, … for long values), AI assist keys (`ai:anthropic-api-key`, `ai:openai-api-key`, `ai:google-api-key`) |
+| `<config>/Apix/plugins/*.wasm` | installed plugins (the Plugins window, `apix plugins install`) |
 | `<config>/Apix/history/` | sent requests (`{{variables}}` unresolved) and their responses: `index.jsonl`, one `<id>.json` and `<id>.body` per entry; the last 300, bodies cut at 256 KB; a gRPC call keeps its log as the body |
 
 `<config>` is `%APPDATA%` on Windows, `~/Library/Application Support` on macOS
@@ -115,6 +129,7 @@ collections are never written to disk.
 | `APIX_CLAUDE_CONFIG` | The Claude Desktop configuration file that Connect to Claude writes, instead of the real one (for tests). |
 | `APIX_AI_URL` | Where the AI assist sends its Messages API requests instead of Anthropic (a proxy, a test server). |
 | `APIX_GEO_URL` | Where **Download DB-IP Lite** downloads from instead of DB-IP. |
+| `APIX_PLUGINS_DIR` | The plugins folder, instead of `<config>/Apix/plugins`. |
 | `GITHUB_BASE_REF` | Set by GitHub Actions on pull requests: `apix run --changed` without a value compares with `origin/<it>`. |
 
 ## Measuring performance
@@ -215,6 +230,7 @@ so a new commit rebuilds it and an unchanged one reuses it.
 | apix-mock | path patterns (`{{base_url}}/users/:id`, hosts, queries), the most literal match, picking by `x-mock-response-name` and `-code`, 2xx first, decoded bodies without `Content-Encoding`, the 404 list, preflights; a real server on a port answering through the HTTP client, with CORS, and serving an example added while it runs |
 | apix-capture | saved requests keep no cookies or credentials, host filters; through real local servers: plain HTTP recorded and saved, HTTPS opened with the local authority (the client trusting only it), HTTPS tunnels passed on unread |
 | apix-route | lines of tracert (a translated one too), traceroute and tracepath; local addresses; the map projection and distances; a database written in the MaxMind DB format: places, addresses it does not know, private ones, picking the file; installing a download (gzip, refused when not a database, the old one replaced only after); the system's own tool tracing 127.0.0.1 |
+| apix-plugins | the example plugins loaded with their manifests; the HMAC signature against one computed independently; CSV import and field stats; modules written as text: an endless loop stopped, imports refused, a bad name, a missing manifest, an answer outside memory, a file that is not WebAssembly; also `[auth.plugin]` round trips (apix-core) and an importer's answer as request files (apix-import) |
 | apix-vault | encryption format, tampering, password change, recovery key, keychain entries (against the real credential store under a test service name; skipped where none exists) |
 | apix-desktop | translations complete, language helpers, file paths, highlighting query, theme files (reading, errors, round trip), accent and transparency colours, GraphQL schema file names, a gRPC call's log in the history |
 | docs-check | documentation structure and stamps |

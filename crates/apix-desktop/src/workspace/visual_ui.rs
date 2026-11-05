@@ -32,6 +32,29 @@ pub(super) enum VisualMode {
     Text,
     Table,
     Chart,
+    /// The visualizer plugin at this place among the installed ones.
+    Plugin(usize),
+}
+
+/// A visualizer plugin's view of a body: still running, or done.
+#[derive(Clone)]
+enum PluginView {
+    Running,
+    Done(Result<apix_plugins::View, String>),
+}
+
+/// The installed plugins that offer a view, with their labels.
+fn visualizers() -> Vec<(String, String)> {
+    apix_plugins::installed()
+        .iter()
+        .filter_map(|p| p.as_ref().ok())
+        .filter_map(|p| {
+            Some((
+                p.manifest.name.clone(),
+                p.manifest.visualize.as_ref()?.label.clone(),
+            ))
+        })
+        .collect()
 }
 
 /// What the table was made from: the body's bytes, or the filter's values.
@@ -46,6 +69,8 @@ pub(super) struct VisualState {
     label: Option<usize>,
     value: Option<usize>,
     cache: RefCell<Option<(Key, Made)>>,
+    /// The last plugin view: for which body and plugin.
+    plugin: RefCell<Option<(Key, String, PluginView)>>,
 }
 
 impl Workspace {
@@ -113,11 +138,30 @@ impl Workspace {
                 tr!("visual.chart"),
                 VisualMode::Chart,
             ))
+            .children(
+                visualizers()
+                    .into_iter()
+                    .enumerate()
+                    .map(|(i, (_, label))| {
+                        let b = Button::new(("visual-plugin", i)).xsmall().label(label);
+                        let b = if current == VisualMode::Plugin(i) {
+                            b.primary()
+                        } else {
+                            b.ghost()
+                        };
+                        b.on_click(cx.listener(move |this, _: &ClickEvent, _, cx| {
+                            this.set_visual(VisualMode::Plugin(i), cx)
+                        }))
+                    }),
+            )
     }
 
     /// The Pretty tab while the Table or Chart view is chosen.
     pub(super) fn render_visual(&self, done: &Finished, cx: &mut Context<Self>) -> AnyElement {
         let p = crate::theme::current();
+        if let VisualMode::Plugin(i) = self.visual.mode {
+            return self.render_plugin_view(i, done, cx);
+        }
         let table = match self.visual_table(done) {
             Ok(table) => table,
             Err(why) => {
@@ -299,6 +343,106 @@ fn format_number(v: f64) -> String {
 }
 
 /// The records as a grid: a header row and one row per record.
+impl Workspace {
+    /// The view of visualizer plugin `i`, worked out in the background once
+    /// per body.
+    fn render_plugin_view(&self, i: usize, done: &Finished, cx: &mut Context<Self>) -> AnyElement {
+        let p = crate::theme::current();
+        let muted = |text: SharedString| {
+            div()
+                .p_3()
+                .text_sm()
+                .text_color(p.text_muted)
+                .child(bidi::para(text))
+                .into_any_element()
+        };
+        let Some((name, _)) = visualizers().into_iter().nth(i) else {
+            return muted(tr!("visual.plugin_gone"));
+        };
+        let body = done.response.body.clone();
+        let key: Key = (body.as_ptr() as usize, body.len(), 0);
+        let known = self
+            .visual
+            .plugin
+            .borrow()
+            .as_ref()
+            .filter(|(k, n, _)| *k == key && *n == name)
+            .map(|(_, _, view)| view.clone());
+        let view = match known {
+            Some(view) => view,
+            None => {
+                *self.visual.plugin.borrow_mut() = Some((key, name.clone(), PluginView::Running));
+                let (status, headers) = (done.response.status, done.response.headers.clone());
+                let (plugin_name, name) = (name.clone(), name.clone());
+                cx.spawn(async move |this, cx| {
+                    let result = cx
+                        .background_spawn(async move {
+                            let plugin = apix_plugins::find(&plugin_name)
+                                .ok_or_else(|| format!("{plugin_name} is not installed"))?;
+                            plugin.visualize(status, &headers, &String::from_utf8_lossy(&body))
+                        })
+                        .await;
+                    this.update(cx, |this, cx| {
+                        if let Some((k, n, view)) = this.visual.plugin.borrow_mut().as_mut()
+                            && *k == key
+                            && *n == name
+                        {
+                            *view = PluginView::Done(result);
+                        }
+                        cx.notify();
+                    })
+                    .ok();
+                })
+                .detach();
+                PluginView::Running
+            }
+        };
+        match view {
+            PluginView::Running => muted(tr!("visual.plugin_running")),
+            PluginView::Done(Err(e)) => div()
+                .p_3()
+                .text_sm()
+                .text_color(p.err)
+                .child(bidi::para(e))
+                .into_any_element(),
+            PluginView::Done(Ok(view)) => {
+                let header = div()
+                    .text_xs()
+                    .text_color(p.text_muted)
+                    .pb_1()
+                    .child(bidi::para(tr!(
+                        "visual.plugin_by",
+                        title = view.title.clone(),
+                        plugin = name.clone()
+                    )));
+                if view.columns.is_empty() {
+                    return v_flex()
+                        .p_2()
+                        .child(header)
+                        .child(
+                            div()
+                                .text_sm()
+                                .font_family(crate::fonts::MONO)
+                                .child(view.text.clone()),
+                        )
+                        .into_any_element();
+                }
+                let table = Table {
+                    columns: view.columns.clone(),
+                    rows: view
+                        .rows
+                        .iter()
+                        .map(|r| r.iter().cloned().map(serde_json::Value::String).collect())
+                        .collect(),
+                    source: "$".into(),
+                    more_columns: 0,
+                };
+                render_grid(&table, header)
+            }
+        }
+    }
+}
+
 fn render_grid(t: &Table, header: Div) -> AnyElement {
     let p = crate::theme::current();
     const WIDTH: f32 = 170.;
