@@ -1,4 +1,4 @@
-<!-- translated from en/workflows.md sha256:4169cf5c21669811 -->
+<!-- translated from en/workflows.md sha256:2f434d531a5926ac -->
 
 # İş akışları
 
@@ -12,6 +12,7 @@ ve ölçülmesini ele alır.
 - [Gizli bilgiler içeren bir koleksiyonu paylaşma](#gizli-bilgiler-içeren-bir-koleksiyonu-paylaşma)
 - [Postman'dan geçiş](#postmandan-geçiş)
 - [Koleksiyonu CI'da çalıştırma](#koleksiyonu-cida-çalıştırma)
+- [Bir API'yi monitörlerle izleme](#bir-apiyi-monitörlerle-izleme)
 - [OAuth 2.0 ile oturum açma](#oauth-20-ile-oturum-açma)
 - [Bir AWS API'sini çağırma](#bir-aws-apisini-çağırma)
 - [Dosya yükleme, GraphQL gönderme](#dosya-yükleme-graphql-gönderme)
@@ -150,6 +151,7 @@ Seçenekler:
 | `-n, --iterations 5` | İstekleri 5 kez dolaşır (varsayılan: veri satırı başına bir kez, yoksa bir kez) |
 | `--delay 200` | İstekler arasında 200 ms bekler |
 | `--bail` | Başarısız olan ilk istekte durur |
+| `-p, --parallel 4` | 4 tekrarı aynı anda koşar, 4 kullanıcı gibi; her biri isteklerini sırayla gönderir ve scriptlerinin atadıklarını kendine saklar |
 | `--junit report.xml` | CI servislerinin test listesi olarak gösterdiği JUnit XML raporu |
 | `--json report.json` / `--html report.html` | Her şey JSON olarak ya da her tarayıcıda açılan bir sayfa |
 | `--markdown report.md` | Pull request yorumu ya da CI iş özeti için bir özet (aşağıya bakın) |
@@ -325,6 +327,62 @@ pencereyle yapar; bkz. [kullanım kılavuzu](user-guide.md#runner).
 
 `apix send <file>` tek bir istek gönderir ve yanıtı yazdırır; başlıklar için
 `-i`, bağlantı ayrıntıları için `--network` ekleyin.
+
+## Bir API'yi monitörlerle izleme
+
+Monitör, bir koleksiyonu (ya da onun bir klasörünü veya isteğini) zamanında
+çalıştırır ve başarısız olmaya başladığında ve yeniden geçtiğinde bir
+webhook'a haber verir. Monitörler koleksiyonun `apix.toml` dosyasına elle ya da
+uygulamada **Görünüm › Monitörler…** ile yazılır (bkz.
+[kullanım kılavuzu](user-guide.md#monitörler)):
+
+```toml
+[[monitor]]
+name = "Health"
+every = "5m"
+run = "health.apix"
+environment = "production"
+webhook = "{{alerts_url}}"
+```
+
+`apix monitor` onları açık kaldığı sürece, her birini kendi zamanında çalıştırır
+ve `apix.toml`'u ara ara yeniden okur; yapılan değişiklikler geçerli olur:
+
+```sh
+APIX_VAR_ALERTS_URL=https://hooks.slack.com/… apix monitor api
+```
+
+```text
+Watching 2 monitor(s) of Shop API; logs in ~/.config/Apix/monitors (Ctrl+C stops)
+09:30:05Z ✓ Health                 1 passed · 166 ms
+                         next at 09:35:05Z
+09:30:05Z ✗ Orders                 1 of 3 failed · 412 ms
+    orders/list.apix: got 500 Internal Server Error
+    webhook told: failing
+```
+
+| Seçenek | Ne yapar |
+|---|---|
+| `--once` | Her monitörü bir kez çalıştırıp çıkar, biri başarısızsa 1 döner: cron, Görev Zamanlayıcı ya da CI zamanlaması için |
+| `--list` | Monitörler ve son sonuçları |
+| `--only AD` | Yalnızca bu monitör (tekrarlanabilir); `--once` ile kapalıyken de çalışır |
+| `--var`, `--env-file` | Monitörlerin ortamlarının üstüne değişkenler, `apix run`'daki gibi (`APIX_VAR_*` de okunur) |
+| `--log-dir KLASÖR` | Günlüğü başka yerde tutar (CI'da önbelleğe alınan bir klasör) |
+| `--timeout`, `-k`, `--proxy`, `--cacert` | Bağlantı ayarları, `apix run`'daki gibi |
+
+Günlük, her monitörün son 500 sonucunu `<config>/Apix/monitors` içinde
+tutar; masaüstü uygulaması aynı dosyaları okur, böylece aynı bilgisayarda
+`apix monitor`'ün bulduğunu gösterir. Webhook'a yalnızca monitörün durumu
+döndüğünde haber verilir (geçerken başarısız olunca ya da ilk koşusunda;
+başarısızken geçince); gövde, Slack, Discord, Mattermost ve Google Chat'in
+mesaj olarak gösterdiği bir JSON'dur.
+
+Bir sunucuda `apix monitor api`'yi bir servis olarak başlatın ya da
+`apix monitor api --once`'ı cron'a koyun (`*/5 * * * *`). GitHub'da bunu
+zamanlanmış bir iş akışı yapar:
+[examples/ci/monitors.yml](../../examples/ci/monitors.yml) monitörleri action
+üzerinden (`monitor: "true"`) her 15 dakikada bir çalıştırır ve düzelmelerin
+fark edilmesi için günlüğü önbellekte tutar.
 
 ## OAuth 2.0 ile oturum açma
 

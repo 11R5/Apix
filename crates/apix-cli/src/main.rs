@@ -10,6 +10,7 @@ use apix_runner::Scope;
 use clap::{Args, Parser, Subcommand};
 
 mod changes;
+mod monitor_cmd;
 
 #[derive(Parser)]
 #[command(name = "apix", version, about = "Blazingly fast API client")]
@@ -102,6 +103,10 @@ enum Command {
         /// Stop at the first request that fails
         #[arg(long)]
         bail: bool,
+        /// Run this many iterations at once, each sending its requests in order
+        /// (data rows or --iterations side by side, like several users)
+        #[arg(short = 'p', long, value_name = "N", default_value_t = 1)]
+        parallel: u32,
         /// Write a JUnit XML report (for CI test views)
         #[arg(long, value_name = "FILE")]
         junit: Option<PathBuf>,
@@ -120,6 +125,39 @@ enum Command {
         /// in GitHub Actions (origin/$GITHUB_BASE_REF), else HEAD (what is not committed yet)
         #[arg(long, value_name = "REF", num_args = 0..=1, default_missing_value = "", require_equals = true)]
         changed: Option<String>,
+        #[command(flatten)]
+        net: NetArgs,
+    },
+    /// Run a collection's monitors ([[monitor]] in apix.toml) on their
+    /// schedules; a monitor that starts failing or passes again tells its webhook
+    Monitor {
+        /// The collection (or a folder inside it)
+        #[arg(default_value = ".")]
+        dir: PathBuf,
+        /// Run every monitor once and exit, for cron, the Task Scheduler or a CI
+        /// schedule; exits 1 when one fails
+        #[arg(long)]
+        once: bool,
+        /// List the monitors and their last results
+        #[arg(long, conflicts_with = "once")]
+        list: bool,
+        /// Only the monitor with this name (repeatable); with --once it runs even when switched off
+        #[arg(long = "only", value_name = "NAME")]
+        only: Vec<String>,
+        /// Override a variable, e.g. --var token=abc (repeatable); APIX_VAR_<NAME>
+        /// environment variables are read too
+        #[arg(long = "var", value_name = "KEY=VALUE", value_parser = parse_var)]
+        vars: Vec<(String, String)>,
+        /// Read variables from a dotenv file (NAME=value lines)
+        #[arg(long, value_name = "FILE")]
+        env_file: Option<PathBuf>,
+        /// Keep no log of the results (normally <config>/Apix/monitors)
+        #[arg(long)]
+        no_log: bool,
+        /// Keep the log in this folder instead (in CI, a cached folder, so a
+        /// monitor that passes again is noticed)
+        #[arg(long, value_name = "DIR")]
+        log_dir: Option<PathBuf>,
         #[command(flatten)]
         net: NetArgs,
     },
@@ -458,6 +496,11 @@ impl VarArgs {
     }
 }
 
+/// A dim remark on stderr.
+fn note_line(style: &Style, text: &str) {
+    eprintln!("{}{text}{}", style.dim, style.reset);
+}
+
 /// A line on stderr about where values came from (names only, never values).
 fn note(text: &str) {
     eprintln!("variables {text}");
@@ -733,6 +776,7 @@ async fn run(cli: Cli) -> Result<bool> {
             data,
             delay,
             bail: stop_on_failure,
+            parallel,
             junit,
             json,
             html,
@@ -785,10 +829,17 @@ async fn run(cli: Cli) -> Result<bool> {
                 iterations: iterations.unwrap_or(0),
                 delay: std::time::Duration::from_millis(delay),
                 bail: stop_on_failure,
+                parallel,
                 overrides: net.overrides(),
                 state: Default::default(),
             };
             let total = plan.iteration_count();
+            if parallel > 1 && total == 1 {
+                note_line(
+                    &style,
+                    "--parallel runs iterations side by side; this run has one (add --data or -n)",
+                );
+            }
             let control = apix_runner::Control::default();
             let mut report = if plan.requests.is_empty() {
                 // --changed found nothing to send: still write the reports, to say so.
@@ -805,7 +856,7 @@ async fn run(cli: Cli) -> Result<bool> {
                     script_sender(),
                     &control,
                     |progress| match progress {
-                        apix_runner::Progress::Iteration(n, row) if total > 1 => {
+                        apix_runner::Progress::Iteration(n, row) if total > 1 && parallel <= 1 => {
                             let row = row
                                 .map(|r| {
                                     let pairs: Vec<String> =
@@ -821,6 +872,9 @@ async fn run(cli: Cli) -> Result<bool> {
                             );
                         }
                         apix_runner::Progress::Item(item) => {
+                            if parallel > 1 && total > 1 {
+                                print!("{}#{:<3}{} ", style.dim, item.iteration + 1, style.reset);
+                            }
                             print!("{:<40} ", item.path);
                             match item.status {
                                 Some(status) => print_status(
@@ -875,6 +929,34 @@ async fn run(cli: Cli) -> Result<bool> {
                 println!("{}Wrote {}{}", style.dim, path.display(), style.reset);
             }
             Ok(summary.failed == 0)
+        }
+        Command::Monitor {
+            dir,
+            once,
+            list,
+            only,
+            vars,
+            env_file,
+            no_log,
+            log_dir,
+            net,
+        } => {
+            let mut pinned = match &env_file {
+                Some(path) => apix_runner::vars::load_env_file(path)?,
+                None => Vec::new(),
+            };
+            pinned.extend(vars);
+            let options = monitor_cmd::Options {
+                dir,
+                once,
+                list,
+                only,
+                pinned,
+                overrides: net.overrides(),
+                log: !no_log,
+                log_dir,
+            };
+            monitor_cmd::run(options, &client, &style, &var).await
         }
         Command::Diff {
             from,

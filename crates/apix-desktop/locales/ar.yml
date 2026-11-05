@@ -355,6 +355,7 @@ menu.import_postman: استيراد (Postman وInsomnia وOpenAPI وHAR وWSDL)�
 menu.import_url: استيراد من عنوان URL…
 menu.lock_collections: قفل المجموعات المشفّرة
 menu.method: الطريقة
+menu.monitors: المراقِبات…
 menu.move_into_project: نقل إلى مشروع…
 menu.new_collection: مجموعة جديدة…
 menu.new_encrypted_collection: مجموعة مشفّرة جديدة…
@@ -378,6 +379,49 @@ menu.settings: الإعدادات…
 menu.source_code: الشيفرة المصدرية
 menu.variables: المتغيرات والبيئات…
 menu.view: عرض
+monitors.add: إضافة مراقِب
+monitors.ago_days: قبل %{count} يوم
+monitors.ago_hours: قبل %{count} س
+monitors.ago_minutes: قبل %{count} د
+monitors.ago_now: الآن
+monitors.busy: يعمل مراقِب الآن؛ أعد المحاولة عندما ينتهي.
+monitors.cancel: إلغاء
+monitors.delete: حذف
+monitors.edit: تعديل
+monitors.editing: تعديل «%{name}»
+monitors.empty: لا توجد مراقِبات بعد. يشغّل المراقِب المجموعة، أو مجلدًا منها، وفق جدول ويُعلم Webhook عندما يبدأ بالفشل وعندما ينجح من جديد.
+monitors.enabled: التشغيل في موعده
+monitors.environment: البيئة
+monitors.error: "تعذّر التشغيل: %{error} · %{ago}"
+monitors.every: كل %{every}
+monitors.every_hint: 30s أو 5m أو 1h أو 1d، أو معًا مثل 1h30m؛ 10s على الأقل.
+monitors.every_label: التكرار
+monitors.failed: فشل %{failed} من %{total} · %{ago}
+monitors.in_app: شغّل المراقِبات في مواعيدها ما دام Apix مفتوحًا
+monitors.in_app_hint: "أو شغّلها بـ apix monitor: في طرفية، أو من cron أو مجدول المهام، أو بجدول CI. كلاهما يحفظ السجل نفسه."
+monitors.name: الاسم
+monitors.name_needed: أعطِ المراقِب اسمًا.
+monitors.name_placeholder: فحص الحالة
+monitors.name_taken: يوجد مراقِب آخر باسم «%{name}».
+monitors.new: مراقِب جديد
+monitors.next: التالي بعد %{time}
+monitors.not_run: لم يعمل بعد
+monitors.off: متوقف
+monitors.passed: نجح %{count} · %{ago}
+monitors.run: مجلد أو طلب
+monitors.run_now: تشغيل الآن
+monitors.run_placeholder: "فارغ: المجموعة كلها"
+monitors.running: قيد التشغيل…
+monitors.save: حفظ
+monitors.save_error: "تعذّر حفظ apix.toml: %{error}"
+monitors.title: المراقِبات
+monitors.toast_failing: "المراقِب «%{name}» يفشل: %{summary}"
+monitors.toast_recovered: المراقِب «%{name}» ينجح من جديد
+monitors.webhook: Webhook
+monitors.webhook_failed: "المراقِب «%{name}»: %{error}"
+monitors.webhook_hint: يُعلَم عندما يبدأ المراقِب بالفشل وعندما ينجح من جديد (Slack وDiscord وMattermost وGoogle Chat). تُملأ {{المتغيرات}}، فيمكن أن يبقى العنوان سرًّا.
+monitors.webhook_set: Webhook
+monitors.whole: المجموعة كلها
 mqtt.client_id: معرّف العميل
 mqtt.client_id_placeholder: جديد لكل اتصال
 mqtt.closed_by_broker: أغلق الوسيط الاتصال
@@ -569,6 +613,7 @@ runner.iterations_rows: "الفراغ يعني مرة لكل صف بيانات (
 runner.none: "لا شيء"
 runner.not_sent: "لم يُرسل"
 runner.nothing_selected: "اختر طلبًا واحدًا على الأقل."
+runner.parallel: في الوقت نفسه
 runner.pause: "إيقاف مؤقت"
 runner.paused: "متوقف مؤقتًا"
 runner.requests: "الطلبات (%{count})"

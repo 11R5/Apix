@@ -119,6 +119,11 @@ Measurements of the other tools on the same machine are planned.
   what changed in requests field by field, and the GitHub Action keeps a
   summary comment on the pull request. The status bar shows the branch and the
   changed files; the sidebar marks changed requests.
+- **Monitors:** run a collection or folder every few minutes and hear about it
+  on Slack, Discord or any webhook when it starts failing or passes again;
+  with `apix monitor` on a server or a CI schedule, or from the app while it
+  is open. Kept in `apix.toml`, so they go through git with the requests.
+  `apix run --parallel` runs iterations side by side, like several users.
 - **Encrypted collections** with a recovery key, auto-lock and, if you choose,
   the password remembered in the OS keychain.
 - **Import** from Postman (collections, environments, a whole "Export data"
@@ -179,6 +184,8 @@ apix run my-api --data users.csv --junit report.xml --html report.html --bail
 APIX_VAR_TOKEN=… apix run my-api --env staging --env-file .env.ci
 apix run my-api --changed=origin/main --markdown summary.md   # only what this branch touched
 apix diff main -C my-api                     # what changed in the requests, field by field
+apix monitor my-api                          # [[monitor]]s of apix.toml on their schedules
+apix run my-api --data users.csv -p 8        # 8 iterations at once
 apix send chat/socket.apix --message '{"join":"room-1"}' --listen 10   # a ws:// request
 apix send events/live.apix                   # server-sent events, printed as they arrive
 apix schema graphql/users.apix               # a GraphQL endpoint's schema, as SDL

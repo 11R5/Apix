@@ -103,6 +103,9 @@ pub struct CollectionMeta {
     /// others follow, folders first, by name.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub order: Vec<String>,
+    /// Runs on a schedule (`[[monitor]]`, see `monitor.rs`).
+    #[serde(default, rename = "monitor", skip_serializing_if = "Vec::is_empty")]
+    pub monitors: Vec<crate::monitor::Monitor>,
 }
 
 /// Writes `apix.toml` into `root`.

@@ -297,3 +297,70 @@ fn set_next_request_ends_the_iteration() {
     assert_eq!(paths, ["users/get.apix", "users/get.apix"]);
     assert_eq!(report.items[1].url, format!("{base}/users/1"));
 }
+
+/// Answers every connection on its own thread after `pause`, so requests can overlap.
+fn serve_slowly(pause: Duration) -> String {
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    let addr = listener.local_addr().unwrap();
+    std::thread::spawn(move || {
+        for stream in listener.incoming().flatten() {
+            std::thread::spawn(move || {
+                let mut reader = BufReader::new(stream.try_clone().unwrap());
+                let mut first = String::new();
+                reader.read_line(&mut first).unwrap();
+                loop {
+                    let mut line = String::new();
+                    reader.read_line(&mut line).unwrap();
+                    if line.trim().is_empty() {
+                        break;
+                    }
+                }
+                std::thread::sleep(pause);
+                let path = first.split_whitespace().nth(1).unwrap_or("/").to_owned();
+                let json = format!("{{\"path\":\"{path}\"}}");
+                let mut stream = stream;
+                let _ = write!(
+                    stream,
+                    "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{json}",
+                    json.len()
+                );
+            });
+        }
+    });
+    format!("http://{addr}")
+}
+
+#[test]
+fn iterations_run_side_by_side() {
+    let base = serve_slowly(Duration::from_millis(300));
+    let root = collection("parallel", &base);
+    fs::remove_file(root.join("z-fail.apix")).unwrap();
+    let scope = Scope::find(&root).unwrap();
+    let mut plan = plan(&root, &scope);
+    plan.data = data::parse_csv("id\n1\n2\n3\n4\n").unwrap();
+    plan.parallel = 4;
+    let rt = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap();
+    let client = HttpClient::new().unwrap();
+    let started = std::time::Instant::now();
+    let report = rt.block_on(apix_runner::run(
+        &scope,
+        &plan,
+        &client,
+        sender(),
+        &Control::default(),
+        |_| {},
+    ));
+    // Four requests of 300 ms each, at once: well under the 1.2 s one after another.
+    assert!(
+        started.elapsed() < Duration::from_millis(900),
+        "{:?}",
+        started.elapsed()
+    );
+    let iterations: Vec<u32> = report.items.iter().map(|i| i.iteration).collect();
+    assert_eq!(iterations, [0, 1, 2, 3], "listed by iteration");
+    assert!(report.items.iter().all(|i| i.passed), "{:?}", report.items);
+    assert_eq!(report.items[3].url, format!("{base}/users/4"));
+}

@@ -416,6 +416,10 @@ impl Workspace {
             out.push(
                 Entry::command(name!("menu.runner"), run(Workspace::open_runner)).keys("Shift+R"),
             );
+            out.push(Entry::command(
+                name!("menu.monitors"),
+                run(Workspace::open_monitors),
+            ));
         }
         if open {
             out.push(Entry::command(

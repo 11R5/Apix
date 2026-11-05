@@ -355,6 +355,7 @@ menu.import_postman: İçe aktar (Postman, Insomnia, OpenAPI, HAR, WSDL)…
 menu.import_url: URL'den içe aktar…
 menu.lock_collections: Şifreli koleksiyonları kilitle
 menu.method: Metot
+menu.monitors: Monitörler…
 menu.move_into_project: Bir projeye taşı…
 menu.new_collection: Yeni koleksiyon…
 menu.new_encrypted_collection: Yeni şifreli koleksiyon…
@@ -378,6 +379,49 @@ menu.settings: Ayarlar…
 menu.source_code: Kaynak kod
 menu.variables: Değişkenler ve ortamlar…
 menu.view: Görünüm
+monitors.add: Monitör ekle
+monitors.ago_days: "%{count} gün önce"
+monitors.ago_hours: "%{count} sa önce"
+monitors.ago_minutes: "%{count} dk önce"
+monitors.ago_now: az önce
+monitors.busy: Bir monitör çalışıyor; bittiğinde yeniden deneyin.
+monitors.cancel: Vazgeç
+monitors.delete: Sil
+monitors.edit: Düzenle
+monitors.editing: “%{name}” monitörünü düzenle
+monitors.empty: Henüz monitör yok. Monitör, koleksiyonu ya da bir klasörünü zamanında çalıştırır ve başarısız olmaya başladığında ya da yeniden geçtiğinde bir webhook'a haber verir.
+monitors.enabled: Zamanında çalışsın
+monitors.environment: Ortam
+monitors.error: "Çalıştırılamadı: %{error} · %{ago}"
+monitors.every: her %{every}
+monitors.every_hint: 30s, 5m, 1h ya da 1d; birlikte de olur, 1h30m gibi; en az 10s.
+monitors.every_label: Sıklık
+monitors.failed: "%{total} istekten %{failed} başarısız · %{ago}"
+monitors.in_app: Apix açıkken monitörleri zamanlarında çalıştır
+monitors.in_app_hint: "Ya da apix monitor ile çalıştırın: bir terminalde, cron'dan ya da Görev Zamanlayıcı'dan, ya da CI zamanlamasıyla. İkisi aynı günlüğü tutar."
+monitors.name: Ad
+monitors.name_needed: Monitöre bir ad verin.
+monitors.name_placeholder: Sağlık kontrolü
+monitors.name_taken: “%{name}” adında başka bir monitör var.
+monitors.new: Yeni monitör
+monitors.next: sıradaki %{time} sonra
+monitors.not_run: Henüz çalışmadı
+monitors.off: kapalı
+monitors.passed: "%{count} geçti · %{ago}"
+monitors.run: Klasör ya da istek
+monitors.run_now: Şimdi çalıştır
+monitors.run_placeholder: "boş: tüm koleksiyon"
+monitors.running: Çalışıyor…
+monitors.save: Kaydet
+monitors.save_error: "apix.toml kaydedilemedi: %{error}"
+monitors.title: Monitörler
+monitors.toast_failing: "“%{name}” monitörü başarısız: %{summary}"
+monitors.toast_recovered: “%{name}” monitörü yeniden geçiyor
+monitors.webhook: Webhook
+monitors.webhook_failed: "“%{name}” monitörü: %{error}"
+monitors.webhook_hint: Monitör başarısız olmaya başladığında ve yeniden geçtiğinde haber verilir (Slack, Discord, Mattermost, Google Chat). {{değişkenler}} doldurulur; adres gizli bir değerde kalabilir.
+monitors.webhook_set: webhook
+monitors.whole: tüm koleksiyon
 mqtt.client_id: İstemci kimliği
 mqtt.client_id_placeholder: Her bağlantıda yeni
 mqtt.closed_by_broker: Broker bağlantıyı kapattı
@@ -569,6 +613,7 @@ runner.iterations_rows: "Boş bırakılırsa veri dosyasının her satırı içi
 runner.none: "Hiçbiri"
 runner.not_sent: "gönderilmedi"
 runner.nothing_selected: "En az bir istek seç."
+runner.parallel: Aynı anda
 runner.pause: "Duraklat"
 runner.paused: "Duraklatıldı"
 runner.requests: "İstekler (%{count})"

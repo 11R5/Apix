@@ -30,6 +30,8 @@ pub struct Settings {
     pub secrets_in_keychain: bool,
     /// Ask before sending DELETE, PUT or PATCH while a prod environment is active.
     pub confirm_prod: bool,
+    /// Run the open collections' monitors on their schedules while the app is open.
+    pub monitors_in_app: bool,
 }
 
 impl Default for Settings {
@@ -45,6 +47,7 @@ impl Default for Settings {
             history: true,
             secrets_in_keychain: false,
             confirm_prod: true,
+            monitors_in_app: false,
         }
     }
 }

@@ -10,6 +10,7 @@ pub mod graphql;
 pub mod headers;
 pub mod history;
 pub mod model;
+pub mod monitor;
 pub mod project;
 pub mod scripts;
 pub mod secrets;

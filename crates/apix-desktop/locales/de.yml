@@ -355,6 +355,7 @@ menu.import_postman: Importieren (Postman, Insomnia, OpenAPI, HAR, WSDL)…
 menu.import_url: Von URL importieren…
 menu.lock_collections: Verschlüsselte Sammlungen sperren
 menu.method: Methode
+menu.monitors: Monitore…
 menu.move_into_project: In ein Projekt verschieben…
 menu.new_collection: Neue Sammlung…
 menu.new_encrypted_collection: Neue verschlüsselte Sammlung…
@@ -378,6 +379,49 @@ menu.settings: Einstellungen…
 menu.source_code: Quellcode
 menu.variables: Variablen und Umgebungen…
 menu.view: Ansicht
+monitors.add: Monitor hinzufügen
+monitors.ago_days: vor %{count} Tagen
+monitors.ago_hours: vor %{count} Std.
+monitors.ago_minutes: vor %{count} Min.
+monitors.ago_now: gerade eben
+monitors.busy: Ein Monitor läuft; versuchen Sie es danach erneut.
+monitors.cancel: Abbrechen
+monitors.delete: Löschen
+monitors.edit: Bearbeiten
+monitors.editing: „%{name}“ bearbeiten
+monitors.empty: Noch keine Monitore. Ein Monitor führt die Sammlung oder einen Ordner daraus nach Zeitplan aus und meldet einem Webhook, wenn er fehlschlägt oder wieder besteht.
+monitors.enabled: Nach Zeitplan ausführen
+monitors.environment: Umgebung
+monitors.error: "Konnte nicht laufen: %{error} · %{ago}"
+monitors.every: alle %{every}
+monitors.every_hint: 30s, 5m, 1h oder 1d, auch zusammen wie 1h30m; mindestens 10s.
+monitors.every_label: Intervall
+monitors.failed: "%{failed} von %{total} fehlgeschlagen · %{ago}"
+monitors.in_app: Monitore nach Zeitplan ausführen, solange Apix geöffnet ist
+monitors.in_app_hint: "Oder mit apix monitor ausführen: im Terminal, per cron oder Aufgabenplanung oder nach CI-Zeitplan. Beide führen dasselbe Protokoll."
+monitors.name: Name
+monitors.name_needed: Geben Sie dem Monitor einen Namen.
+monitors.name_placeholder: Health-Check
+monitors.name_taken: Ein anderer Monitor heißt bereits „%{name}“.
+monitors.new: Neuer Monitor
+monitors.next: nächster Lauf in %{time}
+monitors.not_run: Noch nicht gelaufen
+monitors.off: aus
+monitors.passed: "%{count} bestanden · %{ago}"
+monitors.run: Ordner oder Anfrage
+monitors.run_now: Jetzt ausführen
+monitors.run_placeholder: "leer: die ganze Sammlung"
+monitors.running: Läuft…
+monitors.save: Speichern
+monitors.save_error: "apix.toml konnte nicht gespeichert werden: %{error}"
+monitors.title: Monitore
+monitors.toast_failing: "Monitor „%{name}“ schlägt fehl: %{summary}"
+monitors.toast_recovered: Monitor „%{name}“ besteht wieder
+monitors.webhook: Webhook
+monitors.webhook_failed: "Monitor „%{name}“: %{error}"
+monitors.webhook_hint: Wird benachrichtigt, wenn der Monitor fehlschlägt und wenn er wieder besteht (Slack, Discord, Mattermost, Google Chat). {{Variablen}} werden eingesetzt, die Adresse kann also geheim bleiben.
+monitors.webhook_set: Webhook
+monitors.whole: die ganze Sammlung
 mqtt.client_id: Client-ID
 mqtt.client_id_placeholder: Für jede Verbindung neu
 mqtt.closed_by_broker: Der Broker hat die Verbindung geschlossen
@@ -569,6 +613,7 @@ runner.iterations_rows: "Leer heißt einmal pro Datenzeile (%{count}). Die Pause
 runner.none: "Keine"
 runner.not_sent: "nicht gesendet"
 runner.nothing_selected: "Wähle mindestens eine Anfrage."
+runner.parallel: Gleichzeitig
 runner.pause: "Pausieren"
 runner.paused: "Pausiert"
 runner.requests: "Anfragen (%{count})"

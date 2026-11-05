@@ -10,6 +10,7 @@ measuring Apix.
 - [Share a collection that holds secrets](#share-a-collection-that-holds-secrets)
 - [Move from Postman](#move-from-postman)
 - [Run a collection in CI](#run-a-collection-in-ci)
+- [Watch an API with monitors](#watch-an-api-with-monitors)
 - [Sign in with OAuth 2.0](#sign-in-with-oauth-20)
 - [Call an AWS API](#call-an-aws-api)
 - [Upload a file, send GraphQL](#upload-a-file-send-graphql)
@@ -144,6 +145,7 @@ Options:
 | `-n, --iterations 5` | Go through the requests 5 times (default: once per data row, else once) |
 | `--delay 200` | Wait 200 ms between requests |
 | `--bail` | Stop at the first request that fails |
+| `-p, --parallel 4` | Run 4 iterations at once, like 4 users; each sends its requests in order and keeps what its scripts set to itself |
 | `--junit report.xml` | A JUnit XML report, which CI services show as a test list |
 | `--json report.json` / `--html report.html` | Everything as JSON, or a page that opens in any browser |
 | `--markdown report.md` | A summary for a pull request comment or a CI job summary (see below) |
@@ -318,6 +320,60 @@ see the [user guide](user-guide.md#runner).
 
 `apix send <file>` sends one request and prints the response; add `-i` for the
 headers and `--network` for the connection details.
+
+## Watch an API with monitors
+
+A monitor runs a collection (or a folder or request of it) on a schedule and
+tells a webhook when it starts failing and when it passes again. Monitors are
+written in the collection's `apix.toml`, by hand or from **View › Monitors…**
+in the app (see the [user guide](user-guide.md#monitors)):
+
+```toml
+[[monitor]]
+name = "Health"
+every = "5m"
+run = "health.apix"
+environment = "production"
+webhook = "{{alerts_url}}"
+```
+
+`apix monitor` runs them for as long as it is left running, each on its own
+schedule, and reads `apix.toml` again as it goes, so edits take effect:
+
+```sh
+APIX_VAR_ALERTS_URL=https://hooks.slack.com/… apix monitor api
+```
+
+```text
+Watching 2 monitor(s) of Shop API; logs in ~/.config/Apix/monitors (Ctrl+C stops)
+09:30:05Z ✓ Health                 1 passed · 166 ms
+                         next at 09:35:05Z
+09:30:05Z ✗ Orders                 1 of 3 failed · 412 ms
+    orders/list.apix: got 500 Internal Server Error
+    webhook told: failing
+```
+
+| Option | What it does |
+|---|---|
+| `--once` | Run every monitor once and exit, 1 when one fails: for cron, the Task Scheduler or a CI schedule |
+| `--list` | The monitors and their last results |
+| `--only NAME` | Only this monitor (repeatable); with `--once` it runs even when switched off |
+| `--var`, `--env-file` | Variables over the monitors' environments, like `apix run` (`APIX_VAR_*` are read too) |
+| `--log-dir DIR` | Keep the log elsewhere (in CI, a cached folder) |
+| `--timeout`, `-k`, `--proxy`, `--cacert` | Transport settings, as for `apix run` |
+
+The log keeps each monitor's last 500 results in `<config>/Apix/monitors`;
+the desktop app reads the same files, so it shows what `apix monitor` found
+on the same computer. A webhook is told only when a monitor's state turns
+(failing after passing, or on its first run; passing after failing), with a
+JSON body Slack, Discord, Mattermost and Google Chat show as a message.
+
+On a server, start `apix monitor api` as a service, or put
+`apix monitor api --once` in cron (`*/5 * * * *`). On GitHub, a scheduled
+workflow does it:
+[examples/ci/monitors.yml](../../examples/ci/monitors.yml) runs the monitors
+every 15 minutes through the action (`monitor: "true"`) and caches the log so
+recoveries are noticed.
 
 ## Sign in with OAuth 2.0
 

@@ -355,6 +355,7 @@ menu.import_postman: 导入（Postman、Insomnia、OpenAPI、HAR、WSDL）…
 menu.import_url: 从 URL 导入…
 menu.lock_collections: 锁定加密集合
 menu.method: 方法
+menu.monitors: 监视器…
 menu.move_into_project: 移到项目…
 menu.new_collection: 新建集合…
 menu.new_encrypted_collection: 新建加密集合…
@@ -378,6 +379,49 @@ menu.settings: 设置…
 menu.source_code: 源代码
 menu.variables: 变量和环境…
 menu.view: 视图
+monitors.add: 添加监视器
+monitors.ago_days: "%{count} 天前"
+monitors.ago_hours: "%{count} 小时前"
+monitors.ago_minutes: "%{count} 分钟前"
+monitors.ago_now: 刚刚
+monitors.busy: 已有监视器在运行，请在它结束后重试。
+monitors.cancel: 取消
+monitors.delete: 删除
+monitors.edit: 编辑
+monitors.editing: 编辑“%{name}”
+monitors.empty: 还没有监视器。监视器按计划运行集合或其中的文件夹，并在开始失败和恢复通过时通知 Webhook。
+monitors.enabled: 按计划运行
+monitors.environment: 环境
+monitors.error: 无法运行：%{error} · %{ago}
+monitors.every: 每 %{every}
+monitors.every_hint: 30s、5m、1h 或 1d，也可组合如 1h30m；至少 10s。
+monitors.every_label: 间隔
+monitors.failed: "%{total} 个中 %{failed} 个失败 · %{ago}"
+monitors.in_app: Apix 打开时按计划运行监视器
+monitors.in_app_hint: 也可以用 apix monitor 运行：在终端里、通过 cron 或任务计划程序，或按 CI 计划。两者共用同一份日志。
+monitors.name: 名称
+monitors.name_needed: 请为监视器命名。
+monitors.name_placeholder: 健康检查
+monitors.name_taken: 已有名为“%{name}”的监视器。
+monitors.new: 新建监视器
+monitors.next: "%{time} 后再次运行"
+monitors.not_run: 尚未运行
+monitors.off: 已关闭
+monitors.passed: "%{count} 个通过 · %{ago}"
+monitors.run: 文件夹或请求
+monitors.run_now: 立即运行
+monitors.run_placeholder: 留空：整个集合
+monitors.running: 运行中…
+monitors.save: 保存
+monitors.save_error: 无法保存 apix.toml：%{error}
+monitors.title: 监视器
+monitors.toast_failing: 监视器“%{name}”失败：%{summary}
+monitors.toast_recovered: 监视器“%{name}”已恢复通过
+monitors.webhook: Webhook
+monitors.webhook_failed: 监视器“%{name}”：%{error}
+monitors.webhook_hint: 监视器开始失败和恢复通过时通知（Slack、Discord、Mattermost、Google Chat）。{{变量}} 会被替换，因此地址可以保密。
+monitors.webhook_set: Webhook
+monitors.whole: 整个集合
 mqtt.client_id: 客户端 ID
 mqtt.client_id_placeholder: 每次连接新建
 mqtt.closed_by_broker: 代理关闭了连接
@@ -569,6 +613,7 @@ runner.iterations_rows: "留空表示每行数据一次 (%{count})。间隔是�
 runner.none: "全不选"
 runner.not_sent: "未发送"
 runner.nothing_selected: "请至少选择一个请求。"
+runner.parallel: 同时运行
 runner.pause: "暂停"
 runner.paused: "已暂停"
 runner.requests: "请求 (%{count})"

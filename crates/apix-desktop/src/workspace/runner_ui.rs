@@ -92,6 +92,8 @@ pub(super) struct RunnerView {
     script_vars: ScriptVars,
     iterations: Entity<InputState>,
     delay: Entity<InputState>,
+    /// How many iterations run at once.
+    parallel: Entity<InputState>,
     bail: bool,
     data: Option<(PathBuf, Vec<Row>)>,
 
@@ -149,6 +151,7 @@ impl RunnerView {
         // No placeholder: what empty means depends on the data file, and the hint says it.
         let iterations = cx.new(|cx| InputState::new(window, cx));
         let delay = cx.new(|cx| InputState::new(window, cx).placeholder("0"));
+        let parallel = cx.new(|cx| InputState::new(window, cx).placeholder("1"));
         Self {
             collection,
             project,
@@ -159,6 +162,7 @@ impl RunnerView {
             script_vars,
             iterations,
             delay,
+            parallel,
             bail: false,
             data: None,
             control: None,
@@ -204,6 +208,7 @@ impl RunnerView {
         };
         let iterations = number(&self.iterations)?.min(u32::MAX as u64) as u32;
         let delay = number(&self.delay)?;
+        let parallel = number(&self.parallel)?.clamp(1, 64) as u32;
         let requests: Vec<PathBuf> = self
             .items
             .iter()
@@ -238,6 +243,7 @@ impl RunnerView {
             iterations,
             delay: Duration::from_millis(delay),
             bail: self.bail,
+            parallel,
             state: self.script_vars.clone(),
             ..Default::default()
         })
@@ -674,6 +680,13 @@ impl RunnerView {
                             .gap_1()
                             .child(label(tr!("runner.delay")))
                             .child(Input::new(&self.delay).small().disabled(running)),
+                    )
+                    .child(
+                        v_flex()
+                            .flex_1()
+                            .gap_1()
+                            .child(label(tr!("runner.parallel")))
+                            .child(Input::new(&self.parallel).small().disabled(running)),
                     ),
             )
             .child(

@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:3265a05f09c64d7a -->
+<!-- translated from en/architecture.md sha256:7c5cebacbd6ba329 -->
 
 # Apix mimarisi
 
@@ -39,7 +39,8 @@ crates/
 ├── apix-codegen  istekler ↔ kabuk komutları: curl (bash), curl.exe (cmd), PowerShell; yapıştırılan curl'ü ayrıştırır; 10 dilde kod
 ├── apix-vault    şifreli koleksiyonlar: dosya başına XChaCha20-Poly1305, Argon2id, kurtarma anahtarı
 ├── apix-script   istek öncesi ve test scriptleri: pm.* uyumlu API ile QuickJS
-├── apix-runner   koleksiyon koşuları: sıra, tekrar, veri dosyaları, bekleme, bail, raporlar (pull request için Markdown da)
+├── apix-runner   koleksiyon koşuları: sıra, tekrar (yan yana da), veri dosyaları, bekleme, bail,
+│                 raporlar (pull request için Markdown da), monitörler: zamanlama, günlük, webhook
 ├── apix-grpc     gRPC çağrıları: tonic, JSON mesajlar (prost-reflect), .proto dosyaları (protox), koddan ya da JSON'dan tanım
 │                 ya da sunucu reflection'ı
 ├── apix-proto    diğer protokoller: MQTT (rumqttc)
@@ -663,6 +664,27 @@ Geçmiş bir çağrıyı `Summary::grpc` işaretiyle tutar: durum gRPC kodudur,
 trailer'lar ve durum mesajı kendi alanlarındadır, gövde de günlüktür
 (`[{"at_ms", "sent", "message"}]`); `grpc_ui::restored` onu yeniden günlük
 görünümüne çevirir.
+
+## Paralel koşular ve monitörler (M7)
+
+`Plan::parallel` birden büyükse o kadar tekrar aynı anda koşar (koşunun kendi
+görevinde `futures_util` `buffer_unordered`, thread yok): her tekrar isteklerini
+sırayla, script durumunun kendi kopyasıyla gönderir; `bail` altında bir hata
+diğerlerini de durdurur, rapor sonra tekrar sırasına dizilir. İlerleme, çağıranın
+geri çağrısının etrafındaki bir mutex üzerinden gider.
+
+`apix_core::monitor`, `apix.toml`'daki `[[monitor]]`'ü (ad, `every`, `run`,
+ortam, webhook, açık/kapalı) tanımlar ve aralıkları okur; `apix_runner::monitor`
+bir monitörü çalıştırır (`plan` değişkenleri `apix run` gibi çözer: monitörün
+ortamı, `APIX_VAR_*`, sonra sabitlenen değerler), sonucu özetler (`Outcome`),
+monitör başına JSON satırlarından oluşan bir `Log` tutar
+(`<config>/Apix/monitors/<koleksiyonun özeti>-<ad>.jsonl`, son 500), hangisinin
+ne zaman sırası geldiğine karar verir (`Scheduler`: ilk kez görülen monitörün
+sırası, günlükteki son koşusundan beri aralığı geçince gelir) ve durum
+döndüğünde webhook'a haber verir (`change`, `notify`). `apix monitor` de
+masaüstü uygulaması da (`workspace/monitors_ui.rs`: ayar açıkken saniyede bir
+bakan bir zamanlayıcı, ağ runtime'ında birer birer koşu) bunu kullanır; bu
+yüzden günlüğü paylaşırlar.
 
 ## Git (M7)
 

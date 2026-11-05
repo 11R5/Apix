@@ -355,6 +355,7 @@ menu.import_postman: インポート（Postman、Insomnia、OpenAPI、HAR、WSDL
 menu.import_url: URL からインポート…
 menu.lock_collections: 暗号化されたコレクションをロック
 menu.method: メソッド
+menu.monitors: モニター…
 menu.move_into_project: プロジェクトに移動…
 menu.new_collection: 新しいコレクション…
 menu.new_encrypted_collection: 新しい暗号化コレクション…
@@ -378,6 +379,49 @@ menu.settings: 設定…
 menu.source_code: ソースコード
 menu.variables: 変数と環境…
 menu.view: 表示
+monitors.add: モニターを追加
+monitors.ago_days: "%{count} 日前"
+monitors.ago_hours: "%{count} 時間前"
+monitors.ago_minutes: "%{count} 分前"
+monitors.ago_now: たった今
+monitors.busy: モニターを実行中です。終わってからもう一度お試しください。
+monitors.cancel: キャンセル
+monitors.delete: 削除
+monitors.edit: 編集
+monitors.editing: 「%{name}」を編集
+monitors.empty: モニターはまだありません。モニターはコレクションまたはそのフォルダーをスケジュールで実行し、失敗し始めたときと再び成功したときに Webhook へ通知します。
+monitors.enabled: スケジュールどおりに実行
+monitors.environment: 環境
+monitors.error: "実行できませんでした: %{error} · %{ago}"
+monitors.every: "%{every} ごと"
+monitors.every_hint: 30s、5m、1h、1d、または 1h30m のように組み合わせ。最短 10s。
+monitors.every_label: 間隔
+monitors.failed: "%{total} 件中 %{failed} 件失敗 · %{ago}"
+monitors.in_app: Apix を開いている間、モニターをスケジュールどおりに実行
+monitors.in_app_hint: apix monitor で実行することもできます（ターミナル、cron やタスク スケジューラ、CI のスケジュール）。どちらも同じログを残します。
+monitors.name: 名前
+monitors.name_needed: モニターに名前を付けてください。
+monitors.name_placeholder: ヘルスチェック
+monitors.name_taken: 「%{name}」という名前のモニターがすでにあります。
+monitors.new: 新しいモニター
+monitors.next: 次回まで %{time}
+monitors.not_run: まだ実行していません
+monitors.off: オフ
+monitors.passed: "%{count} 件成功 · %{ago}"
+monitors.run: フォルダーまたはリクエスト
+monitors.run_now: 今すぐ実行
+monitors.run_placeholder: "空欄: コレクション全体"
+monitors.running: 実行中…
+monitors.save: 保存
+monitors.save_error: "apix.toml を保存できませんでした: %{error}"
+monitors.title: モニター
+monitors.toast_failing: "モニター「%{name}」が失敗しています: %{summary}"
+monitors.toast_recovered: モニター「%{name}」が再び成功しています
+monitors.webhook: Webhook
+monitors.webhook_failed: "モニター「%{name}」: %{error}"
+monitors.webhook_hint: モニターが失敗し始めたときと再び成功したときに通知します（Slack、Discord、Mattermost、Google Chat）。{{変数}} は置き換えられるので、アドレスを秘密にしておけます。
+monitors.webhook_set: Webhook
+monitors.whole: コレクション全体
 mqtt.client_id: クライアント ID
 mqtt.client_id_placeholder: 接続ごとに新規
 mqtt.closed_by_broker: ブローカーが接続を閉じました
@@ -569,6 +613,7 @@ runner.iterations_rows: "空欄ならデータの行ごとに 1 回 (%{count})�
 runner.none: "なし"
 runner.not_sent: "未送信"
 runner.nothing_selected: "リクエストを 1 つ以上選んでください。"
+runner.parallel: 同時実行数
 runner.pause: "一時停止"
 runner.paused: "一時停止中"
 runner.requests: "リクエスト (%{count})"

@@ -1,0 +1,44 @@
+# Runs an Apix collection's monitors ([[monitor]] in its apix.toml) every
+# 15 minutes. A failing monitor fails the run, and a monitor with a webhook
+# tells it when it starts failing and when it passes again.
+#
+# Copy this file to .github/workflows/api-monitors.yml in your repository and
+# change `api` (the collection folder). GitHub runs scheduled workflows on the
+# default branch, at most every 5 minutes, and may start them late when busy;
+# for tighter schedules run `apix monitor` on a machine of your own.
+
+name: API monitors
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch: # a "Run workflow" button
+
+jobs:
+  monitors:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      # The monitors' last results, kept between runs: without them every
+      # failing run tells the webhook again and a recovery goes unnoticed.
+      - uses: actions/cache@v4
+        with:
+          path: .apix-monitors
+          key: apix-monitors-${{ github.run_id }}
+          restore-keys: apix-monitors-
+
+      # Builds `apix` the first time, then takes it from the cache.
+      # Pin a tag or commit instead of main for repeatable runs.
+      - uses: 11R5/Apix@main
+        with:
+          path: api
+          monitor: "true"
+          monitor-log: .apix-monitors
+        env:
+          # Secrets stay out of the repository. APIX_VAR_<NAME> fills {{name}},
+          # in requests and in a webhook address such as "{{alerts_url}}".
+          APIX_VAR_TOKEN: ${{ secrets.API_TOKEN }}
+          APIX_VAR_ALERTS_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

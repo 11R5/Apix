@@ -17,3 +17,7 @@ serde.workspace = true
 serde_json.workspace = true
 # Waiting between requests.
 tokio = { workspace = true, features = ["time"] }
+# Iterations side by side (`parallel`).
+futures-util = { version = "0.3", default-features = false, features = ["std"] }
+# Where monitor logs go (`<config>/Apix/monitors`).
+dirs = "6"

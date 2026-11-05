@@ -16,6 +16,7 @@ mod grpc_ui;
 mod header_hints;
 mod history_ui;
 mod menu_bar;
+mod monitors_ui;
 mod network;
 mod palette;
 mod runner_ui;
@@ -78,6 +79,7 @@ actions!(
         OpenSettings,
         OpenHistory,
         OpenRunner,
+        OpenMonitors,
         CloseTab,
         NextTab,
         PrevTab,
@@ -385,6 +387,8 @@ pub struct Workspace {
     watcher: Option<collections::Watcher>,
     /// The branch and the changed files, from git.
     git: git_ui::GitState,
+    /// Monitors: when each is due, their last results, the one running.
+    monitors: monitors_ui::MonitorState,
     /// The active environment of the open collection, by file name.
     environment: Option<String>,
     env_select: Entity<EnvSelect>,
@@ -632,6 +636,7 @@ impl Workspace {
             tabs: Vec::new(),
             watcher: None,
             git: Default::default(),
+            monitors: Default::default(),
             environment: None,
             env_select,
             app_state: AppState::load(),
@@ -687,6 +692,7 @@ impl Workspace {
             _subscriptions: subscriptions,
         };
         this._auto_lock = Some(Self::auto_lock_task(window, cx));
+        this.start_monitors(window, cx);
         match crate::bench::mode() {
             Some(crate::bench::Bench::Startup) => window.on_next_frame(|_, cx| {
                 crate::bench::report("startup_first_frame_ms", crate::bench::since_start_ms());
@@ -2167,6 +2173,9 @@ impl Render for Workspace {
                 cx.listener(|this, _: &OpenHistory, window, cx| this.open_history(window, cx)),
             )
             .on_action(cx.listener(|this, _: &OpenRunner, window, cx| this.open_runner(window, cx)))
+            .on_action(
+                cx.listener(|this, _: &OpenMonitors, window, cx| this.open_monitors(window, cx)),
+            )
             // A click anywhere brings focus back inside the workspace (inputs
             // focus themselves first, so they keep it), so shortcuts keep working.
             .on_mouse_down(

@@ -74,8 +74,17 @@ inputs:
       Post the summary on the pull request, editing the same comment on later runs
       ("true" or "false"); the job needs permissions pull-requests write
     default: "false"
+  monitor:
+    description: >-
+      "true": run the collection's monitors once (apix monitor --once) instead of the
+      collection; for a scheduled workflow. A failing monitor fails the step and tells
+      its webhook
+    default: "false"
+  monitor-log:
+    description: Where the monitors keep their last results; cache it between runs so a monitor that passes again is noticed
+    default: .apix-monitors
   args:
-    description: More arguments for apix run, e.g. "--timeout 10 --var region=eu"
+    description: More arguments for apix run (or apix monitor), e.g. "--timeout 10 --var region=eu"
     required: false
 
 runs:
@@ -124,8 +133,17 @@ runs:
         IN_CHANGED: ${{ inputs.changed }}
         IN_DIFF: ${{ inputs.diff }}
         IN_ARGS: ${{ inputs.args }}
+        IN_MONITOR: ${{ inputs.monitor }}
+        IN_MONITOR_LOG: ${{ inputs.monitor-log }}
         PUSH_BEFORE: ${{ github.event.before }}
       run: |
+        # Extra arguments are split on spaces, like on a command line.
+        read -r -a extra <<< "$IN_ARGS"
+        if [ "$IN_MONITOR" = "true" ]; then
+          margs=(monitor "$IN_PATH" --once --log-dir "$IN_MONITOR_LOG")
+          [ -n "$IN_ENV_FILE" ] && margs+=(--env-file "$IN_ENV_FILE")
+          exec apix "${margs[@]}" "${extra[@]}"
+        fi
         args=(run "$IN_PATH")
         [ -n "$IN_ENVIRONMENT" ] && args+=(--env "$IN_ENVIRONMENT")
         [ -n "$IN_DATA" ] && args+=(--data "$IN_DATA")
@@ -160,8 +178,6 @@ runs:
         esac
         [ -n "$base" ] && args+=("--changed=$base")
 
-        # Extra arguments are split on spaces, like on a command line.
-        read -r -a extra <<< "$IN_ARGS"
         set +e
         apix "${args[@]}" "${extra[@]}"
         code=$?

@@ -357,6 +357,7 @@ menu.import_postman: Import (Postman, Insomnia, OpenAPI, HAR, WSDL)…
 menu.import_url: Import from URL…
 menu.lock_collections: Lock encrypted collections
 menu.method: Method
+menu.monitors: Monitors…
 menu.move_into_project: Move into a project…
 menu.new_collection: New collection…
 menu.new_encrypted_collection: New encrypted collection…
@@ -380,6 +381,49 @@ menu.settings: Settings…
 menu.source_code: Source code
 menu.variables: Variables and environments…
 menu.view: View
+monitors.add: Add monitor
+monitors.ago_days: "%{count} d ago"
+monitors.ago_hours: "%{count} h ago"
+monitors.ago_minutes: "%{count} min ago"
+monitors.ago_now: just now
+monitors.busy: A monitor is running; try again when it is done.
+monitors.cancel: Cancel
+monitors.delete: Delete
+monitors.edit: Edit
+monitors.editing: Edit “%{name}”
+monitors.empty: No monitors yet. A monitor runs the collection, or a folder of it, on a schedule and tells a webhook when it starts failing or passes again.
+monitors.enabled: Run on its schedule
+monitors.environment: Environment
+monitors.error: "Could not run: %{error} · %{ago}"
+monitors.every: every %{every}
+monitors.every_hint: 30s, 5m, 1h or 1d, or together as in 1h30m; at least 10s.
+monitors.every_label: Every
+monitors.failed: "%{failed} of %{total} failed · %{ago}"
+monitors.in_app: Run monitors on their schedules while Apix is open
+monitors.in_app_hint: "Or run them with apix monitor: in a terminal, from cron or the Task Scheduler, or on a CI schedule. Both keep the same log."
+monitors.name: Name
+monitors.name_needed: Give the monitor a name.
+monitors.name_placeholder: Health check
+monitors.name_taken: Another monitor is already called “%{name}”.
+monitors.new: New monitor
+monitors.next: next in %{time}
+monitors.not_run: Not run yet
+monitors.off: "off"
+monitors.passed: "%{count} passed · %{ago}"
+monitors.run: Folder or request
+monitors.run_now: Run now
+monitors.run_placeholder: "empty: the whole collection"
+monitors.running: Running…
+monitors.save: Save
+monitors.save_error: "Could not save apix.toml: %{error}"
+monitors.title: Monitors
+monitors.toast_failing: "Monitor “%{name}” is failing: %{summary}"
+monitors.toast_recovered: Monitor “%{name}” passes again
+monitors.webhook: Webhook
+monitors.webhook_failed: "Monitor “%{name}”: %{error}"
+monitors.webhook_hint: Told when the monitor starts failing and when it passes again (Slack, Discord, Mattermost, Google Chat). {{variables}} are filled in, so the address can stay a secret.
+monitors.webhook_set: webhook
+monitors.whole: the whole collection
 mqtt.client_id: Client id
 mqtt.client_id_placeholder: New for every connection
 mqtt.closed_by_broker: The broker closed the connection
@@ -571,6 +615,7 @@ runner.iterations_rows: "Empty means once per data row (%{count}). The delay is 
 runner.none: "None"
 runner.not_sent: "not sent"
 runner.nothing_selected: "Pick at least one request."
+runner.parallel: At once
 runner.pause: "Pause"
 runner.paused: "Paused"
 runner.requests: "Requests (%{count})"

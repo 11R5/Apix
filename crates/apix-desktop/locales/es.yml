@@ -355,6 +355,7 @@ menu.import_postman: Importar (Postman, Insomnia, OpenAPI, HAR, WSDL)…
 menu.import_url: Importar desde URL…
 menu.lock_collections: Bloquear colecciones cifradas
 menu.method: Método
+menu.monitors: Monitores…
 menu.move_into_project: Mover a un proyecto…
 menu.new_collection: Nueva colección…
 menu.new_encrypted_collection: Nueva colección cifrada…
@@ -378,6 +379,49 @@ menu.settings: Configuración…
 menu.source_code: Código fuente
 menu.variables: Variables y entornos…
 menu.view: Ver
+monitors.add: Añadir monitor
+monitors.ago_days: hace %{count} d
+monitors.ago_hours: hace %{count} h
+monitors.ago_minutes: hace %{count} min
+monitors.ago_now: ahora mismo
+monitors.busy: Hay un monitor en marcha; inténtelo de nuevo cuando termine.
+monitors.cancel: Cancelar
+monitors.delete: Eliminar
+monitors.edit: Editar
+monitors.editing: Editar «%{name}»
+monitors.empty: Aún no hay monitores. Un monitor ejecuta la colección, o una carpeta de ella, según un horario y avisa a un webhook cuando empieza a fallar o vuelve a pasar.
+monitors.enabled: Ejecutar según su horario
+monitors.environment: Entorno
+monitors.error: "No se pudo ejecutar: %{error} · %{ago}"
+monitors.every: cada %{every}
+monitors.every_hint: 30s, 5m, 1h o 1d, o juntos como 1h30m; al menos 10s.
+monitors.every_label: Cada
+monitors.failed: "%{failed} de %{total} fallaron · %{ago}"
+monitors.in_app: Ejecutar los monitores según su horario mientras Apix esté abierto
+monitors.in_app_hint: "O ejecútelos con apix monitor: en una terminal, desde cron o el Programador de tareas, o con un horario de CI. Ambos llevan el mismo registro."
+monitors.name: Nombre
+monitors.name_needed: Dé un nombre al monitor.
+monitors.name_placeholder: Comprobación de salud
+monitors.name_taken: Ya hay otro monitor llamado «%{name}».
+monitors.new: Nuevo monitor
+monitors.next: la próxima en %{time}
+monitors.not_run: Aún no se ha ejecutado
+monitors.off: desactivado
+monitors.passed: "%{count} correctas · %{ago}"
+monitors.run: Carpeta o solicitud
+monitors.run_now: Ejecutar ahora
+monitors.run_placeholder: "vacío: toda la colección"
+monitors.running: Ejecutando…
+monitors.save: Guardar
+monitors.save_error: "No se pudo guardar apix.toml: %{error}"
+monitors.title: Monitores
+monitors.toast_failing: "El monitor «%{name}» falla: %{summary}"
+monitors.toast_recovered: El monitor «%{name}» vuelve a pasar
+monitors.webhook: Webhook
+monitors.webhook_failed: "Monitor «%{name}»: %{error}"
+monitors.webhook_hint: Se avisa cuando el monitor empieza a fallar y cuando vuelve a pasar (Slack, Discord, Mattermost, Google Chat). Las {{variables}} se rellenan, así que la dirección puede quedar en secreto.
+monitors.webhook_set: webhook
+monitors.whole: toda la colección
 mqtt.client_id: Id. de cliente
 mqtt.client_id_placeholder: Nuevo en cada conexión
 mqtt.closed_by_broker: El broker cerró la conexión
@@ -569,6 +613,7 @@ runner.iterations_rows: "Vacío: una vez por fila de datos (%{count}). La espera
 runner.none: "Ninguna"
 runner.not_sent: "no enviada"
 runner.nothing_selected: "Elige al menos una petición."
+runner.parallel: A la vez
 runner.pause: "Pausar"
 runner.paused: "En pausa"
 runner.requests: "Peticiones (%{count})"

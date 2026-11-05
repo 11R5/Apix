@@ -456,6 +456,7 @@ pub fn convert_collection(json: &str) -> Result<Plan, ImportError> {
         auth,
         settings,
         order,
+        monitors: Vec::new(),
     };
     Ok(Plan {
         meta,

@@ -28,6 +28,7 @@ command line runs the same requests in a terminal or CI.
 - [gRPC](#grpc)
 - [Scripts and tests](#scripts-and-tests)
 - [Runner](#runner)
+- [Monitors](#monitors)
 - [Tabs](#tabs)
 - [Organising requests](#organising-requests)
 - [Projects](#projects)
@@ -714,6 +715,10 @@ The **Runner** sends many requests in one go and checks them all. Open it with
 - **Iterations**: how many times to go through the requests. Left empty, it is
   once, or once per row when there is a data file.
 - **Delay (ms)**: a pause between two requests, for rate-limited APIs.
+- **At once**: how many iterations run side by side, like several users of
+  the API at the same time. Each sends its requests in order (so a login's
+  token still reaches the next request) and keeps what its own scripts set;
+  the results are listed by iteration. Left empty, one after another.
 - **Data file**: a CSV or JSON file for a data-driven run. Every row is one
   iteration and its columns are variables: `{{email}}` in the request and
   `pm.iterationData.get("email")` in scripts. CSV needs a header line; quotes
@@ -739,6 +744,49 @@ terminal; see [Run a collection in CI](workflows.md#run-a-collection-in-ci).
 A password written in a URL (`https://user:password@host`) is left out of
 reports, command-line output, logs and error messages. The request file and
 the URL bar still hold it, so prefer a variable or the Auth tab for real ones.
+
+## Monitors
+
+A **monitor** runs the collection, or a folder or request of it, on a
+schedule, and says so when it starts failing or passes again. Open
+**View › Monitors…**.
+
+![Monitors](images/monitors.png)
+
+- **Add monitor** asks for a name, how often (`30s`, `5m`, `1h`, `1d`, or
+  together as in `1h30m`; at least `10s`), a folder or request (empty for the
+  whole collection), an environment, and a webhook. The ⚙ button edits a
+  monitor, the ▷ button runs it now.
+- Each monitor shows its last result (passed, or how many failed and the
+  first failures) and, while scheduling is on, when it runs next.
+- **Run monitors on their schedules while Apix is open** turns the schedule
+  on (it is off until you choose it). Apix then runs the due monitors in the
+  background, one at a time, and shows a notification when one starts
+  failing or passes again.
+- A **webhook** is told the same: Apix posts JSON with a `text` (and
+  `content`) line that Slack, Discord, Mattermost and Google Chat show as a
+  message, plus the details (`monitor`, `status`, `passed`, `failed`,
+  `failures`). `{{variables}}` are filled in, so the address can stay in an
+  environment's secrets.
+
+Monitors are kept in the collection's `apix.toml`, so they are shared
+through git:
+
+```toml
+[[monitor]]
+name = "Health"
+every = "5m"
+run = "users"            # a folder or request; leave out for the whole collection
+environment = "staging"
+webhook = "{{alerts_url}}"
+# enabled = false        # listed, but not run on its schedule
+```
+
+To watch an API when the app is closed, run `apix monitor` in a terminal,
+from cron or the Task Scheduler, or on a CI schedule; see
+[Watch an API with monitors](workflows.md#watch-an-api-with-monitors). The
+app and `apix monitor` keep the same log of results, so either shows what the
+other found.
 
 ## Tabs
 

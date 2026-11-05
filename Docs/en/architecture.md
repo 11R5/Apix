@@ -37,7 +37,8 @@ crates/
 ├── apix-codegen  requests ↔ shell commands: curl (bash), curl.exe (cmd), PowerShell; parses pasted curl; code in 10 languages
 ├── apix-vault    encrypted collections: per-file XChaCha20-Poly1305, Argon2id, recovery key
 ├── apix-script   pre-request and test scripts: QuickJS with a pm.*-compatible API
-├── apix-runner   runs collections: order, iterations, data files, delay, bail, reports (also Markdown for pull requests)
+├── apix-runner   runs collections: order, iterations (also side by side), data files, delay, bail,
+│                 reports (also Markdown for pull requests), monitors: schedule, log, webhooks
 ├── apix-grpc     gRPC calls: tonic, messages as JSON (prost-reflect), .proto files (protox), definitions from code or JSON
 ├── apix-proto    other protocols: MQTT (rumqttc)
 │                 or server reflection
@@ -636,6 +637,27 @@ a call with `Summary::grpc` set: the status is the gRPC code, the trailers and
 status message have their own fields, and the body is the log
 (`[{"at_ms", "sent", "message"}]`), which `grpc_ui::restored` turns back into
 the log view.
+
+## Parallel runs and monitors (M7)
+
+`Plan::parallel` above one runs that many iterations at once
+(`futures_util` `buffer_unordered` on the run's own task, no threads): each
+iteration sends its requests in order with its own copy of the script state,
+a failure under `bail` stops the others, and the report is sorted by
+iteration afterwards. Progress goes through a mutex around the caller's
+callback.
+
+`apix_core::monitor` describes `[[monitor]]` in `apix.toml` (name, `every`,
+`run`, environment, webhook, enabled) and reads intervals; `apix_runner::monitor`
+runs one (`plan` resolves variables like `apix run`: the monitor's environment,
+`APIX_VAR_*`, then pinned values), sums it up (`Outcome`), keeps a JSON-lines
+`Log` per monitor (`<config>/Apix/monitors/<hash of the collection>-<name>.jsonl`,
+the last 500), decides when each is due (`Scheduler`: a monitor seen for the
+first time is due once its interval has passed since its last logged run),
+and tells a webhook when the state turns (`change`, `notify`). `apix monitor`
+and the desktop app (`workspace/monitors_ui.rs`: a ticker every second while
+the setting is on, one run at a time on the network runtime) both use it, so
+they share the log.
 
 ## Git (M7)
 

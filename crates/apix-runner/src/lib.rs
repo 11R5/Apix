@@ -6,6 +6,7 @@
 //! stopping from outside.
 
 pub mod data;
+pub mod monitor;
 pub mod report;
 pub mod vars;
 
@@ -328,6 +329,8 @@ pub struct Plan {
     pub delay: Duration,
     /// Stop at the first request that fails.
     pub bail: bool,
+    /// How many iterations run at once (0 or 1: one after another).
+    pub parallel: u32,
     /// Transport settings that win over the requests' own.
     pub overrides: RequestSettings,
     /// What scripts set before the run (the desktop app's session); the
@@ -380,13 +383,19 @@ pub enum Progress<'a> {
 
 /// Runs `plan`. Stopping (through `control` or `bail`) still returns what
 /// was done so far.
+///
+/// With `plan.parallel` above one, that many iterations run at once, like
+/// users of the API working side by side: each sends its requests in order
+/// (so a login's token still reaches the next request) and starts from the
+/// plan's script state, keeping what its own scripts set to itself. The
+/// report lists the items by iteration either way.
 pub async fn run(
     scope: &Scope,
     plan: &Plan,
     client: &HttpClient,
     sender: Sender,
     control: &Control,
-    mut progress: impl FnMut(Progress),
+    progress: impl FnMut(Progress) + Send,
 ) -> RunReport {
     let started = Instant::now();
     let iterations = plan.iteration_count();
@@ -408,42 +417,114 @@ pub async fn run(
         .iter()
         .map(|p| load_request(p).map(|r| r.name).unwrap_or_default())
         .collect();
-    let mut state = plan.state.clone();
-    let mut first = true;
-    'run: for iteration in 0..iterations {
+    let run = RunCtx {
+        scope,
+        plan,
+        client,
+        sender,
+        control,
+        names,
+        progress: std::sync::Mutex::new(progress),
+        halt: AtomicBool::new(false),
+    };
+    let workers = (plan.parallel.max(1)).min(iterations.max(1)) as usize;
+    if workers <= 1 {
+        let mut state = plan.state.clone();
+        for iteration in 0..iterations {
+            let (items, stopped) = run.iteration(iteration, &mut state, iteration > 0).await;
+            report.items.extend(items);
+            if stopped {
+                report.stopped = true;
+                break;
+            }
+        }
+    } else {
+        use futures_util::StreamExt as _;
+        let run = &run;
+        let done: Vec<(Vec<ItemResult>, bool)> = futures_util::stream::iter(0..iterations)
+            .map(|iteration| async move {
+                let mut state = plan.state.clone();
+                run.iteration(iteration, &mut state, false).await
+            })
+            .buffer_unordered(workers)
+            .collect()
+            .await;
+        for (items, stopped) in done {
+            report.items.extend(items);
+            report.stopped |= stopped;
+        }
+        // Stable: within an iteration the items keep the order they were sent in.
+        report.items.sort_by_key(|item| item.iteration);
+    }
+    report.duration_ms = started.elapsed().as_millis() as u64;
+    report
+}
+
+/// What every iteration of a run shares.
+struct RunCtx<'a, P> {
+    scope: &'a Scope,
+    plan: &'a Plan,
+    client: &'a HttpClient,
+    sender: Sender,
+    control: &'a Control,
+    names: Vec<String>,
+    progress: std::sync::Mutex<P>,
+    /// A request failed under `bail`: the other iterations stop too.
+    halt: AtomicBool,
+}
+
+impl<P: FnMut(Progress) + Send> RunCtx<'_, P> {
+    fn report(&self, event: Progress) {
+        let mut progress = self.progress.lock().unwrap_or_else(|e| e.into_inner());
+        (progress)(event);
+    }
+
+    /// Sends one iteration's requests in order. Returns its items and
+    /// whether the run was stopped.
+    async fn iteration(
+        &self,
+        iteration: u32,
+        state: &mut ScriptVars,
+        delay_first: bool,
+    ) -> (Vec<ItemResult>, bool) {
+        let plan = self.plan;
+        let iterations = plan.iteration_count();
         let (vars, scopes, row) = plan.iteration(iteration);
-        progress(Progress::Iteration(iteration, row));
+        self.report(Progress::Iteration(iteration, row));
+        let mut items = Vec::new();
         let mut at = 0;
         // `setNextRequest` may loop (polling); a ceiling keeps a mistake from running forever.
         let mut steps = 0;
         while at < plan.requests.len() && steps < plan.requests.len() * 100 {
+            let delay = if steps == 0 && !delay_first {
+                Duration::ZERO
+            } else {
+                plan.delay
+            };
             steps += 1;
-            let delay = if first { Duration::ZERO } else { plan.delay };
-            first = false;
-            if !control.wait(delay).await {
-                report.stopped = true;
-                break 'run;
+            if !self.control.wait(delay).await || self.halt.load(Ordering::Relaxed) {
+                return (items, true);
             }
             let path = &plan.requests[at];
             let label = plan.label(path);
-            progress(Progress::Sending(path));
+            self.report(Progress::Sending(path));
             let info = Info {
-                request_name: names[at].clone(),
+                request_name: self.names[at].clone(),
                 request_id: label.clone(),
                 iteration,
                 iteration_count: iterations,
             };
             let mut next = at + 1;
             let item = match exchange(
-                client,
-                scope,
+                self.client,
+                self.scope,
                 path,
                 &vars,
                 &scopes,
-                &mut state,
+                state,
                 &plan.overrides,
                 info,
-                sender.clone(),
+                self.sender.clone(),
                 |_| {},
             )
             .await
@@ -457,7 +538,7 @@ pub async fn run(
                         .or(done.pre.next_request.clone());
                     match wanted {
                         Some(None) => next = plan.requests.len(),
-                        Some(Some(name)) => match names.iter().position(|n| *n == name) {
+                        Some(Some(name)) => match self.names.iter().position(|n| *n == name) {
                             Some(ix) => next = ix,
                             None => item.logs.push(LogLine {
                                 level: "warn".into(),
@@ -472,7 +553,7 @@ pub async fn run(
                     let request = load_request(path).ok();
                     ItemResult {
                         iteration,
-                        name: names[at].clone(),
+                        name: self.names[at].clone(),
                         path: label,
                         method: request
                             .as_ref()
@@ -486,18 +567,17 @@ pub async fn run(
                     }
                 }
             };
-            progress(Progress::Item(&item));
+            self.report(Progress::Item(&item));
             let failed = !item.passed;
-            report.items.push(item);
+            items.push(item);
             if failed && plan.bail {
-                report.stopped = true;
-                break 'run;
+                self.halt.store(true, Ordering::Relaxed);
+                return (items, true);
             }
             at = next;
         }
+        (items, false)
     }
-    report.duration_ms = started.elapsed().as_millis() as u64;
-    report
 }
 
 #[cfg(test)]

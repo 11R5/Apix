@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:87fa16a166c040fb -->
+<!-- translated from en/user-guide.md sha256:4e629f5c18eb42d0 -->
 
 # Apix kullanım kılavuzu
 
@@ -31,6 +31,7 @@ veya CI'da çalıştırır.
 - [gRPC](#grpc)
 - [Scriptler ve testler](#scriptler-ve-testler)
 - [Runner](#runner)
+- [Monitörler](#monitörler)
 - [Sekmeler](#sekmeler)
 - [Kenar çubuğunda istekleri düzenleme](#kenar-çubuğunda-istekleri-düzenleme)
 - [Projeler](#projeler)
@@ -727,6 +728,11 @@ tıklayıp **Çalıştır…** ile açılır.
 - **Tekrar**: isteklerin kaç kez dolaşılacağı. Boş bırakılırsa bir kez; veri
   dosyası varsa her satır için bir kez.
 - **Bekleme (ms)**: iki istek arasındaki ara; istek sınırı olan API'ler için.
+- **Aynı anda**: kaç tekrarın yan yana koşacağı; API'yi aynı anda kullanan
+  birkaç kullanıcı gibi. Her biri isteklerini sırayla gönderir (böylece bir
+  girişin token'ı sonraki isteğe ulaşır) ve kendi scriptlerinin atadıklarını
+  kendine saklar; sonuçlar tekrar sırasıyla listelenir. Boş bırakılırsa
+  biri bitince öteki.
 - **Veri dosyası**: veri odaklı koşu için bir CSV ya da JSON dosyası. Her satır
   bir tekrardır ve sütunları değişken olur: istekte `{{email}}`, scriptlerde
   `pm.iterationData.get("email")`. CSV'nin ilk satırı başlık olmalı; tırnaklı
@@ -753,6 +759,49 @@ URL'ye yazılan şifre (`https://kullanici:sifre@host`) raporlarda, komut satır
 çıktısında, günlüklerde ve hata mesajlarında gösterilmez. İstek dosyası ve URL
 çubuğu onu tutmaya devam eder; gerçek şifreler için değişken ya da Yetkilendirme
 sekmesini tercih edin.
+
+## Monitörler
+
+**Monitör**, koleksiyonu ya da onun bir klasörünü veya isteğini zamanında
+çalıştırır ve başarısız olmaya başladığında ya da yeniden geçtiğinde bunu
+bildirir. **Görünüm › Monitörler…** ile açın.
+
+![Monitörler](images/monitors.png)
+
+- **Monitör ekle** bir ad, sıklık (`30s`, `5m`, `1h`, `1d` ya da `1h30m` gibi
+  birlikte; en az `10s`), bir klasör ya da istek (boşsa tüm koleksiyon), bir
+  ortam ve bir webhook ister. ⚙ düğmesi monitörü düzenler, ▷ düğmesi hemen
+  çalıştırır.
+- Her monitör son sonucunu (geçti, ya da kaç isteğin başarısız olduğu ve ilk
+  hatalar) ve zamanlama açıkken ne zaman yeniden çalışacağını gösterir.
+- **Apix açıkken monitörleri zamanlarında çalıştır** zamanlamayı açar (siz
+  seçene kadar kapalıdır). Apix zamanı gelen monitörleri arka planda, birer
+  birer çalıştırır; biri başarısız olmaya başladığında ya da yeniden
+  geçtiğinde bir bildirim gösterir.
+- **Webhook**'a da aynısı söylenir: Apix, Slack, Discord, Mattermost ve Google
+  Chat'in mesaj olarak gösterdiği bir `text` (ve `content`) satırı ile
+  ayrıntıları (`monitor`, `status`, `passed`, `failed`, `failures`) içeren bir
+  JSON gönderir. `{{değişkenler}}` doldurulur; böylece adres bir ortamın gizli
+  değerlerinde kalabilir.
+
+Monitörler koleksiyonun `apix.toml` dosyasında tutulur; böylece git ile
+paylaşılır:
+
+```toml
+[[monitor]]
+name = "Health"
+every = "5m"
+run = "users"            # bir klasör ya da istek; tüm koleksiyon için yazmayın
+environment = "staging"
+webhook = "{{alerts_url}}"
+# enabled = false        # listelenir ama zamanında çalışmaz
+```
+
+Uygulama kapalıyken bir API'yi izlemek için `apix monitor`'ü bir terminalde,
+cron'dan ya da Görev Zamanlayıcı'dan, ya da bir CI zamanlamasıyla çalıştırın;
+bkz. [Bir API'yi monitörlerle izleme](workflows.md#bir-apiyi-monitörlerle-izleme).
+Uygulama ve `apix monitor` aynı sonuç günlüğünü tutar; biri diğerinin
+bulduğunu gösterir.
 
 ## Sekmeler
 

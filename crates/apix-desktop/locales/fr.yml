@@ -355,6 +355,7 @@ menu.import_postman: Importer (Postman, Insomnia, OpenAPI, HAR, WSDL)…
 menu.import_url: Importer depuis une URL…
 menu.lock_collections: Verrouiller les collections chiffrées
 menu.method: Méthode
+menu.monitors: Moniteurs…
 menu.move_into_project: Déplacer dans un projet…
 menu.new_collection: Nouvelle collection…
 menu.new_encrypted_collection: Nouvelle collection chiffrée…
@@ -378,6 +379,49 @@ menu.settings: Paramètres…
 menu.source_code: Code source
 menu.variables: Variables et environnements…
 menu.view: Affichage
+monitors.add: Ajouter un moniteur
+monitors.ago_days: il y a %{count} j
+monitors.ago_hours: il y a %{count} h
+monitors.ago_minutes: il y a %{count} min
+monitors.ago_now: à l’instant
+monitors.busy: Un moniteur est en cours ; réessayez quand il aura fini.
+monitors.cancel: Annuler
+monitors.delete: Supprimer
+monitors.edit: Modifier
+monitors.editing: Modifier « %{name} »
+monitors.empty: Aucun moniteur pour l’instant. Un moniteur exécute la collection, ou l’un de ses dossiers, selon un planning et prévient un webhook quand il commence à échouer ou réussit de nouveau.
+monitors.enabled: Exécuter selon le planning
+monitors.environment: Environnement
+monitors.error: "Exécution impossible : %{error} · %{ago}"
+monitors.every: toutes les %{every}
+monitors.every_hint: 30s, 5m, 1h ou 1d, ou combinés comme 1h30m ; au moins 10s.
+monitors.every_label: Fréquence
+monitors.failed: "%{failed} sur %{total} en échec · %{ago}"
+monitors.in_app: Exécuter les moniteurs selon leur planning tant qu’Apix est ouvert
+monitors.in_app_hint: "Ou lancez-les avec apix monitor : dans un terminal, via cron ou le Planificateur de tâches, ou sur un planning de CI. Les deux tiennent le même journal."
+monitors.name: Nom
+monitors.name_needed: Donnez un nom au moniteur.
+monitors.name_placeholder: Vérification de santé
+monitors.name_taken: Un autre moniteur s’appelle déjà « %{name} ».
+monitors.new: Nouveau moniteur
+monitors.next: prochaine dans %{time}
+monitors.not_run: Pas encore exécuté
+monitors.off: désactivé
+monitors.passed: "%{count} réussies · %{ago}"
+monitors.run: Dossier ou requête
+monitors.run_now: Exécuter maintenant
+monitors.run_placeholder: "vide : toute la collection"
+monitors.running: En cours…
+monitors.save: Enregistrer
+monitors.save_error: "Impossible d’enregistrer apix.toml : %{error}"
+monitors.title: Moniteurs
+monitors.toast_failing: "Le moniteur « %{name} » échoue : %{summary}"
+monitors.toast_recovered: Le moniteur « %{name} » réussit de nouveau
+monitors.webhook: Webhook
+monitors.webhook_failed: "Moniteur « %{name} » : %{error}"
+monitors.webhook_hint: Prévenu quand le moniteur commence à échouer et quand il réussit de nouveau (Slack, Discord, Mattermost, Google Chat). Les {{variables}} sont remplacées, l’adresse peut donc rester secrète.
+monitors.webhook_set: webhook
+monitors.whole: toute la collection
 mqtt.client_id: ID client
 mqtt.client_id_placeholder: Nouveau à chaque connexion
 mqtt.closed_by_broker: Le broker a fermé la connexion
@@ -569,6 +613,7 @@ runner.iterations_rows: "Vide : une fois par ligne de données (%{count}). Le d�
 runner.none: "Aucune"
 runner.not_sent: "non envoyée"
 runner.nothing_selected: "Choisissez au moins une requête."
+runner.parallel: En même temps
 runner.pause: "Pause"
 runner.paused: "En pause"
 runner.requests: "Requêtes (%{count})"

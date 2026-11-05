@@ -355,6 +355,7 @@ menu.import_postman: Импорт (Postman, Insomnia, OpenAPI, HAR, WSDL)…
 menu.import_url: Импорт по URL…
 menu.lock_collections: Заблокировать зашифрованные коллекции
 menu.method: Метод
+menu.monitors: Мониторы…
 menu.move_into_project: Переместить в проект…
 menu.new_collection: Новая коллекция…
 menu.new_encrypted_collection: Новая зашифрованная коллекция…
@@ -378,6 +379,49 @@ menu.settings: Настройки…
 menu.source_code: Исходный код
 menu.variables: Переменные и окружения…
 menu.view: Вид
+monitors.add: Добавить монитор
+monitors.ago_days: "%{count} дн. назад"
+monitors.ago_hours: "%{count} ч назад"
+monitors.ago_minutes: "%{count} мин назад"
+monitors.ago_now: только что
+monitors.busy: Монитор уже выполняется; повторите, когда он закончит.
+monitors.cancel: Отмена
+monitors.delete: Удалить
+monitors.edit: Изменить
+monitors.editing: Изменить «%{name}»
+monitors.empty: Мониторов пока нет. Монитор запускает коллекцию или её папку по расписанию и сообщает вебхуку, когда начинает падать или снова проходит.
+monitors.enabled: Запускать по расписанию
+monitors.environment: Окружение
+monitors.error: "Не удалось запустить: %{error} · %{ago}"
+monitors.every: каждые %{every}
+monitors.every_hint: 30s, 5m, 1h или 1d, можно вместе, как 1h30m; не меньше 10s.
+monitors.every_label: Интервал
+monitors.failed: Не прошло %{failed} из %{total} · %{ago}
+monitors.in_app: Запускать мониторы по расписанию, пока Apix открыт
+monitors.in_app_hint: "Или запускайте их через apix monitor: в терминале, из cron или Планировщика заданий, или по расписанию CI. Журнал у них общий."
+monitors.name: Название
+monitors.name_needed: Дайте монитору название.
+monitors.name_placeholder: Проверка работоспособности
+monitors.name_taken: Монитор «%{name}» уже есть.
+monitors.new: Новый монитор
+monitors.next: следующий через %{time}
+monitors.not_run: Ещё не запускался
+monitors.off: выключен
+monitors.passed: "Пройдено: %{count} · %{ago}"
+monitors.run: Папка или запрос
+monitors.run_now: Запустить сейчас
+monitors.run_placeholder: "пусто: вся коллекция"
+monitors.running: Выполняется…
+monitors.save: Сохранить
+monitors.save_error: "Не удалось сохранить apix.toml: %{error}"
+monitors.title: Мониторы
+monitors.toast_failing: "Монитор «%{name}» падает: %{summary}"
+monitors.toast_recovered: Монитор «%{name}» снова проходит
+monitors.webhook: Вебхук
+monitors.webhook_failed: "Монитор «%{name}»: %{error}"
+monitors.webhook_hint: Получает сообщение, когда монитор начинает падать и когда снова проходит (Slack, Discord, Mattermost, Google Chat). {{Переменные}} подставляются, так что адрес можно держать в секрете.
+monitors.webhook_set: вебхук
+monitors.whole: вся коллекция
 mqtt.client_id: ID клиента
 mqtt.client_id_placeholder: Новый при каждом подключении
 mqtt.closed_by_broker: Брокер закрыл соединение
@@ -569,6 +613,7 @@ runner.iterations_rows: "Пусто — по разу на каждую стро
 runner.none: "Ни одного"
 runner.not_sent: "не отправлен"
 runner.nothing_selected: "Выберите хотя бы один запрос."
+runner.parallel: Одновременно
 runner.pause: "Пауза"
 runner.paused: "На паузе"
 runner.requests: "Запросы (%{count})"

@@ -287,6 +287,7 @@ impl MenuState {
             .menu(tr!("menu.command_palette"), Box::new(OpenPalette))
             .menu(tr!("menu.history"), Box::new(OpenHistory))
             .menu(tr!("menu.runner"), Box::new(OpenRunner))
+            .menu(tr!("menu.monitors"), Box::new(OpenMonitors))
             .separator()
             .menu(tr!("menu.next_tab"), Box::new(NextTab))
             .menu(tr!("menu.previous_tab"), Box::new(PrevTab))
