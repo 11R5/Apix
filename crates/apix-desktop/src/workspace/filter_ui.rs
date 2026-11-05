@@ -26,6 +26,8 @@ pub(super) enum FilterState {
         doc: Arc<Document>,
         count: usize,
         language: &'static str,
+        /// What it picked out, for the Table and Chart views.
+        values: Arc<Vec<serde_json::Value>>,
     },
     Failed(SharedString),
 }
@@ -80,6 +82,7 @@ impl Workspace {
                             Arc::new(Document::new(f.to_pretty(), true)),
                             count,
                             language,
+                            Arc::new(f.values),
                         )
                     })
                 })
@@ -87,10 +90,11 @@ impl Workspace {
             this.update_in(cx, |this, window, cx| {
                 this.filter_task = None;
                 this.filter_state = match result {
-                    Ok((doc, count, language)) => FilterState::Shown {
+                    Ok((doc, count, language, values)) => FilterState::Shown {
                         doc,
                         count,
                         language,
+                        values,
                     },
                     Err(message) => FilterState::Failed(message.into()),
                 };
@@ -204,6 +208,7 @@ impl Workspace {
                             })),
                     )
                 })
+                .child(self.render_visual_switch(cx))
                 .into_any_element(),
         )
     }

@@ -833,6 +833,17 @@ vault.unlock_title: „%{name}“ entsperren
 vault.use_password: Stattdessen das Passwort verwenden
 vault.use_recovery: Passwort vergessen? Wiederherstellungsschlüssel verwenden
 vault.working: Bitte warten… Das Ableiten des Schlüssels dauert absichtlich einen Moment.
+visual.chart: Diagramm
+visual.first_rows: Die ersten %{shown} von %{total}.
+visual.label: Beschriftung
+visual.more_columns: "%{count} weitere Spalten nicht angezeigt."
+visual.no_numbers: Keine Spalte enthält nur Zahlen; es gibt nichts darzustellen.
+visual.no_records: Keine Liste von Datensätzen in diesem Body. Filtern Sie auf eine (zum Beispiel $.items).
+visual.summary: "%{rows} Zeilen · %{columns} Spalten · aus %{source}"
+visual.table: Tabelle
+visual.text: Text
+visual.too_big: Der Body ist zu groß für eine Tabelle; filtern Sie ihn zuerst.
+visual.value: Wert
 ws.bad_message: "Die Nachricht kann nicht gesendet werden: %{reason}"
 ws.bytes: "%{count} Bytes: %{hex}"
 ws.closed: "Geschlossen"

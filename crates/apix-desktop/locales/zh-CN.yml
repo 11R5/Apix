@@ -833,6 +833,17 @@ vault.unlock_title: 解锁“%{name}”
 vault.use_password: 改用密码
 vault.use_recovery: 忘记密码？使用恢复密钥
 vault.working: 正在处理…密钥派生需要一些时间，这是有意设计的。
+visual.chart: 图表
+visual.first_rows: "%{total} 行中的前 %{shown} 行。"
+visual.label: 标签
+visual.more_columns: 还有 %{count} 列未显示。
+visual.no_numbers: 没有只含数字的列，无法绘图。
+visual.no_records: 此正文中没有记录列表。请筛选到某个列表（例如 $.items）。
+visual.summary: "%{rows} 行 · %{columns} 列 · 来自 %{source}"
+visual.table: 表格
+visual.text: 文本
+visual.too_big: 正文太大，无法显示为表格；请先筛选。
+visual.value: 数值
 ws.bad_message: 无法发送消息：%{reason}
 ws.bytes: "%{count} 字节：%{hex}"
 ws.closed: "已关闭"

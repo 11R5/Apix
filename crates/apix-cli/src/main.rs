@@ -45,6 +45,10 @@ enum Command {
         /// (`$.items[*].id`), jq otherwise (`.items[].id`)
         #[arg(long, value_name = "EXPRESSION")]
         filter: Option<String>,
+        /// Print a JSON body (or what --filter picks) as a table: the list of
+        /// records in it, one column per key
+        #[arg(long)]
+        table: bool,
         /// Keep the response in the request's file as an example with this name
         #[arg(long, value_name = "NAME")]
         save_example: Option<String>,
@@ -557,6 +561,7 @@ async fn run(cli: Cli) -> Result<bool> {
             include_headers,
             network,
             filter,
+            table,
             save_example,
             messages,
             message_format,
@@ -756,13 +761,40 @@ async fn run(cli: Cli) -> Result<bool> {
                 if network {
                     print_network(&style, response);
                 }
-                match &filter {
-                    Some(expression) => {
-                        let filtered = apix_core::filter::filter(&response.raw_body(), expression)
-                            .map_err(|e| anyhow::anyhow!("--filter: {e}"))?;
-                        println!("{}", filtered.to_pretty());
+                let filtered = match &filter {
+                    Some(expression) => Some(
+                        apix_core::filter::filter(&response.raw_body(), expression)
+                            .map_err(|e| anyhow::anyhow!("--filter: {e}"))?,
+                    ),
+                    None => None,
+                };
+                if table {
+                    let value = match &filtered {
+                        Some(f) if f.values.len() == 1 => f.values[0].clone(),
+                        Some(f) => serde_json::Value::Array(f.values.clone()),
+                        None => serde_json::from_slice(&response.body)
+                            .map_err(|e| anyhow::anyhow!("--table: the body is not JSON: {e}"))?,
+                    };
+                    match apix_core::table::from_json(&value) {
+                        Some(t) => {
+                            if t.source != "$" {
+                                println!("{}{}{}", style.dim, t.source, style.reset);
+                            }
+                            print!("{}", t.to_text(40));
+                            if t.more_columns > 0 {
+                                println!(
+                                    "{}… {} more columns{}",
+                                    style.dim, t.more_columns, style.reset
+                                );
+                            }
+                        }
+                        None => bail!("--table: no list of records in the body (try --filter)"),
                     }
-                    None => println!("{}", response.pretty_body()),
+                } else {
+                    match &filtered {
+                        Some(f) => println!("{}", f.to_pretty()),
+                        None => println!("{}", response.pretty_body()),
+                    }
                 }
                 if let Some(name) = &save_example {
                     if response.body.len() > apix_core::model::MAX_EXAMPLE_BODY {

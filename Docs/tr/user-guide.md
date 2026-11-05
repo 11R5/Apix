@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:96ba3b8f61fe3f40 -->
+<!-- translated from en/user-guide.md sha256:d0e5f079a86586b3 -->
 
 # Apix kullanım kılavuzu
 
@@ -325,6 +325,21 @@ devam eder, ✕ gövdeyi geri getirir. JSONPath eşleşmelerinin listesini, jq i
 çıktılarını art arda verir. Süzme, aynı isteğin bir sonraki yanıtında da kalır;
 böylece istek tekrar tekrar gönderilip tek bir değer izlenebilir.
 `apix send --filter '<ifade>'` yalnızca süzmenin seçtiğini yazar.
+
+**Tablo ve grafik.** Süzme satırının sonundaki **Metin**, **Tablo** ve **Grafik**
+bir JSON yanıtı (ya da süzmenin seçtiğini) metin olarak, kayıtlarının tablosu
+olarak ya da çubuk grafik olarak gösterir. Kayıtlar gövdedeki dizi ya da içindeki
+en uzun nesne dizisidir (`$.items`, `$.data`); her anahtar bir sütundur, iç içe
+nesneler sıkıştırılmış JSON olarak görünür. Grafik bir sayı sütununu
+(**Değer**) satırları adlandıran bir sütuna (**Etiket**) karşı çizer; ikisi de
+seçilebilir. 8 MB'tan büyük gövdeler tabloya çevrilmez: önce süzün.
+`apix send --table` aynı tabloyu terminalde yazar (`--filter` ile, seçtiğinin
+tablosunu). Apix'te web görünümü olmadığı için Postman'ın `pm.visualizer.set`
+şablonları çizilmez; onu çağıran scriptler konsolda bir not görür.
+
+![Süzülmüş bir yanıtın Tablo görünümü](images/visual-table.png)
+
+![Grafik görünümü](images/visual-chart.png)
 
 **Örnekler.** Durum satırındaki tepsi düğmesi yanıtı isteğin bir örneği olarak tutar:
 durumu, başlıkları ve gövdesiyle, geldiği isteğin yazıldığı hâliyle birlikte

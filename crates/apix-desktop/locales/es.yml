@@ -833,6 +833,17 @@ vault.unlock_title: Desbloquear “%{name}”
 vault.use_password: Usar la contraseña
 vault.use_recovery: ¿Olvidaste la contraseña? Usa la clave de recuperación
 vault.working: Procesando… derivar la clave tarda un momento a propósito.
+visual.chart: Gráfico
+visual.first_rows: Los primeros %{shown} de %{total}.
+visual.label: Etiqueta
+visual.more_columns: "%{count} columnas más sin mostrar."
+visual.no_numbers: Ninguna columna tiene solo números; no hay nada que graficar.
+visual.no_records: No hay una lista de registros en este cuerpo. Filtre una (por ejemplo $.items).
+visual.summary: "%{rows} filas · %{columns} columnas · de %{source}"
+visual.table: Tabla
+visual.text: Texto
+visual.too_big: El cuerpo es demasiado grande para una tabla; fíltrelo primero.
+visual.value: Valor
 ws.bad_message: "No se puede enviar el mensaje: %{reason}"
 ws.bytes: "%{count} bytes: %{hex}"
 ws.closed: "Cerrada"

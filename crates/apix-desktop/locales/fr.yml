@@ -833,6 +833,17 @@ vault.unlock_title: Déverrouiller « %{name} »
 vault.use_password: Utiliser plutôt le mot de passe
 vault.use_recovery: Mot de passe oublié ? Utiliser la clé de récupération
 vault.working: Traitement… la dérivation de la clé prend volontairement un moment.
+visual.chart: Graphique
+visual.first_rows: Les %{shown} premiers sur %{total}.
+visual.label: Libellé
+visual.more_columns: "%{count} colonnes de plus non affichées."
+visual.no_numbers: Aucune colonne ne contient que des nombres ; rien à tracer.
+visual.no_records: Pas de liste d’enregistrements dans ce corps. Filtrez-en une (par exemple $.items).
+visual.summary: "%{rows} lignes · %{columns} colonnes · depuis %{source}"
+visual.table: Tableau
+visual.text: Texte
+visual.too_big: Le corps est trop grand pour un tableau ; filtrez-le d’abord.
+visual.value: Valeur
 ws.bad_message: "Le message ne peut pas être envoyé : %{reason}"
 ws.bytes: "%{count} octets : %{hex}"
 ws.closed: "Fermée"

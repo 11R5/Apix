@@ -122,6 +122,8 @@ Measurements of the other tools on the same machine are planned.
 - **Mock server:** serve the responses saved with requests on a local port
   (`apix mock`, or View › Mock server… in the app), matched by method and path,
   so a front end can be built before the API exists.
+- **Table and chart:** a JSON response (or what a JSONPath/jq filter picks out)
+  as a table of its records or a bar chart, in the app and `apix send --table`.
 - **API documentation:** one HTML page or Markdown from a collection
   (`apix docs`, File › Export documentation…), with no secrets in it.
 - **Monitors:** run a collection or folder every few minutes and hear about it

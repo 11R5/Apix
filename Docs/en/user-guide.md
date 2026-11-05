@@ -318,6 +318,21 @@ its outputs one after another. The filter stays for the next response of the
 same request, so it can be sent again and again while watching one value.
 `apix send --filter '<expression>'` prints only what the filter picks out.
 
+**Table and chart.** **Text**, **Table** and **Chart** at the end of the filter
+row show a JSON response (or what the filter picked out) as text, as a table
+of its records, or as a bar chart. The records are the array in the body, or
+the longest array of objects inside it (`$.items`, `$.data`); each key is a
+column, nested objects show as compact JSON. The chart draws one number
+column (**Value**) against a column that names the rows (**Label**); both can
+be picked. Bodies over 8 MB are not turned into a table: filter them first.
+`apix send --table` prints the same table in a terminal (with `--filter`, of
+what it picks out). Postman's `pm.visualizer.set` templates are not drawn,
+as Apix has no web view; scripts that call it get a note in the console.
+
+![The Table view of a filtered response](images/visual-table.png)
+
+![The Chart view](images/visual-chart.png)
+
 **Examples.** The tray button on the status line keeps the response as an
 example of the request: its status, headers and body, and the request it came
 from as written (`{{variables}}` stay, so no token lands in the file). Cookies

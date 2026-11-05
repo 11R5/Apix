@@ -17,6 +17,7 @@ pub mod secrets;
 pub mod sign;
 pub mod soap;
 pub mod store;
+pub mod table;
 pub mod text;
 pub mod urls;
 pub mod vars;

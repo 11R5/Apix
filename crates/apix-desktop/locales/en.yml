@@ -835,6 +835,17 @@ vault.unlock_title: Unlock “%{name}”
 vault.use_password: Use the password instead
 vault.use_recovery: Forgot the password? Use the recovery key
 vault.working: Working… deriving the key takes a moment on purpose.
+visual.chart: Chart
+visual.first_rows: The first %{shown} of %{total}.
+visual.label: Label
+visual.more_columns: "%{count} more columns not shown."
+visual.no_numbers: No column holds only numbers, so there is nothing to chart.
+visual.no_records: No list of records in this body. Filter to one (for example $.items).
+visual.summary: "%{rows} rows · %{columns} columns · from %{source}"
+visual.table: Table
+visual.text: Text
+visual.too_big: The body is too large to show as a table; filter it first.
+visual.value: Value
 ws.bad_message: "The message cannot be sent: %{reason}"
 ws.bytes: "%{count} bytes: %{hex}"
 ws.closed: "Closed"

@@ -1087,7 +1087,7 @@
     sendRequest: sendRequest,
     visualizer: {
       set() {
-        logs.push({ level: "info", text: "pm.visualizer is not supported; the template was ignored" });
+        logs.push({ level: "info", text: "pm.visualizer templates are not drawn; the response's Table and Chart views show JSON records without one" });
       },
     },
     require(name) {

@@ -833,6 +833,17 @@ vault.unlock_title: فتح قفل «%{name}»
 vault.use_password: استخدام كلمة المرور بدلًا من ذلك
 vault.use_recovery: نسيت كلمة المرور؟ استخدم مفتاح الاسترداد
 vault.working: جارٍ العمل… اشتقاق المفتاح يستغرق لحظة عن قصد.
+visual.chart: مخطط
+visual.first_rows: أول %{shown} من %{total}.
+visual.label: التسمية
+visual.more_columns: "%{count} أعمدة أخرى غير معروضة."
+visual.no_numbers: لا يوجد عمود يحوي أرقامًا فقط، فلا شيء يُرسم.
+visual.no_records: لا توجد قائمة سجلات في هذا المحتوى. صفِّه إلى قائمة (مثلًا $.items).
+visual.summary: "%{rows} صف · %{columns} عمود · من %{source}"
+visual.table: جدول
+visual.text: نص
+visual.too_big: المحتوى أكبر من أن يُعرض جدولًا؛ صفِّه أولًا.
+visual.value: القيمة
 ws.bad_message: "لا يمكن إرسال الرسالة: %{reason}"
 ws.bytes: "%{count} بايت: %{hex}"
 ws.closed: "مغلق"

@@ -833,6 +833,17 @@ vault.unlock_title: 「%{name}」のロックを解除
 vault.use_password: 代わりにパスワードを使用
 vault.use_recovery: パスワードを忘れた場合は回復キーを使用
 vault.working: 処理中… キーの導出には意図的に時間がかかります。
+visual.chart: グラフ
+visual.first_rows: "%{total} 件中、最初の %{shown} 件。"
+visual.label: ラベル
+visual.more_columns: 表示していない列が %{count} 個あります。
+visual.no_numbers: 数値だけの列がないため、グラフにできません。
+visual.no_records: "このボディにはレコードの一覧がありません。一覧にフィルターしてください（例: $.items）。"
+visual.summary: "%{rows} 行 · %{columns} 列 · %{source} から"
+visual.table: 表
+visual.text: テキスト
+visual.too_big: ボディが大きすぎて表にできません。先にフィルターしてください。
+visual.value: 値
 ws.bad_message: "メッセージを送信できません: %{reason}"
 ws.bytes: "%{count} バイト: %{hex}"
 ws.closed: "切断されました"

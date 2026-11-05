@@ -833,6 +833,17 @@ vault.unlock_title: “%{name}” koleksiyonunun kilidini aç
 vault.use_password: Bunun yerine parolayı kullan
 vault.use_recovery: Parolayı mı unuttunuz? Kurtarma anahtarını kullanın
 vault.working: Çalışıyor… anahtar türetme bilerek biraz zaman alır.
+visual.chart: Grafik
+visual.first_rows: "%{total} satırın ilk %{shown} tanesi."
+visual.label: Etiket
+visual.more_columns: "%{count} sütun daha gösterilmiyor."
+visual.no_numbers: Yalnızca sayı tutan bir sütun yok; çizilecek bir şey yok.
+visual.no_records: Bu gövdede bir kayıt listesi yok. Birine süzün (örneğin $.items).
+visual.summary: "%{rows} satır · %{columns} sütun · %{source} içinden"
+visual.table: Tablo
+visual.text: Metin
+visual.too_big: Gövde tablo olarak göstermek için çok büyük; önce süzün.
+visual.value: Değer
 ws.bad_message: "Mesaj gönderilemez: %{reason}"
 ws.bytes: "%{count} bayt: %{hex}"
 ws.closed: "Kapandı"

@@ -8,7 +8,7 @@ mod drag;
 mod env_editor;
 mod examples_ui;
 mod extract_ui;
-mod filter_ui;
+pub(super) mod filter_ui;
 mod git_ui;
 mod graphql_ui;
 mod grpc_editor;
@@ -33,6 +33,7 @@ mod tabs;
 mod url_sync;
 mod var_chips;
 mod vault_ui;
+mod visual_ui;
 mod ws_editor;
 
 use std::collections::{BTreeMap, HashSet};
@@ -393,6 +394,8 @@ pub struct Workspace {
     monitors: monitors_ui::MonitorState,
     /// The mock server, when started, and what it was asked.
     mock: mock_ui::MockState,
+    /// The Pretty tab as text, a table or a chart.
+    visual: visual_ui::VisualState,
     /// The active environment of the open collection, by file name.
     environment: Option<String>,
     env_select: Entity<EnvSelect>,
@@ -642,6 +645,7 @@ impl Workspace {
             git: Default::default(),
             monitors: Default::default(),
             mock: Default::default(),
+            visual: Default::default(),
             environment: None,
             env_select,
             app_state: AppState::load(),
@@ -1724,6 +1728,13 @@ impl Workspace {
                     (_, 6) => self.render_console(done, cx).into_any_element(),
                     (_, 2) => self.render_response_headers(response).into_any_element(),
                     (_, 3) => self.render_network(done).into_any_element(),
+                    (_, 0)
+                        if self.visual.mode != visual_ui::VisualMode::Text
+                            && done.json
+                            && done.events.is_none() =>
+                    {
+                        self.render_visual(done, cx)
+                    }
                     (None, 0) if done.events.is_some() => self.render_events(
                         done.events.as_deref().unwrap_or_default(),
                         &[],

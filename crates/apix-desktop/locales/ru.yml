@@ -833,6 +833,17 @@ vault.unlock_title: Разблокировать «%{name}»
 vault.use_password: Использовать пароль
 vault.use_recovery: Забыли пароль? Используйте ключ восстановления
 vault.working: Подождите… получение ключа намеренно занимает некоторое время.
+visual.chart: График
+visual.first_rows: Первые %{shown} из %{total}.
+visual.label: Подпись
+visual.more_columns: "Ещё столбцов не показано: %{count}."
+visual.no_numbers: Ни в одном столбце нет только чисел; строить нечего.
+visual.no_records: В этом теле нет списка записей. Отфильтруйте до него (например, $.items).
+visual.summary: "Строк: %{rows} · столбцов: %{columns} · из %{source}"
+visual.table: Таблица
+visual.text: Текст
+visual.too_big: Тело слишком велико для таблицы; сначала отфильтруйте его.
+visual.value: Значение
 ws.bad_message: "Сообщение нельзя отправить: %{reason}"
 ws.bytes: "Байт: %{count}: %{hex}"
 ws.closed: "Закрыто"
