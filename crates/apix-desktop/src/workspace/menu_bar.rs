@@ -299,10 +299,12 @@ impl MenuState {
     }
 
     fn help(&self, menu: PopupMenu) -> PopupMenu {
-        menu.link(tr!("menu.documentation"), format!("{REPO}#readme"))
+        menu.action_context(self.focus.clone())
+            .link(tr!("menu.documentation"), format!("{REPO}#readme"))
             .link(tr!("menu.report_problem"), format!("{REPO}/issues"))
             .link(tr!("menu.source_code"), REPO)
             .separator()
+            .menu(tr!("menu.check_updates"), Box::new(CheckForUpdates))
             .label(format!("Apix {}", env!("CARGO_PKG_VERSION")))
     }
 }

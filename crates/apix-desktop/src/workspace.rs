@@ -32,6 +32,7 @@ mod sidebar_search;
 mod socket_ui;
 mod stream_ui;
 mod tabs;
+mod update_ui;
 mod url_sync;
 mod var_chips;
 mod vault_ui;
@@ -87,6 +88,7 @@ actions!(
         OpenMock,
         OpenCapture,
         OpenGit,
+        CheckForUpdates,
         CloseTab,
         NextTab,
         PrevTab,
@@ -709,6 +711,9 @@ impl Workspace {
         };
         this._auto_lock = Some(Self::auto_lock_task(window, cx));
         this.start_monitors(window, cx);
+        if this.settings.check_updates && crate::bench::mode().is_none() {
+            this.check_updates(false, window, cx);
+        }
         match crate::bench::mode() {
             Some(crate::bench::Bench::Startup) => window.on_next_frame(|_, cx| {
                 crate::bench::report("startup_first_frame_ms", crate::bench::since_start_ms());
@@ -2204,6 +2209,9 @@ impl Render for Workspace {
                 cx.listener(|this, _: &OpenCapture, window, cx| this.open_capture(window, cx)),
             )
             .on_action(cx.listener(|this, _: &OpenGit, window, cx| this.open_git(window, cx)))
+            .on_action(cx.listener(|this, _: &CheckForUpdates, window, cx| {
+                this.check_updates(true, window, cx)
+            }))
             // A click anywhere brings focus back inside the workspace (inputs
             // focus themselves first, so they keep it), so shortcuts keep working.
             .on_mouse_down(

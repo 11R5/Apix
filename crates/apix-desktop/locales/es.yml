@@ -369,6 +369,7 @@ import.url_title: Importar desde URL
 menu.active_environment: Entorno activo
 menu.cancel: Cancelar
 menu.capture: Proxy de captura…
+menu.check_updates: Buscar actualizaciones…
 menu.close_tab: Cerrar pestaña
 menu.collection_auth: Autenticación de la colección…
 menu.collection_settings: Ajustes de petición de la colección…
@@ -712,6 +713,8 @@ settings.auto_lock_description: Tras este tiempo de inactividad, las colecciones
 settings.auto_lock_hour: Tras 1 hora
 settings.auto_lock_minutes: Tras %{count} minutos
 settings.auto_lock_never: Nunca
+settings.check_updates: Buscar actualizaciones
+settings.check_updates_description: Al iniciar, pregunta a GitHub si salió una versión más nueva de Apix. No se envía ni se descarga nada más que la solicitud.
 settings.confirm_prod: Confirmar en producción
 settings.confirm_prod_description: Preguntar antes de enviar DELETE, PUT o PATCH cuando está activo un entorno cuyo nombre contiene «prod».
 settings.dark_theme: "Tema oscuro"
@@ -816,6 +819,13 @@ tests.skipped: omitida
 tests.summary: "%{passed} correctas, %{failed} fallidas"
 time.hours_minutes: "%{hours} h %{minutes} min"
 time.minutes: "%{count} min"
+update.available: "Ya salió Apix %{version} (usted tiene %{current})."
+update.checking: Buscando actualizaciones…
+update.failed: "No se pudo buscar actualizaciones: %{error}"
+update.no_releases: "Apix %{current}: aún no se ha publicado ninguna versión."
+update.open: Descargar
+update.title: Actualización disponible
+update.up_to_date: "Apix %{current} está al día."
 vault.auto_locked: Las colecciones cifradas se bloquearon tras %{count} minutos de inactividad.
 vault.change_password: Cambiar contraseña
 vault.change_password_note: Los archivos no se vuelven a cifrar; solo cambia la clave que los desbloquea.

@@ -199,6 +199,7 @@ apix monitor my-api                          # [[monitor]]s of apix.toml on thei
 apix mock my-api --port 4010                 # serve saved examples as a mock API
 apix docs my-api --out api.html              # API documentation (or --out API.md)
 apix capture my-api/captured --only api.test # record traffic through a proxy on :8888
+apix update                                  # is a newer Apix out? (nothing is downloaded)
 apix run my-api --data users.csv -p 8        # 8 iterations at once
 apix send chat/socket.apix --message '{"join":"room-1"}' --listen 10   # a ws:// request
 apix send events/live.apix                   # server-sent events, printed as they arrive

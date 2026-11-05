@@ -153,6 +153,9 @@ enum Command {
         #[arg(long)]
         no_save: bool,
     },
+    /// Check whether a newer Apix has been released (one request to GitHub;
+    /// nothing is downloaded)
+    Update,
     /// Write API documentation for a collection: one HTML page that opens in
     /// any browser, or Markdown for a repository; no secrets are printed
     Docs {
@@ -1093,6 +1096,26 @@ async fn run(cli: Cli) -> Result<bool> {
                 },
             )
             .await?;
+            Ok(true)
+        }
+        Command::Update => {
+            let current = apix_core::update::Version::current();
+            let response = client.send(&apix_core::update::request()).await?;
+            match apix_core::update::interpret(response.status, &response.body, &current)
+                .map_err(anyhow::Error::msg)?
+            {
+                apix_core::update::Check::Newer(release) => println!(
+                    "Apix {} is available (this is {current}): {}",
+                    release.version, release.url
+                ),
+                apix_core::update::Check::UpToDate { latest } => {
+                    println!("Apix {current} is up to date (latest release: {latest})")
+                }
+                apix_core::update::Check::NoReleases => println!(
+                    "Apix {current}: no release has been published yet ({})",
+                    apix_core::update::RELEASES_PAGE
+                ),
+            }
             Ok(true)
         }
         Command::Docs { dir, out } => {

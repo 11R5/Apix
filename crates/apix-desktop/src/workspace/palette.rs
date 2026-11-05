@@ -412,6 +412,10 @@ impl Workspace {
             run(Workspace::prompt_import_url),
         ));
         out.push(Entry::command(name!("menu.history"), run(Workspace::open_history)).keys("H"));
+        out.push(Entry::command(
+            name!("menu.check_updates"),
+            run(Workspace::check_updates_now),
+        ));
         if open {
             out.push(
                 Entry::command(name!("menu.runner"), run(Workspace::open_runner)).keys("Shift+R"),

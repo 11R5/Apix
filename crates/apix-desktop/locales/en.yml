@@ -371,6 +371,7 @@ import.url_title: Import from URL
 menu.active_environment: Active environment
 menu.cancel: Cancel
 menu.capture: Capture proxy…
+menu.check_updates: Check for updates…
 menu.close_tab: Close tab
 menu.collection_auth: Collection auth…
 menu.collection_settings: Collection request settings…
@@ -714,6 +715,8 @@ settings.auto_lock_description: After this much idle time, encrypted collections
 settings.auto_lock_hour: After 1 hour
 settings.auto_lock_minutes: After %{count} minutes
 settings.auto_lock_never: Never
+settings.check_updates: Check for updates
+settings.check_updates_description: At start, ask GitHub whether a newer Apix has been released. Nothing is downloaded or sent but the request.
 settings.confirm_prod: Confirm in production
 settings.confirm_prod_description: Ask before sending DELETE, PUT or PATCH while an environment whose name contains “prod” is active.
 settings.dark_theme: "Dark theme"
@@ -818,6 +821,13 @@ tests.skipped: skipped
 tests.summary: "%{passed} passed, %{failed} failed"
 time.hours_minutes: "%{hours} h %{minutes} min"
 time.minutes: "%{count} min"
+update.available: "Apix %{version} is out (you have %{current})."
+update.checking: Checking for updates…
+update.failed: "Could not check for updates: %{error}"
+update.no_releases: "Apix %{current}: no release has been published yet."
+update.open: Download
+update.title: Update available
+update.up_to_date: "Apix %{current} is up to date."
 vault.auto_locked: Encrypted collections were locked after %{count} idle minutes.
 vault.change_password: Change password
 vault.change_password_note: Files are not re-encrypted; only the key that unlocks them changes.

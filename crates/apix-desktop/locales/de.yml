@@ -369,6 +369,7 @@ import.url_title: Von URL importieren
 menu.active_environment: Aktive Umgebung
 menu.cancel: Abbrechen
 menu.capture: Mitschnitt-Proxy…
+menu.check_updates: Nach Updates suchen…
 menu.close_tab: Tab schließen
 menu.collection_auth: Sammlungs-Authentifizierung…
 menu.collection_settings: Anfrage-Einstellungen der Sammlung…
@@ -712,6 +713,8 @@ settings.auto_lock_description: Nach dieser Leerlaufzeit werden verschlüsselte 
 settings.auto_lock_hour: Nach 1 Stunde
 settings.auto_lock_minutes: Nach %{count} Minuten
 settings.auto_lock_never: Nie
+settings.check_updates: Nach Updates suchen
+settings.check_updates_description: Beim Start GitHub fragen, ob eine neuere Apix-Version erschienen ist. Außer der Anfrage wird nichts gesendet oder heruntergeladen.
 settings.confirm_prod: In Produktion nachfragen
 settings.confirm_prod_description: Vor dem Senden von DELETE, PUT oder PATCH nachfragen, wenn eine Umgebung mit „prod“ im Namen aktiv ist.
 settings.dark_theme: "Dunkles Theme"
@@ -816,6 +819,13 @@ tests.skipped: übersprungen
 tests.summary: "%{passed} bestanden, %{failed} fehlgeschlagen"
 time.hours_minutes: "%{hours} Std. %{minutes} Min."
 time.minutes: "%{count} Min."
+update.available: "Apix %{version} ist erschienen (Sie haben %{current})."
+update.checking: Suche nach Updates…
+update.failed: "Suche nach Updates fehlgeschlagen: %{error}"
+update.no_releases: "Apix %{current}: Es wurde noch keine Version veröffentlicht."
+update.open: Herunterladen
+update.title: Update verfügbar
+update.up_to_date: "Apix %{current} ist aktuell."
 vault.auto_locked: Verschlüsselte Sammlungen wurden nach %{count} Minuten Leerlauf gesperrt.
 vault.change_password: Passwort ändern
 vault.change_password_note: Die Dateien werden nicht neu verschlüsselt; nur der Schlüssel, der sie entsperrt, ändert sich.

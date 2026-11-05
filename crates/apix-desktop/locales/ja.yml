@@ -369,6 +369,7 @@ import.url_title: URL からインポート
 menu.active_environment: アクティブな環境
 menu.cancel: キャンセル
 menu.capture: キャプチャ プロキシ…
+menu.check_updates: アップデートを確認…
 menu.close_tab: タブを閉じる
 menu.collection_auth: コレクションの認証…
 menu.collection_settings: コレクションのリクエスト設定…
@@ -712,6 +713,8 @@ settings.auto_lock_description: この時間操作がないと、暗号化され
 settings.auto_lock_hour: 1 時間後
 settings.auto_lock_minutes: "%{count} 分後"
 settings.auto_lock_never: しない
+settings.check_updates: アップデートを確認
+settings.check_updates_description: 起動時に、新しい Apix が公開されたかを GitHub に問い合わせます。リクエスト以外は何も送信・ダウンロードしません。
 settings.confirm_prod: 本番環境で確認する
 settings.confirm_prod_description: 名前に「prod」を含む環境が選択されているとき、DELETE・PUT・PATCH を送信する前に確認します。
 settings.dark_theme: "ダークテーマ"
@@ -816,6 +819,13 @@ tests.skipped: スキップ
 tests.summary: "%{passed} 件成功、%{failed} 件失敗"
 time.hours_minutes: "%{hours} 時間 %{minutes} 分"
 time.minutes: "%{count} 分"
+update.available: "Apix %{version} が公開されました (現在 %{current})。"
+update.checking: アップデートを確認しています…
+update.failed: "アップデートを確認できませんでした: %{error}"
+update.no_releases: "Apix %{current}: まだリリースは公開されていません。"
+update.open: ダウンロード
+update.title: アップデートがあります
+update.up_to_date: "Apix %{current} は最新です。"
 vault.auto_locked: "%{count} 分間操作がなかったため、暗号化されたコレクションをロックしました。"
 vault.change_password: パスワードを変更
 vault.change_password_note: ファイルは再暗号化されません。変わるのはロックを解除するキーだけです。

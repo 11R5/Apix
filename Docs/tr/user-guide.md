@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:c29732dd07a31ee9 -->
+<!-- translated from en/user-guide.md sha256:55c01d41c8386592 -->
 
 # Apix kullanım kılavuzu
 
@@ -1106,6 +1106,15 @@ bulunabilir.
   anahtarlığında (bkz. [Değişkenler ve ortamlar](#değişkenler-ve-ortamlar)).
 - **Üretimde onay iste:** “prod” ortamı seçiliyken DELETE, PUT veya PATCH
   öncesi sor (varsayılan olarak açık).
+- **Güncellemeleri denetle:** açılışta GitHub'a daha yeni bir Apix çıkıp
+  çıkmadığını sorar (varsayılan olarak açık). Yalnızca bu tek istek, sizi
+  tanıtan hiçbir şey olmadan gönderilir ve hiçbir şey indirilmez: yeni bir
+  sürüm, sayfasını açan bir **İndir** düğmesiyle bildirilir. **Yardım ›
+  Güncellemeleri denetle…** istediğiniz an sorar; terminalde `apix update`
+  aynısını yapar.
+
+![Yeni bir sürümün bildirimi](images/update.png)
+
 - **Geçmiş:** açık veya kapalı (bkz. [Geçmiş](#geçmiş)).
 
 Ayarların **Tema** bölümü Apix'in görünüşünü yeniden başlatmadan, hemen

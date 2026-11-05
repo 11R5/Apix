@@ -369,6 +369,7 @@ import.url_title: استيراد من عنوان URL
 menu.active_environment: البيئة النشطة
 menu.cancel: إلغاء
 menu.capture: وكيل الالتقاط…
+menu.check_updates: التحقق من التحديثات…
 menu.close_tab: إغلاق علامة التبويب
 menu.collection_auth: مصادقة المجموعة…
 menu.collection_settings: إعدادات طلبات المجموعة…
@@ -712,6 +713,8 @@ settings.auto_lock_description: بعد هذه المدة من الخمول، ت�
 settings.auto_lock_hour: بعد ساعة واحدة
 settings.auto_lock_minutes: بعد %{count} دقيقة
 settings.auto_lock_never: أبدًا
+settings.check_updates: التحقق من التحديثات
+settings.check_updates_description: عند البدء، يسأل GitHub إن صدر Apix أحدث. لا يُرسل ولا يُنزَّل شيء سوى الطلب نفسه.
 settings.confirm_prod: التأكيد في بيئة الإنتاج
 settings.confirm_prod_description: السؤال قبل إرسال DELETE أو PUT أو PATCH عندما تكون بيئة يحتوي اسمها على «prod» نشطة.
 settings.dark_theme: "السمة الداكنة"
@@ -816,6 +819,13 @@ tests.skipped: متخطى
 tests.summary: "نجح %{passed}، فشل %{failed}"
 time.hours_minutes: "%{hours} س %{minutes} د"
 time.minutes: "%{count} د"
+update.available: "صدر Apix %{version} (لديك %{current})."
+update.checking: جارٍ التحقق من التحديثات…
+update.failed: "تعذّر التحقق من التحديثات: %{error}"
+update.no_releases: "Apix %{current}: لم يُنشر أي إصدار بعد."
+update.open: تنزيل
+update.title: يتوفر تحديث
+update.up_to_date: "Apix %{current} محدّث."
 vault.auto_locked: قُفلت المجموعات المشفّرة بعد %{count} دقيقة من الخمول.
 vault.change_password: تغيير كلمة المرور
 vault.change_password_note: لا يُعاد تشفير الملفات؛ يتغير فقط المفتاح الذي يفتح قفلها.

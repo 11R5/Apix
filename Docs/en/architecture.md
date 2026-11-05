@@ -705,6 +705,19 @@ runs with `GIT_TERMINAL_PROMPT=0`, so a remote that needs a password fails
 with git's message instead of waiting for input; credential helpers still
 work. Each operation runs in the background and refreshes the status bar.
 
+## Update check
+
+`apix_core::update` builds the request (GitHub's `releases/latest` for
+11R5/Apix, `User-Agent: Apix/<version>`, a 10 s timeout; `APIX_UPDATE_URL`
+points it elsewhere) and reads the answer: `Version` parses `v1.2.3`,
+`1.2` and pre-releases (`1.0.0-rc.1` sorts before `1.0.0`, numeric parts by
+value), 404 means nothing is published yet, other errors carry GitHub's
+message. The CLI (`apix update`) sends it with its own client; the app
+(`workspace/update_ui.rs`) through `net::send` at start when
+`settings.check_updates` is on (only a newer release is shown) and from Help
+› Check for updates… (every answer is shown). Nothing is downloaded or
+installed.
+
 ## Themes
 
 `theme.rs` holds the colours. A `ThemeDef` is a theme (built in, or read from

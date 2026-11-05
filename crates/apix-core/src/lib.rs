@@ -19,6 +19,7 @@ pub mod soap;
 pub mod store;
 pub mod table;
 pub mod text;
+pub mod update;
 pub mod urls;
 pub mod vars;
 pub mod vfs;

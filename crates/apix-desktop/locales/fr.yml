@@ -369,6 +369,7 @@ import.url_title: Importer depuis une URL
 menu.active_environment: Environnement actif
 menu.cancel: Annuler
 menu.capture: Proxy de capture…
+menu.check_updates: Rechercher des mises à jour…
 menu.close_tab: Fermer l'onglet
 menu.collection_auth: Authentification de la collection…
 menu.collection_settings: Réglages de requête de la collection…
@@ -712,6 +713,8 @@ settings.auto_lock_description: Après ce délai d'inactivité, les collections 
 settings.auto_lock_hour: Après 1 heure
 settings.auto_lock_minutes: Après %{count} minutes
 settings.auto_lock_never: Jamais
+settings.check_updates: Rechercher des mises à jour
+settings.check_updates_description: Au démarrage, demande à GitHub si une version plus récente d’Apix est sortie. Rien n’est envoyé ni téléchargé à part la requête.
 settings.confirm_prod: Confirmer en production
 settings.confirm_prod_description: Demander avant d’envoyer DELETE, PUT ou PATCH quand un environnement dont le nom contient « prod » est actif.
 settings.dark_theme: "Thème sombre"
@@ -816,6 +819,13 @@ tests.skipped: ignoré
 tests.summary: "%{passed} réussis, %{failed} échoués"
 time.hours_minutes: "%{hours} h %{minutes} min"
 time.minutes: "%{count} min"
+update.available: "Apix %{version} est disponible (vous avez %{current})."
+update.checking: Recherche de mises à jour…
+update.failed: "Impossible de rechercher les mises à jour : %{error}"
+update.no_releases: "Apix %{current} : aucune version n’a encore été publiée."
+update.open: Télécharger
+update.title: Mise à jour disponible
+update.up_to_date: "Apix %{current} est à jour."
 vault.auto_locked: Les collections chiffrées ont été verrouillées après %{count} minutes d'inactivité.
 vault.change_password: Changer le mot de passe
 vault.change_password_note: Les fichiers ne sont pas rechiffrés ; seule la clé qui les déverrouille change.

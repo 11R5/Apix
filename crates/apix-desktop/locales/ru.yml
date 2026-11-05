@@ -369,6 +369,7 @@ import.url_title: Импорт по URL
 menu.active_environment: Активное окружение
 menu.cancel: Отменить
 menu.capture: Прокси для записи…
+menu.check_updates: Проверить обновления…
 menu.close_tab: Закрыть вкладку
 menu.collection_auth: Авторизация коллекции…
 menu.collection_settings: Настройки запросов коллекции…
@@ -712,6 +713,8 @@ settings.auto_lock_description: После такого времени безд�
 settings.auto_lock_hour: Через 1 час
 settings.auto_lock_minutes: Через %{count} мин
 settings.auto_lock_never: Никогда
+settings.check_updates: Проверять обновления
+settings.check_updates_description: При запуске спрашивать GitHub, не вышла ли новая версия Apix. Кроме самого запроса ничего не отправляется и не скачивается.
 settings.confirm_prod: Подтверждение в продакшене
 settings.confirm_prod_description: Спрашивать перед отправкой DELETE, PUT или PATCH, когда выбрано окружение, в названии которого есть «prod».
 settings.dark_theme: "Тёмная тема"
@@ -816,6 +819,13 @@ tests.skipped: пропущен
 tests.summary: "Пройдено: %{passed}, провалено: %{failed}"
 time.hours_minutes: "%{hours} ч %{minutes} мин"
 time.minutes: "%{count} мин"
+update.available: "Вышла Apix %{version} (у вас %{current})."
+update.checking: Проверка обновлений…
+update.failed: "Не удалось проверить обновления: %{error}"
+update.no_releases: "Apix %{current}: релизы ещё не публиковались."
+update.open: Скачать
+update.title: Доступно обновление
+update.up_to_date: "Apix %{current} — последняя версия."
 vault.auto_locked: Зашифрованные коллекции заблокированы после %{count} мин бездействия.
 vault.change_password: Сменить пароль
 vault.change_password_note: Файлы не перешифровываются; меняется только ключ, который их открывает.

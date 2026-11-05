@@ -103,6 +103,7 @@ pub(super) struct SettingsView {
     history: Entity<Picker>,
     secrets: Entity<Picker>,
     prod: Entity<Picker>,
+    updates: Entity<Picker>,
     dark_themes: ThemeList,
     light_themes: ThemeList,
     accents: Vec<String>,
@@ -222,8 +223,20 @@ impl SettingsView {
         );
         let prod_ix = if settings.confirm_prod { 0 } else { 1 };
         let prod = picker(history_choices(), Some(IndexPath::new(prod_ix)), window, cx);
+        let updates_ix = if settings.check_updates { 0 } else { 1 };
+        let updates = picker(
+            history_choices(),
+            Some(IndexPath::new(updates_ix)),
+            window,
+            cx,
+        );
 
         let subscriptions = vec![
+            cx.subscribe_in(&updates, window, |this, state, _: &Changed, _, cx| {
+                if let Some(ix) = state.read(cx).selected_index(cx) {
+                    this.change(|s| s.check_updates = ix.row == 0, cx);
+                }
+            }),
             cx.subscribe_in(&prod, window, |this, state, _: &Changed, _, cx| {
                 if let Some(ix) = state.read(cx).selected_index(cx) {
                     this.change(|s| s.confirm_prod = ix.row == 0, cx);
@@ -354,6 +367,7 @@ impl SettingsView {
             history,
             secrets,
             prod,
+            updates,
             dark_themes,
             light_themes,
             accents,
@@ -491,6 +505,7 @@ impl SettingsView {
             (&self.history, history_choices()),
             (&self.secrets, secrets_choices()),
             (&self.prod, history_choices()),
+            (&self.updates, history_choices()),
         ];
         for (picker, items) in lists {
             picker.update(cx, |state, cx| state.set_items(items, window, cx));
@@ -594,6 +609,12 @@ impl Render for SettingsView {
                 tr!("settings.confirm_prod"),
                 tr!("settings.confirm_prod_description"),
                 Select::new(&self.prod).small(),
+            ))
+            .child(line())
+            .child(self.row(
+                tr!("settings.check_updates"),
+                tr!("settings.check_updates_description"),
+                Select::new(&self.updates).small(),
             ))
             .child(line())
             .child(self.row(

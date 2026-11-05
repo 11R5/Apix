@@ -1080,6 +1080,15 @@ in every language.
   (see [Variables and environments](#variables-and-environments)).
 - **Confirm in production:** ask before DELETE, PUT or PATCH while a “prod”
   environment is active (on by default).
+- **Check for updates:** at start, ask GitHub whether a newer Apix has been
+  released (on by default). Only that one request is sent, with nothing that
+  identifies you, and nothing is downloaded: a newer release shows a
+  notification with a **Download** button that opens its page. **Help ›
+  Check for updates…** asks at any time, and `apix update` does the same in a
+  terminal.
+
+![A newer release announced](images/update.png)
+
 - **History:** on or off (see [History](#history)).
 
 The **Theme** part of Settings changes how Apix looks, at once, without a

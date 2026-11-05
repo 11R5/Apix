@@ -38,6 +38,8 @@ pub struct Settings {
     pub editor_font_size: u32,
     /// `compact`, `normal` or `comfortable`: how much room list rows get.
     pub density: String,
+    /// Ask GitHub once at start whether a newer Apix has been released.
+    pub check_updates: bool,
 }
 
 impl Default for Settings {
@@ -54,6 +56,7 @@ impl Default for Settings {
             secrets_in_keychain: false,
             confirm_prod: true,
             monitors_in_app: false,
+            check_updates: true,
             text_size: 100,
             editor_font_size: 13,
             density: "normal".into(),

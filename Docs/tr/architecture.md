@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:55ed18bb0d92d4e0 -->
+<!-- translated from en/architecture.md sha256:7e070f6b51e366c6 -->
 
 # Apix mimarisi
 
@@ -732,6 +732,19 @@ Git penceresi (`workspace/git_panel.rs`) aynı `Repo`'yu kullanır: liste için
 `GIT_TERMINAL_PROMPT=0` ile çalışır; parola isteyen bir uzak depo girdi
 beklemek yerine git'in mesajıyla başarısız olur, kimlik bilgisi yardımcıları
 yine çalışır. Her işlem arka planda koşar ve durum çubuğunu yeniler.
+
+## Güncelleme denetimi
+
+`apix_core::update` isteği kurar (11R5/Apix için GitHub'ın
+`releases/latest` adresi, `User-Agent: Apix/<sürüm>`, 10 sn zaman aşımı;
+`APIX_UPDATE_URL` onu başka yere yöneltir) ve yanıtı okur: `Version`
+`v1.2.3`, `1.2` ve ön sürümleri ayrıştırır (`1.0.0-rc.1`, `1.0.0`'dan önce
+gelir, sayısal parçalar değerine göre), 404 henüz bir şey yayımlanmadığı
+anlamına gelir, öteki hatalar GitHub'ın mesajını taşır. CLI (`apix update`)
+isteği kendi istemcisiyle, uygulama (`workspace/update_ui.rs`) `net::send`
+ile gönderir: `settings.check_updates` açıksa açılışta (yalnızca daha yeni
+bir sürüm gösterilir) ve Yardım › Güncellemeleri denetle… ile (her yanıt
+gösterilir). Hiçbir şey indirilmez ya da kurulmaz.
 
 ## Temalar
 

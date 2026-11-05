@@ -369,6 +369,7 @@ import.url_title: 从 URL 导入
 menu.active_environment: 当前环境
 menu.cancel: 取消
 menu.capture: 捕获代理…
+menu.check_updates: 检查更新…
 menu.close_tab: 关闭标签页
 menu.collection_auth: 集合认证…
 menu.collection_settings: 集合请求设置…
@@ -712,6 +713,8 @@ settings.auto_lock_description: 空闲达到此时长后，加密集合将被锁
 settings.auto_lock_hour: 1 小时后
 settings.auto_lock_minutes: "%{count} 分钟后"
 settings.auto_lock_never: 从不
+settings.check_updates: 检查更新
+settings.check_updates_description: 启动时向 GitHub 询问是否发布了更新的 Apix。除该请求外不发送也不下载任何内容。
 settings.confirm_prod: 生产环境确认
 settings.confirm_prod_description: 当名称包含“prod”的环境处于活动状态时，发送 DELETE、PUT 或 PATCH 之前先确认。
 settings.dark_theme: "深色主题"
@@ -816,6 +819,13 @@ tests.skipped: 已跳过
 tests.summary: "通过 %{passed}，失败 %{failed}"
 time.hours_minutes: "%{hours} 小时 %{minutes} 分钟"
 time.minutes: "%{count} 分钟"
+update.available: "Apix %{version} 已发布（您的版本为 %{current}）。"
+update.checking: 正在检查更新…
+update.failed: "无法检查更新：%{error}"
+update.no_releases: "Apix %{current}：尚未发布任何版本。"
+update.open: 下载
+update.title: 有可用更新
+update.up_to_date: "Apix %{current} 已是最新版本。"
 vault.auto_locked: 加密集合已在空闲 %{count} 分钟后锁定。
 vault.change_password: 更改密码
 vault.change_password_note: 文件不会重新加密，只会更改用于解锁的密钥。
