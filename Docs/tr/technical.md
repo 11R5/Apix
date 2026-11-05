@@ -1,4 +1,4 @@
-<!-- translated from en/technical.md sha256:5293022084ba27a8 -->
+<!-- translated from en/technical.md sha256:171f46e5672c99dd -->
 
 # Teknik notlar
 
@@ -228,6 +228,10 @@ bir `.dmg` yapar. Linux (Ubuntu 22.04'te, böylece glibc 2.35 yeter):
 derler. `.deb` ve Arch paketi iş akışında kurulur ve eksik kütüphane için
 denetlenir. `.github/workflows/pages.yml` `site/` klasörünü
 https://11r5.github.io/Apix/ adresine yayımlar.
+Her sürüm ayrıca doldurulmuş bir Homebrew cask'i (`apix.rb`,
+`packaging/homebrew`'dan) ve winget manifest'lerini (`AhmetDemir.Apix*.yaml`,
+`packaging/winget`'ten) taşır; bunları `scripts/channel-manifests.sh` yapar,
+tap deposuna ve bir `microsoft/winget-pkgs` pull request'ine kopyalanır.
 
 `.github/workflows/docker.yml` sürüm etiketlerinde konteyner imajını
 yayımlar. Action derlediği `apix`'i motor kaynaklarının özetiyle önbelleğe

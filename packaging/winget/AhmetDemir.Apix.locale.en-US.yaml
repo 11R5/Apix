@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.6.0.schema.json
+PackageIdentifier: AhmetDemir.Apix
+PackageVersion: "@VERSION@"
+PackageLocale: en-US
+Publisher: Ahmet Demir
+PublisherUrl: https://github.com/11R5
+PublisherSupportUrl: https://github.com/11R5/Apix/issues
+PackageName: Apix
+PackageUrl: https://11r5.github.io/Apix/
+License: Apache-2.0
+LicenseUrl: https://github.com/11R5/Apix/blob/main/LICENSE
+ShortDescription: Fast, native API client with a command line
+Description: >-
+  Apix sends HTTP, GraphQL, gRPC, WebSocket, Socket.IO and MQTT requests kept
+  as plain files next to your code, in a small app drawn on the GPU. The apix
+  command line runs the same requests in terminals and CI.
+Moniker: apix
+Tags:
+  - api
+  - api-client
+  - graphql
+  - grpc
+  - http
+  - rest
+  - websocket
+ReleaseNotesUrl: https://github.com/11R5/Apix/releases/tag/v@VERSION@
+ManifestType: defaultLocale
+ManifestVersion: 1.6.0

@@ -157,6 +157,16 @@ jobs:
       - name: Checksums
         working-directory: dist
         run: sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt
+      # The Homebrew cask and winget manifests for this release, filled in:
+      # copied from the release into the tap and a winget-pkgs pull request.
+      - uses: actions/checkout@v4
+        with:
+          path: src
+      - name: Store manifests
+        run: |
+          bash src/scripts/channel-manifests.sh "${{ needs.version.outputs.version }}" dist channels
+          cp channels/homebrew/Casks/apix.rb dist/apix.rb
+          cp channels/winget/*/*.yaml dist/
       - name: GitHub release
         env:
           GH_TOKEN: ${{ github.token }}

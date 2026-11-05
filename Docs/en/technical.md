@@ -226,6 +226,10 @@ signed) and makes a `.dmg`. Linux (on Ubuntu 22.04, so glibc 2.35 is enough):
 an `archlinux` container. The `.deb` and the Arch package are installed in
 the workflow and checked for missing libraries. `.github/workflows/pages.yml`
 publishes `site/` to https://11r5.github.io/Apix/ .
+Each release also carries a filled-in Homebrew cask (`apix.rb`, from
+`packaging/homebrew`) and winget manifests (`AhmetDemir.Apix*.yaml`, from
+`packaging/winget`), made by `scripts/channel-manifests.sh`, to copy into the
+tap repository and a `microsoft/winget-pkgs` pull request.
 `.github/workflows/docker.yml` publishes the container image on version tags.
 The action caches the `apix` it builds under a hash of the engine's sources,
 so a new commit rebuilds it and an unchanged one reuses it.

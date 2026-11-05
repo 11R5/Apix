@@ -146,7 +146,7 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [x] Installers and packages, using the M3 icons: Windows setup `.exe` (Inno Setup, per-user, optional PATH and `.apix` association) and portable `.zip`, a universal macOS `.dmg`, `.deb`, an Arch package and `PKGBUILD`, a Linux tarball with `install.sh`; built by `release.yml` on version tags
 - [x] Download page on GitHub Pages (`site/`): the right file for the visitor's system, from the latest release, in English and Turkish
 - [x] AppImage (one file for any Linux; `… cli` runs the command line)
-- [ ] winget, Homebrew cask, Flatpak, the AUR
+- [ ] winget, Homebrew cask, Flatpak, the AUR: the cask and winget manifests are made for every release (`scripts/channel-manifests.sh`); publishing them needs the `homebrew-apix` tap repository and a winget-pkgs pull request, the AUR an account
 - [ ] Keep the release binary under 100 MB (54.4 MB in 0.1.1); speed and smoothness come first
 - ~~Signed Windows builds and notarized macOS builds~~: dropped (5 Nov), they cost money every year; the download page and the user guide explain how to open the unsigned builds
 - [ ] Documentation in all nine languages, an illustrated user guide with screenshots taken from each language's UI, a docs site with a language picker
