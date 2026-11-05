@@ -18,7 +18,8 @@
 
 **[Download page](https://11r5.github.io/Apix/)**: a Windows installer, a macOS
 app (Apple silicon and Intel), `.deb` for Debian and Ubuntu, a package for
-Arch, and a tarball for other Linux systems, each with the `apix` command line.
+Arch, an AppImage and a tarball for other Linux systems, each with the `apix`
+command line. On macOS also `brew install --cask 11r5/apix/apix`.
 How to install each one: [user guide](Docs/en/user-guide.md#installing-apix).
 
 ## Why Apix
@@ -121,7 +122,7 @@ Measurements of the other tools on the same machine are planned.
   several times or once per row of a CSV/JSON data file, with a delay between
   requests; pause, resume, stop at the first failure; save JUnit XML, JSON or
   HTML reports. `apix run` does the same in CI and fails the build when a test
-  fails: as a GitHub Action (`uses: 11R5/Apix@…`,
+  fails: as a GitHub Action (`uses: 11R5/apix-action@v1`, on the Marketplace;
   [example](examples/ci/github-actions.yml)), a Docker image, or plain
   `apix`, with secrets from `APIX_VAR_<NAME>` variables or a `.env` file.
 - **Git-aware:** `apix run --changed` sends only the requests a change touches

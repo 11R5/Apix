@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:f643156eab06e433 -->
+<!-- translated from en/user-guide.md sha256:302bcb1b0e41cc49 -->
 
 # Apix kullanım kılavuzu
 
@@ -64,7 +64,7 @@ da vardır. Her birinde masaüstü uygulaması ve `apix` komut satırı bulunur.
 | Sistem | Dosya | Nasıl |
 |---|---|---|
 | Windows 10/11 | `Apix-<sürüm>-windows-x64-setup.exe` | Çalıştırın. Yönetici izni istemeden kullanıcınıza (isterseniz herkese) kurar, Başlat menüsüne ekler; `apix`'i PATH'e ekleyebilir ve `.apix` dosyalarını açabilir. `…-windows-x64.zip` kurulumsuz hâlidir. |
-| macOS 11+ | `Apix-<sürüm>-macos-universal.dmg` | Açın ve Apix'i Uygulamalar'a sürükleyin; Apple silicon ve Intel için tek uygulama. Komut satırı `/Applications/Apix.app/Contents/MacOS/apix`'tir. |
+| macOS 11+ | `Apix-<sürüm>-macos-universal.dmg` | Açın ve Apix'i Uygulamalar'a sürükleyin; Apple silicon ve Intel için tek uygulama. Komut satırı `/Applications/Apix.app/Contents/MacOS/apix`'tir. Ya da `brew install --cask 11r5/apix/apix`; bu `apix`'i PATH'e de koyar. |
 | Debian, Ubuntu, Mint, … | `apix_<sürüm>_amd64.deb` | `sudo apt install ./apix_<sürüm>_amd64.deb` |
 | Arch, Manjaro, EndeavourOS, … | `apix-<sürüm>-1-x86_64.pkg.tar.zst` | `sudo pacman -U ./apix-<sürüm>-1-x86_64.pkg.tar.zst` ya da sürümdeki `PKGBUILD` ile `makepkg -si` |
 | Diğer Linux (glibc 2.35+) | `apix-<sürüm>-linux-x64.tar.gz` | Açın ve `./install.sh` çalıştırın (kullanıcınız için; herkes için `--system`, kaldırmak için `--uninstall`) |

@@ -219,6 +219,7 @@ footer { color: var(--muted); font-size: 14px; padding: 40px 0 50px; display: fl
       mac_dmg: "Disk image (.dmg)",
       mac_note: "Open the disk image and drag Apix to Applications. It is not notarized by Apple: the first time, right-click Apix → Open, or run:",
       mac_cli: "The command line is inside the app:",
+      mac_brew: "Or with Homebrew, which installs both and puts apix on the PATH:",
       deb_title: "Debian, Ubuntu, Mint", deb_desc: "And other Debian-based systems (Pop!_OS, elementary, Zorin…), 64-bit.",
       deb_file: "Package (.deb)", deb_note: "Install it with its dependencies:",
       arch_title: "Arch Linux", arch_desc: "And Manjaro, EndeavourOS, Garuda…, 64-bit.",
@@ -268,6 +269,7 @@ footer { color: var(--muted); font-size: 14px; padding: 40px 0 50px; display: fl
       mac_dmg: "Disk görüntüsü (.dmg)",
       mac_note: "Disk görüntüsünü açıp Apix'i Uygulamalar'a sürükleyin. Apple tarafından notarize edilmedi: ilk seferde Apix'e sağ tıklayıp Aç'ı seçin ya da şunu çalıştırın:",
       mac_cli: "Komut satırı uygulamanın içindedir:",
+      mac_brew: "Ya da Homebrew ile; ikisini de kurar ve apix'i PATH'e koyar:",
       deb_title: "Debian, Ubuntu, Mint", deb_desc: "Ve Debian tabanlı diğer sistemler (Pop!_OS, elementary, Zorin…), 64 bit.",
       deb_file: "Paket (.deb)", deb_note: "Bağımlılıklarıyla birlikte kurun:",
       arch_title: "Arch Linux", arch_desc: "Ve Manjaro, EndeavourOS, Garuda…, 64 bit.",
@@ -403,7 +405,9 @@ footer { color: var(--muted); font-size: 14px; padding: 40px 0 50px; display: fl
         el("p", { class: "note", text: t("mac_note") }),
         command("xattr -dr com.apple.quarantine /Applications/Apix.app"),
         el("p", { text: t("mac_cli") }),
-        command("sudo ln -s /Applications/Apix.app/Contents/MacOS/apix /usr/local/bin/apix")
+        command("sudo ln -s /Applications/Apix.app/Contents/MacOS/apix /usr/local/bin/apix"),
+        el("p", { text: t("mac_brew") }),
+        command("brew install --cask 11r5/apix/apix")
       ]),
       card("deb", "linux", os === "deb", [
         el("div", { class: "files" }, [fileLink("deb_file")]),

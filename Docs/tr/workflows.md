@@ -1,4 +1,4 @@
-<!-- translated from en/workflows.md sha256:92715a1963bc19dd -->
+<!-- translated from en/workflows.md sha256:fe1e3fbf941b3b64 -->
 
 # İş akışları
 
@@ -205,6 +205,11 @@ indirir (saniyeler); bir dal ya da commit'te `apix`'i ilk seferde derleyip
   env:
     APIX_VAR_TOKEN: ${{ secrets.API_TOKEN }}
 ```
+
+Aynı action GitHub Marketplace'te
+[`11R5/apix-action`](https://github.com/11R5/apix-action) olarak listelenir.
+Her zaman yayımlanmış bir `apix` indirir: `uses: 11R5/apix-action@v1` son
+sürümü, `@v0.1.1` o sürümü alır; `apix-version` ikisinin de yerine geçer.
 
 [examples/ci/github-actions.yml](../../examples/ci/github-actions.yml) eksiksiz
 bir iş akışıdır: koleksiyonu her ortam için bir kez çalıştırır (`test` ve

@@ -141,12 +141,13 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [x] GitHub Actions: test on Windows, macOS and Linux (CI foundation); build on version tags
 - [x] Prebuilt binaries on GitHub Releases, which the GitHub Action downloads instead of building (at a release tag, or with `apix-version`)
 - [ ] Build, try and publish the Docker image (ghcr.io)
-- [ ] A small `apix-action` repository for the GitHub Marketplace (it does not list repositories that have workflow files)
+- [x] A small [`apix-action`](https://github.com/11R5/apix-action) repository for the GitHub Marketplace (it does not list repositories that have workflow files), written by `scripts/action-repo.sh`; it always downloads a released `apix`
 - [ ] Meet the start-up (150 ms) and idle memory (60 MB) budgets: 222 ms and 88 MB in 0.1.1 (was 278 ms); the Direct3D device is now created on its own thread from the first moment. About 150 ms and most of the memory are the graphics driver loading (NVIDIA here; the integrated GPU was slower and bigger), so the rest has to come from GPUI and Apix itself
 - [x] Installers and packages, using the M3 icons: Windows setup `.exe` (Inno Setup, per-user, optional PATH and `.apix` association) and portable `.zip`, a universal macOS `.dmg`, `.deb`, an Arch package and `PKGBUILD`, a Linux tarball with `install.sh`; built by `release.yml` on version tags
 - [x] Download page on GitHub Pages (`site/`): the right file for the visitor's system, from the latest release, in English and Turkish
 - [x] AppImage (one file for any Linux; `… cli` runs the command line)
-- [ ] winget, Homebrew cask, Flatpak, the AUR: the cask and winget manifests are made for every release (`scripts/channel-manifests.sh`); publishing them needs the `homebrew-apix` tap repository and a winget-pkgs pull request, the AUR an account
+- [x] Homebrew cask in the [`11R5/homebrew-apix`](https://github.com/11R5/homebrew-apix) tap: `brew install --cask 11r5/apix/apix`
+- [ ] winget, Flatpak, the AUR: the winget manifests are made for every release (`scripts/channel-manifests.sh`) and wait for a winget-pkgs pull request; the AUR needs an account
 - [ ] Keep the release binary under 100 MB (54.4 MB in 0.1.1); speed and smoothness come first
 - ~~Signed Windows builds and notarized macOS builds~~: dropped (5 Nov), they cost money every year; the download page and the user guide explain how to open the unsigned builds
 - [ ] Documentation in all nine languages, an illustrated user guide with screenshots taken from each language's UI, a docs site with a language picker

@@ -62,7 +62,7 @@ desktop app and the `apix` command line.
 | System | File | How |
 |---|---|---|
 | Windows 10/11 | `Apix-<version>-windows-x64-setup.exe` | Run it. It installs for your user without admin rights (or for everyone, if you choose), adds Apix to the Start menu and can put `apix` on the PATH and open `.apix` files. `…-windows-x64.zip` is the same without installing. |
-| macOS 11+ | `Apix-<version>-macos-universal.dmg` | Open it and drag Apix to Applications; one app for Apple silicon and Intel. The command line is `/Applications/Apix.app/Contents/MacOS/apix`. |
+| macOS 11+ | `Apix-<version>-macos-universal.dmg` | Open it and drag Apix to Applications; one app for Apple silicon and Intel. The command line is `/Applications/Apix.app/Contents/MacOS/apix`. Or `brew install --cask 11r5/apix/apix`, which also puts `apix` on the PATH. |
 | Debian, Ubuntu, Mint, … | `apix_<version>_amd64.deb` | `sudo apt install ./apix_<version>_amd64.deb` |
 | Arch, Manjaro, EndeavourOS, … | `apix-<version>-1-x86_64.pkg.tar.zst` | `sudo pacman -U ./apix-<version>-1-x86_64.pkg.tar.zst`, or `makepkg -si` with the release's `PKGBUILD` |
 | Other Linux (glibc 2.35+) | `apix-<version>-linux-x64.tar.gz` | Unpack it and run `./install.sh` (for your user; `--system` for everyone, `--uninstall` to remove) |
