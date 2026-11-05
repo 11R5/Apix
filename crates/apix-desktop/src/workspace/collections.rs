@@ -1086,6 +1086,58 @@ impl Workspace {
         .detach();
     }
 
+    /// Writes API documentation of the collection at `root` to a file the
+    /// user picks: Markdown for a `.md` name, otherwise one HTML page.
+    pub(super) fn export_docs(
+        &mut self,
+        root: PathBuf,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let collection = match Collection::open(&root) {
+            Ok(c) => c,
+            Err(e) => return self.notify_error(describe(&e), window, cx),
+        };
+        let docs = apix_codegen::docs::collect(&collection);
+        let name = format!("{}.html", apix_import::slug(&collection.meta.name, "api"));
+        let picked = cx.prompt_for_new_path(&root, Some(&name));
+        cx.spawn_in(window, async move |this, cx| {
+            let Ok(Ok(Some(path))) = picked.await else {
+                return;
+            };
+            let markdown = path
+                .extension()
+                .is_some_and(|e| e.eq_ignore_ascii_case("md"));
+            let text = if markdown {
+                docs.to_markdown()
+            } else {
+                docs.to_html()
+            };
+            let written = std::fs::write(&path, text);
+            this.update_in(cx, |this, window, cx| match written {
+                Ok(()) => window.push_notification(
+                    Notification::success(tr!("docs.written", path = path.display().to_string())),
+                    cx,
+                ),
+                Err(e) => this.notify_error(format!("{}: {e}", path.display()), window, cx),
+            })
+            .ok();
+        })
+        .detach();
+    }
+
+    /// Documentation for the open collection (File menu, palette).
+    pub(super) fn export_active_docs(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        match self.collection.as_ref().map(|c| c.root.clone()) {
+            Some(root) => self.export_docs(root, window, cx),
+            None => self.notify_error(
+                tr!("collection.open_first", key = key_hint("O")),
+                window,
+                cx,
+            ),
+        }
+    }
+
     /// Export for the open collection (File menu, palette).
     pub(super) fn export_active_to_postman(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         match self.collection.as_ref().map(|c| c.root.clone()) {
@@ -2191,6 +2243,9 @@ fn collection_menu(
             tr!("menu.export_postman"),
             |this, root, window, cx| this.export_to_postman(root, window, cx),
         ))
+        .item(item(tr!("menu.export_docs"), |this, root, window, cx| {
+            this.export_docs(root, window, cx)
+        }))
         .separator();
     menu = if vfs::is_virtual(&root) {
         menu.item(item(tr!("sidebar.lock"), |this, _, window, cx| {

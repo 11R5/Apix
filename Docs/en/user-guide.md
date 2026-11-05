@@ -30,6 +30,7 @@ command line runs the same requests in a terminal or CI.
 - [Runner](#runner)
 - [Monitors](#monitors)
 - [Mock server](#mock-server)
+- [API documentation](#api-documentation)
 - [Tabs](#tabs)
 - [Organising requests](#organising-requests)
 - [Projects](#projects)
@@ -817,6 +818,26 @@ To use it, add an environment (say `mock`) whose `base_url` is
 `http://127.0.0.1:4010`. From a terminal: `apix mock my-api --port 4010`
 (`--host 0.0.0.0` to be reachable from other computers, `--delay 300` for a
 slow server).
+
+## API documentation
+
+**File › Export documentation…** (or **Export documentation…** on a
+collection in the sidebar) writes the collection as API documentation: one
+HTML page that opens in any browser, light or dark, with a table of contents;
+or Markdown for a repository when the file name ends in `.md`.
+
+![Generated documentation](images/api-docs.jpg)
+
+It shows the collection's description (Markdown), its variables and the
+variables committed in each environment, then every request in sidebar order
+under its folders: method, URL, description, path variables, query,
+headers, auth type, body, checks and saved examples. Nothing secret is
+printed: `.local.toml` files and the keychain are not read, auth shows only
+its kind, and `Authorization`, `Cookie` and API-key headers show their value
+only when it is a `{{variable}}`. Raw HTML in descriptions is left out.
+
+From a terminal: `apix docs my-api --out api.html` (or `--out API.md`;
+without `--out`, Markdown on standard output).
 
 ## Tabs
 

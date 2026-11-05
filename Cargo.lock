@@ -287,6 +287,8 @@ name = "apix-codegen"
 version = "0.1.0"
 dependencies = [
  "apix-core",
+ "markdown",
+ "toml 0.8.23",
  "url",
 ]
 

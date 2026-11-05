@@ -203,6 +203,7 @@ copy.curl_imported: curl импортирован
 dialog.cancel: Отмена
 dialog.close: Закрыть
 dialog.save: Сохранить
+docs.written: Документация записана в %{path}
 env.add_environment: Добавить окружение
 env.add_variable: Добавить переменную
 env.delete: Удалить
@@ -344,6 +345,7 @@ menu.copy_as: Копировать как
 menu.documentation: Документация
 menu.encrypt_collection: Зашифровать эту коллекцию…
 menu.environment: Окружение
+menu.export_docs: Экспорт документации…
 menu.export_postman: Экспорт в Postman…
 menu.file: Файл
 menu.group_by: Группировать боковую панель по

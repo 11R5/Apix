@@ -203,6 +203,7 @@ copy.curl_imported: تم استيراد curl
 dialog.cancel: إلغاء
 dialog.close: إغلاق
 dialog.save: حفظ
+docs.written: كُتب التوثيق في %{path}
 env.add_environment: إضافة بيئة
 env.add_variable: إضافة متغير
 env.delete: حذف
@@ -344,6 +345,7 @@ menu.copy_as: نسخ كـ
 menu.documentation: الوثائق
 menu.encrypt_collection: تشفير هذه المجموعة…
 menu.environment: البيئة
+menu.export_docs: تصدير التوثيق…
 menu.export_postman: تصدير إلى Postman…
 menu.file: ملف
 menu.group_by: تجميع الشريط الجانبي حسب

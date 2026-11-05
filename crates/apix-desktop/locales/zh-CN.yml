@@ -203,6 +203,7 @@ copy.curl_imported: 已导入 curl
 dialog.cancel: 取消
 dialog.close: 关闭
 dialog.save: 保存
+docs.written: 文档已写入 %{path}
 env.add_environment: 添加环境
 env.add_variable: 添加变量
 env.delete: 删除
@@ -344,6 +345,7 @@ menu.copy_as: 复制为
 menu.documentation: 文档
 menu.encrypt_collection: 加密此集合…
 menu.environment: 环境
+menu.export_docs: 导出文档…
 menu.export_postman: 导出到 Postman…
 menu.file: 文件
 menu.group_by: 侧边栏分组方式

@@ -203,6 +203,7 @@ copy.curl_imported: curl importiert
 dialog.cancel: Abbrechen
 dialog.close: Schließen
 dialog.save: Speichern
+docs.written: Dokumentation nach %{path} geschrieben
 env.add_environment: Umgebung hinzufügen
 env.add_variable: Variable hinzufügen
 env.delete: Löschen
@@ -344,6 +345,7 @@ menu.copy_as: Kopieren als
 menu.documentation: Dokumentation
 menu.encrypt_collection: Diese Sammlung verschlüsseln…
 menu.environment: Umgebung
+menu.export_docs: Dokumentation exportieren…
 menu.export_postman: Nach Postman exportieren…
 menu.file: Datei
 menu.group_by: Seitenleiste gruppieren nach

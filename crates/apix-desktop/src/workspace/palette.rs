@@ -430,6 +430,10 @@ impl Workspace {
                 name!("menu.export_postman"),
                 run(Workspace::export_active_to_postman),
             ));
+            out.push(Entry::command(
+                name!("menu.export_docs"),
+                run(Workspace::export_active_docs),
+            ));
         }
         if !open {
             out.extend(self.palette_recent());

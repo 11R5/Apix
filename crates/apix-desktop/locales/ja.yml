@@ -203,6 +203,7 @@ copy.curl_imported: curl をインポートしました
 dialog.cancel: キャンセル
 dialog.close: 閉じる
 dialog.save: 保存
+docs.written: ドキュメントを %{path} に書き出しました
 env.add_environment: 環境を追加
 env.add_variable: 変数を追加
 env.delete: 削除
@@ -344,6 +345,7 @@ menu.copy_as: 形式を指定してコピー
 menu.documentation: ドキュメント
 menu.encrypt_collection: このコレクションを暗号化…
 menu.environment: 環境
+menu.export_docs: ドキュメントをエクスポート…
 menu.export_postman: Postman にエクスポート…
 menu.file: ファイル
 menu.group_by: サイドバーのグループ化

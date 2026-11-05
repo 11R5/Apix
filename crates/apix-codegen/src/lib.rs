@@ -13,6 +13,7 @@ mod code;
 mod curl_import;
 mod shell;
 
+pub mod docs;
 pub use code::{Lang, to_code};
 pub use curl_import::{CurlImport, from_curl, looks_like_curl};
 pub use shell::{Shell, to_shell};

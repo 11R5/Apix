@@ -203,6 +203,7 @@ copy.curl_imported: curl içe aktarıldı
 dialog.cancel: İptal
 dialog.close: Kapat
 dialog.save: Kaydet
+docs.written: Dokümantasyon %{path} dosyasına yazıldı
 env.add_environment: Ortam ekle
 env.add_variable: Değişken ekle
 env.delete: Sil
@@ -344,6 +345,7 @@ menu.copy_as: Komut veya kod olarak kopyala
 menu.documentation: Belgeler
 menu.encrypt_collection: Bu koleksiyonu şifrele…
 menu.environment: Ortam
+menu.export_docs: Dokümantasyonu dışa aktar…
 menu.export_postman: Postman'a dışa aktar…
 menu.file: Dosya
 menu.group_by: Kenar çubuğunu grupla

@@ -105,10 +105,12 @@ impl MenuState {
         menu = menu.menu(tr!("menu.import_postman"), Box::new(ImportFile));
         menu = menu.menu(tr!("menu.import_url"), Box::new(ImportUrl));
         if self.open {
-            menu = menu.item(self.item(
-                tr!("menu.export_postman"),
-                Workspace::export_active_to_postman,
-            ));
+            menu = menu
+                .item(self.item(
+                    tr!("menu.export_postman"),
+                    Workspace::export_active_to_postman,
+                ))
+                .item(self.item(tr!("menu.export_docs"), Workspace::export_active_docs));
         }
         if let Some(root) = self.plain_collection.clone() {
             menu = menu

@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:982c17024b401514 -->
+<!-- translated from en/user-guide.md sha256:96ba3b8f61fe3f40 -->
 
 # Apix kullanım kılavuzu
 
@@ -33,6 +33,7 @@ veya CI'da çalıştırır.
 - [Runner](#runner)
 - [Monitörler](#monitörler)
 - [Mock sunucu](#mock-sunucu)
+- [API dokümantasyonu](#api-dokümantasyonu)
 - [Sekmeler](#sekmeler)
 - [Kenar çubuğunda istekleri düzenleme](#kenar-çubuğunda-istekleri-düzenleme)
 - [Projeler](#projeler)
@@ -832,6 +833,27 @@ Kullanmak için `base_url` değeri `http://127.0.0.1:4010` olan bir ortam (örne
 `mock`) ekleyin. Terminalden: `apix mock my-api --port 4010` (başka
 bilgisayarlardan erişmek için `--host 0.0.0.0`, yavaş bir sunucu gibi davranmak
 için `--delay 300`).
+
+## API dokümantasyonu
+
+**Dosya › Dokümantasyonu dışa aktar…** (ya da kenar çubuğunda bir koleksiyonda
+**Dokümantasyonu dışa aktar…**) koleksiyonu API dokümantasyonu olarak yazar:
+her tarayıcıda açılan, açık ya da koyu, içindekiler listeli tek bir HTML sayfası;
+dosya adı `.md` ile bitiyorsa bir depo için Markdown.
+
+![Üretilen dokümantasyon](images/api-docs.jpg)
+
+Koleksiyonun açıklamasını (Markdown), değişkenlerini ve her ortamın git'e giren
+değişkenlerini, ardından her isteği kenar çubuğu sırasıyla klasörlerinin altında
+gösterir: yöntem, URL, açıklama, yol değişkenleri, sorgu, başlıklar,
+yetkilendirme türü, gövde, doğrulamalar ve kayıtlı örnekler. Gizli hiçbir şey
+yazılmaz: `.local.toml` dosyaları ve anahtarlık okunmaz, yetkilendirmenin
+yalnızca türü görünür; `Authorization`, `Cookie` ve API anahtarı başlıklarının
+değeri yalnızca bir `{{değişken}}` ise gösterilir. Açıklamalardaki ham HTML
+atılır.
+
+Terminalden: `apix docs my-api --out api.html` (ya da `--out API.md`; `--out`
+olmadan Markdown standart çıktıya yazılır).
 
 ## Sekmeler
 

@@ -128,6 +128,17 @@ enum Command {
         #[command(flatten)]
         net: NetArgs,
     },
+    /// Write API documentation for a collection: one HTML page that opens in
+    /// any browser, or Markdown for a repository; no secrets are printed
+    Docs {
+        /// The collection (or a folder inside it)
+        #[arg(default_value = ".")]
+        dir: PathBuf,
+        /// Write to this file: .md for Markdown, anything else HTML (default:
+        /// Markdown on standard output)
+        #[arg(short, long, value_name = "FILE")]
+        out: Option<PathBuf>,
+    },
     /// Serve the examples saved with a collection's requests ([[example]]) as a
     /// local mock server, matched by method and path
     Mock {
@@ -945,6 +956,33 @@ async fn run(cli: Cli) -> Result<bool> {
                 println!("{}Wrote {}{}", style.dim, path.display(), style.reset);
             }
             Ok(summary.failed == 0)
+        }
+        Command::Docs { dir, out } => {
+            unlock_around(&dir, &var)?;
+            let root = Collection::find_root(&dir).with_context(|| {
+                format!("no apix.toml found in {} or its parents", dir.display())
+            })?;
+            let docs = apix_codegen::docs::collect(&Collection::open(&root)?);
+            match out {
+                None => print!("{}", docs.to_markdown()),
+                Some(path) => {
+                    let markdown = path
+                        .extension()
+                        .is_some_and(|e| e.eq_ignore_ascii_case("md"));
+                    let text = if markdown {
+                        docs.to_markdown()
+                    } else {
+                        docs.to_html()
+                    };
+                    if let Some(parent) = path.parent().filter(|p| !p.as_os_str().is_empty()) {
+                        std::fs::create_dir_all(parent)?;
+                    }
+                    std::fs::write(&path, text)
+                        .with_context(|| format!("writing {}", path.display()))?;
+                    println!("{}Wrote {}{}", style.dim, path.display(), style.reset);
+                }
+            }
+            Ok(true)
         }
         Command::Mock {
             dir,

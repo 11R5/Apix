@@ -10,3 +10,6 @@ repository.workspace = true
 apix-core.workspace = true
 # Query strings are encoded and decoded exactly like the HTTP engine does.
 url = "2"
+# API documentation: Markdown descriptions as HTML (raw HTML left out), environment files.
+markdown = "1"
+toml.workspace = true

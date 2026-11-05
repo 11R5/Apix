@@ -122,6 +122,8 @@ Measurements of the other tools on the same machine are planned.
 - **Mock server:** serve the responses saved with requests on a local port
   (`apix mock`, or View › Mock server… in the app), matched by method and path,
   so a front end can be built before the API exists.
+- **API documentation:** one HTML page or Markdown from a collection
+  (`apix docs`, File › Export documentation…), with no secrets in it.
 - **Monitors:** run a collection or folder every few minutes and hear about it
   on Slack, Discord or any webhook when it starts failing or passes again;
   with `apix monitor` on a server or a CI schedule, or from the app while it
@@ -189,6 +191,7 @@ apix run my-api --changed=origin/main --markdown summary.md   # only what this b
 apix diff main -C my-api                     # what changed in the requests, field by field
 apix monitor my-api                          # [[monitor]]s of apix.toml on their schedules
 apix mock my-api --port 4010                 # serve saved examples as a mock API
+apix docs my-api --out api.html              # API documentation (or --out API.md)
 apix run my-api --data users.csv -p 8        # 8 iterations at once
 apix send chat/socket.apix --message '{"join":"room-1"}' --listen 10   # a ws:// request
 apix send events/live.apix                   # server-sent events, printed as they arrive
