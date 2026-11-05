@@ -10,10 +10,10 @@ use serde::{Deserialize, Serialize};
 pub struct Settings {
     /// Interface language code; empty follows the system language.
     pub language: String,
-    /// The dark theme: a built-in id (`obsidian`, `cyber`, `dracula`, `nord`,
+    /// The dark theme: a built-in id (`graphite`, `obsidian`, `cyber`, `dracula`, `nord`,
     /// `solarized-dark`) or a file name from the themes folder.
     pub theme: String,
-    /// The light theme (`daylight`, `solarized-light`, or a file).
+    /// The light theme (`porcelain`, `daylight`, `solarized-light`, or a file).
     pub light_theme: String,
     /// `dark`, `light` or `system` (follow the OS).
     pub appearance: String,
@@ -54,11 +54,11 @@ impl Default for Settings {
     fn default() -> Self {
         Self {
             language: String::new(),
-            theme: "obsidian".into(),
-            light_theme: "daylight".into(),
+            theme: "graphite".into(),
+            light_theme: "porcelain".into(),
             appearance: "dark".into(),
             accent: String::new(),
-            transparency: 20,
+            transparency: 0,
             auto_lock_minutes: 15,
             history: true,
             secrets_in_keychain: false,
