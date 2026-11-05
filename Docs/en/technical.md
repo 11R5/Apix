@@ -88,12 +88,13 @@ release build of the desktop app takes a few minutes.
 | `<config>/Apix/settings.toml` | language, appearance, dark and light theme, accent colour, transparency, auto-lock time, history on or off, where environment secrets go, whether monitors run while the app is open |
 | `<config>/Apix/capture-ca.pem`, `capture-ca.key` | the capture proxy's local certificate authority, made the first time HTTPS is opened; trusted only if you add it yourself |
 | `<config>/Apix/geo/*.mmdb` | the IP location database for the route map (downloaded from the Route and map window, or put there) |
+| `<config>/Claude/claude_desktop_config.json` | written only by Connect to Claude: the `apix-<collection>` entry under `mcpServers` (the original kept as `.json.bak`) |
 | `<config>/Apix/monitors/` | each monitor's last 500 results, one JSON line per run (`<hash of the collection folder>-<monitor name>.jsonl`), written by `apix monitor` and the app |
 | `<config>/Apix/state.toml` | recently opened collections, the chosen environment and the open tabs per collection or project (not for encrypted collections) |
 | `<config>/Apix/cookies.json` | the cookie jar (session cookies are not persisted) |
 | `<config>/Apix/graphql/*.json` | the GraphQL schema last fetched from each endpoint (the server's introspection answer), named by a hash of the URL |
 | `<config>/Apix/themes/*.toml` | your own themes (written only when you press **Open the folder** in Settings and the folder is empty: one example) |
-| OS credential store, service `Apix` | only when asked for: remembered passwords of encrypted collections (`vault:<folder>`) and environment secrets (`env:<id>`, plus `env:<id>#1`, … for long values) |
+| OS credential store, service `Apix` | only when asked for: remembered passwords of encrypted collections (`vault:<folder>`) and environment secrets (`env:<id>`, plus `env:<id>#1`, … for long values), AI assist keys (`ai:anthropic-api-key`, `ai:openai-api-key`, `ai:google-api-key`) |
 | `<config>/Apix/history/` | sent requests (`{{variables}}` unresolved) and their responses: `index.jsonl`, one `<id>.json` and `<id>.body` per entry; the last 300, bodies cut at 256 KB; a gRPC call keeps its log as the body |
 
 `<config>` is `%APPDATA%` on Windows, `~/Library/Application Support` on macOS
@@ -110,6 +111,8 @@ collections are never written to disk.
 | `APIX_BENCH` | `startup` or `json:<url>`: measure and quit (see below). |
 | `APIX_BENCH_OUT` | File to append the measurements to. |
 | `APIX_UPDATE_URL` | Where the update check asks instead of GitHub's latest release (a fork, a mirror, a test server). |
+| `OPENAI_API_KEY`, `GEMINI_API_KEY` (or `GOOGLE_API_KEY`), `ANTHROPIC_API_KEY` | The AI assist key when none is kept in the keychain for that provider. |
+| `APIX_CLAUDE_CONFIG` | The Claude Desktop configuration file that Connect to Claude writes, instead of the real one (for tests). |
 | `APIX_AI_URL` | Where the AI assist sends its Messages API requests instead of Anthropic (a proxy, a test server). |
 | `APIX_GEO_URL` | Where **Download DB-IP Lite** downloads from instead of DB-IP. |
 | `GITHUB_BASE_REF` | Set by GitHub Actions on pull requests: `apix run --changed` without a value compares with `origin/<it>`. |

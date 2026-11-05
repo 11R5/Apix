@@ -1,12 +1,12 @@
 _version: 1
-ai.asking: Спрашиваем Claude…
+ai.asking: "Спрашиваем %{provider}…"
 ai.explain_short: Объяснить
 ai.explain_title: Почему это не удалось?
-ai.no_key: Добавьте ключ Anthropic API в Настройки › ИИ-помощник.
-ai.note: Написано Claude по запросу и ответу; заголовки с учётными данными скрыты. Может ошибаться.
+ai.no_key: Добавьте ключ API поставщика в Настройки › ИИ-помощник.
+ai.note: "Написано %{provider} по запросу и ответу; заголовки с учётными данными скрыты. Может ошибаться."
 ai.tests_added: "Тесты добавлены в скрипт Tests: проверьте и сохраните."
 ai.tests_short: ИИ-тесты
-ai.tests_tooltip: Попросить Claude тесты для этого ответа; они добавятся в скрипт Tests.
+ai.tests_tooltip: Попросить ИИ тесты для этого ответа; они добавятся в скрипт Tests.
 app.error_with_cause: "%{error}: %{cause}"
 app.status.collections: "Коллекций: %{count}"
 app.status.env: "окружение: %{name}"
@@ -165,6 +165,19 @@ chips.scope.project: Проект «%{name}»
 chips.scope.script: Задано скриптом
 chips.secret_scope: "%{scope} · секрет, только на этом компьютере"
 chips.set_for_run: Задать для этого запуска
+claude.about: "Добавляет «%{collection}» в Claude как MCP-сервер %{name}: Claude запускает для неё apix mcp и может перечислять, отправлять и запускать её запросы с тестами. Значения переменных ему не показываются."
+claude.add_code: Добавить в Claude Code
+claude.add_desktop: Добавить в Claude Desktop
+claude.added_code: "%{name} добавлен в Claude Code для всех проектов."
+claude.added_desktop: "%{name} добавлен в %{file}. Перезапустите Claude Desktop."
+claude.copy: Копировать
+claude.list_only: Только список (Claude не может отправлять запросы)
+claude.no_claude_code: Claude Code (команда claude) не установлен.
+claude.not_there: "%{name} не было в Claude Desktop."
+claude.note: Другие серверы и настройки Claude Desktop сохраняются; исходный файл в первый раз копируется в .bak. Или скопируйте запись или команду сами.
+claude.remove_desktop: Удалить
+claude.removed: "%{name} удалён из Claude Desktop."
+claude.title: Подключить к Claude
 collection.choose_folder: Выбрать папку…
 collection.create: Создать
 collection.create_collection: Создать коллекцию
@@ -429,6 +442,7 @@ menu.collection_auth: Авторизация коллекции…
 menu.collection_settings: Настройки запросов коллекции…
 menu.command_palette: Палитра команд…
 menu.compare: Сравнить ответы…
+menu.connect_claude: Подключить к Claude (MCP)…
 menu.cookies: Cookie…
 menu.copy_as: Копировать как
 menu.documentation: Документация
@@ -471,6 +485,7 @@ menu.runner: "Runner…"
 menu.save: Сохранить
 menu.send: Отправить
 menu.settings: Настройки…
+menu.setup: Настройка…
 menu.source_code: Исходный код
 menu.variables: Переменные и окружения…
 menu.view: Вид
@@ -777,14 +792,21 @@ settings.accent_red: "Красный"
 settings.accent_theme: "Цвет темы"
 settings.accent_yellow: "Жёлтый"
 settings.ai: ИИ-помощник
-settings.ai_description: "Кнопки рядом с ответом: попросить Claude написать для него тесты или объяснить ошибку, с вашим ключом Anthropic API. Запрос и ответ отправляются в Anthropic, заголовки с учётными данными скрыты. По умолчанию выключено."
-settings.ai_key: Ключ Anthropic API
-settings.ai_key_description: Хранится в системной связке ключей, а не в файле. Сохраните пустое поле, чтобы удалить. Без сохранённого ключа используется ANTHROPIC_API_KEY.
+settings.ai_description: "Кнопки рядом с ответом: попросить ИИ написать для него тесты или объяснить ошибку, с вашим ключом API. Запрос и ответ отправляются выбранному поставщику, заголовки с учётными данными скрыты. По умолчанию выключено."
+settings.ai_key: Ключ API
+settings.ai_key_description: Для поставщика выше; хранится в системной связке ключей, а не в файле. Сохраните пустое поле, чтобы удалить. Ключ можно получить на console.anthropic.com, platform.openai.com или aistudio.google.com.
 settings.ai_key_kept: ключ сохранён
-settings.ai_key_placeholder: sk-ant-…
+settings.ai_key_placeholder: вставьте ключ
 settings.ai_key_removed: Ключ API удалён.
 settings.ai_key_save: Сохранить
 settings.ai_key_saved: Ключ API в связке ключей.
+settings.ai_model: Модель
+settings.ai_model_default: "по умолчанию (%{model})"
+settings.ai_model_description: Модель поставщика по умолчанию или одна из доступных вашему ключу (Загрузить список).
+settings.ai_models_load: Загрузить список
+settings.ai_models_loaded: "Моделей: %{count}"
+settings.ai_provider: Поставщик ИИ
+settings.ai_provider_description: "Кто отвечает: Claude (Anthropic), ChatGPT (OpenAI) или Gemini (Google). У каждого свой ключ."
 settings.appearance: "Оформление"
 settings.appearance_dark: "Тёмное"
 settings.appearance_description: "Тёмное, светлое или как в системе."
@@ -834,6 +856,23 @@ settings.title: Настройки
 settings.transparency: "Прозрачность"
 settings.transparency_description: "Насколько рабочий стол просвечивает сквозь окно, размытый, как матовое стекло. 0 — непрозрачно."
 settings.transparency_value: "%{value}%"
+setup.ai_about: Тесты для ответа и объяснение ошибок от Claude, ChatGPT или Gemini с вашим ключом API. Apix — открытый проект, своего ИИ-аккаунта у него нет.
+setup.ai_off: Выключено.
+setup.ai_on: "Включено, %{provider}."
+setup.ai_open: Открыть настройки
+setup.ai_title: ИИ-помощник
+setup.claude_about: Позволяет Claude Desktop или Claude Code перечислять, отправлять и запускать с тестами запросы коллекции, не видя её секретов.
+setup.claude_for: "Для открытой коллекции: %{collection}"
+setup.claude_no_collection: Сначала откройте коллекцию.
+setup.claude_title: Claude (MCP)
+setup.geo_about: Показывает, где находится каждый маршрутизатор на пути к серверу, на карте маршрута (Сеть › Проследить маршрут) и в apix trace. Бесплатная база DB-IP, около 130 МБ, CC BY 4.0, хранится на этом компьютере; в сети ничего не запрашивается.
+setup.geo_installed: "Установлена: %{file}"
+setup.geo_missing: "Не установлена: список маршрута работает, на карте нет мест."
+setup.geo_title: База геолокации IP
+setup.geo_update: Обновить
+setup.intro: Apix работает и так. Эти дополнения необязательны; каждое — один щелчок, его можно изменить или удалить позже.
+setup.later: Справка › Настройка… откроет это снова.
+setup.title: Настройка Apix
 sidebar.auth: Авторизация…
 sidebar.change_password: Сменить пароль…
 sidebar.color: Цвет

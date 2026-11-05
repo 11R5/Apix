@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:6cfe9457b70a2edc -->
+<!-- translated from en/user-guide.md sha256:00b218be8533e2c8 -->
 
 # Apix kullanım kılavuzu
 
@@ -48,6 +48,7 @@ veya CI'da çalıştırır.
 - [Yanıtları karşılaştırma](#yanıtları-karşılaştırma)
 - [AI yardımcısı](#ai-yardımcısı)
 - [Komut paleti](#komut-paleti)
+- [Kurulum](#kurulum)
 - [Ayarlar ve dil](#ayarlar-ve-dil)
 - [Klavye kısayolları](#klavye-kısayolları)
 
@@ -399,7 +400,7 @@ adresler öyle işaretlenir.
 Her yönlendiricinin yeri bu bilgisayardaki bir IP konum veritabanından gelir;
 çevrimiçi hiçbir sorgu yapılmaz. Veritabanı yoksa liste yine çalışır, harita
 boş kalır: **DB-IP Lite'ı indir** DB-IP'nin ücretsiz veritabanını (yaklaşık
-130 MB, CC BY 4.0) `<config>/Apix/geo` klasörüne indirir; ya da oraya
+130 MB, CC BY 4.0) `<config>/Apix/geo` klasörüne indirir (Kurulum ve `apix geo download` da aynısını yapar); ya da oraya
 herhangi bir `.mmdb` şehir veritabanı koyun (DB-IP Lite, MaxMind GeoLite2
 City). Bu veritabanları bir adresi en iyi ihtimalle bir şehre yerleştirir ve
 omurga yönlendiricilerinde bazen yanılır. Terminalde `apix trace <url ya da
@@ -1174,28 +1175,36 @@ karşılaştırılır.
 
 ## AI yardımcısı
 
-AI yardımcısı, **Dosya › Ayarlar… › AI yardımcısı**'ndan açıp altındaki
-satıra kendi Anthropic API anahtarınızı verene kadar kapalıdır (anahtar
-dosyada değil sistem anahtarlığında tutulur; alanı boş kaydetmek siler;
-anahtar yoksa `ANTHROPIC_API_KEY` kullanılır). Sonra yanıtın yanında bir
-düğme daha belirir:
+AI yardımcısı, **Dosya › Ayarlar… › AI yardımcısı**'ndan açılana kadar
+kapalıdır. Apix açık kaynaktır ve kendine ait bir AI hesabı yoktur: bir
+sağlayıcı seçer, kendi API anahtarınızı verirsiniz.
 
-- Başarılı yanıtta **AI testleri**: Claude durumu, içerik türünü ve gövdenin
-  yapısını denetleyen bir Tests betiği yazar; Apix onu isteğin Tests'ine
-  (Claude'un yazdığı belirtilerek, kaydedilmemiş olarak) ekler, siz okuyup
-  sonra saklarsınız.
-- Başarısız yanıtta (400 ve üstü) **Açıkla**: Claude yanıtın ne dediğini,
-  olası nedenleri ve neyin denetleneceğini uygulamanın dilinde anlatır.
+- **AI sağlayıcısı**: Claude (Anthropic), ChatGPT (OpenAI) ya da Gemini
+  (Google).
+- **Model**: sağlayıcının varsayılanı (Claude Opus 5.5, `gpt-5.5`,
+  `gemini-2.5-flash`) ya da **↻** anahtarınızın kullanabildiği modelleri
+  yükler, birini seçersiniz.
+- **API anahtarı**: yukarıdaki sağlayıcı için; dosyada değil sistem
+  anahtarlığında tutulur, alanı boş kaydetmek siler. Yoksa
+  `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` ya da `GEMINI_API_KEY` kullanılır.
+
+Sonra yanıtın yanında bir düğme daha belirir:
+
+- Başarılı yanıtta **AI testleri**: yapay zekâ durumu, içerik türünü ve
+  gövdenin yapısını denetleyen bir Tests betiği yazar; Apix onu isteğin
+  Tests'ine (onun yazdığı belirtilerek, kaydedilmemiş olarak) ekler, siz
+  okuyup sonra saklarsınız.
+- Başarısız yanıtta (400 ve üstü) **Açıkla**: yanıtın ne dediği, olası
+  nedenler ve neyin denetleneceği, uygulamanın dilinde.
 
 ![Başarısız bir yanıtın açıklanması](images/ai-explain.png)
 
-Anthropic'e gönderilenler: isteğin yöntemi, URL'si, başlıkları ve gövdesi ile
+Sağlayıcıya gönderilenler: isteğin yöntemi, URL'si, başlıkları ve gövdesi ile
 yanıtın durumu, başlıkları ve gövdesi (12 KB'ta kesilir). Authorization,
 çerezler ve adında key, token, secret ya da signature geçen başlıklar •••
-olarak gizlenir. Model, `settings.toml` içindeki `ai_model` başka birini
-söylemedikçe Claude Opus 5.5'tir. Claude yanılabilir; siz istemeden hiçbir
-şey değişmez ya da başka yere gönderilmez. Ekran görüntüsü gerçek bir yanıt
-değil, yerel bir test sunucusuyla alındı.
+olarak gizlenir. Yapay zekâ yanılabilir; siz istemeden hiçbir şey değişmez ya
+da başka yere gönderilmez. Ekran görüntüsü gerçek bir yanıt değil, yerel bir
+test sunucusuyla alındı.
 
 ## Komut paleti
 
@@ -1204,6 +1213,47 @@ harfini yazıp Enter'a basın. Komutlar her dilde İngilizce adlarıyla da
 bulunabilir.
 
 ![Komut paleti](images/palette.png)
+
+## Kurulum
+
+Apix ilk açılışta isteğe bağlı ekleri tek yerde toplayan **Kurulum**
+penceresini açar; **Yardım › Kurulum…** onu yeniden açar. Apix bunların hiçbiri
+olmadan da çalışır.
+
+- **IP konum veritabanı**: rota haritasında ve `apix trace`'te her
+  yönlendiriciyi yerine koyar. **İndir**, DB-IP'nin ücretsiz şehir
+  veritabanını (yaklaşık 130 MB, CC BY 4.0) `<config>/Apix/geo` klasörüne
+  indirir; **Güncelle** en yeni ayınkini alır. Çevrimiçi hiçbir sorgu
+  yapılmaz. Terminalde: `apix geo download`, `apix geo status`,
+  `apix geo remove`.
+- **AI yardımcısı**: açık olup olmadığını ve hangi sağlayıcıyla çalıştığını
+  gösterir; **Ayarları aç** onun satırlarına götürür.
+- **Claude (MCP)**: açık koleksiyon için **Claude'a bağla** (ayrıca **Yardım ›
+  Claude'a bağla (MCP)…**), aşağıda.
+
+![Kurulum](images/setup.png)
+
+### Claude'a bağlama
+
+**Claude'a bağla**, açık koleksiyonu Claude için bir MCP sunucusu yapar;
+böylece Claude değişken değerlerini görmeden isteklerini listeleyebilir,
+gönderebilir ve testleriyle çalıştırabilir (bkz. [MCP](workflows.md#bir-yapay-zekâ-ajanına-koleksiyonu-kullandırma-mcp)).
+
+- **Claude Desktop'a ekle**, `apix-<koleksiyon>` girdisini Claude Desktop'ın
+  `claude_desktop_config.json` dosyasına yazar. Diğer sunucuları ve ayarları
+  korunur, dosyanın ilk hâli ilk seferde `.bak` olarak kopyalanır; kullanmak
+  için Claude Desktop'ı yeniden başlatın. **Kaldır** girdiyi geri çıkarır.
+- **Claude Code'a ekle**, `claude mcp add --scope user …` komutunu çalıştırır;
+  koleksiyon her projede hazır olur.
+- **Yalnızca listeleme**, Claude'a yalnızca listeleme araçlarını verir
+  (`--list-only`).
+- Girdi ve komut, elle eklemek için **Kopyala** ile gösterilir.
+
+![Claude'a bağla](images/claude-connect.png)
+
+Aynısı terminalden: `apix mcp my-api --add-to claude-desktop`,
+`apix mcp my-api --add-to claude-code`, `apix mcp my-api
+--remove-from-claude-desktop`.
 
 ## Ayarlar ve dil
 

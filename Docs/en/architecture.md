@@ -708,20 +708,25 @@ work. Each operation runs in the background and refreshes the status bar.
 
 ## AI assist
 
-`apix_core::ai` builds a Messages API request by hand (Rust has no official
-Anthropic SDK): `POST https://api.anthropic.com/v1/messages` with `x-api-key`,
-`anthropic-version: 2026-10-21`, model `claude-opus-5-5` (adaptive thinking is
-its default), `max_tokens` 16000, a short system prompt about Apix's script
-sandbox, and one user message with the exchange (`Context::describe`,
-credential headers masked, bodies cut at 12 KB), the task's instruction and
-the app's language code. With the default model it also asks for server-side
-fallbacks (`fallbacks: "default"`, beta `server-side-fallback-2026-07-01`).
-`answer` reads the text blocks and turns error objects and a `refusal` stop
-reason into messages; `script` takes the first code block. `APIX_AI_URL`
-points the request elsewhere for tests. The key lives in the keychain
-(`apix_vault::keychain::save_text`, account `ai:anthropic-api-key`). The app
-(`workspace/ai_ui.rs`) sends through `net::send`, appends tests with
-`ScriptEditor::append_test` and shows explanations in a dialog.
+`apix_core::ai` builds the request for one of three providers by hand (Rust
+has no official SDK for them) and reads the answer. `Provider` (`anthropic`,
+`openai`, `google`) gives the default model, the key's keychain account
+(`ai:<provider>-api-key`, through `apix_vault::keychain::save_text`), its
+environment variable and the URL. Anthropic: `POST /v1/messages` with
+`x-api-key`, `anthropic-version: 2026-10-21`, `claude-opus-5-5` and, for the
+default model, server-side fallbacks (`fallbacks: "default"`, beta
+`server-side-fallback-2026-07-01`); a `refusal` stop reason becomes a
+message. OpenAI: `POST /v1/chat/completions` with a bearer key, a system and
+a user message; a `refusal` field is declined. Google: `POST
+/v1beta/models/{model}:generateContent` with `x-goog-api-key`,
+`systemInstruction` and `contents`; `SAFETY` finishes and blocked prompts are
+declined, thought parts skipped. Every prompt carries the exchange
+(`Context::describe`: credential headers masked, bodies cut at 12 KB), the
+task and the app's language code. `models_request` / `models` list what a key
+can use (OpenAI chat models only, Google models that `generateContent`).
+`APIX_AI_URL` replaces the base URL for tests. The app (`workspace/ai_ui.rs`)
+sends through `net::send`, appends tests with `ScriptEditor::append_test` and
+shows explanations in a dialog; Settings keeps `ai_provider` and `ai_model`.
 
 ## MCP server
 
@@ -740,6 +745,20 @@ agent can read why. Paths from the agent are joined to the collection root,
 other commands, with the agent's `variables` as `--var`s. The CLI runs on a
 16 MB thread, since the commands' shared future outgrew the main thread's
 stack on Windows.
+
+## Setup and Claude
+
+`workspace/setup_ui.rs` opens Setup once (`settings.setup_shown`) and from
+Help. The database button runs `route_ui::download_geo` (this month's DB-IP
+file, else last month's, through the app's client, unpacked off the UI
+thread); `apix geo download|status|remove` does the same in a terminal, which
+is what an installer's optional step will call. `apix_core::claude_mcp`
+finds Claude Desktop's configuration (`%APPDATA%\Claude`, `~/Library/Application
+Support/Claude`, `~/.config/Claude`; `APIX_CLAUDE_CONFIG` for tests), names
+the server `apix-<collection>`, points it at the `apix` next to the running
+program (or on the PATH) with `mcp <folder> [--list-only]`, and merges it
+into `mcpServers` keeping everything else (the original copied to `.bak`
+once); `claude_code_command` is `claude mcp add --scope user`.
 
 ## Comparing responses
 

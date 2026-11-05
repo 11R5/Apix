@@ -1,14 +1,14 @@
 _version: 1
 # English, the source language. One `key: value` per line, sorted by key.
 # %{name} placeholders must stay the same in every language.
-ai.asking: Asking Claude…
+ai.asking: "Asking %{provider}…"
 ai.explain_short: Explain
 ai.explain_title: Why did this fail?
-ai.no_key: Add your Anthropic API key in Settings › AI assist.
-ai.note: Written by Claude from the request and response; credential headers were masked. It can be wrong.
+ai.no_key: Add an API key for the AI provider in Settings › AI assist.
+ai.note: "Written by %{provider} from the request and response; credential headers were masked. It can be wrong."
 ai.tests_added: "Tests added to the Tests script: check them, then save."
 ai.tests_short: AI tests
-ai.tests_tooltip: Ask Claude for tests that fit this response; they are added to the Tests script.
+ai.tests_tooltip: Ask the AI for tests that fit this response; they are added to the Tests script.
 app.error_with_cause: "%{error}: %{cause}"
 app.status.collections: "%{count} collections"
 app.status.env: "env: %{name}"
@@ -167,6 +167,19 @@ chips.scope.project: Project “%{name}”
 chips.scope.script: Set by a script
 chips.secret_scope: "%{scope} · secret, only on this computer"
 chips.set_for_run: Set for this run
+claude.about: "Adds “%{collection}” to Claude as the MCP server %{name}: Claude starts apix mcp for it and can then list, send and run its requests with their tests. Variable values are never shown to it."
+claude.add_code: Add to Claude Code
+claude.add_desktop: Add to Claude Desktop
+claude.added_code: "%{name} added to Claude Code for every project."
+claude.added_desktop: "%{name} added to %{file}. Restart Claude Desktop to use it."
+claude.copy: Copy
+claude.list_only: Listing only (Claude cannot send requests)
+claude.no_claude_code: Claude Code (the claude command) is not installed.
+claude.not_there: "%{name} was not in Claude Desktop."
+claude.note: Claude Desktop's other servers and settings are kept; the file as it was is copied to .bak the first time. Or copy the entry or the command yourself.
+claude.remove_desktop: Remove
+claude.removed: "%{name} removed from Claude Desktop."
+claude.title: Connect to Claude
 collection.choose_folder: Choose folder…
 collection.create: Create
 collection.create_collection: Create collection
@@ -431,6 +444,7 @@ menu.collection_auth: Collection auth…
 menu.collection_settings: Collection request settings…
 menu.command_palette: Command palette…
 menu.compare: Compare responses…
+menu.connect_claude: Connect to Claude (MCP)…
 menu.cookies: Cookies…
 menu.copy_as: Copy as
 menu.documentation: Documentation
@@ -473,6 +487,7 @@ menu.runner: "Runner…"
 menu.save: Save
 menu.send: Send
 menu.settings: Settings…
+menu.setup: Setup…
 menu.source_code: Source code
 menu.variables: Variables and environments…
 menu.view: View
@@ -779,14 +794,21 @@ settings.accent_red: "Red"
 settings.accent_theme: "The theme's own"
 settings.accent_yellow: "Yellow"
 settings.ai: AI assist
-settings.ai_description: Buttons next to the response that ask Claude to write tests for it or explain a failure, with your own Anthropic API key. The request and response are sent to Anthropic, credential headers masked. Off by default.
-settings.ai_key: Anthropic API key
-settings.ai_key_description: Kept in the system keychain, never in a file. Save an empty field to remove it. ANTHROPIC_API_KEY is used when none is saved.
+settings.ai_description: Buttons next to the response that ask an AI to write tests for it or explain a failure, with your own API key. The request and response are sent to the provider you pick, credential headers masked. Off by default.
+settings.ai_key: API key
+settings.ai_key_description: For the provider above, kept in the system keychain, never in a file. Save an empty field to remove it. Get one at console.anthropic.com, platform.openai.com or aistudio.google.com.
 settings.ai_key_kept: a key is saved
-settings.ai_key_placeholder: sk-ant-…
+settings.ai_key_placeholder: paste a key
 settings.ai_key_removed: The API key was removed.
 settings.ai_key_save: Save
 settings.ai_key_saved: The API key is in the keychain.
+settings.ai_model: Model
+settings.ai_model_default: "default (%{model})"
+settings.ai_model_description: The provider's default, or one of the models your key can use (Load the list).
+settings.ai_models_load: Load the list
+settings.ai_models_loaded: "%{count} models"
+settings.ai_provider: AI provider
+settings.ai_provider_description: "Who answers: Claude (Anthropic), ChatGPT (OpenAI) or Gemini (Google). Each has its own key."
 settings.appearance: "Appearance"
 settings.appearance_dark: "Dark"
 settings.appearance_description: "Dark, light, or follow the system's light/dark setting."
@@ -836,6 +858,23 @@ settings.title: Settings
 settings.transparency: "Transparency"
 settings.transparency_description: "How much of the desktop shows through the window, blurred like frosted glass. 0 is solid."
 settings.transparency_value: "%{value}%"
+setup.ai_about: Tests written for a response and failures explained, by Claude, ChatGPT or Gemini with your own API key. Apix is open source and has no AI account of its own.
+setup.ai_off: Off.
+setup.ai_on: "On, with %{provider}."
+setup.ai_open: Open Settings
+setup.ai_title: AI assist
+setup.claude_about: Lets Claude Desktop or Claude Code list, send and run the requests of a collection, with their tests, without seeing its secrets.
+setup.claude_for: "For the open collection: %{collection}"
+setup.claude_no_collection: Open a collection first.
+setup.claude_title: Claude (MCP)
+setup.geo_about: Shows where each router on the way to a server is, on the route map (Network tab › Trace the route) and in apix trace. DB-IP's free database, about 130 MB, CC BY 4.0, kept on this computer; nothing is looked up online.
+setup.geo_installed: "Installed: %{file}"
+setup.geo_missing: "Not installed: the route list works, the map shows no places."
+setup.geo_title: IP location database
+setup.geo_update: Update
+setup.intro: Apix works as it is. These extras are optional; each is one click and can be changed or removed later.
+setup.later: Help › Setup… opens this again.
+setup.title: Set up Apix
 sidebar.auth: Auth…
 sidebar.change_password: Change password…
 sidebar.color: Colour

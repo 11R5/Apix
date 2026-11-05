@@ -42,8 +42,12 @@ pub struct Settings {
     pub check_updates: bool,
     /// Offer AI help (writing tests, explaining failures) with the user's own API key.
     pub ai_assist: bool,
-    /// The Claude model for it; empty for the default.
+    /// Who answers: `anthropic`, `openai` or `google`.
+    pub ai_provider: String,
+    /// The provider's model; empty for its default.
     pub ai_model: String,
+    /// The Setup window was shown (it opens by itself only the first time).
+    pub setup_shown: bool,
 }
 
 impl Default for Settings {
@@ -62,7 +66,9 @@ impl Default for Settings {
             monitors_in_app: false,
             check_updates: true,
             ai_assist: false,
+            ai_provider: "anthropic".into(),
             ai_model: String::new(),
+            setup_shown: false,
             text_size: 100,
             editor_font_size: 13,
             density: "normal".into(),

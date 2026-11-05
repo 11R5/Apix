@@ -307,6 +307,8 @@ impl MenuState {
             .link(tr!("menu.report_problem"), format!("{REPO}/issues"))
             .link(tr!("menu.source_code"), REPO)
             .separator()
+            .menu(tr!("menu.setup"), Box::new(OpenSetup))
+            .menu(tr!("menu.connect_claude"), Box::new(ConnectClaude))
             .menu(tr!("menu.check_updates"), Box::new(CheckForUpdates))
             .label(format!("Apix {}", env!("CARGO_PKG_VERSION")))
     }

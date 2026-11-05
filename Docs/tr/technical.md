@@ -1,4 +1,4 @@
-<!-- translated from en/technical.md sha256:c57a0ec398418c24 -->
+<!-- translated from en/technical.md sha256:1fdf9e2aa86886eb -->
 
 # Teknik notlar
 
@@ -89,12 +89,13 @@ Masaüstü uygulamasının tam bir release derlemesi birkaç dakika sürer.
 | `<config>/Apix/settings.toml` | dil, görünüm, koyu ve açık tema, vurgu rengi, saydamlık, otomatik kilit süresi, geçmişin açık ya da kapalı olması, ortam gizli değerlerinin nereye yazılacağı, uygulama açıkken monitörlerin çalışıp çalışmayacağı |
 | `<config>/Apix/capture-ca.pem`, `capture-ca.key` | yakalama proxy'sinin yerel sertifika yetkilisi; HTTPS ilk açıldığında oluşturulur, yalnızca siz eklerseniz güvenilir |
 | `<config>/Apix/geo/*.mmdb` | rota haritası için IP konum veritabanı (Rota ve harita penceresinden indirilir ya da oraya konur) |
+| `<config>/Claude/claude_desktop_config.json` | yalnızca Claude'a bağla yazar: `mcpServers` altındaki `apix-<koleksiyon>` girdisi (özgünü `.json.bak` olarak saklanır) |
 | `<config>/Apix/monitors/` | her monitörün son 500 sonucu, koşu başına bir JSON satırı (`<koleksiyon klasörünün özeti>-<monitör adı>.jsonl`); `apix monitor` ve uygulama yazar |
 | `<config>/Apix/state.toml` | son açılan koleksiyonlar, koleksiyon ya da proje başına seçilen ortam ve açık sekmeler (şifreli koleksiyonlar hariç) |
 | `<config>/Apix/cookies.json` | çerez kavanozu (oturum çerezleri kalıcı değildir) |
 | `<config>/Apix/graphql/*.json` | her uç noktadan en son çekilen GraphQL şeması (sunucunun introspection cevabı), adresin özetiyle adlandırılır |
 | `<config>/Apix/themes/*.toml` | kendi temaların (yalnızca Ayarlar'da **Klasörü aç**'a basıldığında ve klasör boşsa yazılır: bir örnek) |
-| İşletim sistemi kimlik bilgisi deposu, `Apix` servisi | yalnızca istenirse: şifreli koleksiyonların hatırlanan parolaları (`vault:<klasör>`) ve ortam gizli değerleri (`env:<kimlik>`, uzun değerler için ayrıca `env:<kimlik>#1`, …) |
+| İşletim sistemi kimlik bilgisi deposu, `Apix` servisi | yalnızca istenirse: şifreli koleksiyonların hatırlanan parolaları (`vault:<klasör>`) ve ortam gizli değerleri (`env:<kimlik>`, uzun değerler için ayrıca `env:<kimlik>#1`, …), AI yardımcısı anahtarları (`ai:anthropic-api-key`, `ai:openai-api-key`, `ai:google-api-key`) |
 | `<config>/Apix/history/` | gönderilen istekler (`{{değişkenler}}` çözülmeden) ve yanıtları: `index.jsonl`, her kayıt için bir `<id>.json` ve `<id>.body`; son 300 kayıt, gövdeler 256 KB'ta kesilir; bir gRPC çağrısı gövde olarak günlüğünü tutar |
 
 `<config>`, Windows'ta `%APPDATA%`, macOS'te `~/Library/Application Support`,
@@ -111,6 +112,8 @@ parolaları asla diske yazılmaz.
 | `APIX_BENCH` | `startup` veya `json:<url>`: ölç ve çık (aşağıya bakın). |
 | `APIX_BENCH_OUT` | Ölçümlerin sonuna ekleneceği dosya. |
 | `APIX_UPDATE_URL` | Güncelleme denetiminin GitHub'ın son sürümü yerine sorduğu adres (bir çatal, bir ayna, bir test sunucusu). |
+| `OPENAI_API_KEY`, `GEMINI_API_KEY` (ya da `GOOGLE_API_KEY`), `ANTHROPIC_API_KEY` | O sağlayıcı için anahtarlıkta anahtar yoksa AI yardımcısının anahtarı. |
+| `APIX_CLAUDE_CONFIG` | Claude'a bağla'nın gerçeği yerine yazdığı Claude Desktop yapılandırma dosyası (testler için). |
 | `APIX_AI_URL` | AI yardımcısının Messages API isteklerini Anthropic yerine gönderdiği adres (bir proxy, bir test sunucusu). |
 | `APIX_GEO_URL` | **DB-IP Lite'ı indir**'in DB-IP yerine indirdiği adres. |
 | `GITHUB_BASE_REF` | GitHub Actions'ın pull request'lerde atadığı değişken: değer verilmeyen `apix run --changed` `origin/<değeri>` ile karşılaştırır. |

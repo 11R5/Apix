@@ -133,8 +133,8 @@ Measurements of the other tools on the same machine are planned.
   location database (`apix trace`, View › Route and map…).
 - **API documentation:** one HTML page or Markdown from a collection
   (`apix docs`, File › Export documentation…), with no secrets in it.
-- **AI assist (optional, off by default):** with your own Anthropic API key,
-  Claude writes tests for a response or explains why one failed.
+- **AI assist (optional, off by default):** with your own API key for Claude,
+  ChatGPT or Gemini, tests are written for a response or a failure explained.
 - **AI agents (MCP):** `apix mcp` lets Claude or any MCP client list, send and
   run a collection's requests with their tests, without seeing its secrets.
 - **Compare responses:** today's answer against yesterday's from the
@@ -218,6 +218,8 @@ apix run my-api --data users.csv -p 8        # 8 iterations at once
 apix bench my-api/users/list.apix -c 50 -d 30s --max-p95 300   # a load test
 apix compare my-api/users/list.apix --env staging --against prod   # do they answer alike?
 apix mcp my-api                              # serve the collection to an AI agent (MCP)
+apix mcp my-api --add-to claude-desktop      # or claude-code: connect Claude to it
+apix geo download                            # the IP location database for the route map
 apix send chat/socket.apix --message '{"join":"room-1"}' --listen 10   # a ws:// request
 apix send events/live.apix                   # server-sent events, printed as they arrive
 apix schema graphql/users.apix               # a GraphQL endpoint's schema, as SDL

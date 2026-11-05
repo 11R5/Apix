@@ -9,9 +9,11 @@ use gpui_kit::*;
 use super::Workspace;
 use crate::bidi::{self, Bidi as _, DialogBidi as _};
 use crate::i18n;
+use crate::net;
 use crate::settings::Settings;
 use crate::theme::{self, ACCENTS, Appearance, ThemeDef};
 use crate::tr;
+use apix_core::ai::Provider;
 
 type Picker = SelectState<Vec<SharedString>>;
 type Changed = SelectEvent<Vec<SharedString>>;
@@ -79,6 +81,45 @@ fn accent_ids(current: &str) -> Vec<String> {
     ids
 }
 
+/// The key field's hint: whether a key is kept for `provider`.
+fn key_placeholder(provider: Provider) -> SharedString {
+    key_placeholder_after(
+        provider,
+        if apix_core::ai::load_key(provider).is_some() {
+            "kept"
+        } else {
+            ""
+        },
+    )
+}
+
+fn key_placeholder_after(provider: Provider, saved: &str) -> SharedString {
+    if saved.trim().is_empty() {
+        tr!("settings.ai_key_placeholder", page = provider.key_page())
+    } else {
+        tr!("settings.ai_key_kept")
+    }
+}
+
+/// The model picker's rows (the default first) and which is selected.
+fn model_items(provider: Provider, models: &[String], current: &str) -> (Vec<SharedString>, usize) {
+    let mut items: Vec<SharedString> = vec![tr!(
+        "settings.ai_model_default",
+        model = provider.default_model()
+    )];
+    let mut names: Vec<String> = models.to_vec();
+    if !current.is_empty() && !names.iter().any(|m| m == current) {
+        names.insert(0, current.to_owned());
+    }
+    items.extend(names.iter().map(|m| SharedString::from(m.clone())));
+    let ix = if current.is_empty() {
+        0
+    } else {
+        names.iter().position(|m| m == current).map_or(0, |i| i + 1)
+    };
+    (items, ix)
+}
+
 fn picker(
     items: Vec<SharedString>,
     selected: Option<IndexPath>,
@@ -106,6 +147,11 @@ pub(super) struct SettingsView {
     updates: Entity<Picker>,
     ai: Entity<Picker>,
     ai_key: Entity<gpui_kit::component::input::InputState>,
+    ai_provider: Entity<Picker>,
+    ai_model: Entity<Picker>,
+    /// The provider's models, once loaded.
+    ai_models: Vec<String>,
+    _ai_models_task: Option<Task<()>>,
     dark_themes: ThemeList,
     light_themes: ThemeList,
     accents: Vec<String>,
@@ -227,16 +273,26 @@ impl SettingsView {
         let prod = picker(history_choices(), Some(IndexPath::new(prod_ix)), window, cx);
         let ai_ix = if settings.ai_assist { 0 } else { 1 };
         let ai = picker(history_choices(), Some(IndexPath::new(ai_ix)), window, cx);
-        let has_key = apix_core::ai::load_key().is_some();
+        let provider = Provider::from_id(&settings.ai_provider);
+        let ai_provider = picker(
+            Provider::ALL
+                .iter()
+                .map(|p| SharedString::from(p.name()))
+                .collect(),
+            Provider::ALL
+                .iter()
+                .position(|p| *p == provider)
+                .map(IndexPath::new),
+            window,
+            cx,
+        );
         let ai_key = cx.new(|cx| {
             gpui_kit::component::input::InputState::new(window, cx)
                 .masked(true)
-                .placeholder(if has_key {
-                    tr!("settings.ai_key_kept")
-                } else {
-                    tr!("settings.ai_key_placeholder")
-                })
+                .placeholder(key_placeholder(provider))
         });
+        let (items, ix) = model_items(provider, &[], &settings.ai_model);
+        let ai_model = picker(items, Some(IndexPath::new(ix)), window, cx);
         let updates_ix = if settings.check_updates { 0 } else { 1 };
         let updates = picker(
             history_choices(),
@@ -246,6 +302,51 @@ impl SettingsView {
         );
 
         let subscriptions = vec![
+            cx.subscribe_in(
+                &ai_provider,
+                window,
+                |this, state, _: &Changed, window, cx| {
+                    let Some(ix) = state.read(cx).selected_index(cx) else {
+                        return;
+                    };
+                    let provider = Provider::ALL[ix.row.min(2)];
+                    if provider == this.provider(cx) {
+                        return;
+                    }
+                    this.change(
+                        |s| {
+                            s.ai_provider = provider.id().to_owned();
+                            s.ai_model.clear();
+                        },
+                        cx,
+                    );
+                    this.ai_models.clear();
+                    this.ai_key.update(cx, |s, cx| {
+                        s.set_value("", window, cx);
+                        s.set_placeholder(key_placeholder(provider), window, cx);
+                    });
+                    let (items, ix) = model_items(provider, &[], "");
+                    this.ai_model.update(cx, |s, cx| {
+                        s.set_items(items, window, cx);
+                        s.set_selected_index(Some(IndexPath::new(ix)), window, cx);
+                    });
+                },
+            ),
+            cx.subscribe_in(&ai_model, window, |this, state, _: &Changed, _, cx| {
+                let Some(ix) = state.read(cx).selected_index(cx) else {
+                    return;
+                };
+                let model = if ix.row == 0 {
+                    String::new()
+                } else {
+                    state
+                        .read(cx)
+                        .selected_value()
+                        .map(|v| v.to_string())
+                        .unwrap_or_default()
+                };
+                this.change(|s| s.ai_model = model, cx);
+            }),
             cx.subscribe_in(&ai, window, |this, state, _: &Changed, _, cx| {
                 if let Some(ix) = state.read(cx).selected_index(cx) {
                     this.change(|s| s.ai_assist = ix.row == 0, cx);
@@ -389,6 +490,10 @@ impl SettingsView {
             updates,
             ai,
             ai_key,
+            ai_provider,
+            ai_model,
+            ai_models: Vec::new(),
+            _ai_models_task: None,
             dark_themes,
             light_themes,
             accents,
@@ -399,6 +504,60 @@ impl SettingsView {
     }
 
     /// Changes the workspace's settings and saves them.
+    /// The AI provider picked in the settings.
+    fn provider(&self, cx: &App) -> Provider {
+        self.workspace
+            .upgrade()
+            .map(|ws| Provider::from_id(&ws.read(cx).settings.ai_provider))
+            .unwrap_or_default()
+    }
+
+    /// Asks the provider which models the key can use and offers them.
+    fn load_models(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let provider = self.provider(cx);
+        let Some(key) = apix_core::ai::load_key(provider) else {
+            window.push_notification(
+                gpui_kit::component::notification::Notification::error(tr!("ai.no_key")),
+                cx,
+            );
+            return;
+        };
+        let sent = net::send(apix_core::ai::models_request(provider, &key));
+        self._ai_models_task = Some(cx.spawn_in(window, async move |this, cx| {
+            let result = sent
+                .await
+                .and_then(|r| apix_core::ai::models(provider, r.status, &r.body));
+            this.update_in(cx, |this, window, cx| match result {
+                Ok(models) => {
+                    let current = this
+                        .workspace
+                        .upgrade()
+                        .map(|ws| ws.read(cx).settings.ai_model.clone())
+                        .unwrap_or_default();
+                    this.ai_models = models;
+                    let (items, ix) = model_items(provider, &this.ai_models, &current);
+                    let count = items.len() - 1;
+                    this.ai_model.update(cx, |s, cx| {
+                        s.set_items(items, window, cx);
+                        s.set_selected_index(Some(IndexPath::new(ix)), window, cx);
+                    });
+                    window.push_notification(
+                        gpui_kit::component::notification::Notification::info(tr!(
+                            "settings.ai_models_loaded",
+                            count = count
+                        )),
+                        cx,
+                    );
+                }
+                Err(e) => window.push_notification(
+                    gpui_kit::component::notification::Notification::error(e),
+                    cx,
+                ),
+            })
+            .ok();
+        }));
+    }
+
     fn change(&self, f: impl FnOnce(&mut Settings), cx: &mut Context<Self>) {
         self.workspace
             .update(cx, |ws, cx| {
@@ -645,6 +804,28 @@ impl Render for SettingsView {
                 Select::new(&self.ai).small(),
             ))
             .child(self.row(
+                tr!("settings.ai_provider"),
+                tr!("settings.ai_provider_description"),
+                Select::new(&self.ai_provider).small(),
+            ))
+            .child(self.row(
+                tr!("settings.ai_model"),
+                tr!("settings.ai_model_description"),
+                h_flex()
+                    .gap_1()
+                    .child(div().w(px(170.)).child(Select::new(&self.ai_model).small()))
+                    .child(
+                        Button::new("ai-models")
+                            .small()
+                            .ghost()
+                            .label("↻")
+                            .tooltip(tr!("settings.ai_models_load"))
+                            .on_click(cx.listener(|this, _: &ClickEvent, window, cx| {
+                                this.load_models(window, cx)
+                            })),
+                    ),
+            ))
+            .child(self.row(
                 tr!("settings.ai_key"),
                 tr!("settings.ai_key_description"),
                 h_flex()
@@ -657,7 +838,11 @@ impl Render for SettingsView {
                             .label(tr!("settings.ai_key_save"))
                             .on_click(cx.listener(|this, _: &ClickEvent, window, cx| {
                                 let key = this.ai_key.read(cx).value().to_string();
-                                let note = match apix_core::ai::save_key(&key) {
+                                let provider = this.provider(cx);
+                                this.ai_key.update(cx, |s, cx| {
+                                    s.set_placeholder(key_placeholder_after(provider, &key), window, cx)
+                                });
+                                let note = match apix_core::ai::save_key(provider, &key) {
                                     Ok(()) if key.trim().is_empty() => gpui_kit::component::notification::Notification::info(tr!("settings.ai_key_removed")),
                                     Ok(()) => gpui_kit::component::notification::Notification::success(tr!("settings.ai_key_saved")),
                                     Err(e) => gpui_kit::component::notification::Notification::error(e),

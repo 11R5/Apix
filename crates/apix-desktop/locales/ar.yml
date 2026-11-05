@@ -1,12 +1,12 @@
 _version: 1
-ai.asking: جارٍ سؤال Claude…
+ai.asking: "جارٍ سؤال %{provider}…"
 ai.explain_short: اشرح
 ai.explain_title: لماذا فشل هذا؟
-ai.no_key: أضف مفتاح Anthropic API في الإعدادات › مساعد الذكاء الاصطناعي.
-ai.note: كتبه Claude من الطلب والاستجابة؛ أُخفيت ترويسات بيانات الاعتماد. قد يخطئ.
+ai.no_key: أضف مفتاح API للمزوّد في الإعدادات › مساعد الذكاء الاصطناعي.
+ai.note: "كتبه %{provider} من الطلب والاستجابة؛ أُخفيت ترويسات بيانات الاعتماد. قد يخطئ."
 ai.tests_added: "أُضيفت الاختبارات إلى برنامج Tests: راجعها ثم احفظ."
 ai.tests_short: اختبارات AI
-ai.tests_tooltip: اطلب من Claude اختبارات تناسب هذه الاستجابة؛ تُضاف إلى برنامج Tests.
+ai.tests_tooltip: اطلب من الذكاء الاصطناعي اختبارات تناسب هذه الاستجابة؛ تُضاف إلى برنامج Tests.
 app.error_with_cause: "%{error}: %{cause}"
 app.status.collections: "المجموعات: %{count}"
 app.status.env: "البيئة: %{name}"
@@ -165,6 +165,19 @@ chips.scope.project: المشروع «%{name}»
 chips.scope.script: ضبطه سكربت
 chips.secret_scope: "%{scope} · سري، على هذا الحاسوب فقط"
 chips.set_for_run: تعيين لهذا التشغيل
+claude.about: "يضيف «%{collection}» إلى Claude كخادم MCP باسم %{name}: يشغّل Claude الأمر apix mcp لها ثم يمكنه سرد طلباتها وإرسالها وتشغيلها مع اختباراتها. لا تُعرض عليه قيم المتغيرات أبدًا."
+claude.add_code: إضافة إلى Claude Code
+claude.add_desktop: إضافة إلى Claude Desktop
+claude.added_code: "أُضيف %{name} إلى Claude Code لكل المشاريع."
+claude.added_desktop: "أُضيف %{name} إلى %{file}. أعد تشغيل Claude Desktop لاستخدامه."
+claude.copy: نسخ
+claude.list_only: السرد فقط (لا يستطيع Claude إرسال طلبات)
+claude.no_claude_code: Claude Code (الأمر claude) غير مثبّت.
+claude.not_there: "لم يكن %{name} في Claude Desktop."
+claude.note: تُحفظ خوادم Claude Desktop وإعداداته الأخرى؛ ويُنسخ الملف الأصلي إلى .bak في المرة الأولى. أو انسخ الإدخال أو الأمر بنفسك.
+claude.remove_desktop: إزالة
+claude.removed: "أُزيل %{name} من Claude Desktop."
+claude.title: الاتصال بـ Claude
 collection.choose_folder: اختيار مجلد…
 collection.create: إنشاء
 collection.create_collection: إنشاء مجموعة
@@ -429,6 +442,7 @@ menu.collection_auth: مصادقة المجموعة…
 menu.collection_settings: إعدادات طلبات المجموعة…
 menu.command_palette: لوحة الأوامر…
 menu.compare: مقارنة الاستجابات…
+menu.connect_claude: الاتصال بـ Claude (MCP)…
 menu.cookies: ملفات تعريف الارتباط…
 menu.copy_as: نسخ كـ
 menu.documentation: الوثائق
@@ -471,6 +485,7 @@ menu.runner: "Runner…"
 menu.save: حفظ
 menu.send: إرسال
 menu.settings: الإعدادات…
+menu.setup: الإعداد…
 menu.source_code: الشيفرة المصدرية
 menu.variables: المتغيرات والبيئات…
 menu.view: عرض
@@ -777,14 +792,21 @@ settings.accent_red: "أحمر"
 settings.accent_theme: "لون السمة"
 settings.accent_yellow: "أصفر"
 settings.ai: مساعد الذكاء الاصطناعي
-settings.ai_description: "أزرار بجانب الاستجابة تطلب من Claude كتابة اختبارات لها أو شرح فشلها، بمفتاح Anthropic API الخاص بك. يُرسل الطلب والاستجابة إلى Anthropic مع إخفاء ترويسات بيانات الاعتماد. معطّل افتراضيًا."
-settings.ai_key: مفتاح Anthropic API
-settings.ai_key_description: يُحفظ في سلسلة مفاتيح النظام لا في ملف. احفظ الحقل فارغًا لحذفه. إن لم يُحفظ مفتاح يُستخدم ANTHROPIC_API_KEY.
+settings.ai_description: "أزرار بجانب الاستجابة تطلب من ذكاء اصطناعي كتابة اختبارات لها أو شرح فشلها، بمفتاح API الخاص بك. يُرسل الطلب والاستجابة إلى المزوّد الذي تختاره مع إخفاء ترويسات بيانات الاعتماد. معطّل افتراضيًا."
+settings.ai_key: مفتاح API
+settings.ai_key_description: للمزوّد أعلاه، يُحفظ في سلسلة مفاتيح النظام لا في ملف. احفظ الحقل فارغًا لحذفه. يُحصل عليه من console.anthropic.com أو platform.openai.com أو aistudio.google.com.
 settings.ai_key_kept: هناك مفتاح محفوظ
-settings.ai_key_placeholder: sk-ant-…
+settings.ai_key_placeholder: الصق المفتاح
 settings.ai_key_removed: حُذف مفتاح API.
 settings.ai_key_save: حفظ
 settings.ai_key_saved: مفتاح API في سلسلة المفاتيح.
+settings.ai_model: النموذج
+settings.ai_model_default: "الافتراضي (%{model})"
+settings.ai_model_description: النموذج الافتراضي للمزوّد أو أحد النماذج التي يتيحها مفتاحك (تحميل القائمة).
+settings.ai_models_load: تحميل القائمة
+settings.ai_models_loaded: "%{count} نموذجًا"
+settings.ai_provider: مزوّد الذكاء الاصطناعي
+settings.ai_provider_description: "من يجيب: Claude (Anthropic) أو ChatGPT (OpenAI) أو Gemini (Google). لكلٍّ مفتاحه."
 settings.appearance: "نمط المظهر"
 settings.appearance_dark: "داكن"
 settings.appearance_description: "داكن أو فاتح أو اتباع إعداد النظام."
@@ -834,6 +856,23 @@ settings.title: الإعدادات
 settings.transparency: "الشفافية"
 settings.transparency_description: "مقدار ما يظهر من سطح المكتب عبر النافذة، ضبابيًا كالزجاج المصنفر. 0 تعني معتمة."
 settings.transparency_value: "%{value}٪"
+setup.ai_about: اختبارات تُكتب للاستجابة وشرح للأخطاء، من Claude أو ChatGPT أو Gemini بمفتاح API الخاص بك. Apix مفتوح المصدر وليس لديه حساب ذكاء اصطناعي خاص به.
+setup.ai_off: معطّل.
+setup.ai_on: "مفعّل، مع %{provider}."
+setup.ai_open: فتح الإعدادات
+setup.ai_title: مساعد الذكاء الاصطناعي
+setup.claude_about: يتيح لـ Claude Desktop أو Claude Code سرد طلبات مجموعة وإرسالها وتشغيلها مع اختباراتها، دون رؤية أسرارها.
+setup.claude_for: "للمجموعة المفتوحة: %{collection}"
+setup.claude_no_collection: افتح مجموعة أولًا.
+setup.claude_title: Claude (MCP)
+setup.geo_about: "تُظهر مكان كل موجّه في الطريق إلى الخادم على خريطة المسار (الشبكة › تتبّع المسار) وفي apix trace. قاعدة DB-IP المجانية، نحو 130 ميغابايت، CC BY 4.0، محفوظة على هذا الحاسوب؛ لا يُستعلم عن شيء عبر الإنترنت."
+setup.geo_installed: "مثبّتة: %{file}"
+setup.geo_missing: "غير مثبّتة: قائمة المسار تعمل، والخريطة لا تعرض أماكن."
+setup.geo_title: قاعدة بيانات مواقع IP
+setup.geo_update: تحديث
+setup.intro: يعمل Apix كما هو. هذه الإضافات اختيارية؛ كلٌّ منها بنقرة واحدة ويمكن تغييرها أو إزالتها لاحقًا.
+setup.later: المساعدة › الإعداد… يفتح هذا مجددًا.
+setup.title: إعداد Apix
 sidebar.auth: المصادقة…
 sidebar.change_password: تغيير كلمة المرور…
 sidebar.color: اللون

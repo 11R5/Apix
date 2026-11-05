@@ -1,12 +1,12 @@
 _version: 1
-ai.asking: Claude に問い合わせています…
+ai.asking: "%{provider} に問い合わせています…"
 ai.explain_short: 説明
 ai.explain_title: なぜ失敗したのか
-ai.no_key: 設定 › AI アシストで Anthropic API キーを追加してください。
-ai.note: リクエストとレスポンスから Claude が書きました。認証ヘッダーは伏せています。誤りがあり得ます。
+ai.no_key: 設定 › AI アシストで提供元の API キーを追加してください。
+ai.note: "リクエストとレスポンスから %{provider} が書きました。認証ヘッダーは伏せています。誤りがあり得ます。"
 ai.tests_added: Tests スクリプトにテストを追加しました。確認してから保存してください。
 ai.tests_short: AI テスト
-ai.tests_tooltip: このレスポンスに合うテストを Claude に頼みます。Tests スクリプトに追加されます。
+ai.tests_tooltip: このレスポンスに合うテストを AI に頼みます。Tests スクリプトに追加されます。
 app.error_with_cause: "%{error}: %{cause}"
 app.status.collections: "コレクション %{count} 件"
 app.status.env: "環境: %{name}"
@@ -165,6 +165,19 @@ chips.scope.project: プロジェクト「%{name}」
 chips.scope.script: スクリプトが設定
 chips.secret_scope: "%{scope} · シークレット、このコンピューターのみ"
 chips.set_for_run: この実行のみ設定
+claude.about: "「%{collection}」を MCP サーバー %{name} として Claude に追加します。Claude が apix mcp を起動し、リクエストの一覧・送信・テスト付き実行ができるようになります。変数の値は見せません。"
+claude.add_code: Claude Code に追加
+claude.add_desktop: Claude Desktop に追加
+claude.added_code: "%{name} をすべてのプロジェクト用に Claude Code に追加しました。"
+claude.added_desktop: "%{name} を %{file} に追加しました。Claude Desktop を再起動してください。"
+claude.copy: コピー
+claude.list_only: 一覧のみ (Claude はリクエストを送れません)
+claude.no_claude_code: Claude Code (claude コマンド) がインストールされていません。
+claude.not_there: "%{name} は Claude Desktop にありませんでした。"
+claude.note: Claude Desktop の他のサーバーと設定は保たれ、元のファイルは初回に .bak へコピーされます。エントリやコマンドを自分でコピーすることもできます。
+claude.remove_desktop: 削除
+claude.removed: "%{name} を Claude Desktop から削除しました。"
+claude.title: Claude に接続
 collection.choose_folder: フォルダーを選択…
 collection.create: 作成
 collection.create_collection: コレクションを作成
@@ -429,6 +442,7 @@ menu.collection_auth: コレクションの認証…
 menu.collection_settings: コレクションのリクエスト設定…
 menu.command_palette: コマンドパレット…
 menu.compare: レスポンスを比較…
+menu.connect_claude: Claude に接続 (MCP)…
 menu.cookies: Cookie…
 menu.copy_as: 形式を指定してコピー
 menu.documentation: ドキュメント
@@ -471,6 +485,7 @@ menu.runner: "Runner…"
 menu.save: 保存
 menu.send: 送信
 menu.settings: 設定…
+menu.setup: セットアップ…
 menu.source_code: ソースコード
 menu.variables: 変数と環境…
 menu.view: 表示
@@ -777,14 +792,21 @@ settings.accent_red: "レッド"
 settings.accent_theme: "テーマの色"
 settings.accent_yellow: "イエロー"
 settings.ai: AI アシスト
-settings.ai_description: レスポンスの横に、Claude にテストを書かせたり失敗を説明させたりするボタンを出します。ご自身の Anthropic API キーを使います。リクエストとレスポンスは認証ヘッダーを伏せて Anthropic に送られます。既定ではオフ。
-settings.ai_key: Anthropic API キー
-settings.ai_key_description: ファイルではなくシステムのキーチェーンに保存します。空で保存すると削除されます。保存されていなければ ANTHROPIC_API_KEY を使います。
+settings.ai_description: レスポンスの横に、AI にテストを書かせたり失敗を説明させたりするボタンを出します。ご自身の API キーを使います。リクエストとレスポンスは認証ヘッダーを伏せて選んだ提供元に送られます。既定ではオフ。
+settings.ai_key: API キー
+settings.ai_key_description: 上の提供元用。ファイルではなくシステムのキーチェーンに保存します。空で保存すると削除。console.anthropic.com、platform.openai.com、aistudio.google.com で取得できます。
 settings.ai_key_kept: キーは保存済み
-settings.ai_key_placeholder: sk-ant-…
+settings.ai_key_placeholder: キーを貼り付け
 settings.ai_key_removed: API キーを削除しました。
 settings.ai_key_save: 保存
 settings.ai_key_saved: API キーをキーチェーンに保存しました。
+settings.ai_model: モデル
+settings.ai_model_default: "既定 (%{model})"
+settings.ai_model_description: 提供元の既定のモデル、またはキーで使えるモデルの一つ (一覧を読み込む)。
+settings.ai_models_load: 一覧を読み込む
+settings.ai_models_loaded: "%{count} 個のモデル"
+settings.ai_provider: AI の提供元
+settings.ai_provider_description: "誰が答えるか: Claude (Anthropic)、ChatGPT (OpenAI)、Gemini (Google)。それぞれ専用のキーがあります。"
 settings.appearance: "外観モード"
 settings.appearance_dark: "ダーク"
 settings.appearance_description: "ダーク、ライト、またはシステムのライト/ダーク設定に従います。"
@@ -834,6 +856,23 @@ settings.title: 設定
 settings.transparency: "透明度"
 settings.transparency_description: "ウィンドウ越しにデスクトップがすりガラスのようにぼやけて見える度合い。0 は不透明です。"
 settings.transparency_value: "%{value}%"
+setup.ai_about: レスポンス用のテスト作成と失敗の説明を、ご自身の API キーで Claude、ChatGPT、Gemini が行います。Apix はオープンソースで、独自の AI アカウントはありません。
+setup.ai_off: オフ。
+setup.ai_on: "オン (%{provider})。"
+setup.ai_open: 設定を開く
+setup.ai_title: AI アシスト
+setup.claude_about: Claude Desktop や Claude Code が、コレクションのリクエストを一覧・送信し、テスト付きで実行できるようにします。秘密は見せません。
+setup.claude_for: "開いているコレクション: %{collection}"
+setup.claude_no_collection: 先にコレクションを開いてください。
+setup.claude_title: Claude (MCP)
+setup.geo_about: サーバーまでの経路上の各ルーターの場所を、経路マップ (ネットワーク › 経路を追跡) と apix trace に表示します。DB-IP の無料データベース、約 130 MB、CC BY 4.0、このコンピューターに保存し、オンライン照会はしません。
+setup.geo_installed: "インストール済み: %{file}"
+setup.geo_missing: "未インストール: 経路の一覧は使えますが、地図に場所は出ません。"
+setup.geo_title: IP 位置データベース
+setup.geo_update: 更新
+setup.intro: Apix はこのままで使えます。以下の追加機能は任意で、どれもワンクリック、後から変更や削除ができます。
+setup.later: ヘルプ › セットアップ… で再び開けます。
+setup.title: Apix のセットアップ
 sidebar.auth: 認証…
 sidebar.change_password: パスワードを変更…
 sidebar.color: 色

@@ -1,12 +1,12 @@
 _version: 1
-ai.asking: Claude'a soruluyor…
+ai.asking: "%{provider}'a soruluyor…"
 ai.explain_short: Açıkla
 ai.explain_title: Bu neden başarısız oldu?
-ai.no_key: Anthropic API anahtarınızı Ayarlar › AI yardımcısı'na ekleyin.
-ai.note: İstek ve yanıttan Claude yazdı; kimlik bilgisi başlıkları gizlendi. Yanılıyor olabilir.
+ai.no_key: Ayarlar › AI yardımcısı'nda AI sağlayıcısı için bir API anahtarı ekleyin.
+ai.note: "İstek ve yanıttan %{provider} yazdı; kimlik bilgisi başlıkları gizlendi. Yanılıyor olabilir."
 ai.tests_added: "Testler Tests betiğine eklendi: gözden geçirip kaydedin."
 ai.tests_short: AI testleri
-ai.tests_tooltip: Claude'dan bu yanıta uyan testler isteyin; Tests betiğine eklenir.
+ai.tests_tooltip: Yapay zekâdan bu yanıta uyan testler isteyin; Tests betiğine eklenir.
 app.error_with_cause: "%{error}: %{cause}"
 app.status.collections: "%{count} koleksiyon"
 app.status.env: "ortam: %{name}"
@@ -165,6 +165,19 @@ chips.scope.project: “%{name}” projesi
 chips.scope.script: Bir script atadı
 chips.secret_scope: "%{scope} · gizli, yalnızca bu bilgisayarda"
 chips.set_for_run: Bu çalıştırma için ayarla
+claude.about: "“%{collection}” koleksiyonunu Claude'a %{name} MCP sunucusu olarak ekler: Claude onun için apix mcp'yi başlatır, sonra isteklerini listeleyebilir, gönderebilir ve testleriyle çalıştırabilir. Değişken değerleri ona asla gösterilmez."
+claude.add_code: Claude Code'a ekle
+claude.add_desktop: Claude Desktop'a ekle
+claude.added_code: "%{name}, Claude Code'a bütün projeler için eklendi."
+claude.added_desktop: "%{name}, %{file} dosyasına eklendi. Kullanmak için Claude Desktop'ı yeniden başlatın."
+claude.copy: Kopyala
+claude.list_only: Yalnızca listeleme (Claude istek gönderemez)
+claude.no_claude_code: Claude Code (claude komutu) kurulu değil.
+claude.not_there: "%{name} Claude Desktop'ta yoktu."
+claude.note: Claude Desktop'ın diğer sunucuları ve ayarları korunur; dosyanın ilk hâli ilk seferde .bak olarak kopyalanır. Ya da girdiyi veya komutu kendiniz kopyalayın.
+claude.remove_desktop: Kaldır
+claude.removed: "%{name}, Claude Desktop'tan kaldırıldı."
+claude.title: Claude'a bağla
 collection.choose_folder: Klasör seç…
 collection.create: Oluştur
 collection.create_collection: Koleksiyon oluştur
@@ -429,6 +442,7 @@ menu.collection_auth: Koleksiyon yetkilendirmesi…
 menu.collection_settings: Koleksiyon istek ayarları…
 menu.command_palette: Komut paleti…
 menu.compare: Yanıtları karşılaştır…
+menu.connect_claude: Claude'a bağla (MCP)…
 menu.cookies: Çerezler…
 menu.copy_as: Komut veya kod olarak kopyala
 menu.documentation: Belgeler
@@ -471,6 +485,7 @@ menu.runner: "Runner…"
 menu.save: Kaydet
 menu.send: Gönder
 menu.settings: Ayarlar…
+menu.setup: Kurulum…
 menu.source_code: Kaynak kod
 menu.variables: Değişkenler ve ortamlar…
 menu.view: Görünüm
@@ -777,14 +792,21 @@ settings.accent_red: "Kırmızı"
 settings.accent_theme: "Temanın kendi rengi"
 settings.accent_yellow: "Sarı"
 settings.ai: AI yardımcısı
-settings.ai_description: Yanıtın yanında, Claude'dan onun için test yazmasını ya da bir hatayı açıklamasını isteyen düğmeler; kendi Anthropic API anahtarınızla. İstek ve yanıt, kimlik bilgisi başlıkları gizlenerek Anthropic'e gönderilir. Varsayılan olarak kapalı.
-settings.ai_key: Anthropic API anahtarı
-settings.ai_key_description: Dosyada değil, sistem anahtarlığında tutulur. Silmek için alanı boş kaydedin. Kayıtlı anahtar yoksa ANTHROPIC_API_KEY kullanılır.
+settings.ai_description: Yanıtın yanında, bir yapay zekâdan onun için test yazmasını ya da bir hatayı açıklamasını isteyen düğmeler; kendi API anahtarınızla. İstek ve yanıt, kimlik bilgisi başlıkları gizlenerek seçtiğiniz sağlayıcıya gönderilir. Varsayılan olarak kapalı.
+settings.ai_key: API anahtarı
+settings.ai_key_description: Yukarıdaki sağlayıcı için; dosyada değil sistem anahtarlığında tutulur. Silmek için alanı boş kaydedin. console.anthropic.com, platform.openai.com ya da aistudio.google.com'dan alınır.
 settings.ai_key_kept: bir anahtar kayıtlı
-settings.ai_key_placeholder: sk-ant-…
+settings.ai_key_placeholder: anahtarı yapıştırın
 settings.ai_key_removed: API anahtarı silindi.
 settings.ai_key_save: Kaydet
 settings.ai_key_saved: API anahtarı anahtarlıkta.
+settings.ai_model: Model
+settings.ai_model_default: "varsayılan (%{model})"
+settings.ai_model_description: Sağlayıcının varsayılanı ya da anahtarınızın kullanabildiği modellerden biri (Listeyi yükle).
+settings.ai_models_load: Listeyi yükle
+settings.ai_models_loaded: "%{count} model"
+settings.ai_provider: AI sağlayıcısı
+settings.ai_provider_description: "Kim yanıtlasın: Claude (Anthropic), ChatGPT (OpenAI) ya da Gemini (Google). Her birinin kendi anahtarı var."
 settings.appearance: "Görünüm"
 settings.appearance_dark: "Koyu"
 settings.appearance_description: "Koyu, açık ya da sistemin açık/koyu ayarını izle."
@@ -834,6 +856,23 @@ settings.title: Ayarlar
 settings.transparency: "Saydamlık"
 settings.transparency_description: "Masaüstünün pencereden ne kadar, buzlu cam gibi bulanık görüneceği. 0 düz renktir."
 settings.transparency_value: "%%{value}"
+setup.ai_about: Bir yanıt için yazılan testler ve açıklanan hatalar; kendi API anahtarınızla Claude, ChatGPT ya da Gemini. Apix açık kaynaktır ve kendine ait bir AI hesabı yoktur.
+setup.ai_off: Kapalı.
+setup.ai_on: "Açık, %{provider} ile."
+setup.ai_open: Ayarları aç
+setup.ai_title: AI yardımcısı
+setup.claude_about: Claude Desktop ya da Claude Code'un bir koleksiyonun isteklerini listelemesini, göndermesini ve testleriyle çalıştırmasını sağlar; gizli değerleri görmeden.
+setup.claude_for: "Açık koleksiyon için: %{collection}"
+setup.claude_no_collection: Önce bir koleksiyon açın.
+setup.claude_title: Claude (MCP)
+setup.geo_about: Bir sunucuya giden yoldaki her yönlendiricinin nerede olduğunu rota haritasında (Ağ sekmesi › Rotayı izle) ve apix trace'te gösterir. DB-IP'nin ücretsiz veritabanı; yaklaşık 130 MB, CC BY 4.0, bu bilgisayarda tutulur, çevrimiçi hiçbir sorgu yapılmaz.
+setup.geo_installed: "Kurulu: %{file}"
+setup.geo_missing: "Kurulu değil: rota listesi çalışır, haritada yer görünmez."
+setup.geo_title: IP konum veritabanı
+setup.geo_update: Güncelle
+setup.intro: Apix olduğu gibi çalışır. Bu ekler isteğe bağlıdır; her biri tek tıklamadır ve sonradan değiştirilebilir ya da kaldırılabilir.
+setup.later: Yardım › Kurulum… bunu yeniden açar.
+setup.title: Apix kurulumu
 sidebar.auth: Yetkilendirme…
 sidebar.change_password: Parolayı değiştir…
 sidebar.color: Renk

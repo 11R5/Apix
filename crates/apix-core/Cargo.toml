@@ -12,6 +12,8 @@ serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
 toml.workspace = true
+# Where Claude Desktop keeps its configuration.
+dirs = "6"
 # Reads SOAP faults in responses.
 roxmltree = "0.21"
 # Filtering JSON responses: JSONPath (RFC 9535) and jq.

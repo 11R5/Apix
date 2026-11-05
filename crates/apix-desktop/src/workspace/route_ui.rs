@@ -4,6 +4,7 @@
 //! is optional; the window offers to download DB-IP's free one.
 
 use std::net::IpAddr;
+use std::path::PathBuf;
 use std::sync::{Arc, Mutex, OnceLock};
 use std::time::Duration;
 
@@ -43,6 +44,53 @@ fn load_geo() -> Result<Option<Arc<Geo>>, String> {
             Ok(Some(geo))
         }
     }
+}
+
+/// Downloads DB-IP's free city database into `<config>/Apix/geo` (this
+/// month's, or last month's in its first days) and makes it the one in use.
+pub(super) async fn download_geo() -> Result<PathBuf, String> {
+    let dir = apix_route::geo_dir().ok_or("no configuration folder")?;
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or_default();
+    let urls = apix_route::dbip_urls(now);
+    let result = net::spawn(async move {
+        let mut result = Err(String::new());
+        for url in urls {
+            let name = url
+                .rsplit('/')
+                .next()
+                .unwrap_or("dbip.mmdb.gz")
+                .trim_end_matches(".gz")
+                .to_owned();
+            let mut request = apix_core::Request::new(apix_core::Method::Get, url.clone());
+            request.settings.timeout_ms = Some(1_800_000);
+            result = match net::client().send(&request).await {
+                Ok(r) if r.is_success() => {
+                    let dir = dir.clone();
+                    tokio::task::spawn_blocking(move || apix_route::install(&r.body, &dir, &name))
+                        .await
+                        .map_err(|e| e.to_string())
+                        .and_then(|r| r)
+                }
+                Ok(r) => Err(format!("{url}: HTTP {}", r.status)),
+                Err(e) => Err(format!("{url}: {e}")),
+            };
+            if result.is_ok() {
+                break;
+            }
+        }
+        result
+    })
+    .await
+    .and_then(|r| r);
+    if result.is_ok()
+        && let Ok(mut cache) = geo_cache().lock()
+    {
+        *cache = None;
+    }
+    result
 }
 
 #[derive(Clone)]
@@ -227,44 +275,11 @@ impl RouteView {
     }
 
     fn download(&mut self, window: &mut Window, cx: &mut Context<Self>) {
-        let Some(dir) = apix_route::geo_dir() else {
-            return;
-        };
         self.geo = GeoState::Downloading;
-        let now = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .map(|d| d.as_secs())
-            .unwrap_or_default();
-        let urls = apix_route::dbip_urls(now);
         self._geo_task = Some(cx.spawn_in(window, async move |this, cx| {
-            let mut result = Err(String::new());
-            for url in urls {
-                let name = url
-                    .rsplit('/')
-                    .next()
-                    .unwrap_or("dbip.mmdb.gz")
-                    .trim_end_matches(".gz")
-                    .to_owned();
-                let mut request = apix_core::Request::new(apix_core::Method::Get, url.clone());
-                request.settings.timeout_ms = Some(600_000);
-                result = match net::send(request).await {
-                    Ok(r) if r.is_success() => {
-                        let (body, dir) = (r.body.clone(), dir.clone());
-                        cx.background_spawn(async move { apix_route::install(&body, &dir, &name) })
-                            .await
-                    }
-                    Ok(r) => Err(format!("{url}: HTTP {}", r.status)),
-                    Err(e) => Err(format!("{url}: {e}")),
-                };
-                if result.is_ok() {
-                    break;
-                }
-            }
+            let result = download_geo().await;
             this.update_in(cx, |this, window, cx| match result {
                 Ok(path) => {
-                    if let Ok(mut cache) = geo_cache().lock() {
-                        *cache = None;
-                    }
                     window.push_notification(
                         gpui_kit::component::notification::Notification::success(tr!(
                             "route.downloaded",

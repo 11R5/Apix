@@ -30,6 +30,16 @@ struct Cli {
 }
 
 #[derive(Subcommand)]
+enum GeoAction {
+    /// Download DB-IP's free city database (about 130 MB, CC BY 4.0) into <config>/Apix/geo
+    Download,
+    /// Show the database in use
+    Status,
+    /// Remove the downloaded database
+    Remove,
+}
+
+#[derive(Subcommand)]
 enum Command {
     /// Send a single request file and print the response
     Send {
@@ -164,6 +174,19 @@ enum Command {
         /// Offer only the listing tools: nothing is sent
         #[arg(long)]
         list_only: bool,
+        /// Instead of serving, add this collection to Claude: `claude-desktop`
+        /// (its configuration file) or `claude-code` (`claude mcp add`)
+        #[arg(long, value_name = "APP")]
+        add_to: Option<String>,
+        /// Instead of serving, remove this collection from Claude Desktop
+        #[arg(long)]
+        remove_from_claude_desktop: bool,
+    },
+    /// The IP location database for `apix trace` and the route map: download
+    /// DB-IP's free one, show which one is in use, or remove it
+    Geo {
+        #[command(subcommand)]
+        action: GeoAction,
     },
     /// Send a request in two environments and compare the answers: status,
     /// headers and the body field by field (exit 1 when they differ)
@@ -1178,9 +1201,140 @@ async fn run(cli: Cli) -> Result<bool> {
             .await?;
             Ok(true)
         }
-        Command::Mcp { dir, list_only } => {
+        Command::Mcp {
+            dir,
+            list_only,
+            add_to,
+            remove_from_claude_desktop,
+        } => {
+            use apix_core::claude_mcp;
+            if add_to.is_some() || remove_from_claude_desktop {
+                let root = Collection::find_root(&dir).with_context(|| {
+                    format!("no apix.toml found in {} or its parents", dir.display())
+                })?;
+                let root = std::path::absolute(&root).unwrap_or(root);
+                let name = claude_mcp::server_name(&Collection::open(&root)?.meta.name);
+                let command = claude_mcp::apix_command();
+                let args = claude_mcp::server_args(&root, list_only);
+                let config =
+                    claude_mcp::desktop_config_path().context("no configuration folder")?;
+                if remove_from_claude_desktop {
+                    if claude_mcp::remove_from_desktop(&config, &name)
+                        .map_err(anyhow::Error::msg)?
+                    {
+                        println!("Removed {name} from {}", config.display());
+                    } else {
+                        println!("{name} was not in {}", config.display());
+                    }
+                    return Ok(true);
+                }
+                match add_to.as_deref() {
+                    Some("claude-desktop") => {
+                        let added = claude_mcp::add_to_desktop(&config, &name, &command, &args)
+                            .map_err(anyhow::Error::msg)?;
+                        let verb = if added == claude_mcp::Added::New {
+                            "Added"
+                        } else {
+                            "Updated"
+                        };
+                        println!("{verb} {name} in {}", config.display());
+                        println!(
+                            "{}Restart Claude Desktop to see it.{}",
+                            style.dim, style.reset
+                        );
+                    }
+                    Some("claude-code") => {
+                        let words = claude_mcp::claude_code_command(&name, &command, &args);
+                        println!("{}", claude_mcp::shell_line(&words));
+                        let status = std::process::Command::new(&words[0])
+                            .args(&words[1..])
+                            .status()
+                            .context("could not run `claude` (is Claude Code installed?)")?;
+                        if !status.success() {
+                            bail!("`claude mcp add` failed");
+                        }
+                    }
+                    Some(other) => bail!("--add-to: claude-desktop or claude-code, not {other}"),
+                    None => {}
+                }
+                return Ok(true);
+            }
             unlock_around(&dir, &var)?;
             mcp::Server::new(&dir, list_only)?.serve().await?;
+            Ok(true)
+        }
+        Command::Geo { action } => {
+            let dir = apix_route::geo_dir().context("no configuration folder")?;
+            match action {
+                GeoAction::Status => match apix_route::default_geo() {
+                    Some(Ok(geo)) => println!("{}", geo.path.display()),
+                    Some(Err(e)) => bail!(e),
+                    None => println!("No IP location database in {}", dir.display()),
+                },
+                GeoAction::Remove => {
+                    let mut removed = 0;
+                    for entry in std::fs::read_dir(&dir).into_iter().flatten().flatten() {
+                        let path = entry.path();
+                        if path
+                            .extension()
+                            .is_some_and(|e| e.eq_ignore_ascii_case("mmdb"))
+                        {
+                            std::fs::remove_file(&path)?;
+                            println!("Removed {}", path.display());
+                            removed += 1;
+                        }
+                    }
+                    if removed == 0 {
+                        println!("No IP location database in {}", dir.display());
+                    }
+                }
+                GeoAction::Download => {
+                    let now = std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .map(|d| d.as_secs())
+                        .unwrap_or_default();
+                    let mut done = None;
+                    for url in apix_route::dbip_urls(now) {
+                        println!("Downloading {url}");
+                        let mut request =
+                            apix_core::Request::new(apix_core::Method::Get, url.clone());
+                        request.settings.timeout_ms = Some(1_800_000);
+                        let mut received = 0usize;
+                        let mut shown = 0usize;
+                        let response = client
+                            .send_with(&request, |progress| {
+                                if let apix_http::Progress::Chunk(bytes) = progress {
+                                    received += bytes.len();
+                                    if received - shown >= 4 << 20 {
+                                        shown = received;
+                                        eprint!("\r  {} MB", received >> 20);
+                                    }
+                                }
+                            })
+                            .await;
+                        eprint!("\r{}\r", " ".repeat(20));
+                        match response {
+                            Ok(r) if r.is_success() => {
+                                let name = url
+                                    .rsplit('/')
+                                    .next()
+                                    .unwrap_or("dbip.mmdb.gz")
+                                    .trim_end_matches(".gz")
+                                    .to_owned();
+                                let path = apix_route::install(&r.body, &dir, &name)
+                                    .map_err(anyhow::Error::msg)?;
+                                done = Some(path);
+                                break;
+                            }
+                            Ok(r) => println!("{}  HTTP {}{}", style.dim, r.status, style.reset),
+                            Err(e) => println!("{}  {e}{}", style.dim, style.reset),
+                        }
+                    }
+                    let path = done.context("could not download the database")?;
+                    println!("Saved {}", path.display());
+                    println!("{}{}{}", style.dim, apix_route::DBIP_CREDIT, style.reset);
+                }
+            }
             Ok(true)
         }
         Command::Compare {

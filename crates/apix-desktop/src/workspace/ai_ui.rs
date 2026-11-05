@@ -56,11 +56,13 @@ impl Workspace {
             self.notify_error(tr!("compare.send_first"), window, cx);
             return None;
         };
-        let Some(key) = ai::load_key() else {
+        let provider = ai::Provider::from_id(&self.settings.ai_provider);
+        let Some(key) = ai::load_key(provider) else {
             self.notify_error(tr!("ai.no_key"), window, cx);
             return None;
         };
         Some(ai::request(
+            provider,
             task,
             &context,
             &key,
@@ -70,20 +72,27 @@ impl Workspace {
     }
 
     pub(super) fn ai_write_tests(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let provider = ai::Provider::from_id(&self.settings.ai_provider);
         let Some(request) = self.ai_request(Task::WriteTests, window, cx) else {
             return;
         };
-        window.push_notification(Notification::info(tr!("ai.asking")), cx);
+        window.push_notification(
+            Notification::info(tr!("ai.asking", provider = provider.name())),
+            cx,
+        );
         let sent = net::send(request);
         cx.spawn_in(window, async move |this, cx| {
-            let result = sent.await.and_then(|r| ai::answer(r.status, &r.body));
+            let result = sent
+                .await
+                .and_then(|r| ai::answer(provider, r.status, &r.body));
             this.update_in(cx, |this, window, cx| match result {
                 Ok(text) => {
                     let script = ai::script(&text);
                     this.script_editor.update(cx, |editor, cx| {
                         editor.append_test(
                             &format!(
-                                "// Written by Claude; check it before you keep it.\n{script}"
+                                "// Written by {}; check it before you keep it.\n{script}",
+                                provider.name()
                             ),
                             window,
                             cx,
@@ -100,14 +109,20 @@ impl Workspace {
     }
 
     pub(super) fn ai_explain(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let provider = ai::Provider::from_id(&self.settings.ai_provider);
         let Some(request) = self.ai_request(Task::Explain, window, cx) else {
             return;
         };
-        let view = cx.new(|_| ExplainView { answer: None });
+        let view = cx.new(|_| ExplainView {
+            answer: None,
+            provider,
+        });
         let sent = net::send(request);
         let shown = view.clone();
         cx.spawn(async move |_, cx| {
-            let result = sent.await.and_then(|r| ai::answer(r.status, &r.body));
+            let result = sent
+                .await
+                .and_then(|r| ai::answer(provider, r.status, &r.body));
             shown.update(cx, |view, cx| {
                 view.answer = Some(result);
                 cx.notify();
@@ -127,6 +142,7 @@ impl Workspace {
 
 struct ExplainView {
     answer: Option<Result<String, String>>,
+    provider: ai::Provider,
 }
 
 impl Render for ExplainView {
@@ -136,7 +152,7 @@ impl Render for ExplainView {
             None => div()
                 .text_sm()
                 .text_color(p.text_muted)
-                .child(tr!("ai.asking"))
+                .child(tr!("ai.asking", provider = self.provider.name()))
                 .into_any_element(),
             Some(Err(e)) => div()
                 .text_sm()
@@ -164,7 +180,7 @@ impl Render for ExplainView {
                 div()
                     .text_xs()
                     .text_color(p.text_muted)
-                    .child(tr!("ai.note")),
+                    .child(tr!("ai.note", provider = self.provider.name())),
             )
     }
 }

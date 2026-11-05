@@ -31,6 +31,7 @@ mod script_editor;
 mod script_run;
 mod settings_editor;
 mod settings_ui;
+mod setup_ui;
 mod shell_copy;
 mod sidebar_search;
 mod socket_ui;
@@ -96,6 +97,8 @@ actions!(
         OpenRoute,
         OpenLoadTest,
         CompareResponses,
+        OpenSetup,
+        ConnectClaude,
         CloseTab,
         NextTab,
         PrevTab,
@@ -721,6 +724,7 @@ impl Workspace {
         if this.settings.check_updates && crate::bench::mode().is_none() {
             this.check_updates(false, window, cx);
         }
+        this.setup_on_first_start(window, cx);
         match crate::bench::mode() {
             Some(crate::bench::Bench::Startup) => window.on_next_frame(|_, cx| {
                 crate::bench::report("startup_first_frame_ms", crate::bench::since_start_ms());
@@ -2264,6 +2268,10 @@ impl Render for Workspace {
             .on_action(
                 cx.listener(|this, _: &CompareResponses, window, cx| this.open_compare(window, cx)),
             )
+            .on_action(cx.listener(|this, _: &OpenSetup, window, cx| this.open_setup(window, cx)))
+            .on_action(cx.listener(|this, _: &ConnectClaude, window, cx| {
+                this.open_connect_claude(window, cx)
+            }))
             .on_action(cx.listener(|this, _: &CheckForUpdates, window, cx| {
                 this.check_updates(true, window, cx)
             }))

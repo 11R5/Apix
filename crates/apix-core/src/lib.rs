@@ -3,6 +3,7 @@
 //! frontend (desktop, CLI, future TUI) shares exactly the same behaviour.
 
 pub mod ai;
+pub mod claude_mcp;
 pub mod compare;
 pub mod diff;
 pub mod dynamic;

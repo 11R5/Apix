@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:18127ecded0cd331 -->
+<!-- translated from en/architecture.md sha256:5404c3e8eb3d2d9f -->
 
 # Apix mimarisi
 
@@ -736,21 +736,26 @@ yine çalışır. Her işlem arka planda koşar ve durum çubuğunu yeniler.
 
 ## AI yardımcısı
 
-`apix_core::ai` bir Messages API isteğini elle kurar (Rust için resmî
-Anthropic SDK'sı yok): `POST https://api.anthropic.com/v1/messages`,
-`x-api-key`, `anthropic-version: 2026-10-21`, model `claude-opus-5-5`
-(uyarlanabilir düşünme onun varsayılanı), `max_tokens` 16000, Apix'in betik
-ortamını anlatan kısa bir sistem istemi ve alışverişi (`Context::describe`,
-kimlik bilgisi başlıkları gizli, gövdeler 12 KB'ta kesik), görevin
-talimatını ve uygulamanın dil kodunu taşıyan tek bir kullanıcı mesajı.
-Varsayılan modelde sunucu tarafı yedekleri de ister (`fallbacks: "default"`,
-beta `server-side-fallback-2026-07-01`). `answer` metin bloklarını okur,
-hata nesnelerini ve `refusal` durdurma nedenini iletiye çevirir; `script`
-ilk kod bloğunu alır. `APIX_AI_URL` testler için isteği başka yere yöneltir.
-Anahtar anahtarlıkta durur (`apix_vault::keychain::save_text`, hesap
-`ai:anthropic-api-key`). Uygulama (`workspace/ai_ui.rs`) `net::send` ile
-gönderir, testleri `ScriptEditor::append_test` ile ekler, açıklamaları bir
-pencerede gösterir.
+`apix_core::ai` üç sağlayıcıdan biri için isteği elle kurar (Rust için resmî
+SDK'ları yok) ve yanıtı okur. `Provider` (`anthropic`, `openai`, `google`)
+varsayılan modeli, anahtarın anahtarlık hesabını (`ai:<sağlayıcı>-api-key`,
+`apix_vault::keychain::save_text` ile), ortam değişkenini ve adresi verir.
+Anthropic: `x-api-key`, `anthropic-version: 2026-10-21` ile `POST
+/v1/messages`, `claude-opus-5-5` ve varsayılan modelde sunucu tarafı
+yedekleri (`fallbacks: "default"`, beta `server-side-fallback-2026-07-01`);
+`refusal` durdurma nedeni iletiye çevrilir. OpenAI: bearer anahtarla, bir
+sistem ve bir kullanıcı mesajıyla `POST /v1/chat/completions`; `refusal`
+alanı ret sayılır. Google: `x-goog-api-key`, `systemInstruction` ve
+`contents` ile `POST /v1beta/models/{model}:generateContent`; `SAFETY`
+bitişleri ve engellenen istemler ret sayılır, düşünce parçaları atlanır. Her
+istem alışverişi (`Context::describe`: kimlik bilgisi başlıkları gizli,
+gövdeler 12 KB'ta kesik), görevi ve uygulamanın dil kodunu taşır.
+`models_request` / `models` bir anahtarın kullanabildiklerini listeler
+(OpenAI'da yalnızca sohbet modelleri, Google'da `generateContent`
+destekleyenler). `APIX_AI_URL` testler için temel adresin yerine geçer.
+Uygulama (`workspace/ai_ui.rs`) `net::send` ile gönderir, testleri
+`ScriptEditor::append_test` ile ekler, açıklamaları bir pencerede gösterir;
+Ayarlar `ai_provider` ve `ai_model`'i tutar.
 
 ## MCP sunucusu
 
@@ -769,6 +774,21 @@ ajan nedenini okuyabilir. Ajanın verdiği yollar koleksiyon köküne eklenir,
 `VarArgs::resolve`'dan gelir, ajanın `variables`'ı `--var` gibi davranır.
 CLI 16 MB'lık bir iş parçacığında çalışır; komutların ortak future'ı
 Windows'ta ana iş parçacığının yığınını aşmıştı.
+
+## Kurulum ve Claude
+
+`workspace/setup_ui.rs` Kurulum'u bir kez (`settings.setup_shown`) ve
+Yardım'dan açar. Veritabanı düğmesi `route_ui::download_geo`'yu çalıştırır
+(bu ayın DB-IP dosyası, yoksa geçen ayınki; uygulamanın istemcisiyle,
+arayüz iş parçacığı dışında açılır); `apix geo download|status|remove`
+terminalde aynısını yapar ve bir yükleyicinin isteğe bağlı adımı da onu
+çağıracak. `apix_core::claude_mcp` Claude Desktop'ın yapılandırmasını bulur
+(`%APPDATA%\Claude`, `~/Library/Application Support/Claude`,
+`~/.config/Claude`; testler için `APIX_CLAUDE_CONFIG`), sunucuyu
+`apix-<koleksiyon>` diye adlandırır, onu çalışan programın yanındaki (ya da
+PATH'teki) `apix`'e `mcp <klasör> [--list-only]` ile yöneltir ve geri kalan
+her şeyi koruyarak `mcpServers`'a ekler (özgün dosya bir kez `.bak`'a
+kopyalanır); `claude_code_command` `claude mcp add --scope user`'dır.
 
 ## Yanıtları karşılaştırma
 

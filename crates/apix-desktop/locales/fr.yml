@@ -1,12 +1,12 @@
 _version: 1
-ai.asking: Claude réfléchit…
+ai.asking: "%{provider} réfléchit…"
 ai.explain_short: Expliquer
 ai.explain_title: Pourquoi cet échec ?
-ai.no_key: Ajoutez votre clé d’API Anthropic dans Paramètres › Assistant IA.
-ai.note: Écrit par Claude à partir de la requête et de la réponse ; les en-têtes d’identifiants ont été masqués. Peut se tromper.
+ai.no_key: Ajoutez une clé d’API pour le fournisseur dans Paramètres › Assistant IA.
+ai.note: "Écrit par %{provider} à partir de la requête et de la réponse ; les en-têtes d’identifiants ont été masqués. Peut se tromper."
 ai.tests_added: "Tests ajoutés au script Tests : vérifiez-les, puis enregistrez."
 ai.tests_short: Tests IA
-ai.tests_tooltip: Demander à Claude des tests adaptés à cette réponse ; ils sont ajoutés au script Tests.
+ai.tests_tooltip: Demander à l’IA des tests adaptés à cette réponse ; ils sont ajoutés au script Tests.
 app.error_with_cause: "%{error} : %{cause}"
 app.status.collections: "%{count} collections"
 app.status.env: "env. : %{name}"
@@ -165,6 +165,19 @@ chips.scope.project: Projet « %{name} »
 chips.scope.script: Défini par un script
 chips.secret_scope: "%{scope} · secrète, uniquement sur cet ordinateur"
 chips.set_for_run: Définir pour cette exécution
+claude.about: "Ajoute « %{collection} » à Claude comme serveur MCP %{name} : Claude lance apix mcp pour elle et peut ensuite lister, envoyer et exécuter ses requêtes avec leurs tests. Les valeurs des variables ne lui sont jamais montrées."
+claude.add_code: Ajouter à Claude Code
+claude.add_desktop: Ajouter à Claude Desktop
+claude.added_code: "%{name} ajouté à Claude Code pour tous les projets."
+claude.added_desktop: "%{name} ajouté à %{file}. Redémarrez Claude Desktop pour l’utiliser."
+claude.copy: Copier
+claude.list_only: Liste seulement (Claude ne peut pas envoyer de requêtes)
+claude.no_claude_code: Claude Code (la commande claude) n’est pas installé.
+claude.not_there: "%{name} n’était pas dans Claude Desktop."
+claude.note: Les autres serveurs et réglages de Claude Desktop sont conservés ; le fichier d’origine est copié en .bak la première fois. Ou copiez vous-même l’entrée ou la commande.
+claude.remove_desktop: Retirer
+claude.removed: "%{name} retiré de Claude Desktop."
+claude.title: Connecter à Claude
 collection.choose_folder: Choisir un dossier…
 collection.create: Créer
 collection.create_collection: Créer la collection
@@ -429,6 +442,7 @@ menu.collection_auth: Authentification de la collection…
 menu.collection_settings: Réglages de requête de la collection…
 menu.command_palette: Palette de commandes…
 menu.compare: Comparer les réponses…
+menu.connect_claude: Connecter à Claude (MCP)…
 menu.cookies: Cookies…
 menu.copy_as: Copier en
 menu.documentation: Documentation
@@ -471,6 +485,7 @@ menu.runner: "Runner…"
 menu.save: Enregistrer
 menu.send: Envoyer
 menu.settings: Paramètres…
+menu.setup: Configuration…
 menu.source_code: Code source
 menu.variables: Variables et environnements…
 menu.view: Affichage
@@ -777,14 +792,21 @@ settings.accent_red: "Rouge"
 settings.accent_theme: "Celle du thème"
 settings.accent_yellow: "Jaune"
 settings.ai: Assistant IA
-settings.ai_description: Des boutons à côté de la réponse pour demander à Claude d’écrire des tests ou d’expliquer un échec, avec votre propre clé d’API Anthropic. La requête et la réponse sont envoyées à Anthropic, en-têtes d’identifiants masqués. Désactivé par défaut.
-settings.ai_key: Clé d’API Anthropic
-settings.ai_key_description: Gardée dans le trousseau du système, jamais dans un fichier. Enregistrez le champ vide pour la retirer. Sans clé enregistrée, ANTHROPIC_API_KEY est utilisée.
+settings.ai_description: Des boutons à côté de la réponse pour demander à une IA d’écrire des tests ou d’expliquer un échec, avec votre propre clé d’API. La requête et la réponse sont envoyées au fournisseur choisi, en-têtes d’identifiants masqués. Désactivé par défaut.
+settings.ai_key: Clé d’API
+settings.ai_key_description: Pour le fournisseur ci-dessus, gardée dans le trousseau du système, jamais dans un fichier. Enregistrez le champ vide pour la retirer. À obtenir sur console.anthropic.com, platform.openai.com ou aistudio.google.com.
 settings.ai_key_kept: une clé est enregistrée
-settings.ai_key_placeholder: sk-ant-…
+settings.ai_key_placeholder: collez une clé
 settings.ai_key_removed: La clé d’API a été retirée.
 settings.ai_key_save: Enregistrer
 settings.ai_key_saved: La clé d’API est dans le trousseau.
+settings.ai_model: Modèle
+settings.ai_model_default: "par défaut (%{model})"
+settings.ai_model_description: Le modèle par défaut du fournisseur ou l’un de ceux que votre clé peut utiliser (Charger la liste).
+settings.ai_models_load: Charger la liste
+settings.ai_models_loaded: "%{count} modèles"
+settings.ai_provider: Fournisseur d’IA
+settings.ai_provider_description: "Qui répond : Claude (Anthropic), ChatGPT (OpenAI) ou Gemini (Google). Chacun a sa propre clé."
 settings.appearance: "Apparence"
 settings.appearance_dark: "Sombre"
 settings.appearance_description: "Sombre, clair, ou suivre le réglage clair/sombre du système."
@@ -834,6 +856,23 @@ settings.title: Paramètres
 settings.transparency: "Transparence"
 settings.transparency_description: "Quelle part du bureau transparaît à travers la fenêtre, floutée comme du verre dépoli. 0 est opaque."
 settings.transparency_value: "%{value} %"
+setup.ai_about: Des tests écrits pour une réponse et des échecs expliqués, par Claude, ChatGPT ou Gemini avec votre propre clé d’API. Apix est open source et n’a pas de compte IA à lui.
+setup.ai_off: Désactivé.
+setup.ai_on: "Activé, avec %{provider}."
+setup.ai_open: Ouvrir les paramètres
+setup.ai_title: Assistant IA
+setup.claude_about: Permet à Claude Desktop ou Claude Code de lister, envoyer et exécuter avec leurs tests les requêtes d’une collection, sans voir ses secrets.
+setup.claude_for: "Pour la collection ouverte : %{collection}"
+setup.claude_no_collection: Ouvrez d’abord une collection.
+setup.claude_title: Claude (MCP)
+setup.geo_about: Montre où se trouve chaque routeur sur le chemin du serveur, sur la carte de la route (Réseau › Tracer la route) et dans apix trace. La base gratuite de DB-IP, environ 130 Mo, CC BY 4.0, gardée sur cet ordinateur ; rien n’est consulté en ligne.
+setup.geo_installed: "Installée : %{file}"
+setup.geo_missing: "Non installée : la liste de la route fonctionne, la carte n’affiche aucun lieu."
+setup.geo_title: Base de géolocalisation IP
+setup.geo_update: Mettre à jour
+setup.intro: Apix fonctionne tel quel. Ces extras sont facultatifs ; chacun tient en un clic et peut être modifié ou retiré plus tard.
+setup.later: Aide › Configuration… rouvre cette fenêtre.
+setup.title: Configurer Apix
 sidebar.auth: Authentification…
 sidebar.change_password: Changer le mot de passe…
 sidebar.color: Couleur

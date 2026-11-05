@@ -45,6 +45,7 @@ command line runs the same requests in a terminal or CI.
 - [Comparing responses](#comparing-responses)
 - [AI assist](#ai-assist)
 - [Command palette](#command-palette)
+- [Setup](#setup)
 - [Settings and language](#settings-and-language)
 - [Keyboard shortcuts](#keyboard-shortcuts)
 
@@ -391,7 +392,7 @@ answer shows as `*`. Addresses on your own network are marked as such.
 Where each router is comes from an IP location database on this computer;
 nothing is looked up online. Without one the list still works and the map
 stays empty: **Download DB-IP Lite** fetches DB-IP's free database (about
-130 MB, CC BY 4.0) into `<config>/Apix/geo`, or put any `.mmdb` city
+130 MB, CC BY 4.0) into `<config>/Apix/geo` (Setup and `apix geo download` do the same), or put any `.mmdb` city
 database there (DB-IP Lite, MaxMind GeoLite2 City). Such databases place
 an address in a city at best and are sometimes wrong for backbone routers.
 In a terminal, `apix trace <url or host>` prints the same list.
@@ -1143,27 +1144,35 @@ were kept.
 
 ## AI assist
 
-AI assist is off until you turn it on in **File › Settings… › AI assist** and
-give your own Anthropic API key in the row below it (kept in the system
-keychain, never in a file; saving an empty field removes it; without one,
-`ANTHROPIC_API_KEY` is used). Then the response gets one more button:
+AI assist is off until you turn it on in **File › Settings… › AI assist**. Apix
+is open source and has no AI account of its own: you pick a provider and give
+your own API key.
 
-- **AI tests** on a successful response: Claude writes a Tests script that
+- **AI provider**: Claude (Anthropic), ChatGPT (OpenAI) or Gemini (Google).
+- **Model**: the provider's default (Claude Opus 5.5, `gpt-5.5`,
+  `gemini-2.5-flash`), or **↻** loads the models your key can use and you
+  pick one.
+- **API key**: for the provider above, kept in the system keychain, never in
+  a file; saving an empty field removes it. Without one, `ANTHROPIC_API_KEY`,
+  `OPENAI_API_KEY` or `GEMINI_API_KEY` is used.
+
+Then the response gets one more button:
+
+- **AI tests** on a successful response: the AI writes a Tests script that
   checks the status, content type and the shape of the body, and Apix adds it
-  to the request's Tests (marked as written by Claude, unsaved), so you read
-  it before you keep it.
-- **Explain** on a failed response (400 and above): Claude says what the
-  response means, the likely causes and what to check, in the app's language.
+  to the request's Tests (marked as written by it, unsaved), so you read it
+  before you keep it.
+- **Explain** on a failed response (400 and above): what the response means,
+  the likely causes and what to check, in the app's language.
 
 ![Explaining a failed response](images/ai-explain.png)
 
-What is sent to Anthropic: the request's method, URL, headers and body and
+What is sent to the provider: the request's method, URL, headers and body and
 the response's status, headers and body (cut at 12 KB). Authorization,
 cookies and headers with key, token, secret or signature in their name are
-masked as •••. The model is Claude Opus 5.5 unless `ai_model` in
-`settings.toml` names another. Claude can be wrong; nothing is changed or
-sent anywhere else without you. The screenshot was taken against a local
-test server, not a real answer.
+masked as •••. The AI can be wrong; nothing is changed or sent anywhere else
+without you. The screenshot was taken against a local test server, not a
+real answer.
 
 ## Command palette
 
@@ -1172,6 +1181,44 @@ name or a command and press Enter. Commands can be found by their English names
 in every language.
 
 ![The command palette](images/palette.png)
+
+## Setup
+
+On the first start Apix opens **Setup**, the optional extras in one place;
+**Help › Setup…** opens it again. Apix works without any of them.
+
+- **IP location database**: places each router on the route map and in
+  `apix trace`. **Download** fetches DB-IP's free city database (about 130 MB,
+  CC BY 4.0) into `<config>/Apix/geo`; **Update** fetches the newest month.
+  Nothing is looked up online. In a terminal: `apix geo download`, `apix geo
+  status`, `apix geo remove`.
+- **AI assist**: shows whether it is on and with which provider; **Open
+  Settings** goes to its rows.
+- **Claude (MCP)**: **Connect to Claude** (also **Help › Connect to Claude
+  (MCP)…**) for the open collection, below.
+
+![Setup](images/setup.png)
+
+### Connecting Claude
+
+**Connect to Claude** makes the open collection an MCP server for Claude, so
+Claude can list, send and run its requests with their tests without seeing
+variable values (see [MCP](workflows.md#let-an-ai-agent-use-your-collection-mcp)).
+
+- **Add to Claude Desktop** writes the entry `apix-<collection>` into Claude
+  Desktop's `claude_desktop_config.json`. Its other servers and settings are
+  kept, and the file as it was is copied to `.bak` the first time; restart
+  Claude Desktop to use it. **Remove** takes the entry out again.
+- **Add to Claude Code** runs `claude mcp add --scope user …`, so the
+  collection is there in every project.
+- **Listing only** gives Claude only the listing tools (`--list-only`).
+- Both the entry and the command are shown with **Copy**, to add them by hand.
+
+![Connect to Claude](images/claude-connect.png)
+
+The same from a terminal: `apix mcp my-api --add-to claude-desktop`,
+`apix mcp my-api --add-to claude-code`, `apix mcp my-api
+--remove-from-claude-desktop`.
 
 ## Settings and language
 

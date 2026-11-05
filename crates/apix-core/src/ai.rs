@@ -1,6 +1,8 @@
 //! The optional AI assist: writing tests for a response and explaining a
-//! failed one, with Claude through the Anthropic Messages API and the
-//! user's own API key. Off unless the user turns it on and gives a key.
+//! failed one, with the user's own API key for Claude (Anthropic), ChatGPT
+//! (OpenAI) or Gemini (Google). Off unless the user turns it on and gives a
+//! key. Each provider is called over plain HTTPS (Rust has no official SDK
+//! for them).
 //!
 //! What is sent: the request's method, URL and headers (credential headers
 //! masked), the status, headers and body of the response (cut at 12 KB).
@@ -10,11 +12,104 @@ use serde_json::{Value, json};
 
 use crate::{KeyValue, Method, Request};
 
-pub const DEFAULT_MODEL: &str = "claude-opus-5-5";
-const MESSAGES_URL: &str = "https://api.anthropic.com/v1/messages";
-const API_VERSION: &str = "2026-10-21";
 /// Body text sent at most.
 const MAX_BODY: usize = 12 * 1024;
+const ANTHROPIC_VERSION: &str = "2026-10-21";
+
+/// Who answers.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum Provider {
+    /// Claude, through the Anthropic Messages API.
+    #[default]
+    Anthropic,
+    /// ChatGPT models, through the OpenAI Chat Completions API.
+    OpenAi,
+    /// Gemini, through the Gemini API.
+    Google,
+}
+
+impl Provider {
+    pub const ALL: [Provider; 3] = [Provider::Anthropic, Provider::OpenAi, Provider::Google];
+
+    /// The name kept in settings: `anthropic`, `openai`, `google`.
+    pub fn id(self) -> &'static str {
+        match self {
+            Provider::Anthropic => "anthropic",
+            Provider::OpenAi => "openai",
+            Provider::Google => "google",
+        }
+    }
+
+    pub fn from_id(id: &str) -> Self {
+        Self::ALL
+            .into_iter()
+            .find(|p| p.id() == id.trim())
+            .unwrap_or_default()
+    }
+
+    /// What people call it.
+    pub fn name(self) -> &'static str {
+        match self {
+            Provider::Anthropic => "Claude (Anthropic)",
+            Provider::OpenAi => "ChatGPT (OpenAI)",
+            Provider::Google => "Gemini (Google)",
+        }
+    }
+
+    /// The model used when none is picked.
+    pub fn default_model(self) -> &'static str {
+        match self {
+            Provider::Anthropic => "claude-opus-5-5",
+            Provider::OpenAi => "gpt-5.5",
+            Provider::Google => "gemini-2.5-flash",
+        }
+    }
+
+    /// The environment variable read when no key is kept.
+    pub fn key_variable(self) -> &'static str {
+        match self {
+            Provider::Anthropic => "ANTHROPIC_API_KEY",
+            Provider::OpenAi => "OPENAI_API_KEY",
+            Provider::Google => "GEMINI_API_KEY",
+        }
+    }
+
+    /// Where to get a key.
+    pub fn key_page(self) -> &'static str {
+        match self {
+            Provider::Anthropic => "https://console.anthropic.com/settings/keys",
+            Provider::OpenAi => "https://platform.openai.com/api-keys",
+            Provider::Google => "https://aistudio.google.com/apikey",
+        }
+    }
+
+    fn base(self) -> String {
+        // APIX_AI_URL points every provider at a proxy or a test server.
+        if let Ok(url) = std::env::var("APIX_AI_URL")
+            && !url.trim().is_empty()
+        {
+            return url.trim_end_matches('/').to_owned();
+        }
+        match self {
+            Provider::Anthropic => "https://api.anthropic.com/v1",
+            Provider::OpenAi => "https://api.openai.com/v1",
+            Provider::Google => "https://generativelanguage.googleapis.com/v1beta",
+        }
+        .to_owned()
+    }
+
+    fn key_account(self) -> String {
+        format!("ai:{}-api-key", self.id())
+    }
+
+    fn auth(self, key: &str) -> KeyValue {
+        match self {
+            Provider::Anthropic => KeyValue::new("x-api-key", key),
+            Provider::OpenAi => KeyValue::new("Authorization", format!("Bearer {key}")),
+            Provider::Google => KeyValue::new("x-goog-api-key", key),
+        }
+    }
+}
 
 /// What to ask for.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -123,74 +218,111 @@ fn instruction(task: Task) -> &'static str {
     }
 }
 
-/// The request to send to the Messages API. `APIX_AI_URL` points it
-/// elsewhere (a proxy, a test server).
+fn json_request(url: String, headers: Vec<KeyValue>, body: Value) -> Request {
+    let mut request = Request::new(Method::Post, url);
+    request.name = "AI assist".into();
+    request.headers = headers;
+    request
+        .headers
+        .push(KeyValue::new("content-type", "application/json"));
+    request.body = crate::Body::Json(body.to_string());
+    request.settings.timeout_ms = Some(300_000);
+    request
+}
+
+/// The request to send to `provider`.
 pub fn request(
+    provider: Provider,
     task: Task,
     context: &Context,
     api_key: &str,
     model: &str,
     language: &str,
 ) -> Request {
-    let url = std::env::var("APIX_AI_URL")
-        .ok()
-        .filter(|u| !u.trim().is_empty())
-        .unwrap_or_else(|| MESSAGES_URL.to_owned());
     let model = if model.trim().is_empty() {
-        DEFAULT_MODEL
+        provider.default_model()
     } else {
         model.trim()
     };
-    let mut body = json!({
-        "model": model,
-        "max_tokens": 16000,
-        "system": SYSTEM,
-        "messages": [{
-            "role": "user",
-            "content": format!(
-                "{}\n\n{} Write any prose in the language with code \"{}\"; keep code, field \
-                 names and text quoted from the exchange as they are.",
-                context.describe(),
-                instruction(task),
-                if language.trim().is_empty() { "en" } else { language.trim() }
-            ),
-        }],
-    });
-    let mut headers = vec![
-        KeyValue::new("x-api-key", api_key),
-        KeyValue::new("anthropic-version", API_VERSION),
-        KeyValue::new("content-type", "application/json"),
-    ];
-    // When a safety classifier declines, let the API retry on a model it routes to.
-    if model == DEFAULT_MODEL {
-        body["fallbacks"] = json!("default");
-        headers.push(KeyValue::new(
-            "anthropic-beta",
-            "server-side-fallback-2026-07-01",
-        ));
+    let prompt = format!(
+        "{}\n\n{} Write any prose in the language with code \"{}\"; keep code, field \
+         names and text quoted from the exchange as they are.",
+        context.describe(),
+        instruction(task),
+        if language.trim().is_empty() {
+            "en"
+        } else {
+            language.trim()
+        }
+    );
+    let base = provider.base();
+    let auth = provider.auth(api_key);
+    match provider {
+        Provider::Anthropic => {
+            let mut body = json!({
+                "model": model,
+                "max_tokens": 16000,
+                "system": SYSTEM,
+                "messages": [{ "role": "user", "content": prompt }],
+            });
+            let mut headers = vec![auth, KeyValue::new("anthropic-version", ANTHROPIC_VERSION)];
+            // When a safety classifier declines, let the API retry on a model it routes to.
+            if model == provider.default_model() {
+                body["fallbacks"] = json!("default");
+                headers.push(KeyValue::new(
+                    "anthropic-beta",
+                    "server-side-fallback-2026-07-01",
+                ));
+            }
+            json_request(format!("{base}/messages"), headers, body)
+        }
+        Provider::OpenAi => json_request(
+            format!("{base}/chat/completions"),
+            vec![auth],
+            json!({
+                "model": model,
+                "messages": [
+                    { "role": "system", "content": SYSTEM },
+                    { "role": "user", "content": prompt },
+                ],
+            }),
+        ),
+        Provider::Google => json_request(
+            format!("{base}/models/{model}:generateContent"),
+            vec![auth],
+            json!({
+                "systemInstruction": { "parts": [{ "text": SYSTEM }] },
+                "contents": [{ "role": "user", "parts": [{ "text": prompt }] }],
+            }),
+        ),
     }
-    let mut request = Request::new(Method::Post, url);
-    request.name = "AI assist".into();
-    request.headers = headers;
-    request.body = crate::Body::Json(body.to_string());
-    request.settings.timeout_ms = Some(300_000);
-    request
 }
 
 /// The answer's text, or why there is none.
-pub fn answer(status: u16, body: &[u8]) -> Result<String, String> {
+pub fn answer(provider: Provider, status: u16, body: &[u8]) -> Result<String, String> {
     let value: Value = serde_json::from_slice(body)
         .map_err(|_| format!("HTTP {status}: the answer is not JSON"))?;
-    if let Some(error) = value.get("error") {
-        let kind = error.get("type").and_then(Value::as_str).unwrap_or("error");
+    if let Some(error) = value.get("error").filter(|e| !e.is_null()) {
+        let kind = error
+            .get("type")
+            .or_else(|| error.get("status"))
+            .and_then(Value::as_str)
+            .unwrap_or("error");
         let message = error
             .get("message")
             .and_then(Value::as_str)
             .unwrap_or_default();
-        return Err(match kind {
-            "authentication_error" => "The API key was not accepted.".to_owned(),
-            "rate_limit_error" | "overloaded_error" => {
-                format!("The API is busy ({kind}); try again in a moment.")
+        return Err(match (status, kind) {
+            (401 | 403, _)
+            | (_, "authentication_error" | "invalid_api_key" | "PERMISSION_DENIED") => {
+                format!("The {} API key was not accepted.", provider.name())
+            }
+            (429 | 529, _)
+            | (_, "rate_limit_error" | "overloaded_error" | "RESOURCE_EXHAUSTED") => {
+                format!(
+                    "{} is busy or the quota is used up; try again later. {message}",
+                    provider.name()
+                )
             }
             _ => format!("{kind}: {message}"),
         });
@@ -198,22 +330,125 @@ pub fn answer(status: u16, body: &[u8]) -> Result<String, String> {
     if !(200..300).contains(&status) {
         return Err(format!("HTTP {status}"));
     }
-    if value.get("stop_reason").and_then(Value::as_str) == Some("refusal") {
-        return Err("Claude declined to answer this one.".to_owned());
-    }
-    let text: Vec<&str> = value
-        .get("content")
-        .and_then(Value::as_array)
-        .into_iter()
-        .flatten()
-        .filter(|block| block.get("type").and_then(Value::as_str) == Some("text"))
-        .filter_map(|block| block.get("text").and_then(Value::as_str))
-        .collect();
-    let text = text.join("").trim().to_owned();
+    let declined = || format!("{} declined to answer this one.", provider.name());
+    let text = match provider {
+        Provider::Anthropic => {
+            if value.get("stop_reason").and_then(Value::as_str) == Some("refusal") {
+                return Err(declined());
+            }
+            value
+                .get("content")
+                .and_then(Value::as_array)
+                .into_iter()
+                .flatten()
+                .filter(|block| block.get("type").and_then(Value::as_str) == Some("text"))
+                .filter_map(|block| block.get("text").and_then(Value::as_str))
+                .collect::<Vec<_>>()
+                .join("")
+        }
+        Provider::OpenAi => {
+            let message = &value["choices"][0]["message"];
+            if message
+                .get("refusal")
+                .and_then(Value::as_str)
+                .is_some_and(|r| !r.is_empty())
+            {
+                return Err(declined());
+            }
+            message["content"].as_str().unwrap_or_default().to_owned()
+        }
+        Provider::Google => {
+            let candidate = &value["candidates"][0];
+            if matches!(
+                candidate["finishReason"].as_str(),
+                Some("SAFETY" | "PROHIBITED_CONTENT" | "BLOCKLIST")
+            ) || value["promptFeedback"]["blockReason"].is_string()
+            {
+                return Err(declined());
+            }
+            candidate["content"]["parts"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter(|p| p["thought"].as_bool() != Some(true))
+                .filter_map(|p| p["text"].as_str())
+                .collect::<Vec<_>>()
+                .join("")
+        }
+    };
+    let text = text.trim().to_owned();
     if text.is_empty() {
         return Err("The answer was empty.".to_owned());
     }
     Ok(text)
+}
+
+/// The request that lists `provider`'s models, for picking one.
+pub fn models_request(provider: Provider, api_key: &str) -> Request {
+    let mut request = Request::new(Method::Get, format!("{}/models", provider.base()));
+    request.name = "AI models".into();
+    request.headers = vec![provider.auth(api_key)];
+    if provider == Provider::Anthropic {
+        request
+            .headers
+            .push(KeyValue::new("anthropic-version", ANTHROPIC_VERSION));
+    }
+    request.settings.timeout_ms = Some(30_000);
+    request
+}
+
+/// The model ids in the answer to [`models_request`] that can write text,
+/// newest names first as the provider lists them.
+pub fn models(provider: Provider, status: u16, body: &[u8]) -> Result<Vec<String>, String> {
+    let value: Value = serde_json::from_slice(body)
+        .map_err(|_| format!("HTTP {status}: the answer is not JSON"))?;
+    if !(200..300).contains(&status) {
+        let message = value["error"]["message"].as_str().unwrap_or_default();
+        return Err(format!("HTTP {status} {message}").trim().to_owned());
+    }
+    let ids: Vec<String> = match provider {
+        Provider::Anthropic => value["data"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(|m| m["id"].as_str().map(str::to_owned))
+            .collect(),
+        Provider::OpenAi => value["data"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(|m| m["id"].as_str())
+            // Chat models only: no embeddings, audio, images or moderation.
+            .filter(|id| {
+                (id.starts_with("gpt-") || id.starts_with('o') || id.starts_with("chatgpt"))
+                    && ![
+                        "audio",
+                        "realtime",
+                        "tts",
+                        "transcribe",
+                        "image",
+                        "embedding",
+                        "search",
+                    ]
+                    .iter()
+                    .any(|bad| id.contains(bad))
+            })
+            .map(str::to_owned)
+            .collect(),
+        Provider::Google => value["models"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter(|m| {
+                m["supportedGenerationMethods"]
+                    .as_array()
+                    .is_some_and(|ms| ms.iter().any(|x| x == "generateContent"))
+            })
+            .filter_map(|m| m["name"].as_str())
+            .map(|name| name.trim_start_matches("models/").to_owned())
+            .collect(),
+    };
+    Ok(ids)
 }
 
 /// The script inside the answer's first code block, or the whole answer.
@@ -228,25 +463,28 @@ pub fn script(answer: &str) -> String {
     answer.trim().to_owned()
 }
 
-/// Where the API key is kept: the system keychain, never a file.
-const KEY_ACCOUNT: &str = "ai:anthropic-api-key";
-
-/// Keeps the API key in the system keychain; an empty key removes it.
-pub fn save_key(key: &str) -> Result<(), String> {
+/// Keeps `provider`'s API key in the system keychain (never a file); an
+/// empty key removes it.
+pub fn save_key(provider: Provider, key: &str) -> Result<(), String> {
     let key = key.trim();
     if key.is_empty() {
-        apix_vault::keychain::forget_text(KEY_ACCOUNT)
+        apix_vault::keychain::forget_text(&provider.key_account())
     } else {
-        apix_vault::keychain::save_text(KEY_ACCOUNT, key)
+        apix_vault::keychain::save_text(&provider.key_account(), key)
     }
 }
 
-/// The kept API key; `ANTHROPIC_API_KEY` when none is kept.
-pub fn load_key() -> Option<String> {
-    apix_vault::keychain::load_text(KEY_ACCOUNT)
+/// `provider`'s kept API key, or its environment variable.
+pub fn load_key(provider: Provider) -> Option<String> {
+    apix_vault::keychain::load_text(&provider.key_account())
         .ok()
         .flatten()
-        .or_else(|| std::env::var("ANTHROPIC_API_KEY").ok())
+        .or_else(|| std::env::var(provider.key_variable()).ok())
+        .or_else(|| {
+            (provider == Provider::Google)
+                .then(|| std::env::var("GOOGLE_API_KEY").ok())
+                .flatten()
+        })
         .filter(|k| !k.trim().is_empty())
 }
 
@@ -270,36 +508,100 @@ mod tests {
         }
     }
 
-    #[test]
-    fn the_request_masks_credentials() {
-        let r = request(Task::Explain, &context(), "sk-test", "", "tr");
-        assert_eq!(r.method, Method::Post);
-        let crate::Body::Json(body) = &r.body else {
+    fn body(r: &Request) -> Value {
+        let crate::Body::Json(text) = &r.body else {
             panic!()
         };
-        let body: Value = serde_json::from_str(body).unwrap();
-        assert_eq!(body["model"], DEFAULT_MODEL);
-        assert_eq!(body["fallbacks"], "default");
-        let prompt = body["messages"][0]["content"].as_str().unwrap();
+        serde_json::from_str(text).unwrap()
+    }
+
+    fn header<'a>(r: &'a Request, name: &str) -> Option<&'a str> {
+        r.headers
+            .iter()
+            .find(|h| h.key.eq_ignore_ascii_case(name))
+            .map(|h| h.value.as_str())
+    }
+
+    #[test]
+    fn requests_for_each_provider() {
+        let r = request(
+            Provider::Anthropic,
+            Task::Explain,
+            &context(),
+            "sk-test",
+            "",
+            "tr",
+        );
+        assert!(r.url.ends_with("/v1/messages"));
+        assert_eq!(header(&r, "x-api-key"), Some("sk-test"));
+        assert!(header(&r, "anthropic-version").is_some());
+        let b = body(&r);
+        assert_eq!(b["model"], "claude-opus-5-5");
+        assert_eq!(b["fallbacks"], "default");
+        let prompt = b["messages"][0]["content"].as_str().unwrap();
         assert!(
             !prompt.contains("s3cret") && !prompt.contains("k3y") && !prompt.contains("sid=abc"),
             "{prompt}"
         );
         assert!(prompt.contains("Accept: application/json") && prompt.contains("status 404"));
         assert!(prompt.contains("did not succeed") && prompt.contains("code \"tr\""));
-        assert!(
-            r.headers
-                .iter()
-                .any(|h| h.key == "x-api-key" && h.value == "sk-test")
+        let other = request(
+            Provider::Anthropic,
+            Task::WriteTests,
+            &context(),
+            "k",
+            "claude-sonnet-5-5",
+            "",
         );
-        assert!(r.headers.iter().any(|h| h.key == "anthropic-version"));
-        // Another model: no fallback setting.
-        let other = request(Task::WriteTests, &context(), "k", "claude-sonnet-5-5", "");
-        let crate::Body::Json(body) = &other.body else {
-            panic!()
-        };
-        assert!(!body.contains("fallbacks"));
-        assert!(body.contains("pm.test"));
+        assert!(body(&other).get("fallbacks").is_none());
+
+        let o = request(
+            Provider::OpenAi,
+            Task::WriteTests,
+            &context(),
+            "sk-o",
+            "",
+            "en",
+        );
+        assert!(o.url.ends_with("/v1/chat/completions"));
+        assert_eq!(header(&o, "authorization"), Some("Bearer sk-o"));
+        let b = body(&o);
+        assert_eq!(b["model"], "gpt-5.5");
+        assert_eq!(b["messages"][0]["role"], "system");
+        assert!(
+            b["messages"][1]["content"]
+                .as_str()
+                .unwrap()
+                .contains("pm.test")
+        );
+
+        let g = request(
+            Provider::Google,
+            Task::Explain,
+            &context(),
+            "AIza",
+            "gemini-x",
+            "en",
+        );
+        assert!(
+            g.url.ends_with("/v1beta/models/gemini-x:generateContent"),
+            "{}",
+            g.url
+        );
+        assert_eq!(header(&g, "x-goog-api-key"), Some("AIza"));
+        let b = body(&g);
+        assert!(
+            b["systemInstruction"]["parts"][0]["text"]
+                .as_str()
+                .unwrap()
+                .contains("Apix")
+        );
+        assert!(
+            b["contents"][0]["parts"][0]["text"]
+                .as_str()
+                .unwrap()
+                .contains("did not succeed")
+        );
     }
 
     #[test]
@@ -312,26 +614,77 @@ mod tests {
     }
 
     #[test]
-    fn answers() {
+    fn answers_from_each_provider() {
+        let a = Provider::Anthropic;
         let ok = br#"{"type":"message","stop_reason":"end_turn","content":[{"type":"thinking","thinking":""},{"type":"text","text":"Here:\n```javascript\npm.test(\"ok\", () => {});\n```"}]}"#;
-        let text = answer(200, ok).unwrap();
-        assert_eq!(script(&text), "pm.test(\"ok\", () => {});");
+        assert_eq!(
+            script(&answer(a, 200, ok).unwrap()),
+            "pm.test(\"ok\", () => {});"
+        );
         assert_eq!(script("pm.test(1)"), "pm.test(1)");
-        let refused = br#"{"stop_reason":"refusal","content":[]}"#;
-        assert!(answer(200, refused).unwrap_err().contains("declined"));
+        assert!(
+            answer(a, 200, br#"{"stop_reason":"refusal","content":[]}"#)
+                .unwrap_err()
+                .contains("declined")
+        );
         let bad_key = br#"{"type":"error","error":{"type":"authentication_error","message":"invalid x-api-key"}}"#;
         assert_eq!(
-            answer(401, bad_key).unwrap_err(),
-            "The API key was not accepted."
+            answer(a, 401, bad_key).unwrap_err(),
+            "The Claude (Anthropic) API key was not accepted."
         );
         let busy =
             br#"{"type":"error","error":{"type":"overloaded_error","message":"Overloaded"}}"#;
-        assert!(answer(529, busy).unwrap_err().contains("busy"));
-        assert!(answer(502, b"<html>").is_err());
+        assert!(answer(a, 529, busy).unwrap_err().contains("busy"));
+        assert!(answer(a, 502, b"<html>").is_err());
         assert!(
-            answer(200, br#"{"content":[]}"#)
+            answer(a, 200, br#"{"content":[]}"#)
                 .unwrap_err()
                 .contains("empty")
         );
+
+        let o = Provider::OpenAi;
+        let ok = br#"{"choices":[{"message":{"role":"assistant","content":"It failed.","refusal":null},"finish_reason":"stop"}]}"#;
+        assert_eq!(answer(o, 200, ok).unwrap(), "It failed.");
+        let refused = br#"{"choices":[{"message":{"content":null,"refusal":"I can't help"}}]}"#;
+        assert!(answer(o, 200, refused).unwrap_err().contains("ChatGPT"));
+        let bad = br#"{"error":{"message":"Incorrect API key provided","type":"invalid_request_error","code":"invalid_api_key"}}"#;
+        assert!(answer(o, 401, bad).unwrap_err().contains("not accepted"));
+
+        let g = Provider::Google;
+        let ok = br#"{"candidates":[{"content":{"parts":[{"text":"thinking","thought":true},{"text":"Because "},{"text":"404."}],"role":"model"},"finishReason":"STOP"}]}"#;
+        assert_eq!(answer(g, 200, ok).unwrap(), "Because 404.");
+        let blocked = br#"{"candidates":[{"finishReason":"SAFETY"}]}"#;
+        assert!(answer(g, 200, blocked).unwrap_err().contains("Gemini"));
+        let quota =
+            br#"{"error":{"code":429,"message":"Quota exceeded","status":"RESOURCE_EXHAUSTED"}}"#;
+        assert!(answer(g, 429, quota).unwrap_err().contains("quota"));
+    }
+
+    #[test]
+    fn model_lists() {
+        let a = br#"{"data":[{"id":"claude-opus-5-5","type":"model"},{"id":"claude-haiku-5-5","type":"model"}]}"#;
+        assert_eq!(
+            models(Provider::Anthropic, 200, a).unwrap(),
+            ["claude-opus-5-5", "claude-haiku-5-5"]
+        );
+        let o = br#"{"data":[{"id":"gpt-5.5"},{"id":"text-embedding-3-large"},{"id":"gpt-4o-audio-preview"},{"id":"o4-mini"},{"id":"dall-e-3"}]}"#;
+        assert_eq!(
+            models(Provider::OpenAi, 200, o).unwrap(),
+            ["gpt-5.5", "o4-mini"]
+        );
+        let g = br#"{"models":[{"name":"models/gemini-2.5-flash","supportedGenerationMethods":["generateContent","countTokens"]},{"name":"models/text-embedding-004","supportedGenerationMethods":["embedContent"]}]}"#;
+        assert_eq!(
+            models(Provider::Google, 200, g).unwrap(),
+            ["gemini-2.5-flash"]
+        );
+        assert!(
+            models(Provider::OpenAi, 401, br#"{"error":{"message":"bad key"}}"#)
+                .unwrap_err()
+                .contains("bad key")
+        );
+        let r = models_request(Provider::Google, "AIza");
+        assert!(r.url.ends_with("/v1beta/models"));
+        assert_eq!(Provider::from_id("openai"), Provider::OpenAi);
+        assert_eq!(Provider::from_id("nonsense"), Provider::Anthropic);
     }
 }

@@ -428,6 +428,14 @@ impl Workspace {
             name!("menu.check_updates"),
             run(Workspace::check_updates_now),
         ));
+        out.push(Entry::command(
+            name!("menu.setup"),
+            run(Workspace::open_setup),
+        ));
+        out.push(Entry::command(
+            name!("menu.connect_claude"),
+            run(Workspace::open_connect_claude),
+        ));
         if open {
             out.push(
                 Entry::command(name!("menu.runner"), run(Workspace::open_runner)).keys("Shift+R"),

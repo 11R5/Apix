@@ -1,12 +1,12 @@
 _version: 1
-ai.asking: 正在询问 Claude…
+ai.asking: "正在询问 %{provider}…"
 ai.explain_short: 解释
 ai.explain_title: 为什么失败了？
-ai.no_key: 请在 设置 › AI 助手 中添加你的 Anthropic API 密钥。
-ai.note: 由 Claude 根据请求和响应撰写；凭据标头已隐藏。可能有误。
+ai.no_key: 请在 设置 › AI 助手 中为提供方添加 API 密钥。
+ai.note: "由 %{provider} 根据请求和响应撰写；凭据标头已隐藏。可能有误。"
 ai.tests_added: 测试已添加到 Tests 脚本：请检查后保存。
 ai.tests_short: AI 测试
-ai.tests_tooltip: 让 Claude 为此响应编写测试；测试会添加到 Tests 脚本。
+ai.tests_tooltip: 让 AI 为此响应编写测试；测试会添加到 Tests 脚本。
 app.error_with_cause: "%{error}：%{cause}"
 app.status.collections: "%{count} 个集合"
 app.status.env: "环境：%{name}"
@@ -165,6 +165,19 @@ chips.scope.project: 项目“%{name}”
 chips.scope.script: 由脚本设置
 chips.secret_scope: "%{scope} · 机密，仅在这台电脑上"
 chips.set_for_run: 为本次运行设置
+claude.about: "将“%{collection}”作为 MCP 服务器 %{name} 添加到 Claude：Claude 会为其启动 apix mcp，然后可以列出、发送并连同测试运行其请求。变量的值不会显示给它。"
+claude.add_code: 添加到 Claude Code
+claude.add_desktop: 添加到 Claude Desktop
+claude.added_code: "已将 %{name} 添加到 Claude Code（所有项目）。"
+claude.added_desktop: "已将 %{name} 添加到 %{file}。请重启 Claude Desktop。"
+claude.copy: 复制
+claude.list_only: 仅列出（Claude 无法发送请求）
+claude.no_claude_code: 未安装 Claude Code（claude 命令）。
+claude.not_there: "%{name} 不在 Claude Desktop 中。"
+claude.note: Claude Desktop 的其他服务器和设置会保留；原文件在第一次修改时复制为 .bak。也可以自行复制条目或命令。
+claude.remove_desktop: 移除
+claude.removed: "已从 Claude Desktop 移除 %{name}。"
+claude.title: 连接到 Claude
 collection.choose_folder: 选择文件夹…
 collection.create: 创建
 collection.create_collection: 创建集合
@@ -429,6 +442,7 @@ menu.collection_auth: 集合认证…
 menu.collection_settings: 集合请求设置…
 menu.command_palette: 命令面板…
 menu.compare: 比较响应…
+menu.connect_claude: 连接到 Claude (MCP)…
 menu.cookies: Cookie…
 menu.copy_as: 复制为
 menu.documentation: 文档
@@ -471,6 +485,7 @@ menu.runner: "Runner…"
 menu.save: 保存
 menu.send: 发送
 menu.settings: 设置…
+menu.setup: 设置向导…
 menu.source_code: 源代码
 menu.variables: 变量和环境…
 menu.view: 视图
@@ -777,14 +792,21 @@ settings.accent_red: "红色"
 settings.accent_theme: "主题自带"
 settings.accent_yellow: "黄色"
 settings.ai: AI 助手
-settings.ai_description: 在响应旁显示按钮，让 Claude 为其编写测试或解释失败原因，使用你自己的 Anthropic API 密钥。请求和响应会发送给 Anthropic，凭据标头已隐藏。默认关闭。
-settings.ai_key: Anthropic API 密钥
-settings.ai_key_description: 保存在系统钥匙串中，从不写入文件。保存空值即可删除。未保存时使用 ANTHROPIC_API_KEY。
+settings.ai_description: 在响应旁显示按钮，让 AI 为其编写测试或解释失败原因，使用你自己的 API 密钥。请求和响应会发送给你选择的提供方，凭据标头已隐藏。默认关闭。
+settings.ai_key: API 密钥
+settings.ai_key_description: 用于上面的提供方，保存在系统钥匙串中，从不写入文件。保存空值即可删除。可在 console.anthropic.com、platform.openai.com 或 aistudio.google.com 获取。
 settings.ai_key_kept: 已保存密钥
-settings.ai_key_placeholder: sk-ant-…
+settings.ai_key_placeholder: 粘贴密钥
 settings.ai_key_removed: API 密钥已删除。
 settings.ai_key_save: 保存
 settings.ai_key_saved: API 密钥已存入钥匙串。
+settings.ai_model: 模型
+settings.ai_model_default: "默认（%{model}）"
+settings.ai_model_description: 提供方的默认模型，或你的密钥可用的模型之一（加载列表）。
+settings.ai_models_load: 加载列表
+settings.ai_models_loaded: "%{count} 个模型"
+settings.ai_provider: AI 提供方
+settings.ai_provider_description: 由谁回答：Claude (Anthropic)、ChatGPT (OpenAI) 或 Gemini (Google)。各有自己的密钥。
 settings.appearance: "外观模式"
 settings.appearance_dark: "深色"
 settings.appearance_description: "深色、浅色，或跟随系统的深浅设置。"
@@ -834,6 +856,23 @@ settings.title: 设置
 settings.transparency: "透明度"
 settings.transparency_description: "桌面透过窗口显示的程度，像磨砂玻璃一样模糊。0 为不透明。"
 settings.transparency_value: "%{value}%"
+setup.ai_about: 由 Claude、ChatGPT 或 Gemini 使用你自己的 API 密钥为响应编写测试并解释失败。Apix 是开源的，没有自己的 AI 账户。
+setup.ai_off: 已关闭。
+setup.ai_on: "已开启，使用 %{provider}。"
+setup.ai_open: 打开设置
+setup.ai_title: AI 助手
+setup.claude_about: 让 Claude Desktop 或 Claude Code 列出、发送并连同测试运行集合中的请求，而看不到其机密。
+setup.claude_for: "针对打开的集合：%{collection}"
+setup.claude_no_collection: 请先打开一个集合。
+setup.claude_title: Claude (MCP)
+setup.geo_about: 在路由地图（网络 › 追踪路由）和 apix trace 中显示通往服务器途中每个路由器的位置。DB-IP 的免费数据库，约 130 MB，CC BY 4.0，保存在本机；不进行任何在线查询。
+setup.geo_installed: "已安装：%{file}"
+setup.geo_missing: 未安装：路由列表可用，地图上不显示地点。
+setup.geo_title: IP 地理位置数据库
+setup.geo_update: 更新
+setup.intro: Apix 开箱即用。以下附加功能都是可选的，每项只需一次点击，之后可更改或移除。
+setup.later: 帮助 › 设置向导… 可再次打开此窗口。
+setup.title: 设置 Apix
 sidebar.auth: 认证…
 sidebar.change_password: 更改密码…
 sidebar.color: 颜色
