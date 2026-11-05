@@ -477,6 +477,8 @@ pub struct Workspace {
     filter_owner: Option<PathBuf>,
     /// The Headers field being typed in, which gets suggestions.
     header_focus: Option<header_hints::HeaderFocus>,
+    /// Network sections opened or closed by hand, against their default.
+    network_toggled: std::collections::HashSet<&'static str>,
     header_blur: Option<Task<()>>,
     /// Narrows the sidebar to the requests that match.
     sidebar_search: Entity<InputState>,
@@ -711,6 +713,7 @@ impl Workspace {
             filter_task: None,
             filter_owner: None,
             header_focus: None,
+            network_toggled: Default::default(),
             header_blur: None,
             sidebar_search,
             task: None,
@@ -1778,7 +1781,7 @@ impl Workspace {
                     (_, 5) => self.render_tests(done).into_any_element(),
                     (_, 6) => self.render_console(done, cx).into_any_element(),
                     (_, 2) => self.render_response_headers(response).into_any_element(),
-                    (_, 3) => self.render_network(done).into_any_element(),
+                    (_, 3) => self.render_network(done, cx).into_any_element(),
                     (_, 0)
                         if self.visual.mode != visual_ui::VisualMode::Text
                             && done.json
