@@ -355,6 +355,7 @@ menu.import_postman: استيراد (Postman وInsomnia وOpenAPI وHAR وWSDL)�
 menu.import_url: استيراد من عنوان URL…
 menu.lock_collections: قفل المجموعات المشفّرة
 menu.method: الطريقة
+menu.mock: خادم المحاكاة…
 menu.monitors: المراقِبات…
 menu.move_into_project: نقل إلى مشروع…
 menu.new_collection: مجموعة جديدة…
@@ -379,6 +380,19 @@ menu.settings: الإعدادات…
 menu.source_code: الشيفرة المصدرية
 menu.variables: المتغيرات والبيئات…
 menu.view: عرض
+mock.about: يجيب بالأمثلة المحفوظة مع طلبات هذه المجموعة، مطابقًا الطريقة والمسار ({{base_url}}/users/:id يجيب على /users/أي-شيء). يمكن للطلب أن يختار مثالًا بالترويسة x-mock-response-name أو x-mock-response-code. لاستخدامه وجّه base_url لإحدى البيئات إلى الخادم.
+mock.cannot_listen: "لا يمكن الاستماع على المنفذ %{port}: %{error}"
+mock.log: الطلبات
+mock.log_empty: لم يُطلب شيء بعد.
+mock.no_example: لا مثال
+mock.no_routes: لا يوجد بعد مثال محفوظ لأي طلب في هذه المجموعة. أرسل طلبًا واحفظ استجابته بزر الأمثلة في لوحة الاستجابة.
+mock.port: المنفذ
+mock.routes: المُقدَّم (%{count})
+mock.running: يجيب على %{url}
+mock.running_other: يجيب لمجموعة أخرى على %{url}
+mock.start: تشغيل
+mock.stop: إيقاف
+mock.title: خادم المحاكاة
 monitors.add: إضافة مراقِب
 monitors.ago_days: قبل %{count} يوم
 monitors.ago_hours: قبل %{count} س

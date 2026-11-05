@@ -272,6 +272,7 @@ dependencies = [
  "apix-grpc",
  "apix-http",
  "apix-import",
+ "apix-mock",
  "apix-proto",
  "apix-runner",
  "apix-script",
@@ -321,6 +322,7 @@ dependencies = [
  "apix-grpc",
  "apix-http",
  "apix-import",
+ "apix-mock",
  "apix-proto",
  "apix-runner",
  "apix-script",
@@ -412,6 +414,21 @@ dependencies = [
  "toml 0.8.23",
  "url",
  "zip",
+]
+
+[[package]]
+name = "apix-mock"
+version = "0.1.0"
+dependencies = [
+ "apix-core",
+ "apix-http",
+ "base64 0.22.1",
+ "bytes",
+ "http-body-util",
+ "hyper",
+ "hyper-util",
+ "serde_json",
+ "tokio",
 ]
 
 [[package]]

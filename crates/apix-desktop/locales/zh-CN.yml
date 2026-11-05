@@ -355,6 +355,7 @@ menu.import_postman: 导入（Postman、Insomnia、OpenAPI、HAR、WSDL）…
 menu.import_url: 从 URL 导入…
 menu.lock_collections: 锁定加密集合
 menu.method: 方法
+menu.mock: 模拟服务器…
 menu.monitors: 监视器…
 menu.move_into_project: 移到项目…
 menu.new_collection: 新建集合…
@@ -379,6 +380,19 @@ menu.settings: 设置…
 menu.source_code: 源代码
 menu.variables: 变量和环境…
 menu.view: 视图
+mock.about: 用此集合的请求中保存的示例应答，按方法和路径匹配（{{base_url}}/users/:id 应答 /users/任意值）。请求可用 x-mock-response-name 或 x-mock-response-code 头选择示例。把某个环境的 base_url 指向服务器即可使用。
+mock.cannot_listen: 无法监听端口 %{port}：%{error}
+mock.log: 请求
+mock.log_empty: 还没有请求。
+mock.no_example: 无示例
+mock.no_routes: 此集合的请求还没有保存的示例。发送请求后，用响应面板中的示例按钮保存响应。
+mock.port: 端口
+mock.routes: 已提供 (%{count})
+mock.running: 正在 %{url} 上应答
+mock.running_other: 正在 %{url} 上为另一个集合应答
+mock.start: 启动
+mock.stop: 停止
+mock.title: 模拟服务器
 monitors.add: 添加监视器
 monitors.ago_days: "%{count} 天前"
 monitors.ago_hours: "%{count} 小时前"

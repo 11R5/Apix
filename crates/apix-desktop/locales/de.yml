@@ -355,6 +355,7 @@ menu.import_postman: Importieren (Postman, Insomnia, OpenAPI, HAR, WSDL)…
 menu.import_url: Von URL importieren…
 menu.lock_collections: Verschlüsselte Sammlungen sperren
 menu.method: Methode
+menu.mock: Mock-Server…
 menu.monitors: Monitore…
 menu.move_into_project: In ein Projekt verschieben…
 menu.new_collection: Neue Sammlung…
@@ -379,6 +380,19 @@ menu.settings: Einstellungen…
 menu.source_code: Quellcode
 menu.variables: Variablen und Umgebungen…
 menu.view: Ansicht
+mock.about: Antwortet mit den Beispielen, die bei den Anfragen dieser Sammlung gespeichert sind, zugeordnet nach Methode und Pfad ({{base_url}}/users/:id bedient /users/beliebig). Eine Anfrage kann mit dem Header x-mock-response-name oder x-mock-response-code ein Beispiel wählen. Richten Sie base_url einer Umgebung auf den Server, um ihn zu nutzen.
+mock.cannot_listen: "Port %{port} kann nicht geöffnet werden: %{error}"
+mock.log: Anfragen
+mock.log_empty: Noch nichts angefragt.
+mock.no_example: kein Beispiel
+mock.no_routes: Noch keine Anfrage dieser Sammlung hat ein gespeichertes Beispiel. Senden Sie eine Anfrage und behalten Sie die Antwort mit der Beispiel-Schaltfläche im Antwortbereich.
+mock.port: Port
+mock.routes: Bereitgestellt (%{count})
+mock.running: Antwortet auf %{url}
+mock.running_other: Antwortet für eine andere Sammlung auf %{url}
+mock.start: Starten
+mock.stop: Stoppen
+mock.title: Mock-Server
 monitors.add: Monitor hinzufügen
 monitors.ago_days: vor %{count} Tagen
 monitors.ago_hours: vor %{count} Std.

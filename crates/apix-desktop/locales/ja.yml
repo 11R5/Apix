@@ -355,6 +355,7 @@ menu.import_postman: インポート（Postman、Insomnia、OpenAPI、HAR、WSDL
 menu.import_url: URL からインポート…
 menu.lock_collections: 暗号化されたコレクションをロック
 menu.method: メソッド
+menu.mock: モックサーバー…
 menu.monitors: モニター…
 menu.move_into_project: プロジェクトに移動…
 menu.new_collection: 新しいコレクション…
@@ -379,6 +380,19 @@ menu.settings: 設定…
 menu.source_code: ソースコード
 menu.variables: 変数と環境…
 menu.view: 表示
+mock.about: このコレクションのリクエストに保存した例で、メソッドとパスを照合して応答します（{{base_url}}/users/:id は /users/任意 に応答）。リクエストは x-mock-response-name または x-mock-response-code ヘッダーで例を選べます。使うには環境の base_url をサーバーに向けてください。
+mock.cannot_listen: "ポート %{port} で待ち受けできません: %{error}"
+mock.log: リクエスト
+mock.log_empty: まだリクエストはありません。
+mock.no_example: 例なし
+mock.no_routes: このコレクションのリクエストには保存された例がまだありません。リクエストを送信し、レスポンス パネルの例ボタンで応答を保存してください。
+mock.port: ポート
+mock.routes: 提供中 (%{count})
+mock.running: "%{url} で応答中"
+mock.running_other: 別のコレクションのために %{url} で応答中
+mock.start: 開始
+mock.stop: 停止
+mock.title: モックサーバー
 monitors.add: モニターを追加
 monitors.ago_days: "%{count} 日前"
 monitors.ago_hours: "%{count} 時間前"

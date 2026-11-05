@@ -16,6 +16,7 @@ mod grpc_ui;
 mod header_hints;
 mod history_ui;
 mod menu_bar;
+mod mock_ui;
 mod monitors_ui;
 mod network;
 mod palette;
@@ -80,6 +81,7 @@ actions!(
         OpenHistory,
         OpenRunner,
         OpenMonitors,
+        OpenMock,
         CloseTab,
         NextTab,
         PrevTab,
@@ -389,6 +391,8 @@ pub struct Workspace {
     git: git_ui::GitState,
     /// Monitors: when each is due, their last results, the one running.
     monitors: monitors_ui::MonitorState,
+    /// The mock server, when started, and what it was asked.
+    mock: mock_ui::MockState,
     /// The active environment of the open collection, by file name.
     environment: Option<String>,
     env_select: Entity<EnvSelect>,
@@ -637,6 +641,7 @@ impl Workspace {
             watcher: None,
             git: Default::default(),
             monitors: Default::default(),
+            mock: Default::default(),
             environment: None,
             env_select,
             app_state: AppState::load(),
@@ -2176,6 +2181,7 @@ impl Render for Workspace {
             .on_action(
                 cx.listener(|this, _: &OpenMonitors, window, cx| this.open_monitors(window, cx)),
             )
+            .on_action(cx.listener(|this, _: &OpenMock, window, cx| this.open_mock(window, cx)))
             // A click anywhere brings focus back inside the workspace (inputs
             // focus themselves first, so they keep it), so shortcuts keep working.
             .on_mouse_down(

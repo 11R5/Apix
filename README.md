@@ -119,6 +119,9 @@ Measurements of the other tools on the same machine are planned.
   what changed in requests field by field, and the GitHub Action keeps a
   summary comment on the pull request. The status bar shows the branch and the
   changed files; the sidebar marks changed requests.
+- **Mock server:** serve the responses saved with requests on a local port
+  (`apix mock`, or View › Mock server… in the app), matched by method and path,
+  so a front end can be built before the API exists.
 - **Monitors:** run a collection or folder every few minutes and hear about it
   on Slack, Discord or any webhook when it starts failing or passes again;
   with `apix monitor` on a server or a CI schedule, or from the app while it
@@ -185,6 +188,7 @@ APIX_VAR_TOKEN=… apix run my-api --env staging --env-file .env.ci
 apix run my-api --changed=origin/main --markdown summary.md   # only what this branch touched
 apix diff main -C my-api                     # what changed in the requests, field by field
 apix monitor my-api                          # [[monitor]]s of apix.toml on their schedules
+apix mock my-api --port 4010                 # serve saved examples as a mock API
 apix run my-api --data users.csv -p 8        # 8 iterations at once
 apix send chat/socket.apix --message '{"join":"room-1"}' --listen 10   # a ws:// request
 apix send events/live.apix                   # server-sent events, printed as they arrive

@@ -41,6 +41,7 @@ crates/
 │                 reports (also Markdown for pull requests), monitors: schedule, log, webhooks
 ├── apix-grpc     gRPC calls: tonic, messages as JSON (prost-reflect), .proto files (protox), definitions from code or JSON
 ├── apix-proto    other protocols: MQTT (rumqttc)
+├── apix-mock     a local mock server answering from saved examples (hyper)
 │                 or server reflection
 ├── apix-cli      `apix` binary: send / run / diff / schema / import / shell from terminal & CI
 └── apix-desktop  GPUI desktop app (Windows, macOS and Linux from one crate)
@@ -67,12 +68,6 @@ the others keep their draft, response and in-flight task), `workspace/drag.rs`
 `bidi.rs` (right-to-left layout helpers, see Languages),
 `state.rs` (recent items and per-folder environment in the user's config
 folder), `theme.rs` and `fonts.rs`.
-
-Planned crates:
-
-| Crate          | Purpose                                                            |
-|----------------|--------------------------------------------------------------------|
-| `apix-mock`    | A local mock server that serves saved examples (`hyper`)           |
 
 ### One desktop crate for three operating systems
 

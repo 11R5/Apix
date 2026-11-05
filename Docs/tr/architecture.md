@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:7c5cebacbd6ba329 -->
+<!-- translated from en/architecture.md sha256:3ce8a71987464606 -->
 
 # Apix mimarisi
 
@@ -44,6 +44,7 @@ crates/
 ├── apix-grpc     gRPC çağrıları: tonic, JSON mesajlar (prost-reflect), .proto dosyaları (protox), koddan ya da JSON'dan tanım
 │                 ya da sunucu reflection'ı
 ├── apix-proto    diğer protokoller: MQTT (rumqttc)
+├── apix-mock     kayıtlı örneklerden yanıt veren yerel mock sunucu (hyper)
 ├── apix-cli      `apix` binary'si: terminalden ve CI'dan send / run / diff / schema / import / shell
 └── apix-desktop  GPUI masaüstü uygulaması (tek crate'ten Windows, macOS ve Linux)
 tools/
@@ -72,12 +73,6 @@ yanıt alanındaki çağrı),
 `large_view.rs` (devasa gövdeler için satır tabanlı görüntüleyici), `net.rs`
 (tokio köprüsü), `bidi.rs` (sağdan sola yerleşim yardımcıları, bkz. Diller), `state.rs` (kullanıcının yapılandırma klasöründe son kullanılan
 öğeler ve klasör başına ortam), `theme.rs` ve `fonts.rs`.
-
-Planlanan crate'ler:
-
-| Crate          | Amaç                                                               |
-|----------------|--------------------------------------------------------------------|
-| `apix-mock`    | Kaydedilmiş örnekleri sunan yerel bir mock sunucu (`hyper`)        |
 
 ### Üç işletim sistemi için tek masaüstü crate'i
 

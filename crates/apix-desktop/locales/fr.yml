@@ -355,6 +355,7 @@ menu.import_postman: Importer (Postman, Insomnia, OpenAPI, HAR, WSDL)…
 menu.import_url: Importer depuis une URL…
 menu.lock_collections: Verrouiller les collections chiffrées
 menu.method: Méthode
+menu.mock: Serveur fictif…
 menu.monitors: Moniteurs…
 menu.move_into_project: Déplacer dans un projet…
 menu.new_collection: Nouvelle collection…
@@ -379,6 +380,19 @@ menu.settings: Paramètres…
 menu.source_code: Code source
 menu.variables: Variables et environnements…
 menu.view: Affichage
+mock.about: Répond avec les exemples enregistrés avec les requêtes de cette collection, choisis par méthode et chemin ({{base_url}}/users/:id sert /users/n’importe-quoi). Une requête peut choisir un exemple avec l’en-tête x-mock-response-name ou x-mock-response-code. Pointez la base_url d’un environnement vers le serveur pour l’utiliser.
+mock.cannot_listen: "Impossible d’écouter le port %{port} : %{error}"
+mock.log: Requêtes
+mock.log_empty: Rien n’a encore été demandé.
+mock.no_example: aucun exemple
+mock.no_routes: Aucune requête de cette collection n’a encore d’exemple enregistré. Envoyez une requête et gardez sa réponse avec le bouton des exemples dans le panneau de réponse.
+mock.port: Port
+mock.routes: Servis (%{count})
+mock.running: Répond sur %{url}
+mock.running_other: Répond pour une autre collection sur %{url}
+mock.start: Démarrer
+mock.stop: Arrêter
+mock.title: Serveur fictif
 monitors.add: Ajouter un moniteur
 monitors.ago_days: il y a %{count} j
 monitors.ago_hours: il y a %{count} h

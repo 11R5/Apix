@@ -357,6 +357,7 @@ menu.import_postman: Import (Postman, Insomnia, OpenAPI, HAR, WSDL)…
 menu.import_url: Import from URL…
 menu.lock_collections: Lock encrypted collections
 menu.method: Method
+menu.mock: Mock server…
 menu.monitors: Monitors…
 menu.move_into_project: Move into a project…
 menu.new_collection: New collection…
@@ -381,6 +382,19 @@ menu.settings: Settings…
 menu.source_code: Source code
 menu.variables: Variables and environments…
 menu.view: View
+mock.about: Answers with the examples saved with this collection's requests, matched by method and path ({{base_url}}/users/:id serves /users/anything). A request can pick an example with the x-mock-response-name or x-mock-response-code header. Point an environment's base_url at the server to use it.
+mock.cannot_listen: "Cannot listen on port %{port}: %{error}"
+mock.log: Requests
+mock.log_empty: Nothing asked yet.
+mock.no_example: no example
+mock.no_routes: No request of this collection has a saved example yet. Send a request and keep its response with the examples button in the response pane.
+mock.port: Port
+mock.routes: Served (%{count})
+mock.running: Serving on %{url}
+mock.running_other: Serving another collection on %{url}
+mock.start: Start
+mock.stop: Stop
+mock.title: Mock server
 monitors.add: Add monitor
 monitors.ago_days: "%{count} d ago"
 monitors.ago_hours: "%{count} h ago"

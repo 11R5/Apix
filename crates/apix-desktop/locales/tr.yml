@@ -355,6 +355,7 @@ menu.import_postman: İçe aktar (Postman, Insomnia, OpenAPI, HAR, WSDL)…
 menu.import_url: URL'den içe aktar…
 menu.lock_collections: Şifreli koleksiyonları kilitle
 menu.method: Metot
+menu.mock: Mock sunucu…
 menu.monitors: Monitörler…
 menu.move_into_project: Bir projeye taşı…
 menu.new_collection: Yeni koleksiyon…
@@ -379,6 +380,19 @@ menu.settings: Ayarlar…
 menu.source_code: Kaynak kod
 menu.variables: Değişkenler ve ortamlar…
 menu.view: Görünüm
+mock.about: Bu koleksiyonun isteklerine kaydedilen örneklerle, yöntem ve yola göre eşleştirerek yanıt verir ({{base_url}}/users/:id, /users/herhangi-bir-şey'e yanıt verir). Bir istek x-mock-response-name ya da x-mock-response-code başlığıyla örnek seçebilir. Kullanmak için bir ortamın base_url değerini sunucuya yöneltin.
+mock.cannot_listen: "%{port} portu dinlenemiyor: %{error}"
+mock.log: İstekler
+mock.log_empty: Henüz istek gelmedi.
+mock.no_example: örnek yok
+mock.no_routes: Bu koleksiyonun hiçbir isteğinin kayıtlı örneği yok. Bir istek gönderin ve yanıt panelindeki örnek düğmesiyle yanıtı saklayın.
+mock.port: Port
+mock.routes: Sunulanlar (%{count})
+mock.running: "%{url} adresinde yanıt veriyor"
+mock.running_other: Başka bir koleksiyon için %{url} adresinde yanıt veriyor
+mock.start: Başlat
+mock.stop: Durdur
+mock.title: Mock sunucu
 monitors.add: Monitör ekle
 monitors.ago_days: "%{count} gün önce"
 monitors.ago_hours: "%{count} sa önce"

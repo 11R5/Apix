@@ -29,6 +29,7 @@ command line runs the same requests in a terminal or CI.
 - [Scripts and tests](#scripts-and-tests)
 - [Runner](#runner)
 - [Monitors](#monitors)
+- [Mock server](#mock-server)
 - [Tabs](#tabs)
 - [Organising requests](#organising-requests)
 - [Projects](#projects)
@@ -787,6 +788,35 @@ from cron or the Task Scheduler, or on a CI schedule; see
 [Watch an API with monitors](workflows.md#watch-an-api-with-monitors). The
 app and `apix monitor` keep the same log of results, so either shows what the
 other found.
+
+## Mock server
+
+The **mock server** answers with the examples saved with the collection's
+requests (see Examples), so a front end can be built or a test run before
+the real API exists. Open **View › Mock server…**, choose a port and
+**Start**.
+
+![The mock server](images/mock.png)
+
+- A request is matched by method and path: the request's URL after its host
+  or after a leading `{{variable}}`, so `{{base_url}}/users/:id` serves
+  `/users/7`. `:name` and `{{name}}` segments match any one segment, and the
+  most literal path wins. An example whose own saved request has another URL
+  serves that URL.
+- With several examples, the first with a 2xx status answers. A request can
+  pick another with the `x-mock-response-name: <example>` or
+  `x-mock-response-code: 404` header (the ones Postman's mock servers read).
+- Every answer allows any origin (CORS) and says which example it came from
+  in `X-Apix-Mock`; an `OPTIONS` preflight is answered too.
+- No match gets `404` with a JSON list of what is served.
+- The window lists what is served and the last requests. Examples added or
+  edited are served at once; the server keeps running when the window
+  closes, until **Stop** or the app quits.
+
+To use it, add an environment (say `mock`) whose `base_url` is
+`http://127.0.0.1:4010`. From a terminal: `apix mock my-api --port 4010`
+(`--host 0.0.0.0` to be reachable from other computers, `--delay 300` for a
+slow server).
 
 ## Tabs
 

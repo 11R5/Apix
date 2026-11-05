@@ -1,0 +1,25 @@
+[package]
+name = "apix-mock"
+description = "A local mock server that answers from the examples saved with Apix requests"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+apix-core.workspace = true
+bytes.workspace = true
+serde_json.workspace = true
+# Example bodies that are not text are kept in base64.
+base64 = "0.22"
+# The HTTP/1.1 server; the same hyper reqwest is built on.
+hyper = { version = "1", features = ["server", "http1"] }
+hyper-util = { version = "0.1", features = ["tokio"] }
+http-body-util = "0.1"
+tokio = { workspace = true, features = ["net", "time", "sync"] }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["net", "time", "io-util"] }
+
+[dev-dependencies.apix-http]
+workspace = true

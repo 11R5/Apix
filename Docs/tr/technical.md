@@ -1,4 +1,4 @@
-<!-- translated from en/technical.md sha256:63ffc86aa85f73a4 -->
+<!-- translated from en/technical.md sha256:bb94ed4150eb9c2a -->
 
 # Teknik notlar
 
@@ -18,6 +18,7 @@ crates/
 ├── apix-runner     koleksiyon koşuları, veri dosyaları, JUnit/JSON/HTML/Markdown raporlar
 ├── apix-grpc       gRPC çağrıları: .proto dosyaları, sunucu reflection'ı ya da koddan ve JSON'dan tanım, JSON mesajlar
 ├── apix-proto      diğer protokoller: MQTT
+├── apix-mock       kayıtlı örneklerden yanıt veren yerel mock sunucu
 ├── apix-cli        `apix` komutu
 └── apix-desktop    masaüstü uygulaması (GPUI); arayüz metinleri locales/ içinde
 tools/
@@ -201,6 +202,7 @@ alır; yeni bir commit yeniden derler, değişmeyen kaynak öncekini kullanır.
 | apix-import | Postman v2.0/v2.1 fixture'ları; WSDL: iki SOAP sürümü, portlar ve adresler, document ve rpc stilleri, başlıklar, şemadan örnekler (extension, enum, choice, `form`, özyineleme), içe aktarılanlar ve okunamayanlar, konumlar, reddedilen WSDL 2.0 |
 | apix-script | istek öncesi scriptlerden değişken ve istek değişiklikleri, `pm.test` / `pm.expect` sonuçları ve mesajları, eski `tests[...]` API'si, dosyayı adlandıran hatalar, sonsuz scriptlerin durdurulması, `setNextRequest`, `atob`/`btoa`, `pm.sendRequest` (geri çağırma ve `await`, bekleme sayılmaz), bilinen özet değerlerine karşı hazır kütüphaneler, kodsuz doğrulamalar, yanıt hedefleri için değer ve ifade üretimi |
 | apix-runner | CSV (tırnaklar, satır sonları, `;`, BOM) ve JSON veri dosyaları, dotenv dosyaları ve `APIX_VAR_*` adları, tekrar sayıları ve veri satırları, duraklatma/durdurma zamanlaması, JUnit/JSON/HTML/Markdown çıktısı ve kaçışlar (pull request için Markdown: işaret, kaçışlar, başarısız olanlar, `--changed` seçimi), tarihler; yerel bir sunucuya karşı bütün koşular (veri satırları, kenar çubuğu sırası, `bail`, `setNextRequest`), yavaş bir sunucuya karşı yan yana koşan tekrarlar (sırayla koşmaktan hızlı, tekrar sırasıyla listelenir); monitörler: durumun dönmesi, son sonuçlarla sınırlı ve koleksiyona göre ayrı günlükler, günlüğe uyan zamanlama, webhook mesajları |
+| apix-mock | yol kalıpları (`{{base_url}}/users/:id`, sunucular, sorgular), en çok sabit parçalı eşleşme, `x-mock-response-name` ve `-code` ile seçim, önce 2xx, `Content-Encoding`'siz açılmış gövdeler, 404 listesi, ön istekler; bir portta HTTP istemcisiyle yanıtlayan gerçek sunucu, CORS ve çalışırken eklenen örneğin sunulması |
 | apix-vault | şifreleme formatı, kurcalama (tampering), parola değişikliği, kurtarma anahtarı, anahtarlık kayıtları (gerçek kimlik bilgisi deposunda, test servis adıyla; depo yoksa atlanır) |
 | apix-desktop | çevirilerin eksiksizliği, dil yardımcıları, dosya yolları, vurgulama sorgusu, tema dosyaları (okuma, hatalar, gidiş-dönüş), vurgu ve saydamlık renkleri, GraphQL şema dosyası adları, geçmişte bir gRPC çağrısının günlüğü |
 | docs-check | belge yapısı ve damgalar |

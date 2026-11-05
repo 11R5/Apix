@@ -128,6 +128,22 @@ enum Command {
         #[command(flatten)]
         net: NetArgs,
     },
+    /// Serve the examples saved with a collection's requests ([[example]]) as a
+    /// local mock server, matched by method and path
+    Mock {
+        /// The collection (or a folder inside it)
+        #[arg(default_value = ".")]
+        dir: PathBuf,
+        /// The port to listen on
+        #[arg(short, long, default_value_t = 4010)]
+        port: u16,
+        /// The address to listen on (0.0.0.0 to be reachable from other computers)
+        #[arg(long, default_value = "127.0.0.1")]
+        host: String,
+        /// Wait this many milliseconds before every answer
+        #[arg(long, value_name = "MS", default_value_t = 0)]
+        delay: u64,
+    },
     /// Run a collection's monitors ([[monitor]] in apix.toml) on their
     /// schedules; a monitor that starts failing or passes again tells its webhook
     Monitor {
@@ -929,6 +945,67 @@ async fn run(cli: Cli) -> Result<bool> {
                 println!("{}Wrote {}{}", style.dim, path.display(), style.reset);
             }
             Ok(summary.failed == 0)
+        }
+        Command::Mock {
+            dir,
+            port,
+            host,
+            delay,
+        } => {
+            unlock_around(&dir, &var)?;
+            let root = Collection::find_root(&dir).with_context(|| {
+                format!("no apix.toml found in {} or its parents", dir.display())
+            })?;
+            let routes = apix_mock::load(&root);
+            if routes.is_empty() {
+                eprintln!(
+                    "{}No request has a saved example yet: save one from the response pane, or with apix send --save-example. Requests get 404 until then.{}",
+                    style.yellow, style.reset
+                );
+            }
+            for route in &routes {
+                println!(
+                    "{}{:<7}{} {:<32} {}{} · {} ({}){}",
+                    style.green,
+                    route.method.as_str(),
+                    style.reset,
+                    route.path,
+                    style.dim,
+                    route.request,
+                    route.example.name,
+                    route.example.status,
+                    style.reset
+                );
+            }
+            let listener = tokio::net::TcpListener::bind((host.as_str(), port))
+                .await
+                .with_context(|| format!("cannot listen on {host}:{port}"))?;
+            println!(
+                "\nMock server for {} on http://{} (Ctrl+C stops)",
+                root.display(),
+                listener.local_addr()?
+            );
+            let (green, red, dim, reset) = (style.green, style.red, style.dim, style.reset);
+            apix_mock::serve(
+                listener,
+                root,
+                apix_mock::Options {
+                    delay: std::time::Duration::from_millis(delay),
+                },
+                move |hit| {
+                    let colour = if hit.matched.is_some() { green } else { red };
+                    let matched = hit
+                        .matched
+                        .map(|(request, example)| format!("{request} · {example}"))
+                        .unwrap_or_else(|| "no example".into());
+                    println!(
+                        "{:<7} {:<40} {colour}{}{reset} {dim}{matched}{reset}",
+                        hit.method, hit.path, hit.status
+                    );
+                },
+            )
+            .await?;
+            Ok(true)
         }
         Command::Monitor {
             dir,

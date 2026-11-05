@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:bd3cfe0dbcf84632 -->
+<!-- translated from en/user-guide.md sha256:982c17024b401514 -->
 
 # Apix kullanım kılavuzu
 
@@ -32,6 +32,7 @@ veya CI'da çalıştırır.
 - [Scriptler ve testler](#scriptler-ve-testler)
 - [Runner](#runner)
 - [Monitörler](#monitörler)
+- [Mock sunucu](#mock-sunucu)
 - [Sekmeler](#sekmeler)
 - [Kenar çubuğunda istekleri düzenleme](#kenar-çubuğunda-istekleri-düzenleme)
 - [Projeler](#projeler)
@@ -802,6 +803,35 @@ cron'dan ya da Görev Zamanlayıcı'dan, ya da bir CI zamanlamasıyla çalışt�
 bkz. [Bir API'yi monitörlerle izleme](workflows.md#bir-apiyi-monitörlerle-izleme).
 Uygulama ve `apix monitor` aynı sonuç günlüğünü tutar; biri diğerinin
 bulduğunu gösterir.
+
+## Mock sunucu
+
+**Mock sunucu**, koleksiyonun isteklerine kaydedilen örneklerle (bkz.
+Örnekler) yanıt verir; böylece gerçek API hazır olmadan bir arayüz yazılabilir
+ya da bir test koşulabilir. **Görünüm › Mock sunucu…** ile açın, bir port seçin
+ve **Başlat**'a basın.
+
+![Mock sunucu](images/mock.png)
+
+- İstek, yöntem ve yola göre eşleşir: isteğin URL'sinin sunucudan ya da baştaki
+  bir `{{değişken}}`den sonraki kısmı; yani `{{base_url}}/users/:id`,
+  `/users/7`'ye yanıt verir. `:ad` ve `{{ad}}` parçaları herhangi bir parçayla
+  eşleşir, en çok sabit parçası olan yol kazanır. Kayıtlı isteği başka bir URL
+  taşıyan örnek o URL'ye yanıt verir.
+- Birden çok örnek varsa durumu 2xx olan ilk örnek yanıt verir. İstek başka
+  birini `x-mock-response-name: <örnek>` ya da `x-mock-response-code: 404`
+  başlığıyla seçebilir (Postman'ın mock sunucularının okuduğu başlıklar).
+- Her yanıt her kaynağa izin verir (CORS) ve hangi örnekten geldiğini
+  `X-Apix-Mock` başlığında söyler; `OPTIONS` ön isteği de yanıtlanır.
+- Eşleşme yoksa sunulanların JSON listesiyle `404` döner.
+- Pencere sunulanları ve son istekleri listeler. Eklenen ya da değiştirilen
+  örnekler hemen sunulur; sunucu pencere kapanınca da **Durdur**'a basılana ya
+  da uygulama kapanana kadar çalışır.
+
+Kullanmak için `base_url` değeri `http://127.0.0.1:4010` olan bir ortam (örneğin
+`mock`) ekleyin. Terminalden: `apix mock my-api --port 4010` (başka
+bilgisayarlardan erişmek için `--host 0.0.0.0`, yavaş bir sunucu gibi davranmak
+için `--delay 300`).
 
 ## Sekmeler
 

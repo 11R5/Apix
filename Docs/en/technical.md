@@ -17,6 +17,7 @@ crates/
 ├── apix-runner     collection runs, data files, JUnit/JSON/HTML/Markdown reports
 ├── apix-grpc       gRPC calls: .proto files, server reflection or definitions from code and JSON, messages as JSON
 ├── apix-proto      other protocols: MQTT
+├── apix-mock       a local mock server answering from saved examples
 ├── apix-cli        the `apix` command
 └── apix-desktop    the desktop app (GPUI); interface texts in locales/
 tools/
@@ -199,6 +200,7 @@ so a new commit rebuilds it and an unchanged one reuses it.
 | apix-import | Postman v2.0/v2.1 fixtures; WSDL: both SOAP versions, ports and addresses, document and rpc styles, headers, examples from the schema (extension, enums, choices, `form`, recursion), imports and what could not be read, locations, WSDL 2.0 refused |
 | apix-script | variables and request changes from pre-request scripts, `pm.test` / `pm.expect` results and messages, the older `tests[...]` API, errors naming the file, endless scripts stopped, `setNextRequest`, `atob`/`btoa`, `pm.sendRequest` (callback and `await`, waiting not counted), the built-in libraries against known digests, checks without code, values and expressions for response targets |
 | apix-runner | CSV (quotes, line breaks, `;`, BOM) and JSON data files, dotenv files and `APIX_VAR_*` names, iteration counts and data rows, pause/stop timing, JUnit/JSON/HTML/Markdown output and escaping (Markdown for pull requests: marker, escaping, what failed, a `--changed` selection), dates; whole runs against a local server (data rows, sidebar order, `bail`, `setNextRequest`), iterations side by side against a slow server (faster than one after another, listed by iteration); monitors: when the state turns, logs kept to their last results and apart per collection, schedules that follow the log, webhook messages |
+| apix-mock | path patterns (`{{base_url}}/users/:id`, hosts, queries), the most literal match, picking by `x-mock-response-name` and `-code`, 2xx first, decoded bodies without `Content-Encoding`, the 404 list, preflights; a real server on a port answering through the HTTP client, with CORS, and serving an example added while it runs |
 | apix-vault | encryption format, tampering, password change, recovery key, keychain entries (against the real credential store under a test service name; skipped where none exists) |
 | apix-desktop | translations complete, language helpers, file paths, highlighting query, theme files (reading, errors, round trip), accent and transparency colours, GraphQL schema file names, a gRPC call's log in the history |
 | docs-check | documentation structure and stamps |

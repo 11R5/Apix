@@ -420,6 +420,10 @@ impl Workspace {
                 name!("menu.monitors"),
                 run(Workspace::open_monitors),
             ));
+            out.push(Entry::command(
+                name!("menu.mock"),
+                run(Workspace::open_mock),
+            ));
         }
         if open {
             out.push(Entry::command(

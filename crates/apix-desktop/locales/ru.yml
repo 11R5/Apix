@@ -355,6 +355,7 @@ menu.import_postman: Импорт (Postman, Insomnia, OpenAPI, HAR, WSDL)…
 menu.import_url: Импорт по URL…
 menu.lock_collections: Заблокировать зашифрованные коллекции
 menu.method: Метод
+menu.mock: Mock-сервер…
 menu.monitors: Мониторы…
 menu.move_into_project: Переместить в проект…
 menu.new_collection: Новая коллекция…
@@ -379,6 +380,19 @@ menu.settings: Настройки…
 menu.source_code: Исходный код
 menu.variables: Переменные и окружения…
 menu.view: Вид
+mock.about: Отвечает примерами, сохранёнными в запросах этой коллекции, сопоставляя метод и путь ({{base_url}}/users/:id обслуживает /users/что-угодно). Запрос может выбрать пример заголовком x-mock-response-name или x-mock-response-code. Чтобы использовать сервер, направьте на него base_url окружения.
+mock.cannot_listen: "Не удаётся слушать порт %{port}: %{error}"
+mock.log: Запросы
+mock.log_empty: Запросов ещё не было.
+mock.no_example: нет примера
+mock.no_routes: Ни у одного запроса этой коллекции пока нет сохранённого примера. Отправьте запрос и сохраните ответ кнопкой примеров на панели ответа.
+mock.port: Порт
+mock.routes: Обслуживается (%{count})
+mock.running: Отвечает на %{url}
+mock.running_other: Отвечает для другой коллекции на %{url}
+mock.start: Запустить
+mock.stop: Остановить
+mock.title: Mock-сервер
 monitors.add: Добавить монитор
 monitors.ago_days: "%{count} дн. назад"
 monitors.ago_hours: "%{count} ч назад"
