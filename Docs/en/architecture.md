@@ -42,6 +42,7 @@ crates/
 ├── apix-grpc     gRPC calls: tonic, messages as JSON (prost-reflect), .proto files (protox), definitions from code or JSON
 ├── apix-proto    other protocols: MQTT (rumqttc)
 ├── apix-mock     a local mock server answering from saved examples (hyper)
+├── apix-capture  a recording proxy: plain HTTP, CONNECT tunnels, HTTPS opened with a local CA (rcgen, rustls)
 │                 or server reflection
 ├── apix-cli      `apix` binary: send / run / diff / schema / import / shell from terminal & CI
 └── apix-desktop  GPUI desktop app (Windows, macOS and Linux from one crate)

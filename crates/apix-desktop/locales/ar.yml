@@ -137,6 +137,14 @@ body.part_file: ملف
 body.part_text: نص
 body.send_file_instead: إرسال ملف بدلًا من ذلك
 body.send_text_instead: إرسال نص بدلًا من ذلك
+capture.about: تُحفظ الطلبات التي تمر عبر هذا الوكيل في مجلد captured للمجموعة، كلٌّ مع استجابته مثالًا. اضبطه وكيلًا لمتصفح أو تطبيق أو سكربت. لا تُكتب ملفات تعريف الارتباط، وتصبح بيانات الاعتماد {{متغيرات}}.
+capture.hosts: فقط
+capture.hosts_placeholder: "المضيفون المراد تسجيلهم، مثل api.example.com (فارغ: الكل)"
+capture.https: افتح HTTPS بسلطة الشهادات المحلية في Apix لتسجيله أيضًا
+capture.running: يسجّل عبر %{url}
+capture.saving: يحفظ في %{folder}
+capture.title: وكيل الالتقاط
+capture.trust: "لا يُفتح HTTPS إلا حيث يُوثق بالسلطة المحلية في Apix. ثق بها مرة واحدة بالأمر:"
 chips.add_with: أضفه باستخدام %{key} (المتغيرات).
 chips.dynamic: "ديناميكي: قيمة جديدة في كل إرسال"
 chips.empty: (فارغ)
@@ -336,6 +344,7 @@ import.url_ok: استيراد
 import.url_title: استيراد من عنوان URL
 menu.active_environment: البيئة النشطة
 menu.cancel: إلغاء
+menu.capture: وكيل الالتقاط…
 menu.close_tab: إغلاق علامة التبويب
 menu.collection_auth: مصادقة المجموعة…
 menu.collection_settings: إعدادات طلبات المجموعة…

@@ -137,6 +137,14 @@ body.part_file: Fichier
 body.part_text: Texte
 body.send_file_instead: Envoyer un fichier à la place
 body.send_text_instead: Envoyer du texte à la place
+capture.about: Les requêtes qui passent par ce proxy sont enregistrées dans le dossier captured de la collection, chacune avec sa réponse comme exemple. Définissez-le comme proxy d’un navigateur, d’une app ou d’un script. Les cookies sont omis et les identifiants deviennent des {{variables}}.
+capture.hosts: Seulement
+capture.hosts_placeholder: "hôtes à enregistrer, ex. api.example.com (vide : tous)"
+capture.https: Ouvrir le HTTPS avec l’autorité de certification locale d’Apix, pour l’enregistrer aussi
+capture.running: Enregistre via %{url}
+capture.saving: Enregistre dans %{folder}
+capture.title: Proxy de capture
+capture.trust: "Le HTTPS n’est ouvert que là où l’autorité locale d’Apix est approuvée. Approuvez-la une fois avec :"
 chips.add_with: Ajoutez-la avec %{key} (Variables).
 chips.dynamic: "Dynamique : une nouvelle valeur à chaque envoi"
 chips.empty: (vide)
@@ -336,6 +344,7 @@ import.url_ok: Importer
 import.url_title: Importer depuis une URL
 menu.active_environment: Environnement actif
 menu.cancel: Annuler
+menu.capture: Proxy de capture…
 menu.close_tab: Fermer l'onglet
 menu.collection_auth: Authentification de la collection…
 menu.collection_settings: Réglages de requête de la collection…

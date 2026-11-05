@@ -132,6 +132,27 @@ enum Command {
         #[command(flatten)]
         net: NetArgs,
     },
+    /// Record the requests that pass through a local proxy as request files,
+    /// each with its answer as an example. Cookies are dropped and credentials
+    /// become {{variables}}
+    Capture {
+        /// Where to save them: a collection, or a folder in one (made if missing)
+        #[arg(default_value = "captured")]
+        into: PathBuf,
+        /// The port to listen on
+        #[arg(short, long, default_value_t = 8888)]
+        port: u16,
+        /// Record only hosts that end with this (repeatable); others pass through
+        #[arg(long = "only", value_name = "HOST")]
+        only: Vec<String>,
+        /// Open HTTPS with Apix's local certificate authority, so it can be
+        /// recorded; the authority must be trusted first (the command says how)
+        #[arg(long)]
+        https: bool,
+        /// Print what passes, but save nothing
+        #[arg(long)]
+        no_save: bool,
+    },
     /// Write API documentation for a collection: one HTML page that opens in
     /// any browser, or Markdown for a repository; no secrets are printed
     Docs {
@@ -988,6 +1009,91 @@ async fn run(cli: Cli) -> Result<bool> {
                 println!("{}Wrote {}{}", style.dim, path.display(), style.reset);
             }
             Ok(summary.failed == 0)
+        }
+        Command::Capture {
+            into,
+            port,
+            only,
+            https,
+            no_save,
+        } => {
+            let into = std::path::absolute(&into).unwrap_or(into);
+            if !no_save && Collection::find_root(&into).is_none() {
+                std::fs::create_dir_all(&into)?;
+                apix_core::store::save_collection_meta(
+                    &into,
+                    &apix_core::store::CollectionMeta {
+                        name: "Captured".into(),
+                        ..Default::default()
+                    },
+                )?;
+            }
+            let authority = if https {
+                let dir = apix_capture::default_dir().context("no configuration folder")?;
+                let authority = apix_capture::Authority::load_or_create(&dir)?;
+                println!(
+                    "{}HTTPS is opened with Apix's local authority. Trust it once (Firefox keeps its own list):{}\n  {}\n",
+                    style.yellow,
+                    style.reset,
+                    apix_capture::trust_hint(&authority.cert_path)
+                );
+                Some(std::sync::Arc::new(authority))
+            } else {
+                None
+            };
+            let listener = tokio::net::TcpListener::bind(("127.0.0.1", port))
+                .await
+                .with_context(|| format!("cannot listen on 127.0.0.1:{port}"))?;
+            let address = listener.local_addr()?;
+            println!(
+                "Capture proxy on http://{address}; set it as the HTTP{} proxy, e.g.\n  HTTP_PROXY=http://{address} HTTPS_PROXY=http://{address}\n{}",
+                if https { " and HTTPS" } else { "" },
+                if no_save {
+                    "Nothing is saved.".to_owned()
+                } else {
+                    format!("Saving into {} (Ctrl+C stops)", into.display())
+                }
+            );
+            let (green, red, dim, reset) = (style.green, style.red, style.dim, style.reset);
+            apix_capture::run(
+                listener,
+                apix_capture::Options {
+                    hosts: only,
+                    open_https: authority,
+                    upstream_ca: None,
+                },
+                move |event| match event {
+                    apix_capture::Event::Exchange(exchange) => {
+                        let colour = if exchange.status < 400 { green } else { red };
+                        let saved = if no_save {
+                            String::new()
+                        } else {
+                            match apix_capture::save(&exchange, &into) {
+                                Ok(path) => format!(
+                                    "  {dim}→ {}{reset}",
+                                    path.file_name().map(|n| n.to_string_lossy()).unwrap_or_default()
+                                ),
+                                Err(e) => format!("  {red}not saved: {e}{reset}"),
+                            }
+                        };
+                        println!(
+                            "{:<7} {}  {colour}{}{reset} {dim}{} ms{reset}{saved}",
+                            exchange.request.method.as_str(),
+                            apix_core::display_url(&exchange.request.url),
+                            exchange.status,
+                            exchange.took.as_millis()
+                        );
+                    }
+                    apix_capture::Event::Tunnel { host } => {
+                        println!("{dim}CONNECT {host}  (HTTPS passed through unread; --https records it){reset}");
+                    }
+                    apix_capture::Event::Failed { url, error } => {
+                        println!("{red}{url}: {error}{reset}");
+                    }
+                },
+            )
+            .await?;
+            Ok(true)
         }
         Command::Docs { dir, out } => {
             unlock_around(&dir, &var)?;

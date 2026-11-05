@@ -124,6 +124,9 @@ Measurements of the other tools on the same machine are planned.
   so a front end can be built before the API exists.
 - **Table and chart:** a JSON response (or what a JSONPath/jq filter picks out)
   as a table of its records or a bar chart, in the app and `apix send --table`.
+- **Capture proxy:** traffic through a local proxy becomes requests with their
+  answers (`apix capture`, View › Capture proxy…); HTTPS too, with a local
+  certificate authority you choose to trust.
 - **API documentation:** one HTML page or Markdown from a collection
   (`apix docs`, File › Export documentation…), with no secrets in it.
 - **Monitors:** run a collection or folder every few minutes and hear about it
@@ -194,6 +197,7 @@ apix diff main -C my-api                     # what changed in the requests, fie
 apix monitor my-api                          # [[monitor]]s of apix.toml on their schedules
 apix mock my-api --port 4010                 # serve saved examples as a mock API
 apix docs my-api --out api.html              # API documentation (or --out API.md)
+apix capture my-api/captured --only api.test # record traffic through a proxy on :8888
 apix run my-api --data users.csv -p 8        # 8 iterations at once
 apix send chat/socket.apix --message '{"join":"room-1"}' --listen 10   # a ws:// request
 apix send events/live.apix                   # server-sent events, printed as they arrive

@@ -137,6 +137,14 @@ body.part_file: Dosya
 body.part_text: Metin
 body.send_file_instead: Bunun yerine dosya gönder
 body.send_text_instead: Bunun yerine metin gönder
+capture.about: Bu proxy'den geçen istekler, yanıtları örnek olarak eklenmiş hâlde koleksiyonun captured klasörüne kaydedilir. Bir tarayıcının, uygulamanın ya da scriptin proxy'si olarak ayarlayın. Çerezler yazılmaz, kimlik bilgileri {{değişken}} olur.
+capture.hosts: Yalnızca
+capture.hosts_placeholder: "kaydedilecek sunucular, örneğin api.example.com (boş: hepsi)"
+capture.https: HTTPS'i Apix'in yerel sertifika yetkilisiyle aç, onu da kaydet
+capture.running: "%{url} üzerinden kaydediyor"
+capture.saving: "%{folder} klasörüne kaydediliyor"
+capture.title: Yakalama proxy'si
+capture.trust: "HTTPS yalnızca Apix'in yerel yetkilisine güvenilen yerde açılır. Bir kez şu komutla güvenin:"
 chips.add_with: "%{key} ile ekleyin (Değişkenler)."
 chips.dynamic: "Dinamik: her gönderimde yeni bir değer"
 chips.empty: (boş)
@@ -336,6 +344,7 @@ import.url_ok: İçe aktar
 import.url_title: URL'den içe aktar
 menu.active_environment: Etkin ortam
 menu.cancel: İptal
+menu.capture: Yakalama proxy'si…
 menu.close_tab: Sekmeyi kapat
 menu.collection_auth: Koleksiyon yetkilendirmesi…
 menu.collection_settings: Koleksiyon istek ayarları…

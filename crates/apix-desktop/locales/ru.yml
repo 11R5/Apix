@@ -137,6 +137,14 @@ body.part_file: Файл
 body.part_text: Текст
 body.send_file_instead: Отправить файл вместо текста
 body.send_text_instead: Отправить текст вместо файла
+capture.about: Запросы, проходящие через этот прокси, сохраняются в папку captured коллекции, каждый с ответом в виде примера. Укажите его как прокси браузера, приложения или скрипта. Cookie не записываются, учётные данные становятся {{переменными}}.
+capture.hosts: Только
+capture.hosts_placeholder: "хосты для записи, например api.example.com (пусто: все)"
+capture.https: Открывать HTTPS локальным центром сертификации Apix, чтобы записывать и его
+capture.running: Записывает через %{url}
+capture.saving: Сохраняет в %{folder}
+capture.title: Прокси для записи
+capture.trust: "HTTPS открывается только там, где доверяют локальному центру Apix. Доверьтесь ему один раз командой:"
 chips.add_with: Добавьте её через %{key} (Переменные).
 chips.dynamic: "Динамическая: новое значение при каждой отправке"
 chips.empty: (пусто)
@@ -336,6 +344,7 @@ import.url_ok: Импортировать
 import.url_title: Импорт по URL
 menu.active_environment: Активное окружение
 menu.cancel: Отменить
+menu.capture: Прокси для записи…
 menu.close_tab: Закрыть вкладку
 menu.collection_auth: Авторизация коллекции…
 menu.collection_settings: Настройки запросов коллекции…

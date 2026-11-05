@@ -31,6 +31,7 @@ command line runs the same requests in a terminal or CI.
 - [Monitors](#monitors)
 - [Mock server](#mock-server)
 - [API documentation](#api-documentation)
+- [Capture proxy](#capture-proxy)
 - [Tabs](#tabs)
 - [Organising requests](#organising-requests)
 - [Projects](#projects)
@@ -853,6 +854,32 @@ only when it is a `{{variable}}`. Raw HTML in descriptions is left out.
 
 From a terminal: `apix docs my-api --out api.html` (or `--out API.md`;
 without `--out`, Markdown on standard output).
+
+## Capture proxy
+
+The **capture proxy** turns real traffic into requests. Open **View › Capture
+proxy…**, pick a port (8888) and **Start**, then set `http://127.0.0.1:8888`
+as the proxy of a browser, an app or a script (`HTTP_PROXY` and
+`HTTPS_PROXY`). Every request that passes is saved into the collection's
+`captured/` folder as a request file, with its answer as the example
+`Captured`, and listed in the window.
+
+![The capture proxy](images/capture.png)
+
+- **Only** limits recording to some hosts (`example.com` also takes
+  `api.example.com`); the rest passes through unrecorded.
+- Nothing secret is written: `Cookie` is dropped, and the values of
+  `Authorization` and API-key headers become variables (`{{authorization}}`).
+- HTTPS travels in a tunnel the proxy cannot read, so by default it is passed
+  on and only its host is listed. With **Open HTTPS** ticked, Apix answers the
+  TLS handshake with a certificate for the host signed by a local authority
+  (`<config>/Apix/capture-ca.pem`) and records the requests too. This works
+  only where that authority is trusted: the window shows the command that
+  trusts it (on Windows `certutil -user -addstore Root …`); Apix never
+  installs it, and Firefox keeps its own list.
+
+From a terminal: `apix capture my-api/captured --port 8888 --only example.com`
+(`--https` to open HTTPS, `--no-save` to only watch).
 
 ## Tabs
 

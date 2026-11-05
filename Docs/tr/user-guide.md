@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:d0e5f079a86586b3 -->
+<!-- translated from en/user-guide.md sha256:c40bb6f528d4f840 -->
 
 # Apix kullanım kılavuzu
 
@@ -34,6 +34,7 @@ veya CI'da çalıştırır.
 - [Monitörler](#monitörler)
 - [Mock sunucu](#mock-sunucu)
 - [API dokümantasyonu](#api-dokümantasyonu)
+- [Yakalama proxy'si](#yakalama-proxysi)
 - [Sekmeler](#sekmeler)
 - [Kenar çubuğunda istekleri düzenleme](#kenar-çubuğunda-istekleri-düzenleme)
 - [Projeler](#projeler)
@@ -869,6 +870,33 @@ atılır.
 
 Terminalden: `apix docs my-api --out api.html` (ya da `--out API.md`; `--out`
 olmadan Markdown standart çıktıya yazılır).
+
+## Yakalama proxy'si
+
+**Yakalama proxy'si** gerçek trafiği isteklere çevirir. **Görünüm › Yakalama
+proxy'si…** ile açın, bir port seçin (8888) ve **Başlat**'a basın; sonra
+`http://127.0.0.1:8888` adresini bir tarayıcının, uygulamanın ya da scriptin
+proxy'si olarak ayarlayın (`HTTP_PROXY` ve `HTTPS_PROXY`). Geçen her istek,
+yanıtı `Captured` örneği olarak eklenmiş bir istek dosyası olarak koleksiyonun
+`captured/` klasörüne kaydedilir ve pencerede listelenir.
+
+![Yakalama proxy'si](images/capture.png)
+
+- **Yalnızca** kaydı bazı sunucularla sınırlar (`example.com`,
+  `api.example.com`'u da kapsar); kalanı kaydedilmeden geçer.
+- Gizli hiçbir şey yazılmaz: `Cookie` atılır; `Authorization` ve API anahtarı
+  başlıklarının değerleri değişkene dönüşür (`{{authorization}}`).
+- HTTPS, proxy'nin okuyamadığı bir tünelde gider; bu yüzden varsayılan olarak
+  olduğu gibi iletilir ve yalnızca sunucusu listelenir. **HTTPS'i aç**
+  işaretliyse Apix TLS el sıkışmasına sunucu için yerel bir yetkilinin
+  (`<config>/Apix/capture-ca.pem`) imzaladığı bir sertifikayla yanıt verir ve
+  istekleri de kaydeder. Bu yalnızca o yetkiliye güvenilen yerde çalışır:
+  pencere ona güvenmenin komutunu gösterir (Windows'ta `certutil -user
+  -addstore Root …`); Apix onu asla kendisi kurmaz, Firefox kendi listesini
+  tutar.
+
+Terminalden: `apix capture my-api/captured --port 8888 --only example.com`
+(HTTPS'i açmak için `--https`, yalnızca izlemek için `--no-save`).
 
 ## Sekmeler
 

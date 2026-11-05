@@ -1,4 +1,4 @@
-<!-- translated from en/technical.md sha256:976299c0df912a6d -->
+<!-- translated from en/technical.md sha256:d09a5d2a9145c9a5 -->
 
 # Teknik notlar
 
@@ -19,6 +19,7 @@ crates/
 ├── apix-grpc       gRPC çağrıları: .proto dosyaları, sunucu reflection'ı ya da koddan ve JSON'dan tanım, JSON mesajlar
 ├── apix-proto      diğer protokoller: MQTT
 ├── apix-mock       kayıtlı örneklerden yanıt veren yerel mock sunucu
+├── apix-capture    geçen istekleri kaydeden proxy
 ├── apix-cli        `apix` komutu
 └── apix-desktop    masaüstü uygulaması (GPUI); arayüz metinleri locales/ içinde
 tools/
@@ -85,6 +86,7 @@ Masaüstü uygulamasının tam bir release derlemesi birkaç dakika sürer.
 | Dosya | İçerik |
 |---|---|
 | `<config>/Apix/settings.toml` | dil, görünüm, koyu ve açık tema, vurgu rengi, saydamlık, otomatik kilit süresi, geçmişin açık ya da kapalı olması, ortam gizli değerlerinin nereye yazılacağı, uygulama açıkken monitörlerin çalışıp çalışmayacağı |
+| `<config>/Apix/capture-ca.pem`, `capture-ca.key` | yakalama proxy'sinin yerel sertifika yetkilisi; HTTPS ilk açıldığında oluşturulur, yalnızca siz eklerseniz güvenilir |
 | `<config>/Apix/monitors/` | her monitörün son 500 sonucu, koşu başına bir JSON satırı (`<koleksiyon klasörünün özeti>-<monitör adı>.jsonl`); `apix monitor` ve uygulama yazar |
 | `<config>/Apix/state.toml` | son açılan koleksiyonlar, koleksiyon ya da proje başına seçilen ortam ve açık sekmeler (şifreli koleksiyonlar hariç) |
 | `<config>/Apix/cookies.json` | çerez kavanozu (oturum çerezleri kalıcı değildir) |
@@ -203,6 +205,7 @@ alır; yeni bir commit yeniden derler, değişmeyen kaynak öncekini kullanır.
 | apix-script | istek öncesi scriptlerden değişken ve istek değişiklikleri, `pm.test` / `pm.expect` sonuçları ve mesajları, eski `tests[...]` API'si, dosyayı adlandıran hatalar, sonsuz scriptlerin durdurulması, `setNextRequest`, `atob`/`btoa`, `pm.sendRequest` (geri çağırma ve `await`, bekleme sayılmaz), bilinen özet değerlerine karşı hazır kütüphaneler, kodsuz doğrulamalar, yanıt hedefleri için değer ve ifade üretimi |
 | apix-runner | CSV (tırnaklar, satır sonları, `;`, BOM) ve JSON veri dosyaları, dotenv dosyaları ve `APIX_VAR_*` adları, tekrar sayıları ve veri satırları, duraklatma/durdurma zamanlaması, JUnit/JSON/HTML/Markdown çıktısı ve kaçışlar (pull request için Markdown: işaret, kaçışlar, başarısız olanlar, `--changed` seçimi), tarihler; yerel bir sunucuya karşı bütün koşular (veri satırları, kenar çubuğu sırası, `bail`, `setNextRequest`), yavaş bir sunucuya karşı yan yana koşan tekrarlar (sırayla koşmaktan hızlı, tekrar sırasıyla listelenir); monitörler: durumun dönmesi, son sonuçlarla sınırlı ve koleksiyona göre ayrı günlükler, günlüğe uyan zamanlama, webhook mesajları |
 | apix-mock | yol kalıpları (`{{base_url}}/users/:id`, sunucular, sorgular), en çok sabit parçalı eşleşme, `x-mock-response-name` ve `-code` ile seçim, önce 2xx, `Content-Encoding`'siz açılmış gövdeler, 404 listesi, ön istekler; bir portta HTTP istemcisiyle yanıtlayan gerçek sunucu, CORS ve çalışırken eklenen örneğin sunulması |
+| apix-capture | kaydedilen isteklerde çerez ve kimlik bilgisi olmaması, sunucu süzgeçleri; gerçek yerel sunucularla: düz HTTP'nin kaydı, HTTPS'in yerel yetkiliyle açılması (istemci yalnızca ona güvenirken), HTTPS tünellerinin okunmadan geçmesi |
 | apix-vault | şifreleme formatı, kurcalama (tampering), parola değişikliği, kurtarma anahtarı, anahtarlık kayıtları (gerçek kimlik bilgisi deposunda, test servis adıyla; depo yoksa atlanır) |
 | apix-desktop | çevirilerin eksiksizliği, dil yardımcıları, dosya yolları, vurgulama sorgusu, tema dosyaları (okuma, hatalar, gidiş-dönüş), vurgu ve saydamlık renkleri, GraphQL şema dosyası adları, geçmişte bir gRPC çağrısının günlüğü |
 | docs-check | belge yapısı ve damgalar |

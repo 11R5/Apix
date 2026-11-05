@@ -18,6 +18,7 @@ crates/
 ├── apix-grpc       gRPC calls: .proto files, server reflection or definitions from code and JSON, messages as JSON
 ├── apix-proto      other protocols: MQTT
 ├── apix-mock       a local mock server answering from saved examples
+├── apix-capture    a recording proxy that saves passing requests
 ├── apix-cli        the `apix` command
 └── apix-desktop    the desktop app (GPUI); interface texts in locales/
 tools/
@@ -84,6 +85,7 @@ release build of the desktop app takes a few minutes.
 | File | Contents |
 |---|---|
 | `<config>/Apix/settings.toml` | language, appearance, dark and light theme, accent colour, transparency, auto-lock time, history on or off, where environment secrets go, whether monitors run while the app is open |
+| `<config>/Apix/capture-ca.pem`, `capture-ca.key` | the capture proxy's local certificate authority, made the first time HTTPS is opened; trusted only if you add it yourself |
 | `<config>/Apix/monitors/` | each monitor's last 500 results, one JSON line per run (`<hash of the collection folder>-<monitor name>.jsonl`), written by `apix monitor` and the app |
 | `<config>/Apix/state.toml` | recently opened collections, the chosen environment and the open tabs per collection or project (not for encrypted collections) |
 | `<config>/Apix/cookies.json` | the cookie jar (session cookies are not persisted) |
@@ -201,6 +203,7 @@ so a new commit rebuilds it and an unchanged one reuses it.
 | apix-script | variables and request changes from pre-request scripts, `pm.test` / `pm.expect` results and messages, the older `tests[...]` API, errors naming the file, endless scripts stopped, `setNextRequest`, `atob`/`btoa`, `pm.sendRequest` (callback and `await`, waiting not counted), the built-in libraries against known digests, checks without code, values and expressions for response targets |
 | apix-runner | CSV (quotes, line breaks, `;`, BOM) and JSON data files, dotenv files and `APIX_VAR_*` names, iteration counts and data rows, pause/stop timing, JUnit/JSON/HTML/Markdown output and escaping (Markdown for pull requests: marker, escaping, what failed, a `--changed` selection), dates; whole runs against a local server (data rows, sidebar order, `bail`, `setNextRequest`), iterations side by side against a slow server (faster than one after another, listed by iteration); monitors: when the state turns, logs kept to their last results and apart per collection, schedules that follow the log, webhook messages |
 | apix-mock | path patterns (`{{base_url}}/users/:id`, hosts, queries), the most literal match, picking by `x-mock-response-name` and `-code`, 2xx first, decoded bodies without `Content-Encoding`, the 404 list, preflights; a real server on a port answering through the HTTP client, with CORS, and serving an example added while it runs |
+| apix-capture | saved requests keep no cookies or credentials, host filters; through real local servers: plain HTTP recorded and saved, HTTPS opened with the local authority (the client trusting only it), HTTPS tunnels passed on unread |
 | apix-vault | encryption format, tampering, password change, recovery key, keychain entries (against the real credential store under a test service name; skipped where none exists) |
 | apix-desktop | translations complete, language helpers, file paths, highlighting query, theme files (reading, errors, round trip), accent and transparency colours, GraphQL schema file names, a gRPC call's log in the history |
 | docs-check | documentation structure and stamps |

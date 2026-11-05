@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:3ce8a71987464606 -->
+<!-- translated from en/architecture.md sha256:4bf5fca05c1bfbd6 -->
 
 # Apix mimarisi
 
@@ -45,6 +45,7 @@ crates/
 │                 ya da sunucu reflection'ı
 ├── apix-proto    diğer protokoller: MQTT (rumqttc)
 ├── apix-mock     kayıtlı örneklerden yanıt veren yerel mock sunucu (hyper)
+├── apix-capture  kaydeden proxy: düz HTTP, CONNECT tünelleri, yerel CA ile açılan HTTPS (rcgen, rustls)
 ├── apix-cli      `apix` binary'si: terminalden ve CI'dan send / run / diff / schema / import / shell
 └── apix-desktop  GPUI masaüstü uygulaması (tek crate'ten Windows, macOS ve Linux)
 tools/

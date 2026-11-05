@@ -137,6 +137,14 @@ body.part_file: 文件
 body.part_text: 文本
 body.send_file_instead: 改为发送文件
 body.send_text_instead: 改为发送文本
+capture.about: 经过此代理的请求会保存到集合的 captured 文件夹中，并把响应作为示例。把它设为浏览器、应用或脚本的代理。Cookie 不会写入，凭据会变成 {{变量}}。
+capture.hosts: 仅限
+capture.hosts_placeholder: 要记录的主机，如 api.example.com（留空：全部）
+capture.https: 用 Apix 的本地证书颁发机构打开 HTTPS，以便也记录它
+capture.running: 正在通过 %{url} 记录
+capture.saving: 正在保存到 %{folder}
+capture.title: 捕获代理
+capture.trust: "只有信任 Apix 本地颁发机构的地方才能打开 HTTPS。用下面的命令信任一次："
 chips.add_with: 按 %{key} 添加（变量）。
 chips.dynamic: "动态：每次发送都生成新值"
 chips.empty: （空）
@@ -336,6 +344,7 @@ import.url_ok: 导入
 import.url_title: 从 URL 导入
 menu.active_environment: 当前环境
 menu.cancel: 取消
+menu.capture: 捕获代理…
 menu.close_tab: 关闭标签页
 menu.collection_auth: 集合认证…
 menu.collection_settings: 集合请求设置…

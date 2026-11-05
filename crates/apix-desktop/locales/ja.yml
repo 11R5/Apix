@@ -137,6 +137,14 @@ body.part_file: ファイル
 body.part_text: テキスト
 body.send_file_instead: 代わりにファイルを送信
 body.send_text_instead: 代わりにテキストを送信
+capture.about: このプロキシを通るリクエストは、応答を例として付けてコレクションの captured フォルダーに保存されます。ブラウザー、アプリ、スクリプトのプロキシに設定してください。Cookie は書き込まれず、認証情報は {{変数}} になります。
+capture.hosts: 対象
+capture.hosts_placeholder: "記録するホスト（例: api.example.com、空欄ならすべて）"
+capture.https: Apix のローカル認証局で HTTPS を開いて記録する
+capture.running: "%{url} で記録中"
+capture.saving: "%{folder} に保存中"
+capture.title: キャプチャ プロキシ
+capture.trust: "HTTPS は Apix のローカル認証局を信頼している場合にだけ開けます。一度だけ次のコマンドで信頼してください:"
 chips.add_with: "%{key}（変数）で追加できます。"
 chips.dynamic: "動的: 送信のたびに新しい値"
 chips.empty: （空）
@@ -336,6 +344,7 @@ import.url_ok: インポート
 import.url_title: URL からインポート
 menu.active_environment: アクティブな環境
 menu.cancel: キャンセル
+menu.capture: キャプチャ プロキシ…
 menu.close_tab: タブを閉じる
 menu.collection_auth: コレクションの認証…
 menu.collection_settings: コレクションのリクエスト設定…

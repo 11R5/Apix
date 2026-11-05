@@ -139,6 +139,14 @@ body.part_file: File
 body.part_text: Text
 body.send_file_instead: Send a file instead
 body.send_text_instead: Send text instead
+capture.about: Requests that pass through this proxy are saved into the collection's captured folder, each with its answer as an example. Set it as the proxy of a browser, an app or a script. Cookies are left out and credentials become {{variables}}.
+capture.hosts: Only
+capture.hosts_placeholder: "hosts to record, e.g. api.example.com (empty: all)"
+capture.https: Open HTTPS with Apix's local certificate authority, to record it too
+capture.running: Recording through %{url}
+capture.saving: Saving into %{folder}
+capture.title: Capture proxy
+capture.trust: "HTTPS is opened only where Apix's local authority is trusted. Trust it once with:"
 chips.add_with: Add it with %{key} (Variables).
 chips.dynamic: "Dynamic: a new value on every send"
 chips.empty: (empty)
@@ -338,6 +346,7 @@ import.url_ok: Import
 import.url_title: Import from URL
 menu.active_environment: Active environment
 menu.cancel: Cancel
+menu.capture: Capture proxy…
 menu.close_tab: Close tab
 menu.collection_auth: Collection auth…
 menu.collection_settings: Collection request settings…

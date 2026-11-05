@@ -263,10 +263,29 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470"
 
 [[package]]
+name = "apix-capture"
+version = "0.1.0"
+dependencies = [
+ "apix-core",
+ "apix-http",
+ "bytes",
+ "dirs 6.0.0",
+ "http-body-util",
+ "hyper",
+ "hyper-util",
+ "rcgen",
+ "reqwest",
+ "rustls",
+ "tokio",
+ "tokio-rustls",
+]
+
+[[package]]
 name = "apix-cli"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "apix-capture",
  "apix-codegen",
  "apix-core",
  "apix-grpc",
@@ -319,6 +338,7 @@ dependencies = [
 name = "apix-desktop"
 version = "0.1.0"
 dependencies = [
+ "apix-capture",
  "apix-codegen",
  "apix-core",
  "apix-grpc",

@@ -2,6 +2,7 @@
 
 mod auth_editor;
 mod body_editor;
+mod capture_ui;
 mod collections;
 mod cookies_ui;
 mod drag;
@@ -83,6 +84,7 @@ actions!(
         OpenRunner,
         OpenMonitors,
         OpenMock,
+        OpenCapture,
         CloseTab,
         NextTab,
         PrevTab,
@@ -394,6 +396,8 @@ pub struct Workspace {
     monitors: monitors_ui::MonitorState,
     /// The mock server, when started, and what it was asked.
     mock: mock_ui::MockState,
+    /// The capture proxy, when started, and what passed through.
+    capture: capture_ui::CaptureState,
     /// The Pretty tab as text, a table or a chart.
     visual: visual_ui::VisualState,
     /// The active environment of the open collection, by file name.
@@ -645,6 +649,7 @@ impl Workspace {
             git: Default::default(),
             monitors: Default::default(),
             mock: Default::default(),
+            capture: Default::default(),
             visual: Default::default(),
             environment: None,
             env_select,
@@ -2193,6 +2198,9 @@ impl Render for Workspace {
                 cx.listener(|this, _: &OpenMonitors, window, cx| this.open_monitors(window, cx)),
             )
             .on_action(cx.listener(|this, _: &OpenMock, window, cx| this.open_mock(window, cx)))
+            .on_action(
+                cx.listener(|this, _: &OpenCapture, window, cx| this.open_capture(window, cx)),
+            )
             // A click anywhere brings focus back inside the workspace (inputs
             // focus themselves first, so they keep it), so shortcuts keep working.
             .on_mouse_down(

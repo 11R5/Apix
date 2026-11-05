@@ -291,6 +291,7 @@ impl MenuState {
             .menu(tr!("menu.runner"), Box::new(OpenRunner))
             .menu(tr!("menu.monitors"), Box::new(OpenMonitors))
             .menu(tr!("menu.mock"), Box::new(OpenMock))
+            .menu(tr!("menu.capture"), Box::new(OpenCapture))
             .separator()
             .menu(tr!("menu.next_tab"), Box::new(NextTab))
             .menu(tr!("menu.previous_tab"), Box::new(PrevTab))

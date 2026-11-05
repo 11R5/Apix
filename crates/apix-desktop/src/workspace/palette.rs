@@ -424,6 +424,10 @@ impl Workspace {
                 name!("menu.mock"),
                 run(Workspace::open_mock),
             ));
+            out.push(Entry::command(
+                name!("menu.capture"),
+                run(Workspace::open_capture),
+            ));
         }
         if open {
             out.push(Entry::command(

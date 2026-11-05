@@ -1,0 +1,29 @@
+[package]
+name = "apix-capture"
+description = "A recording proxy: requests that pass through it become Apix requests"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+apix-core.workspace = true
+bytes.workspace = true
+# The proxy's own HTTP/1.1 server (with CONNECT upgrades).
+hyper = { version = "1", features = ["server", "http1"] }
+hyper-util = { version = "0.1", features = ["tokio"] }
+http-body-util = "0.1"
+tokio = { workspace = true, features = ["net", "io-util", "sync", "time"] }
+# Where the local authority is kept (`<config>/Apix`).
+dirs = "6"
+# Forwarding to the real server.
+reqwest.workspace = true
+# Opening HTTPS with a local authority, when asked: the same rustls, and rcgen
+# for the authority and per-host certificates (both already built for tests).
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
+tokio-rustls = { version = "0.26", default-features = false, features = ["ring", "tls12"] }
+rcgen = { version = "0.14", default-features = false, features = ["crypto", "pem", "ring"] }
+
+[dev-dependencies]
+apix-http.workspace = true
+tokio = { workspace = true, features = ["net", "io-util", "time", "macros"] }
