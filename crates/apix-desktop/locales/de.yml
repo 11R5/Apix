@@ -666,6 +666,13 @@ settings.confirm_prod: In Produktion nachfragen
 settings.confirm_prod_description: Vor dem Senden von DELETE, PUT oder PATCH nachfragen, wenn eine Umgebung mit „prod“ im Namen aktiv ist.
 settings.dark_theme: "Dunkles Theme"
 settings.dark_theme_description: "Wird im dunklen Erscheinungsbild verwendet."
+settings.density: Dichte
+settings.density_comfortable: Großzügig
+settings.density_compact: Kompakt
+settings.density_description: Wie viel Platz die Zeilen der Seitenleiste bekommen.
+settings.density_normal: Normal
+settings.editor_font_size: Schriftgröße für Code
+settings.editor_font_size_description: Bodies, Skripte und die Antwortansicht.
 settings.history: Verlauf
 settings.history_description: Jede gesendete Anfrage mit ihrer Antwort auf diesem Computer behalten (Strg+H).
 settings.language: Sprache
@@ -678,6 +685,9 @@ settings.secrets_file: .local.toml-Datei
 settings.secrets_keychain: Schlüsselbund des Systems
 settings.section_general: "Allgemein"
 settings.section_look: "Theme"
+settings.text_size: Textgröße
+settings.text_size_description: Skaliert den Text des ganzen Fensters.
+settings.text_size_value: "%{value} %"
 settings.theme_cyber: Cyber Glass
 settings.theme_daylight: "Tageslicht"
 settings.theme_file_error: "Theme-Datei nicht gelesen: %{error}"

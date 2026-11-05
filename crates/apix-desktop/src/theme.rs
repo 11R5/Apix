@@ -16,8 +16,9 @@ use apix_core::Method;
 use apix_core::text::JsonToken;
 use gpui_kit::component::{Theme, ThemeMode};
 use gpui_kit::{
-    App, Background, Hsla, Rgba, SharedString, WindowAppearance, WindowBackgroundAppearance, hsla,
-    linear_color_stop, linear_gradient, rgb, transparent_black,
+    App, Background, Hsla, Pixels, Rgba, SharedString, WindowAppearance,
+    WindowBackgroundAppearance, hsla, linear_color_stop, linear_gradient, px, rgb,
+    transparent_black,
 };
 use serde::Deserialize;
 
@@ -89,7 +90,117 @@ pub fn from_settings(settings: &Settings, cx: &App) -> Palette {
             .or_else(|| find(fallback))
     });
     let def = def.cloned().unwrap_or_else(|| builtin().remove(0));
-    Palette::build(&def, &settings.accent, settings.transparency)
+    let mut palette = Palette::build(&def, &settings.accent, settings.transparency);
+    palette.text_scale = nearest(&TEXT_SIZES, settings.text_size) as f32 / 100.0;
+    palette.editor_font = nearest(&EDITOR_FONT_SIZES, settings.editor_font_size) as f32;
+    palette.density = Density::from_id(&settings.density);
+    palette
+}
+
+/// Text sizes offered, in percent of the normal size.
+pub const TEXT_SIZES: [u32; 5] = [90, 100, 110, 125, 150];
+/// Code editor font sizes offered, in pixels.
+pub const EDITOR_FONT_SIZES: [u32; 7] = [11, 12, 13, 14, 15, 16, 18];
+
+/// The offered value closest to `value` (a hand-edited settings file may hold any).
+pub fn nearest(choices: &[u32], value: u32) -> u32 {
+    choices
+        .iter()
+        .copied()
+        .min_by_key(|c| c.abs_diff(value))
+        .unwrap_or(value)
+}
+
+/// How much room lists give each row.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Density {
+    Compact,
+    Normal,
+    Comfortable,
+}
+
+impl Density {
+    pub const ALL: [Density; 3] = [Density::Compact, Density::Normal, Density::Comfortable];
+
+    pub fn id(self) -> &'static str {
+        match self {
+            Density::Compact => "compact",
+            Density::Normal => "normal",
+            Density::Comfortable => "comfortable",
+        }
+    }
+
+    pub fn from_id(id: &str) -> Self {
+        Self::ALL
+            .into_iter()
+            .find(|d| d.id() == id)
+            .unwrap_or(Density::Normal)
+    }
+
+    pub fn label(self) -> SharedString {
+        match self {
+            Density::Compact => crate::tr!("settings.density_compact"),
+            Density::Normal => crate::tr!("settings.density_normal"),
+            Density::Comfortable => crate::tr!("settings.density_comfortable"),
+        }
+    }
+}
+
+/// The space above and below a sidebar or list row, by the density setting.
+pub fn row_padding() -> Pixels {
+    match current().density {
+        Density::Compact => px(1.),
+        Density::Normal => px(4.),
+        Density::Comfortable => px(7.),
+    }
+}
+
+/// A colour as a `#rrggbbaa` code-colour entry gpui-kit reads.
+fn syntax_style(color: Hsla) -> Option<gpui_kit::component::highlighter::ThemeStyle> {
+    let c: Rgba = color.into();
+    let byte = |v: f32| (v.clamp(0., 1.) * 255.).round() as u8;
+    let code = format!(
+        "#{:02x}{:02x}{:02x}{:02x}",
+        byte(c.r),
+        byte(c.g),
+        byte(c.b),
+        byte(c.a)
+    );
+    serde_json::from_value(serde_json::json!({ "color": code })).ok()
+}
+
+/// The code editor's colours from the theme: strings, numbers and keywords
+/// as in the large-body viewer, names in the accent, comments muted.
+fn syntax_colors(
+    p: &Palette,
+    base: &gpui_kit::component::highlighter::SyntaxColors,
+) -> gpui_kit::component::highlighter::SyntaxColors {
+    let mut s = base.clone();
+    let string = syntax_style(p.string);
+    let number = syntax_style(p.number);
+    let keyword = syntax_style(p.keyword);
+    let accent = syntax_style(p.accent);
+    let muted = syntax_style(p.text_muted);
+    let text = syntax_style(p.text);
+    s.string = string;
+    s.string_escape = number;
+    s.number = number;
+    s.boolean = keyword;
+    s.constant = keyword;
+    s.keyword = keyword;
+    s.type_ = accent;
+    s.function = accent;
+    s.attribute = accent;
+    s.tag = keyword;
+    s.property = text;
+    s.variable = text;
+    s.comment = muted;
+    s.comment_doc = muted;
+    s.punctuation = muted;
+    s.punctuation_bracket = muted;
+    s.punctuation_delimiter = muted;
+    s.operator = muted;
+    s
 }
 
 pub fn system_is_light(cx: &App) -> bool {
@@ -167,7 +278,12 @@ fn apply(palette: &Palette, embedded_fonts: bool, cx: &mut App) {
         highlight.style.editor_gutter_background = Some(transparent_black());
         highlight.style.editor_active_line = Some(p.hover.opacity(0.8));
         highlight.style.editor_line_number = Some(p.text_muted.opacity(0.6));
+        highlight.style.syntax = syntax_colors(&p, &highlight.style.syntax);
         t.highlight_theme = Arc::new(highlight);
+
+        // Every rem-based size (text_sm, text_xs …) follows the root size.
+        t.font_size = px(16. * p.text_scale);
+        t.mono_font_size = px(p.editor_font);
     });
 }
 
@@ -629,6 +745,11 @@ pub struct Palette {
     pub light: bool,
     /// The window is see-through (with the OS blur behind it).
     pub glass: bool,
+    /// Text size, 1.0 for the normal 16 px rem.
+    pub text_scale: f32,
+    /// The code editor's font size, in pixels.
+    pub editor_font: f32,
+    pub density: Density,
 }
 
 impl Palette {
@@ -702,6 +823,9 @@ impl Palette {
             keyword: c.keyword,
             light: def.light,
             glass,
+            text_scale: 1.0,
+            editor_font: 13.0,
+            density: Density::Normal,
         }
     }
 
@@ -808,6 +932,18 @@ pub fn method_color(method: Method) -> Hsla {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn sizes_and_density_from_settings() {
+        assert_eq!(nearest(&TEXT_SIZES, 100), 100);
+        assert_eq!(nearest(&TEXT_SIZES, 118), 125);
+        assert_eq!(nearest(&TEXT_SIZES, 400), 150);
+        assert_eq!(nearest(&EDITOR_FONT_SIZES, 0), 11);
+        assert_eq!(Density::from_id("compact"), Density::Compact);
+        assert_eq!(Density::from_id("roomy"), Density::Normal);
+        // Code colours are read by gpui-kit from `#rrggbbaa`.
+        assert!(syntax_style(hsla(0.5, 0.5, 0.5, 1.)).is_some());
+    }
 
     #[test]
     fn colours_parse_and_print() {

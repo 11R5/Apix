@@ -96,6 +96,9 @@ pub(super) struct SettingsView {
     light_theme: Entity<Picker>,
     accent: Entity<Picker>,
     transparency: Entity<SliderState>,
+    text_size: Entity<Picker>,
+    editor_font: Entity<Picker>,
+    density: Entity<Picker>,
     auto_lock: Entity<Picker>,
     history: Entity<Picker>,
     secrets: Entity<Picker>,
@@ -161,6 +164,37 @@ impl SettingsView {
                 .step(5.)
                 .default_value(settings.transparency.min(theme::MAX_TRANSPARENCY) as f32)
         });
+        let size_ix = |choices: &[u32], value: u32| {
+            let near = theme::nearest(choices, value);
+            choices.iter().position(|c| *c == near).map(IndexPath::new)
+        };
+        let text_size = picker(
+            theme::TEXT_SIZES
+                .iter()
+                .map(|s| tr!("settings.text_size_value", value = s))
+                .collect(),
+            size_ix(&theme::TEXT_SIZES, settings.text_size),
+            window,
+            cx,
+        );
+        let editor_font = picker(
+            theme::EDITOR_FONT_SIZES
+                .iter()
+                .map(|s| SharedString::from(format!("{s} px")))
+                .collect(),
+            size_ix(&theme::EDITOR_FONT_SIZES, settings.editor_font_size),
+            window,
+            cx,
+        );
+        let density = picker(
+            theme::Density::ALL.iter().map(|d| d.label()).collect(),
+            theme::Density::ALL
+                .iter()
+                .position(|d| *d == theme::Density::from_id(&settings.density))
+                .map(IndexPath::new),
+            window,
+            cx,
+        );
 
         let lock_ix = AUTO_LOCK_MINUTES
             .iter()
@@ -280,6 +314,24 @@ impl SettingsView {
                     }
                 },
             ),
+            cx.subscribe_in(&text_size, window, |this, state, _: &Changed, _, cx| {
+                if let Some(ix) = state.read(cx).selected_index(cx) {
+                    let size = theme::TEXT_SIZES[ix.row];
+                    this.change_theme(|s| s.text_size = size, cx);
+                }
+            }),
+            cx.subscribe_in(&editor_font, window, |this, state, _: &Changed, _, cx| {
+                if let Some(ix) = state.read(cx).selected_index(cx) {
+                    let size = theme::EDITOR_FONT_SIZES[ix.row];
+                    this.change_theme(|s| s.editor_font_size = size, cx);
+                }
+            }),
+            cx.subscribe_in(&density, window, |this, state, _: &Changed, _, cx| {
+                if let Some(ix) = state.read(cx).selected_index(cx) {
+                    let id = theme::Density::ALL[ix.row].id();
+                    this.change_theme(|s| s.density = id.into(), cx);
+                }
+            }),
             cx.subscribe_in(&auto_lock, window, |this, state, _: &Changed, _, cx| {
                 if let Some(ix) = state.read(cx).selected_index(cx) {
                     let minutes = AUTO_LOCK_MINUTES[ix.row];
@@ -295,6 +347,9 @@ impl SettingsView {
             light_theme,
             accent,
             transparency,
+            text_size,
+            editor_font,
+            density,
             auto_lock,
             history,
             secrets,
@@ -594,6 +649,24 @@ impl Render for SettingsView {
                         ),
                 ),
             )
+            .child(line())
+            .child(self.row(
+                tr!("settings.text_size"),
+                tr!("settings.text_size_description"),
+                Select::new(&self.text_size).small(),
+            ))
+            .child(line())
+            .child(self.row(
+                tr!("settings.editor_font_size"),
+                tr!("settings.editor_font_size_description"),
+                Select::new(&self.editor_font).small(),
+            ))
+            .child(line())
+            .child(self.row(
+                tr!("settings.density"),
+                tr!("settings.density_description"),
+                Select::new(&self.density).small(),
+            ))
             .child(line())
             .child(
                 self.row(

@@ -2011,7 +2011,7 @@ fn row_base(path: &Path, depth: usize) -> Stateful<Div> {
         .gap_2()
         .ps(px(8. + 14. * depth as f32))
         .pe(px(8.))
-        .py_1()
+        .py(crate::theme::row_padding())
         .rounded_md()
         .text_sm()
         .cursor_pointer()

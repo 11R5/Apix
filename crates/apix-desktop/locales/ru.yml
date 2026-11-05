@@ -666,6 +666,13 @@ settings.confirm_prod: Подтверждение в продакшене
 settings.confirm_prod_description: Спрашивать перед отправкой DELETE, PUT или PATCH, когда выбрано окружение, в названии которого есть «prod».
 settings.dark_theme: "Тёмная тема"
 settings.dark_theme_description: "Используется при тёмном оформлении."
+settings.density: Плотность
+settings.density_comfortable: Свободная
+settings.density_compact: Плотная
+settings.density_description: Сколько места получают строки боковой панели.
+settings.density_normal: Обычная
+settings.editor_font_size: Размер шрифта кода
+settings.editor_font_size_description: Тела запросов, скрипты и просмотр ответа.
 settings.history: История
 settings.history_description: Сохранять каждый отправленный запрос с ответом на этом компьютере (Ctrl+H).
 settings.language: Язык
@@ -678,6 +685,9 @@ settings.secrets_file: Файл .local.toml
 settings.secrets_keychain: Системное хранилище ключей
 settings.section_general: "Общие"
 settings.section_look: "Внешний вид"
+settings.text_size: Размер текста
+settings.text_size_description: Масштабирует текст во всём окне.
+settings.text_size_value: "%{value} %"
 settings.theme_cyber: Кибер-стекло
 settings.theme_daylight: "Дневной свет"
 settings.theme_file_error: "Файл темы не прочитан: %{error}"

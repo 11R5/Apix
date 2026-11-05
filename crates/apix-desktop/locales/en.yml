@@ -668,6 +668,13 @@ settings.confirm_prod: Confirm in production
 settings.confirm_prod_description: Ask before sending DELETE, PUT or PATCH while an environment whose name contains “prod” is active.
 settings.dark_theme: "Dark theme"
 settings.dark_theme_description: "Used when the appearance is dark."
+settings.density: Density
+settings.density_comfortable: Comfortable
+settings.density_compact: Compact
+settings.density_description: How much room the rows of the sidebar get.
+settings.density_normal: Normal
+settings.editor_font_size: Code font size
+settings.editor_font_size_description: Bodies, scripts and the response viewer.
 settings.history: History
 settings.history_description: Keep every sent request with its response on this computer (Ctrl+H).
 settings.language: Language
@@ -680,6 +687,9 @@ settings.secrets_file: .local.toml file
 settings.secrets_keychain: System keychain
 settings.section_general: "General"
 settings.section_look: "Theme"
+settings.text_size: Text size
+settings.text_size_description: Scales the text of the whole window.
+settings.text_size_value: "%{value}%"
 settings.theme_cyber: Cyber glass
 settings.theme_daylight: "Daylight"
 settings.theme_file_error: "Theme file not read: %{error}"

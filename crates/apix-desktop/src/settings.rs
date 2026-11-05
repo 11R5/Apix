@@ -32,6 +32,12 @@ pub struct Settings {
     pub confirm_prod: bool,
     /// Run the open collections' monitors on their schedules while the app is open.
     pub monitors_in_app: bool,
+    /// Text size in percent (90, 100, 110, 125 or 150).
+    pub text_size: u32,
+    /// The code editor's font size in pixels.
+    pub editor_font_size: u32,
+    /// `compact`, `normal` or `comfortable`: how much room list rows get.
+    pub density: String,
 }
 
 impl Default for Settings {
@@ -48,6 +54,9 @@ impl Default for Settings {
             secrets_in_keychain: false,
             confirm_prod: true,
             monitors_in_app: false,
+            text_size: 100,
+            editor_font_size: 13,
+            density: "normal".into(),
         }
     }
 }

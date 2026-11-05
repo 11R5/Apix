@@ -993,6 +993,17 @@ restart:
   slower rate so text keeps a backing, and borders brighten like the edge of
   glass; menus and dialogs stay solid. Light themes clear more gently, as dark
   text needs a light backing. The default is 20%.
+- **Text size:** 90%, 100%, 110%, 125% or 150% of the normal size, for every
+  text in the window, at once.
+- **Code font size:** 11 to 18 px for the code editors (bodies, scripts, the
+  response's Pretty view); the viewer for very large bodies keeps 13 px.
+- **Density:** compact, normal or comfortable rows in the sidebar.
+- The code editors take their colours from the theme: strings, numbers and
+  keywords as the theme gives them, types and functions in the accent,
+  comments and punctuation muted.
+
+![Text size, code font size and density](images/look.png)
+
 - **Your own themes:** **Open the folder** opens `<config>/Apix/themes` and,
   the first time, writes `my-theme.toml` there to start from. Every `.toml`
   file in that folder is a theme in the lists; a file named like a built-in

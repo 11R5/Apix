@@ -666,6 +666,13 @@ settings.confirm_prod: Üretimde onay iste
 settings.confirm_prod_description: Adında “prod” geçen bir ortam seçiliyken DELETE, PUT veya PATCH göndermeden önce sor.
 settings.dark_theme: "Koyu tema"
 settings.dark_theme_description: "Görünüm koyuyken kullanılır."
+settings.density: Sıklık
+settings.density_comfortable: Ferah
+settings.density_compact: Sıkışık
+settings.density_description: Kenar çubuğundaki satırlara ne kadar yer verileceği.
+settings.density_normal: Normal
+settings.editor_font_size: Kod yazı boyutu
+settings.editor_font_size_description: Gövdeler, scriptler ve yanıt görüntüleyici.
 settings.history: Geçmiş
 settings.history_description: Gönderilen her isteği yanıtıyla birlikte bu bilgisayarda sakla (Ctrl+H).
 settings.language: Dil
@@ -678,6 +685,9 @@ settings.secrets_file: .local.toml dosyası
 settings.secrets_keychain: Sistem anahtarlığı
 settings.section_general: "Genel"
 settings.section_look: "Tema"
+settings.text_size: Yazı boyutu
+settings.text_size_description: Tüm penceredeki yazıları büyütür ya da küçültür.
+settings.text_size_value: "%%{value}"
 settings.theme_cyber: Siber cam
 settings.theme_daylight: "Gün ışığı"
 settings.theme_file_error: "Tema dosyası okunamadı: %{error}"

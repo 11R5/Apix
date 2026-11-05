@@ -666,6 +666,13 @@ settings.confirm_prod: 生产环境确认
 settings.confirm_prod_description: 当名称包含“prod”的环境处于活动状态时，发送 DELETE、PUT 或 PATCH 之前先确认。
 settings.dark_theme: "深色主题"
 settings.dark_theme_description: "在深色外观下使用。"
+settings.density: 密度
+settings.density_comfortable: 宽松
+settings.density_compact: 紧凑
+settings.density_description: 侧边栏每行的间距。
+settings.density_normal: 标准
+settings.editor_font_size: 代码字号
+settings.editor_font_size_description: 正文、脚本和响应查看器。
 settings.history: 历史
 settings.history_description: 在这台电脑上保存每个已发送的请求及其响应（Ctrl+H）。
 settings.language: 语言
@@ -678,6 +685,9 @@ settings.secrets_file: .local.toml 文件
 settings.secrets_keychain: 系统钥匙串
 settings.section_general: "常规"
 settings.section_look: "外观"
+settings.text_size: 文字大小
+settings.text_size_description: 缩放整个窗口的文字。
+settings.text_size_value: "%{value}%"
 settings.theme_cyber: 赛博玻璃
 settings.theme_daylight: "日光"
 settings.theme_file_error: "未能读取主题文件：%{error}"

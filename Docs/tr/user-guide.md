@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:4e629f5c18eb42d0 -->
+<!-- translated from en/user-guide.md sha256:bd3cfe0dbcf84632 -->
 
 # Apix kullanım kılavuzu
 
@@ -1017,6 +1017,17 @@ değiştirir:
   arkası boş kalmasın diye daha yavaş açılır, kenarlar camın kenarı gibi
   parlaklaşır; menüler ve pencereler düz kalır. Koyu yazı açık bir zemine
   ihtiyaç duyduğundan açık temalar daha az açılır. Varsayılan %20'dir.
+- **Yazı boyutu:** penceredeki tüm yazılar için normal boyutun %90, %100,
+  %110, %125 ya da %150'si; hemen uygulanır.
+- **Kod yazı boyutu:** kod editörleri (gövdeler, scriptler, yanıtın Biçimli
+  görünümü) için 11–18 px; çok büyük gövdelerin görüntüleyicisi 13 px kalır.
+- **Sıklık:** kenar çubuğunda sıkışık, normal ya da ferah satırlar.
+- Kod editörleri renklerini temadan alır: metinler, sayılar ve anahtar
+  kelimeler temanın verdiği renkte, tipler ve fonksiyonlar vurgu renginde,
+  yorumlar ve noktalama soluk.
+
+![Yazı boyutu, kod yazı boyutu ve sıklık](images/look.png)
+
 - **Kendi temaların:** **Klasörü aç** `<config>/Apix/themes` klasörünü açar ve
   ilk seferde oraya başlangıç için `my-theme.toml` yazar. O klasördeki her
   `.toml` dosyası listelerde bir temadır; yerleşik bir temayla aynı adı taşıyan
