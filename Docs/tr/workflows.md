@@ -1,4 +1,4 @@
-<!-- translated from en/workflows.md sha256:159f7874d4ac16f8 -->
+<!-- translated from en/workflows.md sha256:c8a6ac2a95feaa95 -->
 
 # İş akışları
 
@@ -152,6 +152,8 @@ Seçenekler:
 | `--bail` | Başarısız olan ilk istekte durur |
 | `--junit report.xml` | CI servislerinin test listesi olarak gösterdiği JUnit XML raporu |
 | `--json report.json` / `--html report.html` | Her şey JSON olarak ya da her tarayıcıda açılan bir sayfa |
+| `--markdown report.md` | Pull request yorumu ya da CI iş özeti için bir özet (aşağıya bakın) |
+| `--changed` / `--changed=origin/main` | Yalnızca bir değişikliğin dokunduğu istekler (aşağıya bakın) |
 | `--timeout 10`, `-k`, `--proxy URL` | İsteklerin bağlantı ayarlarını geçersiz kılar |
 | `--env-file .env` | Değişkenleri bir dotenv dosyasından okur (aşağıya bakın) |
 
@@ -195,7 +197,7 @@ yazar:
 - uses: 11R5/Apix@main          # daha iyisi: bir etiket ya da commit
   with:
     path: api
-    environment: staging        # ayrıca: data, iterations, delay, bail, env-file, junit, html, json, args
+    environment: staging        # ayrıca: data, iterations, delay, bail, env-file, junit, html, json, markdown, changed, diff, comment, args
   env:
     APIX_VAR_TOKEN: ${{ secrets.API_TOKEN }}
 ```
@@ -203,7 +205,105 @@ yazar:
 [examples/ci/github-actions.yml](../../examples/ci/github-actions.yml) eksiksiz
 bir iş akışıdır: koleksiyonu her ortam için bir kez çalıştırır (`test` ve
 `staging` matrisi), JUnit sonuçlarını koşunun sayfasında gösterir ve HTML
-raporları saklar.
+raporları saklar. Action, Markdown özetini işin sayfasına da ekler.
+
+## Yalnızca değişenler: git'e duyarlı koşular
+
+Koleksiyon git'teki bir klasör olduğu için `apix`, bir değişikliğin neye
+dokunduğunu git'e sorabilir. `--changed` yalnızca o istekleri gönderir:
+
+```sh
+apix run api --changed                 # henüz commit'lenmemiş olanlar
+apix run api --changed=origin/main     # bu dalın main'den ayrıldığından beri değiştirdikleri
+```
+
+Bir istek şu durumlarda yeniden koşar: kendi dosyası ya da scriptleri
+değiştiyse; üstündeki bir `folder.toml` ya da klasör scripti değiştiyse (o
+klasördeki tüm istekler); `apix.toml`, bir koleksiyon scripti, bir ortam ya da
+proje dosyası değiştiyse (tüm istekler); ya da değişen başka bir dosyayı
+adıyla anıyorsa (gövde dosyası, `.proto`). Yeni dosyalar commit'lenmeden de
+sayılır; silinen istekler listelenir. Değer verilmezse `--changed`, GitHub
+Actions'ta pull request'in hedef dalıyla (`origin/$GITHUB_BASE_REF`), başka
+yerde `HEAD` ile karşılaştırır. Değeri `=` ile yazın; böylece koşulacak
+klasörle karışmaz.
+
+```text
+2 of 3 requests changed since origin/main
+  users/create-user.apix  ← users/create-user.test.js
+  users/list-users.apix
+```
+
+Karşılaştırma, pull request'teki gibi dalın hedeften ayrıldığı noktadan
+başlar; arada main'e gelenler sayılmaz. Bunun için geçmiş gerekir: sığ bir
+klonda (`actions/checkout`'un varsayılanı) `apix` uyarır ve doğrudan hedefle
+karşılaştırır; `fetch-depth: 0` ile checkout edin. Şifreli koleksiyonlar
+karşılaştırılamaz, çünkü git yalnızca şifreli dosyaları görür.
+
+### Ne değişti: `apix diff`
+
+`apix diff` bir değişikliği gözden geçiren birinin okuyacağı gibi gösterir:
+TOML satırları yerine isteğin alanları, header ve sorgu parametreleri adıyla,
+gövde ve scriptler satır satır, ortamlar değişken değişken. Dosyayı yeniden
+biçimlendirmek değişiklik sayılmaz; başka bir şeyi değişmeden taşınan ya da
+yeniden adlandırılan istek tek bir taşıma olarak görünür.
+
+```sh
+apix diff                       # HEAD ile dosyaların şimdiki hâli
+apix diff main                  # main ile şimdi
+apix diff v1.2 v1.3 -C api      # iki etiket arası, api/ içindeki koleksiyon için
+```
+
+```text
+Between main and the working tree: 1 script, 1 request
+
+A  script  users/create-user.test.js
+     + pm.test("ok", () => pm.response.to.have.status(200));
+M  GET List users  users/list-users.apix
+     query._limit: 3 → 5
+     headers.Accept: (none) → application/json
+```
+
+`--markdown` pull request için, `--json` araçlar için yazar; `--exit-code` bir
+şey değiştiyse 1 ile çıkar.
+
+### Pull request'e özet
+
+`--markdown report.md` koşuyu GitHub Markdown'ı olarak yazar: toplamlar,
+istek başına bir satır ve altında açık hâlde neyin neden başarısız olduğu. İlk
+satırı koleksiyonun adını taşıyan gizli bir işarettir; böylece bir CI adımı
+geçen sefer yazdığı yorumu bulup yenisini eklemek yerine onu düzenler.
+
+Action bunların hepsini yapar. Bir pull request'te yalnızca onun dokunduğu
+istekleri gönderir, özetin altına `apix diff` ekler ve pull request'teki tek
+bir yorumu güncel tutar:
+
+```yaml
+on: pull_request
+permissions:
+  contents: read
+  pull-requests: write          # yorum için
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0        # dalın başladığı yeri bulmak için geçmiş
+      - uses: 11R5/Apix@main
+        with:
+          path: api
+          changed: "true"       # ya da bir commit, dal veya etiket
+          diff: "true"
+          comment: "true"
+```
+
+Bir push'ta `changed: "true"` push'tan önceki commit'le karşılaştırır. Özet
+ayrıca `apix-report.md` dosyasına (girdi `markdown`) yazılır ve işin
+sayfasında görünür.
+
+Masaüstü uygulamasında durum çubuğu dalı ve son commit'ten beri kaç dosyanın
+değiştiğini gösterir; kenar çubuğu değişen istekleri **M** (değişti) ya da
+**A** (yeni) ile işaretler; bkz. [kullanım kılavuzu](user-guide.md#git).
 
 ### Docker
 

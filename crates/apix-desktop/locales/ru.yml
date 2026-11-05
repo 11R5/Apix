@@ -254,6 +254,8 @@ extract.path: "Значение (как в проверках: body.data.token, 
 extract.saved_collection: "%{name} = %{value} сохранено в переменных коллекции."
 extract.saved_env: "%{name} = %{value} сохранено в «%{env}»."
 extract.title: Сохранить значение как переменную
+git.changes: "изменений: %{count}"
+git.one_change: 1 изменение
 grpc.add_protos: Добавить файл
 grpc.calling: Вызов…
 grpc.choose_protos: Выберите файлы .proto или наборы дескрипторов

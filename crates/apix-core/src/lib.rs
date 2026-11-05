@@ -2,8 +2,10 @@
 //! plain-text collection format. No networking and no UI live here, so every
 //! frontend (desktop, CLI, future TUI) shares exactly the same behaviour.
 
+pub mod diff;
 pub mod dynamic;
 pub mod filter;
+pub mod git;
 pub mod graphql;
 pub mod headers;
 pub mod history;

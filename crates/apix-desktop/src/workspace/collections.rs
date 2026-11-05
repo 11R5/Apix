@@ -213,6 +213,7 @@ impl Workspace {
         self.refresh_environments(window, cx);
         // A folder.toml or apix.toml may have changed what the open request inherits.
         self.refresh_inherited_auth(cx);
+        self.refresh_git(window, cx);
 
         self.sync_parked_tabs();
         if let Some(path) = self.selected.clone() {
@@ -1968,6 +1969,15 @@ impl Workspace {
             .when(dirty, |row| {
                 row.child(div().flex_none().text_color(p.warn).child("\u{25cf}"))
             })
+            .children(self.git_change(path).map(|kind| {
+                let (colour, letter) = super::git_ui::change_mark(kind);
+                div()
+                    .flex_none()
+                    .text_xs()
+                    .font_weight(FontWeight::BOLD)
+                    .text_color(colour)
+                    .child(letter.to_string())
+            }))
             .context_menu(move |menu: PopupMenu, window, cx| {
                 request_menu(menu, view.clone(), menu_path.clone(), window, cx)
             })

@@ -7,6 +7,16 @@
 #     env:
 #       APIX_VAR_TOKEN: ${{ secrets.API_TOKEN }}
 #
+# On pull requests it can send only the requests the pull request touches
+# and keep one comment on it up to date with the result:
+#
+#   permissions: { contents: read, pull-requests: write }
+#   steps:
+#     - uses: actions/checkout@v4
+#       with: { fetch-depth: 0 }
+#     - uses: 11R5/Apix@main
+#       with: { path: api, changed: "true", diff: "true", comment: "true" }
+#
 # The first run builds `apix` from this repository at the action's version
 # (a few minutes); later runs take it from the cache.
 name: Apix run
@@ -47,6 +57,23 @@ inputs:
   json:
     description: Where to write the JSON report (empty for none)
     required: false
+  markdown:
+    description: Where to write the Markdown summary, also shown on the job page (empty for none)
+    default: apix-report.md
+  changed:
+    description: >-
+      Send only the requests a change touches. "true": since the pull request's base
+      branch (or the commit before a push); or a commit, branch or tag. Check out
+      with fetch-depth 0 so the branch point can be found
+    default: "false"
+  diff:
+    description: Add what changed in the requests (apix diff) under the summary when "changed" is on ("true" or "false")
+    default: "false"
+  comment:
+    description: >-
+      Post the summary on the pull request, editing the same comment on later runs
+      ("true" or "false"); the job needs permissions pull-requests write
+    default: "false"
   args:
     description: More arguments for apix run, e.g. "--timeout 10 --var region=eu"
     required: false
@@ -93,7 +120,11 @@ runs:
         IN_JUNIT: ${{ inputs.junit }}
         IN_HTML: ${{ inputs.html }}
         IN_JSON: ${{ inputs.json }}
+        IN_MARKDOWN: ${{ inputs.markdown }}
+        IN_CHANGED: ${{ inputs.changed }}
+        IN_DIFF: ${{ inputs.diff }}
         IN_ARGS: ${{ inputs.args }}
+        PUSH_BEFORE: ${{ github.event.before }}
       run: |
         args=(run "$IN_PATH")
         [ -n "$IN_ENVIRONMENT" ] && args+=(--env "$IN_ENVIRONMENT")
@@ -105,6 +136,68 @@ runs:
         [ -n "$IN_JUNIT" ] && args+=(--junit "$IN_JUNIT")
         [ -n "$IN_HTML" ] && args+=(--html "$IN_HTML")
         [ -n "$IN_JSON" ] && args+=(--json "$IN_JSON")
+        [ -n "$IN_MARKDOWN" ] && args+=(--markdown "$IN_MARKDOWN")
+
+        # What "changed" compares with: the pull request's base branch, the
+        # commit before a push, or the commit, branch or tag given.
+        base=""
+        case "$IN_CHANGED" in
+          ""|false) ;;
+          true)
+            if [ -n "$GITHUB_BASE_REF" ]; then
+              base="origin/$GITHUB_BASE_REF"
+              git rev-parse --verify -q "$base^{commit}" > /dev/null ||
+                git fetch --no-tags -q origin "+refs/heads/$GITHUB_BASE_REF:refs/remotes/origin/$GITHUB_BASE_REF"
+            elif [ -n "$PUSH_BEFORE" ] && [ "${PUSH_BEFORE//0/}" != "" ]; then
+              base="$PUSH_BEFORE"
+              git cat-file -e "$base^{commit}" 2> /dev/null ||
+                git fetch --no-tags -q origin "$base" || true
+            else
+              echo "Nothing to compare with (a new branch?): running every request."
+            fi
+            ;;
+          *) base="$IN_CHANGED" ;;
+        esac
+        [ -n "$base" ] && args+=("--changed=$base")
+
         # Extra arguments are split on spaces, like on a command line.
         read -r -a extra <<< "$IN_ARGS"
+        set +e
         apix "${args[@]}" "${extra[@]}"
+        code=$?
+        set -e
+        # What changed in the requests, under the run's summary.
+        if [ "$IN_DIFF" = "true" ] && [ -n "$base" ] && [ -n "$IN_MARKDOWN" ] && [ -f "$IN_MARKDOWN" ]; then
+          { echo; apix diff "$base" -C "$IN_PATH" --markdown; } >> "$IN_MARKDOWN" || true
+        fi
+        exit $code
+
+    - name: Add the summary to the job page
+      if: always() && inputs.markdown != ''
+      shell: bash
+      env:
+        IN_MARKDOWN: ${{ inputs.markdown }}
+      run: |
+        if [ -s "$IN_MARKDOWN" ]; then cat "$IN_MARKDOWN" >> "$GITHUB_STEP_SUMMARY"; fi
+
+    # One comment per collection, edited on every run rather than piling up.
+    - name: Comment on the pull request
+      if: always() && inputs.comment == 'true' && inputs.markdown != '' && github.event.pull_request.number
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        PR: ${{ github.event.pull_request.number }}
+        IN_MARKDOWN: ${{ inputs.markdown }}
+      run: |
+        if [ ! -s "$IN_MARKDOWN" ]; then echo "No summary at $IN_MARKDOWN"; exit 0; fi
+        marker=$(head -n 1 "$IN_MARKDOWN")
+        id=$(gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PR/comments" \
+          --jq '.[] | [.id, (.body | split("\n")[0])] | @tsv' |
+          awk -F '\t' -v m="$marker" '$2 == m { id = $1 } END { print id }')
+        if [ -n "$id" ]; then
+          gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$id" -F "body=@$IN_MARKDOWN" > /dev/null
+          echo "Updated the comment on pull request #$PR"
+        else
+          gh api -X POST "repos/$GITHUB_REPOSITORY/issues/$PR/comments" -F "body=@$IN_MARKDOWN" > /dev/null
+          echo "Commented on pull request #$PR"
+        fi

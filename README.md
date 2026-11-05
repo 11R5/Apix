@@ -113,6 +113,11 @@ Measurements of the other tools on the same machine are planned.
   fails: as a GitHub Action (`uses: 11R5/Apix@…`,
   [example](examples/ci/github-actions.yml)), a Docker image, or plain
   `apix`, with secrets from `APIX_VAR_<NAME>` variables or a `.env` file.
+- **Git-aware:** `apix run --changed` sends only the requests a change touches
+  (their files, scripts, folder or environment settings), `apix diff` shows
+  what changed in requests field by field, and the GitHub Action keeps a
+  summary comment on the pull request. The status bar shows the branch and the
+  changed files; the sidebar marks changed requests.
 - **Encrypted collections** with a recovery key, auto-lock and, if you choose,
   the password remembered in the OS keychain.
 - **Import** from Postman (collections, environments, a whole "Export data"
@@ -171,6 +176,8 @@ apix send examples/jsonplaceholder/health.apix --env local --network
 apix run examples/jsonplaceholder            # non-zero exit if any request fails
 apix run my-api --data users.csv --junit report.xml --html report.html --bail
 APIX_VAR_TOKEN=… apix run my-api --env staging --env-file .env.ci
+apix run my-api --changed=origin/main --markdown summary.md   # only what this branch touched
+apix diff main -C my-api                     # what changed in the requests, field by field
 apix send chat/socket.apix --message '{"join":"room-1"}' --listen 10   # a ws:// request
 apix send events/live.apix                   # server-sent events, printed as they arrive
 apix schema graphql/users.apix               # a GraphQL endpoint's schema, as SDL

@@ -93,6 +93,9 @@ pub struct RunReport {
     pub iterations: u32,
     /// It ended early: `--bail`, or stopped from the Runner.
     pub stopped: bool,
+    /// Set when only some requests ran: those changed since a commit.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub selection: Option<Selection>,
     pub items: Vec<ItemResult>,
 }
 
@@ -345,6 +348,7 @@ footer {{ color:var(--muted); font-size:12px; margin-top:16px; }}
 <main>
 <h1>{name}</h1>
 <div class="sub">{started} UTC{env} · {iterations} iteration(s) · {duration:.1} s</div>
+{selection}
 {stopped}
 <div class="cards">
 <div class="card {req_class}"><b>{passed}/{requests}</b><span>requests passed</span></div>
@@ -375,6 +379,11 @@ footer {{ color:var(--muted); font-size:12px; margin-top:16px; }}
             tests_passed = s.tests - s.tests_failed,
             tests = s.tests,
             avg = average_time(&self.items),
+            selection = self
+                .selection
+                .as_ref()
+                .map(|s| format!("<p class=\"sub\">{}</p>", html(&s.sentence())))
+                .unwrap_or_default(),
         )
     }
 
@@ -386,6 +395,236 @@ footer {{ color:var(--muted); font-size:12px; margin-top:16px; }}
             item.path.clone()
         }
     }
+}
+
+/// A run of only the requests changed since a commit (`apix run --changed`).
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize)]
+pub struct Selection {
+    /// What the files were compared with, e.g. `origin/main` or `HEAD`.
+    pub since: String,
+    /// How many of them ran.
+    pub ran: usize,
+    /// How many requests there were to choose from.
+    pub of: usize,
+    /// Request files deleted since then, relative to the collection.
+    pub removed: Vec<String>,
+    /// Set when the comparison is not the usual one (no branch point found).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub warning: Option<String>,
+}
+
+impl Selection {
+    /// `Only requests changed since origin/main ran: 3 of 12.` and the removed ones.
+    pub fn sentence(&self) -> String {
+        let mut out = format!(
+            "Only requests changed since {} ran: {} of {}.",
+            self.since, self.ran, self.of
+        );
+        if !self.removed.is_empty() {
+            out += &format!(" Removed since then: {}.", self.removed.join(", "));
+        }
+        out
+    }
+}
+
+/// The marker that starts every Markdown report, so a CI step can find and
+/// update its earlier comment on a pull request instead of adding another.
+pub const MARKDOWN_MARKER: &str = "<!-- apix-run";
+
+/// Longest Markdown report: GitHub refuses comments over 65 536 characters.
+const MARKDOWN_LIMIT: usize = 60_000;
+
+impl RunReport {
+    /// A summary for a pull request comment or a CI job summary (GitHub
+    /// Markdown): the totals, one table row per request, then what failed.
+    pub fn to_markdown(&self) -> String {
+        let s = self.summary();
+        let mut out = format!(
+            "{MARKDOWN_MARKER}: {} -->\n",
+            self.name.replace("--", "- -")
+        );
+        let (icon, verdict) = if s.failed > 0 {
+            ("❌", format!("{} failed, {} passed", s.failed, s.passed))
+        } else if s.requests == 0 {
+            ("✅", "nothing to run".to_owned())
+        } else {
+            ("✅", format!("{} passed", s.passed))
+        };
+        out += &format!("### {icon} Apix · {} — {verdict}\n\n", md(&self.name));
+        let mut facts = Vec::new();
+        if let Some(env) = &self.environment {
+            facts.push(format!("environment `{}`", code(env)));
+        }
+        facts.push(match s.requests {
+            1 => "1 request".to_owned(),
+            n => format!("{n} requests"),
+        });
+        if s.tests > 0 {
+            let failed = if s.tests_failed > 0 {
+                format!(" ({} failed)", s.tests_failed)
+            } else {
+                String::new()
+            };
+            let noun = if s.tests == 1 { "test" } else { "tests" };
+            facts.push(format!("{} {noun}{failed}", s.tests));
+        }
+        if self.iterations > 1 {
+            facts.push(format!("{} iterations", self.iterations));
+        }
+        facts.push(format!("{:.1} s", self.duration_ms as f64 / 1000.0));
+        out += &facts.join(" · ");
+        out += "\n";
+        if let Some(sel) = &self.selection {
+            out += &format!(
+                "\nOnly requests changed since `{}` ran: **{} of {}**.",
+                code(&sel.since),
+                sel.ran,
+                sel.of
+            );
+            if !sel.removed.is_empty() {
+                let removed: Vec<String> = sel
+                    .removed
+                    .iter()
+                    .map(|r| format!("`{}`", code(r)))
+                    .collect();
+                out += &format!(" Removed since then: {}.", removed.join(", "));
+            }
+            out += "\n";
+            if let Some(warning) = &sel.warning {
+                out += &format!("\n> [!WARNING]\n> {}\n", md(warning));
+            }
+        }
+        if self.stopped {
+            out += "\n**The run was stopped before the end.**\n";
+        }
+        if self.items.is_empty() {
+            return out;
+        }
+        let iteration_head = if self.iterations > 1 { " # |" } else { "" };
+        let iteration_line = if self.iterations > 1 { "--:|" } else { "" };
+        out += &format!(
+            "\n| |{iteration_head} Request | Status | Time | Tests |\n|:-:|{iteration_line}:--|:--|--:|--:|\n"
+        );
+        let mut shown = 0;
+        for item in &self.items {
+            if out.len() > MARKDOWN_LIMIT / 2 {
+                break;
+            }
+            let mark = if item.skipped {
+                "➖"
+            } else if item.passed {
+                "✅"
+            } else {
+                "❌"
+            };
+            let iteration = if self.iterations > 1 {
+                format!(" {} |", item.iteration + 1)
+            } else {
+                String::new()
+            };
+            let tests = if item.tests.is_empty() {
+                String::new()
+            } else {
+                format!(
+                    "{}/{}",
+                    item.tests.iter().filter(|t| t.passed && !t.skipped).count(),
+                    item.tests.iter().filter(|t| !t.skipped).count()
+                )
+            };
+            let time = if item.status.is_some() {
+                format!("{:.0} ms", item.time_ms)
+            } else {
+                String::new()
+            };
+            out += &format!(
+                "| {mark} |{iteration} `{}` {} <sub>{}</sub> | {} | {time} | {tests} |\n",
+                code(&item.method),
+                md(&item.name),
+                md(&item.path),
+                md(&status_text(item)),
+            );
+            shown += 1;
+        }
+        if shown < self.items.len() {
+            out += &format!(
+                "\n_{} more not shown; the JUnit, JSON or HTML report has them all._\n",
+                self.items.len() - shown
+            );
+        }
+        let failed: Vec<&ItemResult> = self
+            .items
+            .iter()
+            .filter(|i| !i.passed && !i.skipped)
+            .collect();
+        if failed.is_empty() {
+            return out;
+        }
+        out += &format!(
+            "\n<details open><summary><b>What failed ({})</b></summary>\n\n",
+            failed.len()
+        );
+        for item in failed {
+            if out.len() > MARKDOWN_LIMIT {
+                out += "_…cut short; see the full report._\n";
+                break;
+            }
+            out += &format!(
+                "**`{}` {}{}** <sub>{} · {}</sub>\n",
+                code(&item.method),
+                md(&item.name),
+                if self.iterations > 1 {
+                    format!(" (iteration {})", item.iteration + 1)
+                } else {
+                    String::new()
+                },
+                md(&item.path),
+                md(&item.url)
+            );
+            for error in item.errors() {
+                out += &format!("- ❌ {}\n", md(&error));
+            }
+            if status_failed(item) {
+                out += &format!("- ❌ got {}\n", md(&status_text(item)));
+            }
+            for test in item.tests.iter().filter(|t| !t.passed && !t.skipped) {
+                let why = test
+                    .error
+                    .as_deref()
+                    .map(|e| format!(": {}", md(e)))
+                    .unwrap_or_default();
+                out += &format!("- ❌ {}{why}\n", md(&test.name));
+            }
+            out += "\n";
+        }
+        out += "</details>\n";
+        out
+    }
+}
+
+/// Text that GitHub shows as it is inside a table cell or a list item.
+fn md(text: &str) -> String {
+    let one_line = text.replace(['\r', '\n'], " ");
+    let mut out = String::with_capacity(one_line.len());
+    for c in one_line.chars() {
+        match c {
+            '|' => out.push_str("\\|"),
+            '<' => out.push_str("&lt;"),
+            '>' => out.push_str("&gt;"),
+            '*' | '_' | '`' | '[' | ']' | '\\' => {
+                out.push('\\');
+                out.push(c);
+            }
+            _ => out.push(c),
+        }
+    }
+    out
+}
+
+/// Text inside a `code span`: no backticks or table pipes can break out.
+fn code(text: &str) -> String {
+    text.replace(['\r', '\n'], " ")
+        .replace('`', "'")
+        .replace('|', "\\|")
 }
 
 fn average_time(items: &[ItemResult]) -> f64 {
@@ -483,6 +722,7 @@ mod tests {
             duration_ms: 1500,
             iterations: 1,
             stopped: false,
+            selection: None,
             items: vec![
                 ItemResult {
                     name: "List users".into(),
@@ -580,5 +820,43 @@ mod tests {
         assert!(page.contains("<title>Shop &lt;API&gt; · Apix run</title>"));
         assert!(page.contains("expected undefined to exist"));
         assert!(page.contains("0/3"));
+    }
+
+    #[test]
+    fn markdown_for_pull_requests() {
+        let mut run = report();
+        run.selection = Some(Selection {
+            since: "origin/main".into(),
+            ran: 3,
+            of: 12,
+            removed: vec!["old.apix".into()],
+            warning: None,
+        });
+        run.items[0].name = "List | users".into();
+        let text = run.to_markdown();
+        assert!(text.starts_with("<!-- apix-run: Shop <API> -->\n"));
+        assert!(text.contains("### ❌ Apix · Shop &lt;API&gt; — 3 failed, 0 passed"));
+        assert!(text.contains("environment `dev` · 3 requests · 2 tests (1 failed) · 1.5 s"));
+        assert!(text.contains(
+            "changed since `origin/main` ran: **3 of 12**. Removed since then: `old.apix`."
+        ));
+        assert!(text.contains(
+            "| ❌ | `GET` List \\| users <sub>users/list.apix</sub> | 200 OK | 120 ms | 1/2 |"
+        ));
+        assert!(text.contains("- ❌ has \"id\": expected undefined to exist"));
+        assert!(text.contains("- ❌ got 503"));
+        assert!(text.contains("- ❌ undefined variable(s): password"));
+        let page = run.to_html();
+        assert!(page.contains("Only requests changed since origin/main ran: 3 of 12."));
+
+        let empty = RunReport {
+            name: "api".into(),
+            ..Default::default()
+        };
+        assert!(
+            empty
+                .to_markdown()
+                .contains("✅ Apix · api — nothing to run")
+        );
     }
 }

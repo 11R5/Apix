@@ -28,7 +28,8 @@ no WebView and no Electron.
 crates/
 ├── apix-core     request model, {{variables}} and {{$dynamic}} values, on-disk format,
 │                 projects, environments and secrets, tree and file operations,
-│                 GraphQL schemas (introspection, SDL) and query completion
+│                 GraphQL schemas (introspection, SDL) and query completion,
+│                 git: branch, changed files, what a change touches, request-level diffs
 ├── apix-http     HTTP engine: reqwest + rustls, timings, response capture, network trace,
 │                 server-sent events, WebSocket (tokio-tungstenite), Socket.IO, GraphQL schema fetch
 │                 (DNS, connection setup, redirects, certificate, local interface)
@@ -36,11 +37,11 @@ crates/
 ├── apix-codegen  requests ↔ shell commands: curl (bash), curl.exe (cmd), PowerShell; parses pasted curl; code in 10 languages
 ├── apix-vault    encrypted collections: per-file XChaCha20-Poly1305, Argon2id, recovery key
 ├── apix-script   pre-request and test scripts: QuickJS with a pm.*-compatible API
-├── apix-runner   runs collections: order, iterations, data files, delay, bail, reports
+├── apix-runner   runs collections: order, iterations, data files, delay, bail, reports (also Markdown for pull requests)
 ├── apix-grpc     gRPC calls: tonic, messages as JSON (prost-reflect), .proto files (protox), definitions from code or JSON
 ├── apix-proto    other protocols: MQTT (rumqttc)
 │                 or server reflection
-├── apix-cli      `apix` binary: send / run / schema / import / shell from terminal & CI
+├── apix-cli      `apix` binary: send / run / diff / schema / import / shell from terminal & CI
 └── apix-desktop  GPUI desktop app (Windows, macOS and Linux from one crate)
 tools/
 └── icongen       builds every app icon (ico, icns, hicolor PNGs) from Logo/LogoFirst.jpg
@@ -607,6 +608,46 @@ a call with `Summary::grpc` set: the status is the gRPC code, the trailers and
 status message have their own fields, and the body is the log
 (`[{"at_ms", "sent", "message"}]`), which `grpc_ui::restored` turns back into
 the log view.
+
+## Git (M7)
+
+`apix_core::git` runs the `git` program that is already installed (no git
+library, so nothing is added to the binary and the user's own config, hooks
+and credentials apply). A `Repo` is opened at the collection or project
+folder and every command runs there with `--relative`, so paths are relative
+to that folder and a collection inside a bigger repository only sees its own
+files. `changes_since(rev)` is `git diff --merge-base rev` (where the branch
+left `rev`, like a pull request) plus untracked files; without history (a
+shallow clone) it falls back to `rev` itself and says so. `show(rev, path)`
+reads a file at a commit.
+
+`git::affected` maps changed files to requests by their role
+(`git::role_of`): a request file or its `<stem>.*.js` scripts → that request;
+`folder.toml` or `_folder.*.js` → the requests under that folder;
+`apix.toml`, `_collection.*.js`, `environments/*.toml`, the project file or
+the project's environments → all; any other file → the requests whose file
+names it. `apix run --changed` keeps those requests and the report records
+the choice (`RunReport::selection`).
+
+`apix_core::diff` compares two versions of a file by meaning: requests are
+parsed into `Request` and serialised to JSON (so defaults and formatting do
+not matter), other TOML into values, scripts and other text line by line
+(longest common subsequence with common head and tail trimmed). Lists of
+rows with a distinct `key` or `name` (headers, query, `[[example]]`) become
+tables keyed by it, so rows match by name; fields are named by their path
+(`headers.Accept`, `body.json`). A removed and an added request with the
+same content become one move. `apix diff` prints the result as text,
+Markdown or JSON.
+
+`RunReport::to_markdown` writes the run for GitHub (one table row per
+request, failures in an open `<details>`), starting with a hidden
+`<!-- apix-run: <name> -->` marker that the action's comment step looks for
+to edit its earlier comment. It stays under GitHub's 65 536-character limit.
+
+The desktop app (`workspace/git_ui.rs`) reads the branch and `git status`
+for the open folder in the background after each reload and when the window
+is activated, and keeps a map of changed paths for the sidebar marks; a
+request whose own scripts changed counts as changed.
 
 ## Themes
 

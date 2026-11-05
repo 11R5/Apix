@@ -146,6 +146,8 @@ Options:
 | `--bail` | Stop at the first request that fails |
 | `--junit report.xml` | A JUnit XML report, which CI services show as a test list |
 | `--json report.json` / `--html report.html` | Everything as JSON, or a page that opens in any browser |
+| `--markdown report.md` | A summary for a pull request comment or a CI job summary (see below) |
+| `--changed` / `--changed=origin/main` | Only the requests a change touches (see below) |
 | `--timeout 10`, `-k`, `--proxy URL` | Override the requests' transport settings |
 | `--env-file .env` | Variables from a dotenv file (see below) |
 
@@ -188,7 +190,7 @@ The repository is also a GitHub Action. It builds `apix` the first time
 - uses: 11R5/Apix@main          # better: a tag or commit
   with:
     path: api
-    environment: staging        # also: data, iterations, delay, bail, env-file, junit, html, json, args
+    environment: staging        # also: data, iterations, delay, bail, env-file, junit, html, json, markdown, changed, diff, comment, args
   env:
     APIX_VAR_TOKEN: ${{ secrets.API_TOKEN }}
 ```
@@ -196,7 +198,105 @@ The repository is also a GitHub Action. It builds `apix` the first time
 [examples/ci/github-actions.yml](../../examples/ci/github-actions.yml) is a
 complete workflow: it runs the collection once per environment (a matrix of
 `test` and `staging`), shows the JUnit results on the run's page and keeps the
-HTML reports.
+HTML reports. The action also adds its Markdown summary to the job's page.
+
+## Only what changed: git-aware runs
+
+A collection is a folder in git, so `apix` can ask git what a change
+touched. `--changed` sends only those requests:
+
+```sh
+apix run api --changed                 # what is not committed yet
+apix run api --changed=origin/main     # what this branch changed since it left main
+```
+
+A request runs again when its own file or its scripts changed, when a
+`folder.toml` or folder script above it changed (every request in that
+folder), when `apix.toml`, a collection script, an environment or the
+project file changed (every request), or when it names another changed file
+(a body file, a `.proto`). New files count before they are committed;
+deleted requests are listed. Without a value, `--changed` compares with the
+pull request's base branch on GitHub Actions (`origin/$GITHUB_BASE_REF`) and
+otherwise with `HEAD`. Write the value with `=`, so it cannot be mistaken
+for the folder to run.
+
+```text
+2 of 3 requests changed since origin/main
+  users/create-user.apix  ← users/create-user.test.js
+  users/list-users.apix
+```
+
+Like a pull request, the comparison starts where the branch left the base,
+so what landed on main meanwhile does not count. That needs the history: in
+a shallow clone (the default of `actions/checkout`) `apix` warns and compares
+with the base itself; check out with `fetch-depth: 0`. Encrypted collections
+cannot be compared, because git only sees their encrypted files.
+
+### What changed: `apix diff`
+
+`apix diff` shows a change the way a reviewer reads it: a request's fields
+rather than lines of TOML, headers and query parameters by name, the body
+and scripts line by line, environments by variable. Reformatting a file is
+not a change, and a request moved or renamed without other edits is one
+move.
+
+```sh
+apix diff                       # HEAD against the files as they are now
+apix diff main                  # main against now
+apix diff v1.2 v1.3 -C api      # between two tags, for the collection in api/
+```
+
+```text
+Between main and the working tree: 1 script, 1 request
+
+A  script  users/create-user.test.js
+     + pm.test("ok", () => pm.response.to.have.status(200));
+M  GET List users  users/list-users.apix
+     query._limit: 3 → 5
+     headers.Accept: (none) → application/json
+```
+
+`--markdown` prints it for a pull request, `--json` for tools, and
+`--exit-code` exits with 1 when something changed.
+
+### A summary on the pull request
+
+`--markdown report.md` writes the run as GitHub Markdown: the totals, one
+row per request and, open below, what failed and why. Its first line is a
+hidden marker with the collection's name, so a CI step can find the comment
+it wrote last time and edit it instead of adding another.
+
+The action does all of this. On a pull request it sends only what the pull
+request touches, adds `apix diff` under the summary, and keeps one comment on
+the pull request up to date:
+
+```yaml
+on: pull_request
+permissions:
+  contents: read
+  pull-requests: write          # for the comment
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0        # history, to find where the branch started
+      - uses: 11R5/Apix@main
+        with:
+          path: api
+          changed: "true"       # or a commit, branch or tag
+          diff: "true"
+          comment: "true"
+```
+
+On a push, `changed: "true"` compares with the commit before the push. The
+summary is also written to `apix-report.md` (input `markdown`) and shown on
+the job's page.
+
+In the desktop app the status bar shows the branch and how many files
+changed since the last commit, and the sidebar marks changed requests with
+**M** (changed) or **A** (new); see the [user guide](user-guide.md#git).
 
 ### Docker
 

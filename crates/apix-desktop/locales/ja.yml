@@ -254,6 +254,8 @@ extract.path: "値（チェックと同じ: body.data.token、header.X-Token、s
 extract.saved_collection: "%{name} = %{value} をコレクションの変数に保存しました。"
 extract.saved_env: "%{name} = %{value} を「%{env}」に保存しました。"
 extract.title: 値を変数として保存
+git.changes: 変更 %{count} 件
+git.one_change: 変更 1 件
 grpc.add_protos: ファイルを追加
 grpc.calling: 呼び出し中…
 grpc.choose_protos: .proto ファイルまたはディスクリプタセットを選択

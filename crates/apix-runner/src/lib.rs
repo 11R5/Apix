@@ -21,7 +21,7 @@ use apix_http::{HttpClient, Response};
 use apix_script::{Info, Input, LogLine, Output, ResponseView, Sender};
 
 pub use data::Row;
-pub use report::{ItemResult, RunReport, Summary};
+pub use report::{ItemResult, RunReport, Selection, Summary};
 
 /// The collection, and the project around it, that a file or folder belongs to.
 #[derive(Debug, Clone, Default)]

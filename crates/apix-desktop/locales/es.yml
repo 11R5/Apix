@@ -254,6 +254,8 @@ extract.path: "Valor (como en Comprobaciones: body.data.token, header.X-Token, s
 extract.saved_collection: "%{name} = %{value} guardada en las variables de la colección."
 extract.saved_env: "%{name} = %{value} guardada en «%{env}»."
 extract.title: Guardar un valor como variable
+git.changes: "%{count} cambios"
+git.one_change: 1 cambio
 grpc.add_protos: Añadir archivo
 grpc.calling: Llamando…
 grpc.choose_protos: Elija archivos .proto o descriptor sets

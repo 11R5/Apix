@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:74d9d609ab2b9552 -->
+<!-- translated from en/architecture.md sha256:f1b7537a7a6d4866 -->
 
 # Apix mimarisi
 
@@ -30,7 +30,8 @@ Apix, Rust ile yazılmış native bir API istemcisidir. Arayüz,
 crates/
 ├── apix-core     istek modeli, {{variables}} ve {{$dynamic}} değerleri, disk formatı,
 │                 projeler, ortamlar ve gizli değerler, ağaç ve dosya işlemleri,
-│                 GraphQL şemaları (introspection, SDL) ve sorgu tamamlama
+│                 GraphQL şemaları (introspection, SDL) ve sorgu tamamlama,
+│                 git: dal, değişen dosyalar, bir değişikliğin dokunduğu istekler, istek düzeyinde fark
 ├── apix-http     HTTP motoru: reqwest + rustls, zamanlamalar, yanıt yakalama, ağ izi,
 │                 sunucu olayları (SSE), WebSocket (tokio-tungstenite), Socket.IO, GraphQL şeması çekme
 │                 (DNS, bağlantı kurulumu, yönlendirmeler, sertifika, yerel ağ arayüzü)
@@ -38,11 +39,11 @@ crates/
 ├── apix-codegen  istekler ↔ kabuk komutları: curl (bash), curl.exe (cmd), PowerShell; yapıştırılan curl'ü ayrıştırır; 10 dilde kod
 ├── apix-vault    şifreli koleksiyonlar: dosya başına XChaCha20-Poly1305, Argon2id, kurtarma anahtarı
 ├── apix-script   istek öncesi ve test scriptleri: pm.* uyumlu API ile QuickJS
-├── apix-runner   koleksiyon koşuları: sıra, tekrar, veri dosyaları, bekleme, bail, raporlar
+├── apix-runner   koleksiyon koşuları: sıra, tekrar, veri dosyaları, bekleme, bail, raporlar (pull request için Markdown da)
 ├── apix-grpc     gRPC çağrıları: tonic, JSON mesajlar (prost-reflect), .proto dosyaları (protox), koddan ya da JSON'dan tanım
 │                 ya da sunucu reflection'ı
 ├── apix-proto    diğer protokoller: MQTT (rumqttc)
-├── apix-cli      `apix` binary'si: terminalden ve CI'dan send / run / schema / import / shell
+├── apix-cli      `apix` binary'si: terminalden ve CI'dan send / run / diff / schema / import / shell
 └── apix-desktop  GPUI masaüstü uygulaması (tek crate'ten Windows, macOS ve Linux)
 tools/
 └── icongen       tüm uygulama ikonlarını (ico, icns, hicolor PNG'ler) Logo/LogoFirst.jpg'den üretir
@@ -633,6 +634,47 @@ Geçmiş bir çağrıyı `Summary::grpc` işaretiyle tutar: durum gRPC kodudur,
 trailer'lar ve durum mesajı kendi alanlarındadır, gövde de günlüktür
 (`[{"at_ms", "sent", "message"}]`); `grpc_ui::restored` onu yeniden günlük
 görünümüne çevirir.
+
+## Git (M7)
+
+`apix_core::git` zaten kurulu olan `git` programını çalıştırır (git
+kütüphanesi yok; binary büyümez, kullanıcının kendi ayarları, hook'ları ve
+kimlik bilgileri geçerlidir). Bir `Repo` koleksiyon ya da proje klasöründe
+açılır ve her komut orada `--relative` ile çalışır; yollar o klasöre göredir ve
+daha büyük bir deponun içindeki koleksiyon yalnızca kendi dosyalarını görür.
+`changes_since(rev)`, `git diff --merge-base rev` (dalın `rev`'den ayrıldığı
+yer, pull request'teki gibi) ile izlenmeyen dosyalardır; geçmiş yoksa (sığ
+klon) doğrudan `rev` ile karşılaştırır ve bunu söyler. `show(rev, path)` bir
+dosyayı bir commit'teki hâliyle okur.
+
+`git::affected`, değişen dosyaları rollerine göre (`git::role_of`) isteklere
+eşler: istek dosyası ya da `<ad>.*.js` scriptleri → o istek; `folder.toml` ya
+da `_folder.*.js` → o klasörün altındaki istekler; `apix.toml`,
+`_collection.*.js`, `environments/*.toml`, proje dosyası ya da projenin
+ortamları → hepsi; başka bir dosya → dosyası onun adını geçen istekler.
+`apix run --changed` bu istekleri tutar, rapor da seçimi kaydeder
+(`RunReport::selection`).
+
+`apix_core::diff` bir dosyanın iki sürümünü anlamına göre karşılaştırır:
+istekler `Request` olarak okunup JSON'a çevrilir (varsayılanlar ve biçim
+önemsizleşir), diğer TOML dosyaları değer olarak, scriptler ve diğer metinler
+satır satır (ortak baş ve son kırpılıp en uzun ortak alt dizi). `key` ya da
+`name` alanı benzersiz olan satır listeleri (header'lar, sorgu, `[[example]]`)
+o alanla anahtarlanan tablolara dönüşür; satırlar adıyla eşleşir, alanlar
+yollarıyla adlandırılır (`headers.Accept`, `body.json`). Aynı içerikle silinen
+ve eklenen istek tek bir taşıma olur. `apix diff` sonucu metin, Markdown ya da
+JSON olarak yazar.
+
+`RunReport::to_markdown` koşuyu GitHub için yazar (istek başına bir tablo
+satırı, hatalar açık bir `<details>` içinde) ve gizli bir
+`<!-- apix-run: <ad> -->` işaretiyle başlar; action'ın yorum adımı önceki
+yorumunu bu işaretle bulup düzenler. GitHub'ın 65 536 karakter sınırının
+altında kalır.
+
+Masaüstü uygulaması (`workspace/git_ui.rs`) açık klasörün dalını ve
+`git status`'unu her yeniden yüklemeden sonra ve pencere etkinleştiğinde arka
+planda okur, kenar çubuğu işaretleri için değişen yolların bir haritasını
+tutar; kendi scriptleri değişen istek de değişmiş sayılır.
 
 ## Temalar
 

@@ -31,6 +31,7 @@ command line runs the same requests in a terminal or CI.
 - [Tabs](#tabs)
 - [Organising requests](#organising-requests)
 - [Projects](#projects)
+- [Git](#git)
 - [Encrypted collections](#encrypted-collections)
 - [Copy as and paste curl](#copy-as-and-paste-curl)
 - [Importing from Postman](#importing-from-postman)
@@ -763,6 +764,23 @@ Project › Environment › Collections.
 - **File › Move into a project…** (with a single collection open) moves that
   collection's folder into a project you pick. With a project open, dropping a
   collection's folder from the file manager onto the window offers the same.
+
+## Git
+
+A collection is plain files, so it lives in git like code. When the open
+collection (or project) is inside a git repository, the status bar shows the
+branch and how many of its files changed since the last commit, and the
+sidebar marks each changed request: **M** changed (its file or its own
+scripts), **A** new. They follow every save and every change on disk, and
+are read again when the window comes back to the front, so a commit made in
+a terminal clears them.
+
+![Branch and changed requests](images/git-status.png)
+
+On the command line, `apix run --changed` sends only the requests a change
+touches and `apix diff` shows what changed in them field by field; on a pull
+request the GitHub Action can comment with the result. See
+[Only what changed](workflows.md#only-what-changed-git-aware-runs).
 
 ## Encrypted collections
 

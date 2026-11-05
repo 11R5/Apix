@@ -8,13 +8,13 @@ side.
 
 ```
 crates/
-├── apix-core       request model, variables, on-disk format, projects, signing (sign.rs), GraphQL schemas
+├── apix-core       request model, variables, on-disk format, projects, signing (sign.rs), GraphQL schemas, git (git.rs, diff.rs)
 ├── apix-http       the HTTP engine (reqwest), network trace, OAuth 2.0 tokens, SSE, WebSocket, Socket.IO, GraphQL schema fetch
 ├── apix-import     import of Postman, Insomnia, OpenAPI, HAR and WSDL
 ├── apix-codegen    "Copy as" (curl, curl.exe, PowerShell, code in 10 languages) and curl paste
 ├── apix-vault      encrypted collections
 ├── apix-script     pre-request and test scripts (QuickJS)
-├── apix-runner     collection runs, data files, JUnit/JSON/HTML reports
+├── apix-runner     collection runs, data files, JUnit/JSON/HTML/Markdown reports
 ├── apix-grpc       gRPC calls: .proto files, server reflection or definitions from code and JSON, messages as JSON
 ├── apix-proto      other protocols: MQTT
 ├── apix-cli        the `apix` command
@@ -74,7 +74,7 @@ release build of the desktop app takes a few minutes.
 | Signing | `sha2`, `sha1`, `hmac`, `md-5`, `base64`, `rand_core` (AWS SigV4, OAuth 1.0, Digest, PKCE) |
 | Encryption | `chacha20poly1305` (XChaCha20-Poly1305), `argon2`, `zeroize`, `keyring` (OS credential store) |
 | Scripts | `rquickjs` (QuickJS, built from C with the system compiler); `require` libraries are Apix's own JavaScript, hashing through `sha1`, `sha2`, `md-5`, `hmac` |
-| Files | `serde`, `toml`, `serde_json`, `notify` (file watching), `trash` |
+| Files | `serde`, `toml`, `serde_json`, `notify` (file watching), `trash`; git through the installed `git` program (no library) |
 | Responses | `serde_json_path` (JSONPath, RFC 9535) and `jaq-core`, `jaq-std`, `jaq-json` (jq) for the filter; `regex` for searching large bodies |
 | Languages | `rust-i18n` (shared with gpui-kit), `sys-locale` |
 
@@ -103,6 +103,7 @@ collections are never written to disk.
 | `APIX_THEME` | a theme id (`obsidian`, `cyber`, `dracula`, `nord`, `solarized-dark`, `daylight`, `solarized-light` or a theme file's name); shows that theme whatever the settings say. |
 | `APIX_BENCH` | `startup` or `json:<url>`: measure and quit (see below). |
 | `APIX_BENCH_OUT` | File to append the measurements to. |
+| `GITHUB_BASE_REF` | Set by GitHub Actions on pull requests: `apix run --changed` without a value compares with `origin/<it>`. |
 
 ## Measuring performance
 
@@ -189,14 +190,14 @@ so a new commit rebuilds it and an unchanged one reuses it.
 
 | Crate | What is covered |
 |---|---|
-| apix-core | model and file format round trips, variables, environment secrets in the keychain (skipped without a credential store), signing against the AWS test suite, RFC 7616 (Digest), RFC 7636 (PKCE) and the OAuth 1.0 example; GraphQL schemas (reading introspection, SDL) and what is suggested and described at each place in a query (fields, aliases, arguments, enum values, input objects, lists, fragments, variable types, comments and strings); the `[grpc]` table; history entries, gRPC calls included; GraphQL variable declarations and completion in the variables (JSON); the trusted CA setting; filtering JSON with JSONPath and jq (matches, outputs in order, errors in words, endless filters stopped); the URL's query and its rows both ways, `:name` path variables found and filled (only in the path, encoded, a second fill changing nothing), tidying a request's URL; header names and values suggested (start before contains, none once typed in full); examples (text and bytes round trips, the request as written, no Set-Cookie) |
+| apix-core | model and file format round trips, variables, environment secrets in the keychain (skipped without a credential store), signing against the AWS test suite, RFC 7616 (Digest), RFC 7636 (PKCE) and the OAuth 1.0 example; GraphQL schemas (reading introspection, SDL) and what is suggested and described at each place in a query (fields, aliases, arguments, enum values, input objects, lists, fragments, variable types, comments and strings); the `[grpc]` table; history entries, gRPC calls included; GraphQL variable declarations and completion in the variables (JSON); the trusted CA setting; filtering JSON with JSONPath and jq (matches, outputs in order, errors in words, endless filters stopped); the URL's query and its rows both ways, `:name` path variables found and filled (only in the path, encoded, a second fill changing nothing), tidying a request's URL; header names and values suggested (start before contains, none once typed in full); examples (text and bytes round trips, the request as written, no Set-Cookie); git against a real repository (changes since a branch point, not committed, between commits, a file at a commit, an unknown ref), what a changed file touches (scripts, folders, environments, the project, files a request names), request diffs (rows by name, formatting ignored, body line by line, moves) |
 | apix-http | request building, every body type, a local server for OAuth 2.0, Digest, AWS and OAuth 1.0, the network trace; the SSE parser (pieces split anywhere), streaming against a server that sends slowly, WebSocket (echo, auth and params in the handshake, closing from either side, a refused handshake), fetching a GraphQL schema with the request's auth and the errors when there is none, HTTPS with an own certificate authority; WebSocket subprotocols and binary messages, `wss://` with an own CA or unchecked; what an event stream carries over to a reconnection; Socket.IO packets, handshake addresses and binary attachments, and against a local Socket.IO 4 server: events, acks both ways, pings, namespaces with auth and refusals, binary attachments, the server making the client leave, a plain WebSocket server told apart; WebSocket pings at an interval with their pongs timed, a ping left unanswered ending the connection, `ping_interval` in the file |
 | apix-grpc | addresses, status codes, headers and auth as metadata; against a local Greeter (built from dynamic messages, with and without reflection): listing and describing the service, all four kinds of method, auth reaching the server, a failed status, .proto files with imports, and the errors for no description, an unknown method, a message that does not fit, a list for a unary method, a missing file and no server; example messages; a call as an HTTP response for runs (status mapping, `grpc-status`, a stream as a list); TLS against a server with a certificate from its own authority (refused, trusted with the CA, accepted unchecked); definitions: real generator output kept in `tests/fixtures/generated` (protoc 3.19 for Python, Java, C#, C++, PHP; protoc-gen-es; ts-proto) must give back the original service, Go, Rust, betterproto and annotations give numbers and types, the same type read from 10 languages, JSON examples, comparing with a server, a guess giving way to reflection, unknown fields reported, a wrong answer type explained |
 | apix-proto | MQTT addresses, logins and options; against a local broker: every quality of service, wildcards, subscribing and leaving while connected, refused subscriptions and bad topics, retained messages, logins and kept sessions, the broker hanging up, `mqtts://` with an own CA or unchecked |
 | apix-codegen | shell quoting for bash, cmd and PowerShell; curl paste; round trips; every language's URL, headers, bodies, string escaping and settings |
 | apix-import | Postman v2.0/v2.1 fixtures; WSDL: both SOAP versions, ports and addresses, document and rpc styles, headers, examples from the schema (extension, enums, choices, `form`, recursion), imports and what could not be read, locations, WSDL 2.0 refused |
 | apix-script | variables and request changes from pre-request scripts, `pm.test` / `pm.expect` results and messages, the older `tests[...]` API, errors naming the file, endless scripts stopped, `setNextRequest`, `atob`/`btoa`, `pm.sendRequest` (callback and `await`, waiting not counted), the built-in libraries against known digests, checks without code, values and expressions for response targets |
-| apix-runner | CSV (quotes, line breaks, `;`, BOM) and JSON data files, dotenv files and `APIX_VAR_*` names, iteration counts and data rows, pause/stop timing, JUnit/JSON/HTML output and escaping, dates; whole runs against a local server (data rows, sidebar order, `bail`, `setNextRequest`) |
+| apix-runner | CSV (quotes, line breaks, `;`, BOM) and JSON data files, dotenv files and `APIX_VAR_*` names, iteration counts and data rows, pause/stop timing, JUnit/JSON/HTML/Markdown output and escaping (Markdown for pull requests: marker, escaping, what failed, a `--changed` selection), dates; whole runs against a local server (data rows, sidebar order, `bail`, `setNextRequest`) |
 | apix-vault | encryption format, tampering, password change, recovery key, keychain entries (against the real credential store under a test service name; skipped where none exists) |
 | apix-desktop | translations complete, language helpers, file paths, highlighting query, theme files (reading, errors, round trip), accent and transparency colours, GraphQL schema file names, a gRPC call's log in the history |
 | docs-check | documentation structure and stamps |

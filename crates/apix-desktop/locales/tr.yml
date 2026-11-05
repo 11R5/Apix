@@ -254,6 +254,8 @@ extract.path: "Değer (Doğrulamalar'daki gibi: body.data.token, header.X-Token,
 extract.saved_collection: "%{name} = %{value}, koleksiyon değişkenlerine kaydedildi."
 extract.saved_env: "%{name} = %{value}, “%{env}” ortamına kaydedildi."
 extract.title: Bir değeri değişken olarak kaydet
+git.changes: "%{count} değişiklik"
+git.one_change: 1 değişiklik
 grpc.add_protos: Dosya ekle
 grpc.calling: Çağrılıyor…
 grpc.choose_protos: .proto dosyalarını ya da descriptor set'leri seçin

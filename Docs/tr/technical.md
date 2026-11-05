@@ -1,4 +1,4 @@
-<!-- translated from en/technical.md sha256:cf215517d8960ea2 -->
+<!-- translated from en/technical.md sha256:fa048c179def6b08 -->
 
 # Teknik notlar
 
@@ -9,13 +9,13 @@ Apix'in nasıl derlendiği, nelere bağımlı olduğu ve nasıl ölçüleceği.
 
 ```
 crates/
-├── apix-core       istek modeli, değişkenler, disk formatı, projeler, imzalama (sign.rs), GraphQL şemaları
+├── apix-core       istek modeli, değişkenler, disk formatı, projeler, imzalama (sign.rs), GraphQL şemaları, git (git.rs, diff.rs)
 ├── apix-http       HTTP motoru (reqwest), ağ izi, OAuth 2.0 token'ları, SSE, WebSocket, Socket.IO, GraphQL şeması çekme
 ├── apix-import     Postman, Insomnia, OpenAPI, HAR ve WSDL içe aktarma
 ├── apix-codegen    "Komut veya kod olarak kopyala" (curl, curl.exe, PowerShell, 10 dilde kod) ve curl yapıştırma
 ├── apix-vault      şifreli koleksiyonlar
 ├── apix-script     istek öncesi ve test scriptleri (QuickJS)
-├── apix-runner     koleksiyon koşuları, veri dosyaları, JUnit/JSON/HTML raporlar
+├── apix-runner     koleksiyon koşuları, veri dosyaları, JUnit/JSON/HTML/Markdown raporlar
 ├── apix-grpc       gRPC çağrıları: .proto dosyaları, sunucu reflection'ı ya da koddan ve JSON'dan tanım, JSON mesajlar
 ├── apix-proto      diğer protokoller: MQTT
 ├── apix-cli        `apix` komutu
@@ -75,7 +75,7 @@ Masaüstü uygulamasının tam bir release derlemesi birkaç dakika sürer.
 | İmzalama | `sha2`, `sha1`, `hmac`, `md-5`, `base64`, `rand_core` (AWS SigV4, OAuth 1.0, Digest, PKCE) |
 | Şifreleme | `chacha20poly1305` (XChaCha20-Poly1305), `argon2`, `zeroize`, `keyring` (işletim sistemi kimlik bilgisi deposu) |
 | Scriptler | `rquickjs` (QuickJS, sistemin C derleyicisiyle derlenir); `require` kütüphaneleri Apix'in kendi JavaScript kodu, özetler `sha1`, `sha2`, `md-5`, `hmac` ile |
-| Dosyalar | `serde`, `toml`, `serde_json`, `notify` (dosya izleme), `trash` |
+| Dosyalar | `serde`, `toml`, `serde_json`, `notify` (dosya izleme), `trash`; git, kurulu `git` programı üzerinden (kütüphane yok) |
 | Yanıtlar | süzme için `serde_json_path` (JSONPath, RFC 9535) ile `jaq-core`, `jaq-std`, `jaq-json` (jq); büyük gövdelerde arama için `regex` |
 | Diller | `rust-i18n` (gpui-kit ile ortak), `sys-locale` |
 
@@ -104,6 +104,7 @@ parolaları asla diske yazılmaz.
 | `APIX_THEME` | bir tema kimliği (`obsidian`, `cyber`, `dracula`, `nord`, `solarized-dark`, `daylight`, `solarized-light` ya da bir tema dosyasının adı); ayarlar ne derse desin o temayı gösterir. |
 | `APIX_BENCH` | `startup` veya `json:<url>`: ölç ve çık (aşağıya bakın). |
 | `APIX_BENCH_OUT` | Ölçümlerin sonuna ekleneceği dosya. |
+| `GITHUB_BASE_REF` | GitHub Actions'ın pull request'lerde atadığı değişken: değer verilmeyen `apix run --changed` `origin/<değeri>` ile karşılaştırır. |
 
 ## Performans ölçümü
 
@@ -191,14 +192,14 @@ alır; yeni bir commit yeniden derler, değişmeyen kaynak öncekini kullanır.
 
 | Crate | Kapsananlar |
 |---|---|
-| apix-core | model ve dosya formatı için gidiş-dönüş (round trip) testleri, değişkenler, anahtarlıktaki ortam gizli değerleri (kimlik bilgisi deposu yoksa atlanır), AWS test paketine, RFC 7616'ya (Digest), RFC 7636'ya (PKCE) ve OAuth 1.0 örneğine karşı imzalama; GraphQL şemaları (introspection okuma, SDL) ve bir sorgunun her yerinde neyin önerilip açıklandığı (alanlar, takma adlar, argümanlar, enum değerleri, girdi nesneleri, listeler, fragment'ler, değişken türleri, yorumlar ve metinler); `[grpc]` tablosu; gRPC çağrıları dahil geçmiş kayıtları; GraphQL değişken tanımları ve değişkenler (JSON) içinde tamamlama; güvenilen CA ayarı; JSONPath ve jq ile JSON süzme (eşleşmeler, sırayla çıktılar, sözle hatalar, durmayan süzmelerin kesilmesi); URL sorgusu ile satırları iki yönde, `:ad` yol değişkenlerini bulma ve doldurma (yalnızca yolda, kodlanmış, ikinci doldurma bir şey değiştirmez), bir isteğin URL'sini düzenleme; başlık adı ve değeri önerme (başlayanlar içerenlerden önce, tam yazılınca öneri yok); örnekler (metin ve bayt gidiş-dönüşü, yazıldığı hâliyle istek, Set-Cookie yok) |
+| apix-core | model ve dosya formatı için gidiş-dönüş (round trip) testleri, değişkenler, anahtarlıktaki ortam gizli değerleri (kimlik bilgisi deposu yoksa atlanır), AWS test paketine, RFC 7616'ya (Digest), RFC 7636'ya (PKCE) ve OAuth 1.0 örneğine karşı imzalama; GraphQL şemaları (introspection okuma, SDL) ve bir sorgunun her yerinde neyin önerilip açıklandığı (alanlar, takma adlar, argümanlar, enum değerleri, girdi nesneleri, listeler, fragment'ler, değişken türleri, yorumlar ve metinler); `[grpc]` tablosu; gRPC çağrıları dahil geçmiş kayıtları; GraphQL değişken tanımları ve değişkenler (JSON) içinde tamamlama; güvenilen CA ayarı; JSONPath ve jq ile JSON süzme (eşleşmeler, sırayla çıktılar, sözle hatalar, durmayan süzmelerin kesilmesi); URL sorgusu ile satırları iki yönde, `:ad` yol değişkenlerini bulma ve doldurma (yalnızca yolda, kodlanmış, ikinci doldurma bir şey değiştirmez), bir isteğin URL'sini düzenleme; başlık adı ve değeri önerme (başlayanlar içerenlerden önce, tam yazılınca öneri yok); örnekler (metin ve bayt gidiş-dönüşü, yazıldığı hâliyle istek, Set-Cookie yok); gerçek bir depoda git (ayrılma noktasından beri, commit'lenmemiş, iki commit arası değişiklikler, bir commit'teki dosya, bilinmeyen referans), değişen bir dosyanın dokunduğu istekler (scriptler, klasörler, ortamlar, proje, isteğin andığı dosyalar), istek farkları (satırlar adıyla, biçim yok sayılır, gövde satır satır, taşımalar) |
 | apix-http | istek oluşturma, her gövde türü, OAuth 2.0, Digest, AWS ve OAuth 1.0 için yerel bir sunucu, ağ izi; SSE ayrıştırıcı (parçaların her yerden bölünmesi dahil), yavaş gönderen bir sunucuya karşı akış, WebSocket (yankı, el sıkışmada auth ve parametreler, iki taraftan kapanış, reddedilen el sıkışma), isteğin yetkilendirmesiyle GraphQL şeması çekme ve şema yokken verilen hatalar, kendi sertifika yetkilisiyle HTTPS; WebSocket alt protokolleri ve ikili mesajlar, kendi CA'sıyla ya da denetimsiz `wss://`; bir olay akışının yeniden bağlanmaya taşıdıkları; Socket.IO paketleri, el sıkışma adresleri ve ikili ekler, yerel bir Socket.IO 4 sunucusuna karşı: olaylar, iki yönde ack'ler, ping'ler, auth'lu ad alanları ve retler, ikili ekler, sunucunun istemciyi çıkarması, düz WebSocket sunucusunun ayırt edilmesi; aralıkla giden WebSocket ping'leri ve pong sürelerinin ölçülmesi, yanıtlanmayan ping'in bağlantıyı bitirmesi, dosyada `ping_interval` |
 | apix-grpc | adresler, durum kodları, metadata olarak başlıklar ve yetkilendirme; yerel bir Greeter'a karşı (dinamik mesajlarla kurulmuş, reflection'lı ve reflection'sız): servisi listeleme ve tanımlama, dört metot türünün hepsi, yetkilendirmenin sunucuya ulaşması, başarısız bir durum, import'lu .proto dosyaları ve tanım yokken, bilinmeyen metotta, türüne uymayan mesajda, tekli metoda liste verilince, eksik dosyada ve sunucu yokken verilen hatalar; örnek mesajlar; koşular için HTTP yanıtı olarak çağrı (durum eşlemesi, `grpc-status`, liste olarak akış); kendi sertifika yetkilisinden sertifikalı bir sunucuya karşı TLS (reddedilir, CA ile güvenilir, denetlenmeden kabul edilir); tanımlar: `tests/fixtures/generated` içinde saklanan gerçek üretici çıktıları (Python, Java, C#, C++, PHP için protoc 3.19; protoc-gen-es; ts-proto) özgün servisi geri vermeli, Go, Rust, betterproto ve işaretlemeler numara ve türü verir, aynı tip 10 dilden okunur, örnek JSON, sunucuyla karşılaştırma, tahminin reflection'a yol vermesi, bilinmeyen alanların bildirilmesi, yanlış yanıt türünün açıklanması |
 | apix-proto | MQTT adresleri, girişler ve seçenekler; yerel bir broker'a karşı: her QoS, joker konular, bağlıyken abone olma ve bırakma, reddedilen abonelikler ve geçersiz konular, retained mesajlar, girişler ve saklanan oturumlar, broker'ın bağlantıyı kesmesi, kendi CA'sıyla ya da denetimsiz `mqtts://` |
 | apix-codegen | bash, cmd ve PowerShell için kabuk tırnaklama; curl yapıştırma; gidiş-dönüş testleri; her dilde URL, başlıklar, gövdeler, dize kaçışları ve ayarlar |
 | apix-import | Postman v2.0/v2.1 fixture'ları; WSDL: iki SOAP sürümü, portlar ve adresler, document ve rpc stilleri, başlıklar, şemadan örnekler (extension, enum, choice, `form`, özyineleme), içe aktarılanlar ve okunamayanlar, konumlar, reddedilen WSDL 2.0 |
 | apix-script | istek öncesi scriptlerden değişken ve istek değişiklikleri, `pm.test` / `pm.expect` sonuçları ve mesajları, eski `tests[...]` API'si, dosyayı adlandıran hatalar, sonsuz scriptlerin durdurulması, `setNextRequest`, `atob`/`btoa`, `pm.sendRequest` (geri çağırma ve `await`, bekleme sayılmaz), bilinen özet değerlerine karşı hazır kütüphaneler, kodsuz doğrulamalar, yanıt hedefleri için değer ve ifade üretimi |
-| apix-runner | CSV (tırnaklar, satır sonları, `;`, BOM) ve JSON veri dosyaları, dotenv dosyaları ve `APIX_VAR_*` adları, tekrar sayıları ve veri satırları, duraklatma/durdurma zamanlaması, JUnit/JSON/HTML çıktısı ve kaçışlar, tarihler; yerel bir sunucuya karşı bütün koşular (veri satırları, kenar çubuğu sırası, `bail`, `setNextRequest`) |
+| apix-runner | CSV (tırnaklar, satır sonları, `;`, BOM) ve JSON veri dosyaları, dotenv dosyaları ve `APIX_VAR_*` adları, tekrar sayıları ve veri satırları, duraklatma/durdurma zamanlaması, JUnit/JSON/HTML/Markdown çıktısı ve kaçışlar (pull request için Markdown: işaret, kaçışlar, başarısız olanlar, `--changed` seçimi), tarihler; yerel bir sunucuya karşı bütün koşular (veri satırları, kenar çubuğu sırası, `bail`, `setNextRequest`) |
 | apix-vault | şifreleme formatı, kurcalama (tampering), parola değişikliği, kurtarma anahtarı, anahtarlık kayıtları (gerçek kimlik bilgisi deposunda, test servis adıyla; depo yoksa atlanır) |
 | apix-desktop | çevirilerin eksiksizliği, dil yardımcıları, dosya yolları, vurgulama sorgusu, tema dosyaları (okuma, hatalar, gidiş-dönüş), vurgu ve saydamlık renkleri, GraphQL şema dosyası adları, geçmişte bir gRPC çağrısının günlüğü |
 | docs-check | belge yapısı ve damgalar |

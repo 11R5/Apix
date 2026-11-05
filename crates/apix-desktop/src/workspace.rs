@@ -9,6 +9,7 @@ mod env_editor;
 mod examples_ui;
 mod extract_ui;
 mod filter_ui;
+mod git_ui;
 mod graphql_ui;
 mod grpc_editor;
 mod grpc_ui;
@@ -382,6 +383,8 @@ pub struct Workspace {
     /// The request file open in the editor.
     selected: Option<PathBuf>,
     watcher: Option<collections::Watcher>,
+    /// The branch and the changed files, from git.
+    git: git_ui::GitState,
     /// The active environment of the open collection, by file name.
     environment: Option<String>,
     env_select: Entity<EnvSelect>,
@@ -499,6 +502,12 @@ impl Workspace {
         let subscriptions = vec![
             sidebar_search_sub,
             cx.observe_self(|this, _| this.remember_tabs()),
+            // A commit made elsewhere: read git again when the window comes back.
+            cx.observe_window_activation(window, |this, window, cx| {
+                if window.is_window_active() {
+                    this.refresh_git(window, cx);
+                }
+            }),
             // "Follow the system": repaint when the OS switches between light and dark.
             cx.observe_window_appearance(window, |this, _, cx| {
                 if theme::Appearance::from_id(&this.settings.appearance)
@@ -622,6 +631,7 @@ impl Workspace {
             selected: None,
             tabs: Vec::new(),
             watcher: None,
+            git: Default::default(),
             environment: None,
             env_select,
             app_state: AppState::load(),
@@ -2079,6 +2089,7 @@ impl Workspace {
                     .truncate()
                     .child(crate::i18n::display(&location)),
             )
+            .children(self.render_git_status())
             .children(environment)
             .children(unsaved)
             .child(tr!(

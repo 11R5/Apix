@@ -86,7 +86,7 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [x] `pm.sendRequest` (callback and `await`), built-in libraries (`require` of crypto-js, uuid, lodash, moment, ajv, tv4, chai: the parts API scripts use, written for Apix), checks without code (`[[assert]]`, a Checks table in the Scripts tab), save a response value as a variable
 - [x] Runner: the Runner window (Ctrl+Shift+R, or Run… on a collection or folder: pick and order requests, iterations, delay, environment, data file, stop at the first failure, pause/resume/stop, results with tests and console) and `apix run` options (`--data`, `--iterations`, `--delay`, `--bail`, folder runs); data-driven runs from CSV or JSON; JUnit XML / JSON / HTML reports; a GitHub Actions example (`examples/ci/github-actions.yml`); shared crate `apix-runner`
 - [x] CI: secrets from `APIX_VAR_<NAME>` environment variables and `--env-file` (names matched whatever their case), the repository as a GitHub Action (`uses: 11R5/Apix@…`, builds and caches `apix`), a Docker image (`Dockerfile`, published to ghcr.io on version tags), an environment-matrix workflow example
-- [ ] Later: `--parallel`; PR comments, `--changed` (only what a PR touched), `apix diff`, scheduled monitor runs
+- [ ] Later: `--parallel`, scheduled monitor runs (PR comments, `--changed` and `apix diff` came with M7)
 
 ## After M5 — Themes
 - [x] Switch themes without restarting (views read the current palette)
@@ -119,7 +119,7 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [ ] Local mock server, docs generation, monitors, visualizer, capture proxy
 - [ ] Git integration, auto-update (the light theme was done in the theme work after M5)
 - [x] Everyday gaps: ~~search in the response (Ctrl+F), JSONPath/jq filter~~ (done: search in every body tab and the large viewer, a JSONPath/jq filter on JSON responses, `apix send --filter`), ~~params ↔ URL sync, `/users/:id` path variables~~ (done: the URL bar and Params follow each other; `:name` segments filled from `[[path]]`, in the app, CLI, runs and generated code; Postman import and export keep them), ~~header autocomplete, sidebar search~~ (done: names and usual values suggested under the row; the sidebar narrowed to requests with every word in name, method or URL), ~~save examples~~ (done: `[[example]]` with status, headers, body and the request as written; saved from the response pane or `apix send --save-example`, listed, renamed, shown again; Postman's saved responses imported and exported)
-- [ ] Git-aware CLI: `apix run --changed`, `apix diff`, a run summary as a PR comment
+- [x] Git-aware CLI: `apix run --changed` (only the requests a change touches: their files and scripts, folder and collection settings, environments, the project, files they name; since the pull request's base or a given commit, from where the branch started), `apix diff` (requests compared field by field, headers by name, bodies and scripts line by line, moves; text, Markdown or JSON), `apix run --markdown` (a summary for pull requests and job pages); the GitHub Action runs only what a pull request touches and keeps one comment on it up to date; the desktop app shows the branch and changed files in the status bar and marks changed requests in the sidebar
 - [ ] Monitors (scheduled runs), `apix run --parallel`
 - [ ] Theme leftovers: code editor colours from the theme, font size and density
 

@@ -9,6 +9,8 @@ use apix_http::{HttpClient, Response, human_size};
 use apix_runner::Scope;
 use clap::{Args, Parser, Subcommand};
 
+mod changes;
+
 #[derive(Parser)]
 #[command(name = "apix", version, about = "Blazingly fast API client")]
 struct Cli {
@@ -109,8 +111,38 @@ enum Command {
         /// Write a report page that opens in any browser
         #[arg(long, value_name = "FILE")]
         html: Option<PathBuf>,
+        /// Write a Markdown summary, for a pull request comment or a CI job summary
+        #[arg(long, value_name = "FILE")]
+        markdown: Option<PathBuf>,
+        /// Send only the requests that changed since this git commit, branch or tag:
+        /// their files, their scripts, or the folder, collection or environment
+        /// settings above them. Without a value: the pull request's base branch
+        /// in GitHub Actions (origin/$GITHUB_BASE_REF), else HEAD (what is not committed yet)
+        #[arg(long, value_name = "REF", num_args = 0..=1, default_missing_value = "", require_equals = true)]
+        changed: Option<String>,
         #[command(flatten)]
         net: NetArgs,
+    },
+    /// Show what changed in a collection between two git commits, field by
+    /// field: method, URL, headers, body, scripts, folder and environment settings
+    Diff {
+        /// Compare from this commit, branch or tag
+        #[arg(default_value = "HEAD")]
+        from: String,
+        /// Compare with this one (default: the files as they are now, new ones included)
+        to: Option<String>,
+        /// The collection, or the project of several (default: around the current folder)
+        #[arg(short = 'C', long = "dir", value_name = "DIR", default_value = ".")]
+        dir: PathBuf,
+        /// Print Markdown, e.g. for a pull request comment
+        #[arg(long)]
+        markdown: bool,
+        /// Print JSON
+        #[arg(long, conflicts_with = "markdown")]
+        json: bool,
+        /// Exit with 1 when something changed (like `git diff --exit-code`)
+        #[arg(long)]
+        exit_code: bool,
     },
     /// Print a request as a shell command (curl for bash or fish, curl.exe,
     /// PowerShell, HTTPie, wget) or as code (fetch, axios, Python, Go, Rust, C#, Java, PHP, Swift, Kotlin)
@@ -704,6 +736,8 @@ async fn run(cli: Cli) -> Result<bool> {
             junit,
             json,
             html,
+            markdown,
+            changed,
             net,
         } => {
             unlock_around(&dir, &var)?;
@@ -721,6 +755,14 @@ async fn run(cli: Cli) -> Result<bool> {
             if requests.is_empty() {
                 bail!("no requests in {}", dir.display());
             }
+            let selection = match &changed {
+                Some(rev) => {
+                    let (kept, selection) = changes::select(&scope, &root, &requests, rev, &style)?;
+                    requests = kept;
+                    Some(selection)
+                }
+                None => None,
+            };
             let data = match &data {
                 Some(path) => {
                     let rows = apix_runner::data::load(path)?;
@@ -748,46 +790,56 @@ async fn run(cli: Cli) -> Result<bool> {
             };
             let total = plan.iteration_count();
             let control = apix_runner::Control::default();
-            let report = apix_runner::run(
-                &scope,
-                &plan,
-                &client,
-                script_sender(),
-                &control,
-                |progress| match progress {
-                    apix_runner::Progress::Iteration(n, row) if total > 1 => {
-                        let row = row
-                            .map(|r| {
-                                let pairs: Vec<String> =
-                                    r.iter().map(|(k, v)| format!("{k}={v}")).collect();
-                                format!(" · {}", pairs.join(", "))
-                            })
-                            .unwrap_or_default();
-                        println!(
-                            "{}Iteration {}/{total}{row}{}",
-                            style.dim,
-                            n + 1,
-                            style.reset
-                        );
-                    }
-                    apix_runner::Progress::Item(item) => {
-                        print!("{:<40} ", item.path);
-                        match item.status {
-                            Some(status) => print_status(
-                                &style,
-                                status,
-                                &item.reason,
-                                item.time_ms,
-                                item.size as usize,
-                            ),
-                            None => println!(),
+            let mut report = if plan.requests.is_empty() {
+                // --changed found nothing to send: still write the reports, to say so.
+                apix_runner::RunReport {
+                    name: collection.meta.name.clone(),
+                    environment: var_args.env.clone(),
+                    ..Default::default()
+                }
+            } else {
+                apix_runner::run(
+                    &scope,
+                    &plan,
+                    &client,
+                    script_sender(),
+                    &control,
+                    |progress| match progress {
+                        apix_runner::Progress::Iteration(n, row) if total > 1 => {
+                            let row = row
+                                .map(|r| {
+                                    let pairs: Vec<String> =
+                                        r.iter().map(|(k, v)| format!("{k}={v}")).collect();
+                                    format!(" · {}", pairs.join(", "))
+                                })
+                                .unwrap_or_default();
+                            println!(
+                                "{}Iteration {}/{total}{row}{}",
+                                style.dim,
+                                n + 1,
+                                style.reset
+                            );
                         }
-                        print_scripts(&style, item);
-                    }
-                    _ => {}
-                },
-            )
-            .await;
+                        apix_runner::Progress::Item(item) => {
+                            print!("{:<40} ", item.path);
+                            match item.status {
+                                Some(status) => print_status(
+                                    &style,
+                                    status,
+                                    &item.reason,
+                                    item.time_ms,
+                                    item.size as usize,
+                                ),
+                                None => println!(),
+                            }
+                            print_scripts(&style, item);
+                        }
+                        _ => {}
+                    },
+                )
+                .await
+            };
+            report.selection = selection;
             let summary = report.summary();
             let tests = if summary.tests_failed > 0 {
                 format!(" ({} failed tests)", summary.tests_failed)
@@ -810,6 +862,7 @@ async fn run(cli: Cli) -> Result<bool> {
                 (junit, report.to_junit()),
                 (json, report.to_json()),
                 (html, report.to_html()),
+                (markdown, report.to_markdown()),
             ]
             .into_iter()
             .filter_map(|(path, text)| Some((path?, text)))
@@ -822,6 +875,24 @@ async fn run(cli: Cli) -> Result<bool> {
                 println!("{}Wrote {}{}", style.dim, path.display(), style.reset);
             }
             Ok(summary.failed == 0)
+        }
+        Command::Diff {
+            from,
+            to,
+            dir,
+            markdown,
+            json,
+            exit_code,
+        } => {
+            let format = if json {
+                changes::Format::Json
+            } else if markdown {
+                changes::Format::Markdown
+            } else {
+                changes::Format::Text
+            };
+            let changed = changes::diff(&dir, &from, to.as_deref(), format, &style)?;
+            Ok(!(exit_code && changed))
         }
         Command::Schema {
             file,

@@ -254,6 +254,8 @@ extract.path: 值（与检查相同：body.data.token、header.X-Token、status�
 extract.saved_collection: "%{name} = %{value} 已保存到集合的变量中。"
 extract.saved_env: "%{name} = %{value} 已保存到“%{env}”。"
 extract.title: 将值保存为变量
+git.changes: "%{count} 个更改"
+git.one_change: 1 个更改
 grpc.add_protos: 添加文件
 grpc.calling: 调用中…
 grpc.choose_protos: 选择 .proto 文件或描述符集

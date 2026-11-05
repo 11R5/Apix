@@ -254,6 +254,8 @@ extract.path: "القيمة (كما في الفحوص: body.data.token و header
 extract.saved_collection: "حُفظ %{name} = %{value} في متغيرات المجموعة."
 extract.saved_env: "حُفظ %{name} = %{value} في «%{env}»."
 extract.title: حفظ قيمة كمتغير
+git.changes: "%{count} تغييرات"
+git.one_change: تغيير واحد
 grpc.add_protos: إضافة ملف
 grpc.calling: جارٍ الاستدعاء…
 grpc.choose_protos: اختر ملفات ‎.proto أو مجموعات الواصفات

@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:45a9a45cebe14fe4 -->
+<!-- translated from en/user-guide.md sha256:86f82552dbea64a5 -->
 
 # Apix kullanım kılavuzu
 
@@ -34,6 +34,7 @@ veya CI'da çalıştırır.
 - [Sekmeler](#sekmeler)
 - [Kenar çubuğunda istekleri düzenleme](#kenar-çubuğunda-istekleri-düzenleme)
 - [Projeler](#projeler)
+- [Git](#git)
 - [Şifreli koleksiyonlar](#şifreli-koleksiyonlar)
 - [Komut olarak kopyala ve curl yapıştırma](#komut-olarak-kopyala-ve-curl-yapıştırma)
 - [Postman'dan içe aktarma](#postmandan-içe-aktarma)
@@ -779,6 +780,22 @@ Proje › Ortam › Koleksiyonlar düzeninde gösterebilir.
 - **Dosya › Bir projeye taşı…** (tek koleksiyon açıkken) o koleksiyonun
   klasörünü seçtiğiniz projeye taşır. Bir proje açıkken dosya yöneticisinden bir
   koleksiyon klasörünü pencereye bırakmak da aynısını önerir.
+
+## Git
+
+Koleksiyon düz dosyalardan oluşur; bu yüzden kod gibi git'te yaşar. Açık
+koleksiyon (ya da proje) bir git deposundaysa durum çubuğu dalı ve son
+commit'ten beri kaç dosyasının değiştiğini gösterir; kenar çubuğu değişen her
+isteği işaretler: **M** değişti (dosyası ya da kendi scriptleri), **A** yeni.
+İşaretler her kayıtta ve diskteki her değişiklikte güncellenir, pencere öne
+geldiğinde yeniden okunur; terminalde atılan bir commit onları temizler.
+
+![Dal ve değişen istekler](images/git-status.png)
+
+Komut satırında `apix run --changed` yalnızca bir değişikliğin dokunduğu
+istekleri gönderir, `apix diff` onlarda neyin değiştiğini alan alan gösterir;
+GitHub Action pull request'e sonucu yorum olarak yazabilir. Bkz.
+[Yalnızca değişenler](workflows.md#yalnızca-değişenler-gite-duyarlı-koşular).
 
 ## Şifreli koleksiyonlar
 
