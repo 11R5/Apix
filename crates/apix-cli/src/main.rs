@@ -10,6 +10,7 @@ use apix_runner::Scope;
 use clap::{Args, Parser, Subcommand};
 
 mod changes;
+mod mcp;
 mod monitor_cmd;
 
 #[derive(Parser)]
@@ -152,6 +153,17 @@ enum Command {
         /// Print what passes, but save nothing
         #[arg(long)]
         no_save: bool,
+    },
+    /// Serve a collection to AI agents over the Model Context Protocol (MCP,
+    /// stdio): they can list its requests and environments, send a request
+    /// and run a folder with its tests
+    Mcp {
+        /// The collection
+        #[arg(default_value = ".")]
+        dir: PathBuf,
+        /// Offer only the listing tools: nothing is sent
+        #[arg(long)]
+        list_only: bool,
     },
     /// Send a request in two environments and compare the answers: status,
     /// headers and the body field by field (exit 1 when they differ)
@@ -611,9 +623,27 @@ fn note(text: &str) {
     eprintln!("variables {text}");
 }
 
-#[tokio::main(flavor = "current_thread")]
-async fn main() -> ExitCode {
-    match run(Cli::parse()).await {
+fn main() -> ExitCode {
+    let cli = Cli::parse();
+    // The commands share one large future; the main thread's stack (1 MB on
+    // Windows) is too small for it, so it runs on a thread with room.
+    std::thread::Builder::new()
+        .name("apix".into())
+        .stack_size(16 * 1024 * 1024)
+        .spawn(move || {
+            let runtime = tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+                .expect("failed to start the runtime");
+            runtime.block_on(main_async(cli))
+        })
+        .expect("failed to start the main thread")
+        .join()
+        .unwrap_or(ExitCode::from(2))
+}
+
+async fn main_async(cli: Cli) -> ExitCode {
+    match run(cli).await {
         Ok(true) => ExitCode::SUCCESS,
         Ok(false) => ExitCode::FAILURE,
         Err(err) => {
@@ -1146,6 +1176,11 @@ async fn run(cli: Cli) -> Result<bool> {
                 },
             )
             .await?;
+            Ok(true)
+        }
+        Command::Mcp { dir, list_only } => {
+            unlock_around(&dir, &var)?;
+            mcp::Server::new(&dir, list_only)?.serve().await?;
             Ok(true)
         }
         Command::Compare {

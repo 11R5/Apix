@@ -1,4 +1,4 @@
-<!-- translated from en/workflows.md sha256:2f434d531a5926ac -->
+<!-- translated from en/workflows.md sha256:6cce28b908fa9937 -->
 
 # İş akışları
 
@@ -19,6 +19,7 @@ ve ölçülmesini ele alır.
 - [Bir gRPC servisini çağırma](#bir-grpc-servisini-çağırma)
 - [Tarayıcıdaki bir isteği yeniden oluşturma](#tarayıcıdaki-bir-isteği-yeniden-oluşturma)
 - [Bir istek neden yavaş ya da başarısız?](#bir-istek-neden-yavaş-ya-da-başarısız)
+- [Bir yapay zekâ ajanına koleksiyonu kullandırma (MCP)](#bir-yapay-zekâ-ajanına-koleksiyonu-kullandırma-mcp)
 
 ## Başlarken: ilk isteği gönderme ve kaydetme
 
@@ -491,3 +492,36 @@ Aynı rapor bir terminalde de alınabilir:
 ```sh
 apix send my-api/health.apix --network
 ```
+
+## Bir yapay zekâ ajanına koleksiyonu kullandırma (MCP)
+
+`apix mcp` bir koleksiyonu Model Context Protocol üzerinden sunar; böylece
+bir yapay zekâ ajanı (Claude, bir editörün asistanı, herhangi bir MCP
+istemcisi) API'nizle sizin Apix'te çalıştığınız gibi çalışabilir. MCP'yi
+standart girdi ve çıktı üzerinden konuşur; onu ajan başlatır. Claude Code ile:
+
+```bash
+claude mcp add my-api -- apix mcp /path/to/my-api
+```
+
+Öteki istemciler aynı komutu kendi ayarlarında alır, örneğin:
+
+```json
+{ "mcpServers": { "my-api": { "command": "apix", "args": ["mcp", "/path/to/my-api"] } } }
+```
+
+Ajan dört araç alır:
+
+| Araç | Ne yapar |
+|---|---|
+| `list_requests` | istekler (yol, yöntem, ad, `{{değişkenler}}`'iyle URL); bütün koleksiyonun ya da bir klasörün |
+| `list_environments` | ortamlar ve değişkenlerinin adları; değerleri asla |
+| `send_request` | bir isteği scriptleri ve testleriyle, bir ortamda, ajanın verdiği değişkenlerle gönderir; durumu, süreyi, başlıkları, gövdeyi (64 KB'a kadar) ve test sonuçlarını döndürür |
+| `run_requests` | bir klasörü ya da bütün koleksiyonu testleriyle çalıştırır ve neyin geçtiğini bildirir |
+
+Yalnızca o koleksiyonun içindeki isteklere ulaşılabilir. `--list-only` iki
+listeleme aracını bırakır, gönderenleri kaldırır. Gizli değerler yerinde
+kalır: ajan bir isteğin token'la gönderilmesini isteyebilir ama token'ın
+değeri ona asla gösterilmez (onu geri yansıtan bir yanıt başka konu; ajana
+neyi gönderttiğinize dikkat edin). Şifreli bir koleksiyon için parolayı
+`APIX_PASSWORD` ile verin.

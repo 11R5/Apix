@@ -131,7 +131,8 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 ## M8 — Beyond Postman
 - [x] Load testing: `apix bench` (concurrency, count or duration, rate, JSON, `--max-p95` / `--max-failed` for CI) and Request › Load test… (live percentiles and a per-second chart); connections kept and reused (`apix_http::load`), engine in `apix_runner::bench`
 - [x] Response diff and time travel: ⇄ / Request › Compare responses… puts the response next to an earlier one from the history or the same request in another environment (status, headers without volatile ones, JSON field by field with records matched by id); `apix compare --env A --against B`
-- [ ] MCP server mode (`apix mcp`), optional AI assist, WASM plugins, Flows
+- [x] MCP server mode: `apix mcp` (stdio, tools list_requests, list_environments, send_request, run_requests; paths kept inside the collection, variable values never listed, `--list-only`)
+- [ ] Optional AI assist, WASM plugins, Flows
 
 ## M9 — Release & distribution
 - [x] GitHub Actions: test on Windows, macOS and Linux (CI foundation); build on version tags

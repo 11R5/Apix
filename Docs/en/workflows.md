@@ -17,6 +17,7 @@ measuring Apix.
 - [Call a gRPC service](#call-a-grpc-service)
 - [Reproduce a request from the browser](#reproduce-a-request-from-the-browser)
 - [Find out why a request is slow or failing](#find-out-why-a-request-is-slow-or-failing)
+- [Let an AI agent use your collection (MCP)](#let-an-ai-agent-use-your-collection-mcp)
 
 ## Send and save your first request
 
@@ -475,3 +476,36 @@ The same report is available in a terminal:
 ```sh
 apix send my-api/health.apix --network
 ```
+
+## Let an AI agent use your collection (MCP)
+
+`apix mcp` serves a collection over the Model Context Protocol, so an AI
+agent (Claude, an editor's assistant, any MCP client) can work with your API
+the way you do in Apix. It speaks MCP over standard input and output; the
+agent starts it. With Claude Code:
+
+```bash
+claude mcp add my-api -- apix mcp /path/to/my-api
+```
+
+Other clients take the same command in their configuration, for example:
+
+```json
+{ "mcpServers": { "my-api": { "command": "apix", "args": ["mcp", "/path/to/my-api"] } } }
+```
+
+The agent gets four tools:
+
+| Tool | What it does |
+|---|---|
+| `list_requests` | the requests (path, method, name, URL with `{{variables}}`), of the whole collection or a folder |
+| `list_environments` | the environments and the names of their variables, never the values |
+| `send_request` | sends one request with its scripts and tests, in an environment, with variables the agent sets; returns status, time, headers, body (up to 64 KB) and test results |
+| `run_requests` | runs a folder or the whole collection with its tests and reports what passed |
+
+Only requests inside that collection can be reached. `--list-only` keeps the
+two listing tools and drops the ones that send. Secrets stay where they are:
+an agent can ask for a request to be sent with a token, but it is never shown
+the token's value (a response that echoes it is another matter, so mind what
+you let an agent send). For an encrypted collection, give the password in
+`APIX_PASSWORD`.

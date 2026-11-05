@@ -133,6 +133,8 @@ Measurements of the other tools on the same machine are planned.
   location database (`apix trace`, View › Route and map…).
 - **API documentation:** one HTML page or Markdown from a collection
   (`apix docs`, File › Export documentation…), with no secrets in it.
+- **AI agents (MCP):** `apix mcp` lets Claude or any MCP client list, send and
+  run a collection's requests with their tests, without seeing its secrets.
 - **Compare responses:** today's answer against yesterday's from the
   history, or staging against production, field by field (`apix compare`,
   ⇄ next to the response).
@@ -213,6 +215,7 @@ apix trace https://api.example.com          # the route to the server, hop by ho
 apix run my-api --data users.csv -p 8        # 8 iterations at once
 apix bench my-api/users/list.apix -c 50 -d 30s --max-p95 300   # a load test
 apix compare my-api/users/list.apix --env staging --against prod   # do they answer alike?
+apix mcp my-api                              # serve the collection to an AI agent (MCP)
 apix send chat/socket.apix --message '{"join":"room-1"}' --listen 10   # a ws:// request
 apix send events/live.apix                   # server-sent events, printed as they arrive
 apix schema graphql/users.apix               # a GraphQL endpoint's schema, as SDL

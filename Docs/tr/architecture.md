@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:28240cbb78930ebf -->
+<!-- translated from en/architecture.md sha256:0569a873e708bc13 -->
 
 # Apix mimarisi
 
@@ -733,6 +733,24 @@ Git penceresi (`workspace/git_panel.rs`) aynı `Repo`'yu kullanır: liste için
 `GIT_TERMINAL_PROMPT=0` ile çalışır; parola isteyen bir uzak depo girdi
 beklemek yerine git'in mesajıyla başarısız olur, kimlik bilgisi yardımcıları
 yine çalışır. Her işlem arka planda koşar ve durum çubuğunu yeniler.
+
+## MCP sunucusu
+
+`apix mcp` (`apix-cli/src/mcp.rs`) standart girdiden satır başına bir JSON-RPC
+2.0 mesajı okur, standart çıktıya satır başına bir yanıt yazar (MCP'nin stdio
+taşıması; ilk satırın başındaki bayt sırası işareti atlanır). `initialize`,
+bildiği sürümse istenen protokol sürümüyle (2025-06-18, 2025-03-26,
+2024-11-05), değilse en yenisiyle yanıt verir ve yalnızca araç sunar;
+bildirimler yanıtsız kalır, bilinmeyen yöntemler -32601 hatası alır.
+`tools/call` sonuçları JSON'u hem metin hem `structuredContent` olarak taşır;
+başarısız bir araç protokol hatası değil `isError`'lı bir sonuçtur, böylece
+ajan nedenini okuyabilir. Ajanın verdiği yollar koleksiyon köküne eklenir,
+`..` çözülür ve dışarıdaysa reddedilir. `send_request`
+`apix_runner::exchange` (scriptler, değişkenler, testler), `run_requests`
+`apix_runner::run` üzerinden gider; değişkenler öteki komutlarla aynı
+`VarArgs::resolve`'dan gelir, ajanın `variables`'ı `--var` gibi davranır.
+CLI 16 MB'lık bir iş parçacığında çalışır; komutların ortak future'ı
+Windows'ta ana iş parçacığının yığınını aşmıştı.
 
 ## Yanıtları karşılaştırma
 

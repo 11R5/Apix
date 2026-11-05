@@ -706,6 +706,24 @@ runs with `GIT_TERMINAL_PROMPT=0`, so a remote that needs a password fails
 with git's message instead of waiting for input; credential helpers still
 work. Each operation runs in the background and refreshes the status bar.
 
+## MCP server
+
+`apix mcp` (`apix-cli/src/mcp.rs`) reads one JSON-RPC 2.0 message per line
+from standard input and writes one answer per line to standard output (MCP's
+stdio transport; a byte order mark before the first line is skipped).
+`initialize` answers with the asked protocol version when it knows it
+(2025-06-18, 2025-03-26, 2024-11-05) and the newest otherwise, and offers
+tools only; notifications get no answer, unknown methods error -32601.
+`tools/call` results carry the JSON both as text and as `structuredContent`,
+and a failing tool is a result with `isError`, not a protocol error, so the
+agent can read why. Paths from the agent are joined to the collection root,
+`..` resolved, and refused outside it. `send_request` goes through
+`apix_runner::exchange` (scripts, variables, tests), `run_requests` through
+`apix_runner::run`; variables come from the same `VarArgs::resolve` as the
+other commands, with the agent's `variables` as `--var`s. The CLI runs on a
+16 MB thread, since the commands' shared future outgrew the main thread's
+stack on Windows.
+
 ## Comparing responses
 
 `apix_core::compare` takes two `Snapshot`s (label, status, headers, body,
