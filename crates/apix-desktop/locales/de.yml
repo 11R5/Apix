@@ -310,6 +310,50 @@ extract.path: "Wert (wie bei den Prüfungen: body.data.token, header.X-Token, st
 extract.saved_collection: "%{name} = %{value} in den Variablen der Sammlung gespeichert."
 extract.saved_env: "%{name} = %{value} in „%{env}“ gespeichert."
 extract.title: Einen Wert als Variable speichern
+flows.add: Hinzufügen
+flows.canvas_hint: "Knoten zum Verschieben ziehen. Zum Verbinden auf den Punkt eines Ergebnisses klicken, dann auf den Zielknoten."
+flows.connect_hint: "Auf den Knoten klicken, zu dem %{node} → %{port} führt; Klick ins Leere bricht ab."
+flows.create: Anlegen
+flows.end: Ende
+flows.exists: "Ein Ablauf namens %{name} existiert bereits."
+flows.extract: "Aus der Antwort behalten (name = $.json.pfad, einer pro Zeile)"
+flows.failed: "Fehlgeschlagen nach %{steps} Schritten"
+flows.id: Id
+flows.id_taken: Ein anderer Knoten hat diese Id.
+flows.kind.check: Prüfung
+flows.kind.delay: Warten
+flows.kind.request: Anfrage
+flows.kind.set: Variablen setzen
+flows.lines_hint: name = wert
+flows.ms: Millisekunden
+flows.new_name: Name des neuen Ablaufs
+flows.none: "Diese Sammlung hat noch keine Abläufe: Namen eingeben und Anlegen drücken."
+flows.op.contains: enthält
+flows.op.equals: gleich
+flows.op.exists: vorhanden
+flows.op.greater: größer als
+flows.op.less: kleiner als
+flows.op.missing: fehlt
+flows.op.not_equals: ungleich
+flows.outcomes: Ergebnisse
+flows.passed: "Bestanden: %{steps} Schritte, %{ms} ms"
+flows.remove: Knoten löschen
+flows.request: Anfrage
+flows.request_hint: ordner/anfrage.apix
+flows.run: Ausführen
+flows.running: "%{node} läuft…"
+flows.save: Gespeichert
+flows.save_dirty: Speichern
+flows.select_hint: "Einen Knoten zum Bearbeiten wählen oder einen hinzufügen. Ein Lauf beginnt beim Startknoten und folgt jedem Ergebnis; er endet bei einem Ergebnis ohne Ziel und schlägt fehl, wenn dort eine Anfrage fehlschlägt."
+flows.start: Start
+flows.start_here: Hier starten
+flows.stop: Stoppen
+flows.stopped: Gestoppt
+flows.subject: "Gegenstand: status, time, header:Name, $.json.pfad, ein jq-Filter oder {{variable}}"
+flows.subject_hint: status
+flows.title: Abläufe
+flows.value: Wert
+flows.values: "Variablen (name = wert, eine pro Zeile; {{variablen}} gehen)"
 git.changes: "%{count} geändert"
 git.changes_count: "Seit dem letzten Commit geändert: %{count}"
 git.clean: Seit dem letzten Commit hat sich nichts geändert.
@@ -456,6 +500,7 @@ menu.environment: Umgebung
 menu.export_docs: Dokumentation exportieren…
 menu.export_postman: Nach Postman exportieren…
 menu.file: Datei
+menu.flows: Abläufe…
 menu.git: Git…
 menu.group_by: Seitenleiste gruppieren nach
 menu.group_collection: Sammlung

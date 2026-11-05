@@ -310,6 +310,50 @@ extract.path: "Значение (как в проверках: body.data.token, 
 extract.saved_collection: "%{name} = %{value} сохранено в переменных коллекции."
 extract.saved_env: "%{name} = %{value} сохранено в «%{env}»."
 extract.title: Сохранить значение как переменную
+flows.add: Добавить
+flows.canvas_hint: "Перетаскивайте узлы, чтобы двигать их. Чтобы соединить, щёлкните точку результата, затем узел, к которому он ведёт."
+flows.connect_hint: "Щёлкните узел, к которому ведёт %{node} → %{port}; щелчок по пустому месту отменяет."
+flows.create: Создать
+flows.end: конец
+flows.exists: "Сценарий %{name} уже существует."
+flows.extract: "Сохранить из ответа (имя = $.путь.json, по одному в строке)"
+flows.failed: "Ошибка после шагов: %{steps}"
+flows.id: Id
+flows.id_taken: У другого узла уже есть этот id.
+flows.kind.check: Проверка
+flows.kind.delay: Ожидание
+flows.kind.request: Запрос
+flows.kind.set: Задать переменные
+flows.lines_hint: имя = значение
+flows.ms: Миллисекунды
+flows.new_name: Название нового сценария
+flows.none: "В этой коллекции пока нет сценариев: введите название и нажмите «Создать»."
+flows.op.contains: содержит
+flows.op.equals: равно
+flows.op.exists: есть
+flows.op.greater: больше
+flows.op.less: меньше
+flows.op.missing: нет
+flows.op.not_equals: не равно
+flows.outcomes: Результаты
+flows.passed: "Успешно: шагов %{steps}, %{ms} мс"
+flows.remove: Удалить узел
+flows.request: Запрос
+flows.request_hint: папка/запрос.apix
+flows.run: Запустить
+flows.running: "Выполняется %{node}…"
+flows.save: Сохранено
+flows.save_dirty: Сохранить
+flows.select_hint: "Выберите узел, чтобы изменить его, или добавьте новый. Запуск начинается с узла «Начало» и следует за каждым результатом; он заканчивается на результате, который никуда не ведёт, и считается неудачным, если там не прошёл запрос."
+flows.start: Начало
+flows.start_here: Начинать здесь
+flows.stop: Остановить
+flows.stopped: Остановлено
+flows.subject: "Что проверять: status, time, header:Имя, $.путь.json, фильтр jq или {{переменная}}"
+flows.subject_hint: status
+flows.title: Сценарии
+flows.value: Значение
+flows.values: "Переменные (имя = значение, по одной в строке; можно {{переменные}})"
 git.changes: "изменений: %{count}"
 git.changes_count: "Изменено с последнего коммита: %{count}"
 git.clean: С последнего коммита ничего не изменилось.
@@ -456,6 +500,7 @@ menu.environment: Окружение
 menu.export_docs: Экспорт документации…
 menu.export_postman: Экспорт в Postman…
 menu.file: Файл
+menu.flows: Сценарии…
 menu.git: Git…
 menu.group_by: Группировать боковую панель по
 menu.group_collection: Коллекциям

@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:b96ca883b97555bc -->
+<!-- translated from en/architecture.md sha256:e81fa8184ff30d10 -->
 
 # Apix mimarisi
 
@@ -790,6 +790,32 @@ terminalde aynısını yapar ve bir yükleyicinin isteğe bağlı adımı da onu
 PATH'teki) `apix`'e `mcp <klasör> [--list-only]` ile yöneltir ve geri kalan
 her şeyi koruyarak `mcpServers`'a ekler (özgün dosya bir kez `.bak`'a
 kopyalanır); `claude_code_command` `claude mcp add --scope user`'dır.
+
+## Akışlar
+
+`apix_core::flow` dosyanın kendisidir: bir `Flow`'un düğümleri
+(`NodeKind::Request`, `Check`, `Set`, `Delay`; kimliği ve yeriyle birlikte
+her `[[node]]` tablosuna düzleştirilir) ve bir düğümün sonucundan (`ok`/`fail`,
+`yes`/`no`, `next`) başka bir düğüme giden bağlantıları vardır. `problems()`
+bir akışın çalışmasını engelleyenleri listeler; `Seen` son yanıttır ve
+`Seen::subject`, `status`, `time`, `body`, `header:Ad` ya da
+`apix_core::filter` üzerinden bir JSONPath veya jq filtresi okur. `.flow`
+dosyaları koleksiyonda herhangi bir yerde durabilir; kenar çubuğu onları
+yok sayar.
+
+`apix_runner::flow::run`, grafiği başlangıç düğümünden itibaren gezer. Bir
+istek düğümü bir koşudaki gibi `exchange`'ten geçer; böylece scriptler,
+testler ve `pm.*` değişkenleri çalışır; sakladığı değerler script durumunun
+yerel kapsamına yazılır ve sonraki düğümler için ortamın önüne geçer,
+`pm.variables.set`'in yapacağı gibi. Konusu metin olan bir kontrol
+`{{değişkenleri}}` çözer ve biri tanımsızsa değeri yok sayılır. Çalıştırma
+her adımı bildirir (`FlowProgress`) ve 1000 adımdan sonra ya da `Control`
+ile durur. `FlowReport::to_run_report` koşu raporlarını (JUnit, HTML,
+Markdown) yeniden kullanır. Masaüstü editörü (`workspace/flows_ui.rs`)
+düğümleri konumlandırılmış öğeler, bağlantıları bir tuval üzerinde çizer:
+ileri giden bağlantılar eğri, geri dönenler düğümlerin etrafından dolaşan
+çizgilerdir; akışı ağ çalışma zamanında çalıştırır ve ilerlemesini,
+Runner gibi, bir zamanlayıcıyla okur.
 
 ## Eklentiler
 

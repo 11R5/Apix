@@ -128,14 +128,14 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [x] Monitors (scheduled runs): `[[monitor]]` in `apix.toml` (interval, folder or request, environment, webhook, on/off); `apix monitor` (on schedules, `--once` for cron and CI, `--list`, `--only`, `--log-dir`); a shared log of results; webhooks told when a monitor starts failing or passes again (Slack, Discord, Mattermost, Google Chat); a Monitors window in the app (add, edit, delete, run now, last result, next run) that runs them while the app is open and notifies; the action runs them (`monitor: "true"`) with a scheduled workflow example. `apix run --parallel` and "At once" in the Runner: iterations side by side, each in order with its own script state
 - [x] Theme leftovers: code editor colours from the theme (strings, numbers, keywords, accent for types and functions, muted comments), text size (90–150 %), code font size (11–18 px), sidebar density (compact, normal, comfortable), all live from Settings
 
-## M8 — Beyond Postman
+## M8 — Beyond Postman ✅
 - [x] Load testing: `apix bench` (concurrency, count or duration, rate, JSON, `--max-p95` / `--max-failed` for CI) and Request › Load test… (live percentiles and a per-second chart); connections kept and reused (`apix_http::load`), engine in `apix_runner::bench`
 - [x] Response diff and time travel: ⇄ / Request › Compare responses… puts the response next to an earlier one from the history or the same request in another environment (status, headers without volatile ones, JSON field by field with records matched by id); `apix compare --env A --against B`
 - [x] MCP server mode: `apix mcp` (stdio, tools list_requests, list_environments, send_request, run_requests; paths kept inside the collection, variable values never listed, `--list-only`)
 - [x] Optional AI assist: off by default; with the user's Anthropic API key (keychain), AI tests on a successful response and Explain on a failed one (Claude Opus 5.5 over the Messages API, credentials masked, answers in the app's language); providers: Claude, ChatGPT (OpenAI) and Gemini (Google), each with its own key and a model list loaded from the provider
 - [x] Setup: on the first start and from Help, the optional extras explained, each one click: the IP location database (`apix geo download`), AI assist, Connect to Claude (Claude Desktop's configuration or `claude mcp add`; `apix mcp --add-to`)
 - [x] WASM plugins: auth types, importers and response views as WebAssembly files run by `wasmi` with no imports, a fuel and a memory limit (`apix-plugins`); `apix-plugin-sdk` and three examples in `plugins/`; View › Plugins…, `apix plugins list|install|remove`, `apix import --plugin`, `apix send --view`
-- [ ] Flows
+- [x] Flows: `.flow` files of request, check, set and wait nodes joined by their outcomes (`apix_core::flow`), run by `apix_runner::flow` with scripts and tests, values kept from responses as variables; View › Flows… (drag, connect, edit, run with live colours), `apix flow run|list` with JUnit/HTML/Markdown/JSON reports; example `new-user.flow`
 
 ## M9 — Release & distribution
 - [x] GitHub Actions: test on Windows, macOS and Linux (CI foundation); build on version tags

@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:b50f5b4dfd1ee6df -->
+<!-- translated from en/user-guide.md sha256:c296a2c59a6e5bd2 -->
 
 # Apix kullanım kılavuzu
 
@@ -31,6 +31,7 @@ veya CI'da çalıştırır.
 - [gRPC](#grpc)
 - [Scriptler ve testler](#scriptler-ve-testler)
 - [Runner](#runner)
+- [Akışlar](#akışlar)
 - [Yük testi](#yük-testi)
 - [Monitörler](#monitörler)
 - [Mock sunucu](#mock-sunucu)
@@ -806,6 +807,84 @@ URL'ye yazılan şifre (`https://kullanici:sifre@host`) raporlarda, komut satır
 çıktısında, günlüklerde ve hata mesajlarında gösterilmez. İstek dosyası ve URL
 çubuğu onu tutmaya devam eder; gerçek şifreler için değişken ya da Yetkilendirme
 sekmesini tercih edin.
+
+## Akışlar
+
+Bir **akış**, istekleri bir grafikte birbirine bağlar: giriş yap, tokenı
+sakla, bir iş bitene kadar yokla, gelen yanıta göre dallan. Her akış,
+koleksiyonda isteklerin yanında duran bir `.flow` dosyasıdır; böylece
+onlarla birlikte git'e girer. **Görünüm › Akışlar…** ile açın; yeni bir akış
+için bir ad yazıp **Oluştur**'a basın.
+
+![Akışlar penceresi](images/flows.png)
+
+Dört tür düğüm vardır:
+
+- **İstek**, koleksiyondaki bir isteği scriptleri ve testleriyle gönderir.
+  Geçtiyse (başarılı bir durum kodu ya da tüm testler geçti) sonucu **ok**,
+  aksi hâlde **fail** olur. **Yanıttan sakla**, yanıttaki değerleri sonraki
+  düğümler için değişkene çevirir, satır başına bir tane: `token = $.token`.
+- **Kontrol**, bir konuyu bir değerle karşılaştırır: **yes** ya da **no**.
+  Konu `status`, `time` (ms), `body`, `header:Ad`, son yanıt üzerinde bir
+  JSONPath (`$.items[0].id`) ya da jq filtresi (`.items | length`) veya
+  `{{değişkenler}}` içeren bir metin olabilir. Karşılaştırmalar: eşittir, eşit
+  değil, içerir, büyüktür, küçüktür (iki taraf da sayıysa sayı olarak), var,
+  yok.
+- **Değişken ata** değişkenleri atar (`ad = değer` satırları;
+  `{{değişkenler}}` kullanılabilir).
+- **Bekle**, yoklama döngüleri için duraklar.
+
+Bir düğümü taşımak için sürükleyin. Bağlamak için bir düğümün sağındaki sonuç
+noktasına, sonra gideceği düğüme tıklayın; noktaya yeniden tıklamak bağlantıyı
+başka yere yönlendirir, paneldeki **×** onu kaldırır. Sağdaki panel seçili
+düğümü düzenler: kimliği, ayarları, her sonucun nereye gittiği, **Buradan
+başla**, **Düğümü sil**. Bir çalıştırma **Başlangıç** düğümünden başlar
+(yoksa, hiçbir şeyin gitmediği ilk düğümden), her sonucu izler ve hiçbir yere
+gitmeyen bir sonuçta biter. Bir istek **fail** bağlantısı olmadan başarısız
+olursa ya da saklanacak bir değer yoksa başarısız sayılır. Döngülere izin
+verilir; bir çalıştırma 1000 adımdan sonra durur.
+
+**Çalıştır**, akışı koleksiyonun değişkenleri ve seçili ortamla gönderir; her
+düğüm sonucuna göre yeşil, sarı ya da kırmızı olur, tuvalin altındaki liste
+her adımı, saklanan ya da karşılaştırılan değerle birlikte gösterir.
+Değişiklikler **Kaydet** ile ve pencere kapanırken kaydedilir.
+
+Terminalden aynı akış CI'da çalışır:
+
+```sh
+apix flow list my-api
+apix flow run my-api/new-user.flow --env staging --junit flow.xml
+```
+
+`--junit`, `--html` ve `--markdown`, akışın isteklerini `apix run` gibi
+raporlar; `--json` her adımı yazar. Örnek koleksiyonda `new-user.flow` vardır.
+
+Bir akış dosyası:
+
+```toml
+name = "New user"
+
+[[node]]
+id = "first-user"
+kind = "request"
+request = "users/list-users.apix"
+x = 40.0
+y = 40.0
+extract = { user_id = "$[0].id" }
+
+[[node]]
+id = "found"
+kind = "check"
+subject = "{{user_id}}"
+op = "exists"
+x = 300.0
+y = 40.0
+
+[[edge]]
+from = "first-user"
+port = "ok"
+to = "found"
+```
 
 ## Yük testi
 

@@ -761,6 +761,28 @@ program (or on the PATH) with `mcp <folder> [--list-only]`, and merges it
 into `mcpServers` keeping everything else (the original copied to `.bak`
 once); `claude_code_command` is `claude mcp add --scope user`.
 
+## Flows
+
+`apix_core::flow` is the file: a `Flow` has nodes (`NodeKind::Request`,
+`Check`, `Set`, `Delay`, flattened into each `[[node]]` table with its id and
+place) and edges from a node's outcome (`ok`/`fail`, `yes`/`no`, `next`) to
+another node. `problems()` lists what keeps a flow from running; `Seen` is
+the last response, and `Seen::subject` reads `status`, `time`, `body`,
+`header:Name`, or a JSONPath or jq filter through `apix_core::filter`.
+`.flow` files live anywhere in the collection; the sidebar ignores them.
+
+`apix_runner::flow::run` walks the graph from the start node. A request node
+goes through `exchange`, like a run, so scripts, tests and `pm.*` variables
+work; what it keeps is set in the script state's local scope, which wins over
+the environment for the nodes after it, as `pm.variables.set` would. A check
+whose subject is text resolves `{{variables}}` and has no value when one is
+undefined. The run reports each step (`FlowProgress`) and stops after 1000
+steps, or through `Control`. `FlowReport::to_run_report` reuses the run
+reports (JUnit, HTML, Markdown). The desktop editor (`workspace/flows_ui.rs`)
+draws nodes as positioned elements and edges on a canvas: forward edges as
+curves, edges that go back as lines around the nodes; it runs the flow on the
+network runtime and reads its progress on a timer, like the Runner.
+
 ## Plugins
 
 `apix-plugins` runs WebAssembly plugins with `wasmi` 2, an interpreter: no

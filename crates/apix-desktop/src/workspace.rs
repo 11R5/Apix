@@ -12,6 +12,7 @@ mod env_editor;
 mod examples_ui;
 mod extract_ui;
 pub(super) mod filter_ui;
+mod flows_ui;
 mod git_panel;
 mod git_ui;
 mod graphql_ui;
@@ -97,6 +98,7 @@ actions!(
         CheckForUpdates,
         OpenRoute,
         OpenPlugins,
+        OpenFlows,
         OpenLoadTest,
         CompareResponses,
         OpenSetup,
@@ -2268,6 +2270,7 @@ impl Render for Workspace {
             .on_action(
                 cx.listener(|this, _: &OpenPlugins, window, cx| this.open_plugins(window, cx)),
             )
+            .on_action(cx.listener(|this, _: &OpenFlows, window, cx| this.open_flows(window, cx)))
             .on_action(
                 cx.listener(|this, _: &OpenLoadTest, window, cx| this.open_load_test(window, cx)),
             )

@@ -310,6 +310,50 @@ extract.path: "Değer (Doğrulamalar'daki gibi: body.data.token, header.X-Token,
 extract.saved_collection: "%{name} = %{value}, koleksiyon değişkenlerine kaydedildi."
 extract.saved_env: "%{name} = %{value}, “%{env}” ortamına kaydedildi."
 extract.title: Bir değeri değişken olarak kaydet
+flows.add: Ekle
+flows.canvas_hint: "Düğümleri sürükleyerek taşıyın. Bağlamak için bir sonucun noktasına, sonra gideceği düğüme tıklayın."
+flows.connect_hint: "%{node} → %{port} sonucunun gideceği düğüme tıklayın; vazgeçmek için boş bir yere tıklayın."
+flows.create: Oluştur
+flows.end: son
+flows.exists: "%{name} adlı bir akış zaten var."
+flows.extract: "Yanıttan sakla (ad = $.json.yolu, satır başına bir)"
+flows.failed: "%{steps} adımdan sonra başarısız"
+flows.id: Kimlik
+flows.id_taken: Bu kimlik başka bir düğümde var.
+flows.kind.check: Kontrol
+flows.kind.delay: Bekle
+flows.kind.request: İstek
+flows.kind.set: Değişken ata
+flows.lines_hint: ad = değer
+flows.ms: Milisaniye
+flows.new_name: Yeni akış adı
+flows.none: "Bu koleksiyonda henüz akış yok: bir ad yazıp Oluştur'a basın."
+flows.op.contains: içerir
+flows.op.equals: eşittir
+flows.op.exists: var
+flows.op.greater: büyüktür
+flows.op.less: küçüktür
+flows.op.missing: yok
+flows.op.not_equals: eşit değil
+flows.outcomes: Sonuçlar
+flows.passed: "Geçti: %{steps} adım, %{ms} ms"
+flows.remove: Düğümü sil
+flows.request: İstek
+flows.request_hint: klasör/istek.apix
+flows.run: Çalıştır
+flows.running: "%{node} çalışıyor…"
+flows.save: Kaydedildi
+flows.save_dirty: Kaydet
+flows.select_hint: "Düzenlemek için bir düğüm seçin ya da yeni ekleyin. Çalıştırma Başlangıç düğümünden başlar ve her sonucu izler; hiçbir yere gitmeyen bir sonuçta biter, orada bir istek başarısız olduysa başarısız sayılır."
+flows.start: Başlangıç
+flows.start_here: Buradan başla
+flows.stop: Durdur
+flows.stopped: Durduruldu
+flows.subject: "Konu: status, time, header:Ad, $.json.yolu, bir jq filtresi ya da {{değişken}}"
+flows.subject_hint: status
+flows.title: Akışlar
+flows.value: Değer
+flows.values: "Değişkenler (ad = değer, satır başına bir; {{değişkenler}} kullanılabilir)"
 git.changes: "%{count} değişiklik"
 git.changes_count: "Son commit'ten beri değişen: %{count}"
 git.clean: Son commit'ten beri hiçbir şey değişmedi.
@@ -456,6 +500,7 @@ menu.environment: Ortam
 menu.export_docs: Dokümantasyonu dışa aktar…
 menu.export_postman: Postman'a dışa aktar…
 menu.file: Dosya
+menu.flows: Akışlar…
 menu.git: Git…
 menu.group_by: Kenar çubuğunu grupla
 menu.group_collection: Koleksiyon

@@ -310,6 +310,50 @@ extract.path: "القيمة (كما في الفحوص: body.data.token و header
 extract.saved_collection: "حُفظ %{name} = %{value} في متغيرات المجموعة."
 extract.saved_env: "حُفظ %{name} = %{value} في «%{env}»."
 extract.title: حفظ قيمة كمتغير
+flows.add: إضافة
+flows.canvas_hint: "اسحب العُقد لتحريكها. للربط، انقر نقطة نتيجة ثم العقدة التي تؤدي إليها."
+flows.connect_hint: "انقر العقدة التي يؤدي إليها %{node} ← %{port}؛ انقر مساحة فارغة للإلغاء."
+flows.create: إنشاء
+flows.end: النهاية
+flows.exists: "يوجد تدفق باسم %{name} بالفعل."
+flows.extract: "احتفظ من الاستجابة (الاسم = $.json.path، واحد في كل سطر)"
+flows.failed: "فشل بعد %{steps} خطوات"
+flows.id: المعرّف
+flows.id_taken: عقدة أخرى تحمل هذا المعرّف.
+flows.kind.check: تحقق
+flows.kind.delay: انتظار
+flows.kind.request: طلب
+flows.kind.set: تعيين متغيرات
+flows.lines_hint: الاسم = القيمة
+flows.ms: ميلي ثانية
+flows.new_name: اسم التدفق الجديد
+flows.none: "لا توجد تدفقات في هذه المجموعة بعد: اكتب اسمًا واضغط إنشاء."
+flows.op.contains: يحتوي
+flows.op.equals: يساوي
+flows.op.exists: موجود
+flows.op.greater: أكبر من
+flows.op.less: أصغر من
+flows.op.missing: غير موجود
+flows.op.not_equals: لا يساوي
+flows.outcomes: النتائج
+flows.passed: "نجح: %{steps} خطوات، %{ms} م.ث"
+flows.remove: حذف العقدة
+flows.request: الطلب
+flows.request_hint: folder/request.apix
+flows.run: تشغيل
+flows.running: "جارٍ تشغيل %{node}…"
+flows.save: محفوظ
+flows.save_dirty: حفظ
+flows.select_hint: "اختر عقدة لتحريرها أو أضف واحدة. يبدأ التشغيل من عقدة البداية ويتبع كل نتيجة؛ وينتهي عند نتيجة لا تؤدي إلى شيء، ويفشل إن فشل طلب هناك."
+flows.start: البداية
+flows.start_here: ابدأ من هنا
+flows.stop: إيقاف
+flows.stopped: متوقف
+flows.subject: "الموضوع: status أو time أو header:الاسم أو $.json.path أو مرشح jq أو {{متغير}}"
+flows.subject_hint: status
+flows.title: التدفقات
+flows.value: القيمة
+flows.values: "المتغيرات (الاسم = القيمة، واحد في كل سطر؛ تعمل {{المتغيرات}})"
 git.changes: "%{count} تغييرات"
 git.changes_count: "تغيّر منذ آخر إيداع: %{count}"
 git.clean: لم يتغيّر شيء منذ آخر إيداع.
@@ -456,6 +500,7 @@ menu.environment: البيئة
 menu.export_docs: تصدير التوثيق…
 menu.export_postman: تصدير إلى Postman…
 menu.file: ملف
+menu.flows: التدفقات…
 menu.git: Git…
 menu.group_by: تجميع الشريط الجانبي حسب
 menu.group_collection: المجموعة

@@ -2,3 +2,4 @@ name = "JSONPlaceholder"
 
 [vars]
 base_url = "https://jsonplaceholder.typicode.com"
+user_id = "1"

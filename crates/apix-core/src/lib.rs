@@ -8,6 +8,7 @@ pub mod compare;
 pub mod diff;
 pub mod dynamic;
 pub mod filter;
+pub mod flow;
 pub mod git;
 pub mod graphql;
 pub mod headers;

@@ -310,6 +310,50 @@ extract.path: 值（与检查相同：body.data.token、header.X-Token、status�
 extract.saved_collection: "%{name} = %{value} 已保存到集合的变量中。"
 extract.saved_env: "%{name} = %{value} 已保存到“%{env}”。"
 extract.title: 将值保存为变量
+flows.add: 添加
+flows.canvas_hint: "拖动节点来移动它们。要连接，先点击结果的圆点，再点击它通往的节点。"
+flows.connect_hint: "点击 %{node} → %{port} 通往的节点；点击空白处取消。"
+flows.create: 创建
+flows.end: 结束
+flows.exists: "名为 %{name} 的流程已存在。"
+flows.extract: "从响应中保留（名称 = $.json.path，每行一个）"
+flows.failed: "%{steps} 步后失败"
+flows.id: ID
+flows.id_taken: 另一个节点已使用此 ID。
+flows.kind.check: 检查
+flows.kind.delay: 等待
+flows.kind.request: 请求
+flows.kind.set: 设置变量
+flows.lines_hint: 名称 = 值
+flows.ms: 毫秒
+flows.new_name: 新流程名称
+flows.none: "此集合还没有流程：输入名称并点击“创建”。"
+flows.op.contains: 包含
+flows.op.equals: 等于
+flows.op.exists: 存在
+flows.op.greater: 大于
+flows.op.less: 小于
+flows.op.missing: 不存在
+flows.op.not_equals: 不等于
+flows.outcomes: 结果
+flows.passed: "通过：%{steps} 步，%{ms} ms"
+flows.remove: 删除节点
+flows.request: 请求
+flows.request_hint: folder/request.apix
+flows.run: 运行
+flows.running: "正在运行 %{node}…"
+flows.save: 已保存
+flows.save_dirty: 保存
+flows.select_hint: "选择一个节点进行编辑，或添加一个。运行从开始节点出发并沿每个结果前进；在没有去向的结果处结束，若那里的请求失败则运行失败。"
+flows.start: 开始
+flows.start_here: 从这里开始
+flows.stop: 停止
+flows.stopped: 已停止
+flows.subject: "对象：status、time、header:名称、$.json.path、jq 过滤器或 {{变量}}"
+flows.subject_hint: status
+flows.title: 流程
+flows.value: 值
+flows.values: "变量（名称 = 值，每行一个；可用 {{变量}}）"
 git.changes: "%{count} 个更改"
 git.changes_count: "自上次提交以来的更改：%{count}"
 git.clean: 自上次提交以来没有任何更改。
@@ -456,6 +500,7 @@ menu.environment: 环境
 menu.export_docs: 导出文档…
 menu.export_postman: 导出到 Postman…
 menu.file: 文件
+menu.flows: 流程…
 menu.git: Git…
 menu.group_by: 侧边栏分组方式
 menu.group_collection: 集合

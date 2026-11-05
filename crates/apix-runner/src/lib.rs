@@ -7,6 +7,7 @@
 
 pub mod bench;
 pub mod data;
+pub mod flow;
 pub mod monitor;
 pub mod report;
 pub mod vars;
@@ -285,7 +286,7 @@ impl Control {
     }
 
     /// Waits while paused; false once stopped.
-    async fn go_on(&self) -> bool {
+    pub(crate) async fn go_on(&self) -> bool {
         while self.is_paused() && !self.is_stopped() {
             tokio::time::sleep(Duration::from_millis(50)).await;
         }
@@ -293,7 +294,7 @@ impl Control {
     }
 
     /// Waits `delay` (paused time not counted); false once stopped.
-    async fn wait(&self, delay: Duration) -> bool {
+    pub(crate) async fn wait(&self, delay: Duration) -> bool {
         let mut left = delay;
         while !left.is_zero() {
             if !self.go_on().await {

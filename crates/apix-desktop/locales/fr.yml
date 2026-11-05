@@ -310,6 +310,50 @@ extract.path: "Valeur (comme dans Vérifications : body.data.token, header.X-Tok
 extract.saved_collection: "%{name} = %{value} enregistrée dans les variables de la collection."
 extract.saved_env: "%{name} = %{value} enregistrée dans « %{env} »."
 extract.title: Enregistrer une valeur comme variable
+flows.add: Ajouter
+flows.canvas_hint: "Faites glisser les nœuds pour les déplacer. Pour relier, cliquez sur le point d'un résultat, puis sur le nœud visé."
+flows.connect_hint: "Cliquez sur le nœud où mène %{node} → %{port} ; cliquez dans le vide pour annuler."
+flows.create: Créer
+flows.end: fin
+flows.exists: "Un flux nommé %{name} existe déjà."
+flows.extract: "Garder de la réponse (nom = $.chemin.json, un par ligne)"
+flows.failed: "Échec après %{steps} étapes"
+flows.id: Id
+flows.id_taken: Un autre nœud a cet id.
+flows.kind.check: Vérification
+flows.kind.delay: Attendre
+flows.kind.request: Requête
+flows.kind.set: Définir des variables
+flows.lines_hint: nom = valeur
+flows.ms: Millisecondes
+flows.new_name: Nom du nouveau flux
+flows.none: "Pas encore de flux dans cette collection : saisissez un nom et appuyez sur Créer."
+flows.op.contains: contient
+flows.op.equals: égal à
+flows.op.exists: existe
+flows.op.greater: supérieur à
+flows.op.less: inférieur à
+flows.op.missing: absent
+flows.op.not_equals: différent de
+flows.outcomes: Résultats
+flows.passed: "Réussi : %{steps} étapes, %{ms} ms"
+flows.remove: Supprimer le nœud
+flows.request: Requête
+flows.request_hint: dossier/requete.apix
+flows.run: Lancer
+flows.running: "%{node} en cours…"
+flows.save: Enregistré
+flows.save_dirty: Enregistrer
+flows.select_hint: "Sélectionnez un nœud pour le modifier, ou ajoutez-en un. Une exécution part du nœud Début et suit chaque résultat ; elle s'arrête à un résultat qui ne mène nulle part, et échoue si une requête y échoue."
+flows.start: Début
+flows.start_here: Commencer ici
+flows.stop: Arrêter
+flows.stopped: Arrêté
+flows.subject: "Sujet : status, time, header:Nom, $.chemin.json, un filtre jq ou {{variable}}"
+flows.subject_hint: status
+flows.title: Flux
+flows.value: Valeur
+flows.values: "Variables (nom = valeur, une par ligne ; {{variables}} acceptées)"
 git.changes: "%{count} modifiés"
 git.changes_count: "Modifiés depuis le dernier commit : %{count}"
 git.clean: Rien n’a changé depuis le dernier commit.
@@ -456,6 +500,7 @@ menu.environment: Environnement
 menu.export_docs: Exporter la documentation…
 menu.export_postman: Exporter vers Postman…
 menu.file: Fichier
+menu.flows: Flux…
 menu.git: Git…
 menu.group_by: Grouper la barre latérale par
 menu.group_collection: Collection

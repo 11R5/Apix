@@ -10,6 +10,7 @@ use apix_runner::Scope;
 use clap::{Args, Parser, Subcommand};
 
 mod changes;
+mod flow_cmd;
 mod mcp;
 mod monitor_cmd;
 
@@ -37,6 +38,39 @@ enum PluginAction {
     Install { file: PathBuf },
     /// Remove an installed plugin
     Remove { name: String },
+}
+
+#[derive(Subcommand)]
+// Parsed once per process: the size of a variant does not matter.
+#[allow(clippy::large_enum_variant)]
+enum FlowAction {
+    /// Run a .flow file: its nodes one after another, each outcome picking the next;
+    /// exits non-zero when it fails
+    Run {
+        /// The .flow file
+        file: PathBuf,
+        #[command(flatten)]
+        vars: VarArgs,
+        /// Write a JUnit XML report of its requests
+        #[arg(long, value_name = "FILE")]
+        junit: Option<PathBuf>,
+        /// Write every step as JSON
+        #[arg(long, value_name = "FILE")]
+        json: Option<PathBuf>,
+        /// Write a report page of its requests
+        #[arg(long, value_name = "FILE")]
+        html: Option<PathBuf>,
+        /// Write a Markdown summary of its requests
+        #[arg(long, value_name = "FILE")]
+        markdown: Option<PathBuf>,
+        #[command(flatten)]
+        net: NetArgs,
+    },
+    /// The .flow files in a collection
+    List {
+        #[arg(default_value = ".")]
+        dir: PathBuf,
+    },
 }
 
 #[derive(Subcommand)]
@@ -194,6 +228,12 @@ enum Command {
         /// Instead of serving, remove this collection from Claude Desktop
         #[arg(long)]
         remove_from_claude_desktop: bool,
+    },
+    /// Flows: requests, checks, variables and waits joined into a graph
+    /// (.flow files), run from the first node to the end
+    Flow {
+        #[command(subcommand)]
+        action: FlowAction,
     },
     /// WebAssembly plugins: auth types, importers and visualizers in
     /// <config>/Apix/plugins
@@ -1851,6 +1891,26 @@ async fn run(cli: Cli) -> Result<bool> {
         Command::Import {
             file, out, into, ..
         } => import(&style, &client, &file, out, into).await,
+        Command::Flow { action } => match action {
+            FlowAction::Run {
+                file,
+                vars,
+                junit,
+                json,
+                html,
+                markdown,
+                net,
+            } => {
+                let reports = flow_cmd::Reports {
+                    junit,
+                    json,
+                    html,
+                    markdown,
+                };
+                flow_cmd::run(&client, &style, &var, &file, &vars, &net, reports).await
+            }
+            FlowAction::List { dir } => flow_cmd::list(&dir).map(|()| true),
+        },
         Command::Plugins { action } => {
             match action {
                 PluginAction::List => {

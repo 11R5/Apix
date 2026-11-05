@@ -310,6 +310,50 @@ extract.path: "値（チェックと同じ: body.data.token、header.X-Token、s
 extract.saved_collection: "%{name} = %{value} をコレクションの変数に保存しました。"
 extract.saved_env: "%{name} = %{value} を「%{env}」に保存しました。"
 extract.title: 値を変数として保存
+flows.add: 追加
+flows.canvas_hint: "ノードはドラッグで移動します。つなぐには、結果の点をクリックしてから行き先のノードをクリックします。"
+flows.connect_hint: "%{node} → %{port} の行き先ノードをクリックしてください。空いた所をクリックすると取り消します。"
+flows.create: 作成
+flows.end: 終了
+flows.exists: "%{name} というフローは既にあります。"
+flows.extract: "レスポンスから保持(名前 = $.json.path、1 行に 1 つ)"
+flows.failed: "%{steps} ステップ後に失敗"
+flows.id: ID
+flows.id_taken: この ID は別のノードで使われています。
+flows.kind.check: チェック
+flows.kind.delay: 待機
+flows.kind.request: リクエスト
+flows.kind.set: 変数を設定
+flows.lines_hint: 名前 = 値
+flows.ms: ミリ秒
+flows.new_name: 新しいフローの名前
+flows.none: "このコレクションにはまだフローがありません。名前を入力して「作成」を押してください。"
+flows.op.contains: 含む
+flows.op.equals: 等しい
+flows.op.exists: ある
+flows.op.greater: より大きい
+flows.op.less: より小さい
+flows.op.missing: ない
+flows.op.not_equals: 等しくない
+flows.outcomes: 結果
+flows.passed: "成功: %{steps} ステップ、%{ms} ms"
+flows.remove: ノードを削除
+flows.request: リクエスト
+flows.request_hint: folder/request.apix
+flows.run: 実行
+flows.running: "%{node} を実行中…"
+flows.save: 保存済み
+flows.save_dirty: 保存
+flows.select_hint: "ノードを選んで編集するか、追加してください。実行は開始ノードから始まり、各結果に従います。行き先のない結果で終わり、そこでリクエストが失敗していれば失敗です。"
+flows.start: 開始
+flows.start_here: ここから開始
+flows.stop: 停止
+flows.stopped: 停止しました
+flows.subject: "対象: status、time、header:名前、$.json.path、jq フィルター、{{変数}}"
+flows.subject_hint: status
+flows.title: フロー
+flows.value: 値
+flows.values: "変数(名前 = 値、1 行に 1 つ。{{変数}} も使えます)"
 git.changes: 変更 %{count} 件
 git.changes_count: "前回のコミット以降の変更: %{count}"
 git.clean: 前回のコミット以降、変更はありません。
@@ -456,6 +500,7 @@ menu.environment: 環境
 menu.export_docs: ドキュメントをエクスポート…
 menu.export_postman: Postman にエクスポート…
 menu.file: ファイル
+menu.flows: フロー…
 menu.git: Git…
 menu.group_by: サイドバーのグループ化
 menu.group_collection: コレクション

@@ -1,0 +1,82 @@
+name = "New user"
+description = "Checks the API is up, reads the first user, then creates one like it."
+
+[[node]]
+id = "health"
+kind = "request"
+request = "health.apix"
+x = 40.0
+y = 40.0
+
+[[node]]
+id = "first-user"
+kind = "request"
+request = "users/list-users.apix"
+x = 300.0
+y = 40.0
+
+[node.extract]
+user_id = "$[0].id"
+
+[[node]]
+id = "get-user"
+kind = "request"
+request = "users/get-user.apix"
+x = 560.0
+y = 40.0
+
+[node.extract]
+email = "$.email"
+
+[[node]]
+id = "has-email"
+kind = "check"
+subject = "{{email}}"
+op = "contains"
+value = "@"
+x = 40.0
+y = 220.0
+
+[[node]]
+id = "create"
+kind = "request"
+request = "users/create-user.apix"
+x = 300.0
+y = 220.0
+
+[node.extract]
+new_id = "$.id"
+
+[[node]]
+id = "created"
+kind = "check"
+subject = "status"
+op = "equals"
+value = "201"
+x = 560.0
+y = 220.0
+
+[[edge]]
+from = "health"
+port = "ok"
+to = "first-user"
+
+[[edge]]
+from = "first-user"
+port = "ok"
+to = "get-user"
+
+[[edge]]
+from = "get-user"
+port = "ok"
+to = "has-email"
+
+[[edge]]
+from = "has-email"
+port = "yes"
+to = "create"
+
+[[edge]]
+from = "create"
+port = "ok"
+to = "created"

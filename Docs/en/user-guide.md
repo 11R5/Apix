@@ -28,6 +28,7 @@ command line runs the same requests in a terminal or CI.
 - [gRPC](#grpc)
 - [Scripts and tests](#scripts-and-tests)
 - [Runner](#runner)
+- [Flows](#flows)
 - [Load testing](#load-testing)
 - [Monitors](#monitors)
 - [Mock server](#mock-server)
@@ -789,6 +790,83 @@ terminal; see [Run a collection in CI](workflows.md#run-a-collection-in-ci).
 A password written in a URL (`https://user:password@host`) is left out of
 reports, command-line output, logs and error messages. The request file and
 the URL bar still hold it, so prefer a variable or the Auth tab for real ones.
+
+## Flows
+
+A **flow** joins requests into a graph: log in, keep the token, poll until a
+job is done, branch on what came back. Each flow is a `.flow` file in the
+collection, next to the requests, so it goes into git with them. Open
+**View › Flows…**; type a name and press **Create** for a new one.
+
+![The Flows window](images/flows.png)
+
+There are four kinds of node:
+
+- **Request** sends a request of the collection, with its scripts and tests.
+  Its outcome is **ok** when it passed (a successful status, or every test
+  passing) and **fail** otherwise. **Keep from the response** turns values of
+  the response into variables for the nodes after it, one per line:
+  `token = $.token`.
+- **Check** compares a subject with a value: **yes** or **no**. The subject
+  is `status`, `time` (ms), `body`, `header:Name`, a JSONPath (`$.items[0].id`)
+  or jq filter (`.items | length`) on the last response, or a text with
+  `{{variables}}`. Comparisons: equals, not equal, contains, greater than,
+  less than (as numbers when both sides are), exists, missing.
+- **Set variables** sets variables (`name = value` lines; `{{variables}}`
+  work).
+- **Wait** pauses, for polling loops.
+
+Drag a node to move it. To connect, click an outcome's dot on the right of a
+node, then the node it leads to; clicking the dot again re-routes it, and
+**×** in the panel removes it. The panel on the right edits the selected node:
+its id, its settings, where each outcome leads, **Start here**, **Delete
+node**. A run begins at the **Start** node (without one, the first node
+nothing leads to), follows each outcome and ends at an outcome that leads
+nowhere. It fails when a request fails without a **fail** edge, or when a
+value to keep is not there. Loops are allowed; a run stops after 1000 steps.
+
+**Run** sends the flow with the collection's variables and the chosen
+environment; each node turns green, yellow or red by its outcome, and the
+list under the canvas shows every step with what was kept or compared.
+Changes are saved with **Save**, and when the window closes.
+
+From a terminal, the same flow runs in CI:
+
+```sh
+apix flow list my-api
+apix flow run my-api/new-user.flow --env staging --junit flow.xml
+```
+
+`--junit`, `--html` and `--markdown` report the flow's requests like
+`apix run`; `--json` writes every step. The example collection has
+`new-user.flow`.
+
+A flow file:
+
+```toml
+name = "New user"
+
+[[node]]
+id = "first-user"
+kind = "request"
+request = "users/list-users.apix"
+x = 40.0
+y = 40.0
+extract = { user_id = "$[0].id" }
+
+[[node]]
+id = "found"
+kind = "check"
+subject = "{{user_id}}"
+op = "exists"
+x = 300.0
+y = 40.0
+
+[[edge]]
+from = "first-user"
+port = "ok"
+to = "found"
+```
 
 ## Load testing
 

@@ -312,6 +312,50 @@ extract.path: "Value (same as in Checks: body.data.token, header.X-Token, status
 extract.saved_collection: "%{name} = %{value} saved in the collection’s variables."
 extract.saved_env: "%{name} = %{value} saved in “%{env}”."
 extract.title: Save a value as a variable
+flows.add: Add
+flows.canvas_hint: "Drag nodes to move them. To connect, click an outcome's dot, then the node it leads to."
+flows.connect_hint: "Click the node that %{node} → %{port} leads to; click empty space to cancel."
+flows.create: Create
+flows.end: end
+flows.exists: "A flow called %{name} already exists."
+flows.extract: "Keep from the response (name = $.json.path, one per line)"
+flows.failed: "Failed after %{steps} steps"
+flows.id: Id
+flows.id_taken: Another node has this id.
+flows.kind.check: Check
+flows.kind.delay: Wait
+flows.kind.request: Request
+flows.kind.set: Set variables
+flows.lines_hint: name = value
+flows.ms: Milliseconds
+flows.new_name: New flow name
+flows.none: "No flows in this collection yet: type a name and press Create."
+flows.op.contains: contains
+flows.op.equals: equals
+flows.op.exists: exists
+flows.op.greater: greater than
+flows.op.less: less than
+flows.op.missing: missing
+flows.op.not_equals: not equal
+flows.outcomes: Outcomes
+flows.passed: "Passed: %{steps} steps, %{ms} ms"
+flows.remove: Delete node
+flows.request: Request
+flows.request_hint: folder/request.apix
+flows.run: Run
+flows.running: "Running %{node}…"
+flows.save: Saved
+flows.save_dirty: Save
+flows.select_hint: "Select a node to edit it, or add one. A run starts at the Start node and follows each outcome; it ends at an outcome that leads nowhere, and fails if a request fails there."
+flows.start: Start
+flows.start_here: Start here
+flows.stop: Stop
+flows.stopped: Stopped
+flows.subject: "Subject: status, time, header:Name, $.json.path, a jq filter or {{variable}}"
+flows.subject_hint: status
+flows.title: Flows
+flows.value: Value
+flows.values: "Variables (name = value, one per line; {{variables}} work)"
 git.changes: "%{count} changed"
 git.changes_count: "Changed since the last commit: %{count}"
 git.clean: Nothing changed since the last commit.
@@ -458,6 +502,7 @@ menu.environment: Environment
 menu.export_docs: Export documentation…
 menu.export_postman: Export to Postman…
 menu.file: File
+menu.flows: Flows…
 menu.git: Git…
 menu.group_by: Group the sidebar by
 menu.group_collection: Collection

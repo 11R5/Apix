@@ -291,6 +291,7 @@ impl MenuState {
             .menu(tr!("menu.command_palette"), Box::new(OpenPalette))
             .menu(tr!("menu.history"), Box::new(OpenHistory))
             .menu(tr!("menu.runner"), Box::new(OpenRunner))
+            .menu(tr!("menu.flows"), Box::new(OpenFlows))
             .menu(tr!("menu.monitors"), Box::new(OpenMonitors))
             .menu(tr!("menu.mock"), Box::new(OpenMock))
             .menu(tr!("menu.capture"), Box::new(OpenCapture))

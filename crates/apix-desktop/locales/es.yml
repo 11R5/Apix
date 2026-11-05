@@ -310,6 +310,50 @@ extract.path: "Valor (como en Comprobaciones: body.data.token, header.X-Token, s
 extract.saved_collection: "%{name} = %{value} guardada en las variables de la colección."
 extract.saved_env: "%{name} = %{value} guardada en «%{env}»."
 extract.title: Guardar un valor como variable
+flows.add: Añadir
+flows.canvas_hint: "Arrastra los nodos para moverlos. Para unirlos, pulsa el punto de un resultado y luego el nodo al que lleva."
+flows.connect_hint: "Pulsa el nodo al que lleva %{node} → %{port}; pulsa en un espacio vacío para cancelar."
+flows.create: Crear
+flows.end: fin
+flows.exists: "Ya existe un flujo llamado %{name}."
+flows.extract: "Guardar de la respuesta (nombre = $.ruta.json, uno por línea)"
+flows.failed: "Falló tras %{steps} pasos"
+flows.id: Id
+flows.id_taken: Otro nodo tiene este id.
+flows.kind.check: Comprobación
+flows.kind.delay: Esperar
+flows.kind.request: Petición
+flows.kind.set: Asignar variables
+flows.lines_hint: nombre = valor
+flows.ms: Milisegundos
+flows.new_name: Nombre del nuevo flujo
+flows.none: "Esta colección aún no tiene flujos: escribe un nombre y pulsa Crear."
+flows.op.contains: contiene
+flows.op.equals: igual a
+flows.op.exists: existe
+flows.op.greater: mayor que
+flows.op.less: menor que
+flows.op.missing: falta
+flows.op.not_equals: distinto de
+flows.outcomes: Resultados
+flows.passed: "Correcto: %{steps} pasos, %{ms} ms"
+flows.remove: Eliminar nodo
+flows.request: Petición
+flows.request_hint: carpeta/peticion.apix
+flows.run: Ejecutar
+flows.running: "Ejecutando %{node}…"
+flows.save: Guardado
+flows.save_dirty: Guardar
+flows.select_hint: "Selecciona un nodo para editarlo, o añade uno. Una ejecución empieza en el nodo Inicio y sigue cada resultado; termina en un resultado que no lleva a ninguna parte, y falla si allí falla una petición."
+flows.start: Inicio
+flows.start_here: Empezar aquí
+flows.stop: Detener
+flows.stopped: Detenido
+flows.subject: "Sujeto: status, time, header:Nombre, $.ruta.json, un filtro jq o {{variable}}"
+flows.subject_hint: status
+flows.title: Flujos
+flows.value: Valor
+flows.values: "Variables (nombre = valor, una por línea; se admiten {{variables}})"
 git.changes: "%{count} cambios"
 git.changes_count: "Cambios desde el último commit: %{count}"
 git.clean: Nada ha cambiado desde el último commit.
@@ -456,6 +500,7 @@ menu.environment: Entorno
 menu.export_docs: Exportar documentación…
 menu.export_postman: Exportar a Postman…
 menu.file: Archivo
+menu.flows: Flujos…
 menu.git: Git…
 menu.group_by: Agrupar la barra lateral por
 menu.group_collection: Colección
