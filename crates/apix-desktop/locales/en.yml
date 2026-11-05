@@ -266,7 +266,31 @@ extract.saved_collection: "%{name} = %{value} saved in the collection’s variab
 extract.saved_env: "%{name} = %{value} saved in “%{env}”."
 extract.title: Save a value as a variable
 git.changes: "%{count} changed"
+git.changes_count: "Changed since the last commit: %{count}"
+git.clean: Nothing changed since the last commit.
+git.commit: Commit
+git.commit_note: Commit takes every change in this folder (and only this folder). Pull and Push use git with your own settings and credentials.
+git.committed: Committed
+git.deleted_file: The file was deleted.
+git.message_needed: Write a commit message first.
+git.message_placeholder: Commit message
+git.new_branch: New branch
+git.new_branch_placeholder: branch-name
+git.new_file: A new file.
+git.none: (none)
+git.not_a_repo: The open folder is not in a git repository.
 git.one_change: 1 changed
+git.pick_file: Pick a file to see what changed in it.
+git.pull: Pull
+git.pulled: Pulled the latest changes.
+git.push: Push
+git.pushed: "Pushed %{branch}."
+git.reading: Reading…
+git.recent: Recent commits
+git.same_meaning: Only the formatting changed; the content is the same.
+git.switching: Switching branch…
+git.title: Git
+git.up_to_date: Already up to date.
 grpc.add_protos: Add file
 grpc.calling: Calling…
 grpc.choose_protos: Choose .proto files or descriptor sets
@@ -359,6 +383,7 @@ menu.environment: Environment
 menu.export_docs: Export documentation…
 menu.export_postman: Export to Postman…
 menu.file: File
+menu.git: Git…
 menu.group_by: Group the sidebar by
 menu.group_collection: Collection
 menu.group_environment: Environment

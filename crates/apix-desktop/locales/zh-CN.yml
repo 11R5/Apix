@@ -264,7 +264,31 @@ extract.saved_collection: "%{name} = %{value} 已保存到集合的变量中。"
 extract.saved_env: "%{name} = %{value} 已保存到“%{env}”。"
 extract.title: 将值保存为变量
 git.changes: "%{count} 个更改"
+git.changes_count: "自上次提交以来的更改：%{count}"
+git.clean: 自上次提交以来没有任何更改。
+git.commit: 提交
+git.commit_note: 提交会包含此文件夹中（且仅此文件夹）的所有更改。Pull 和 Push 使用您自己的设置和凭据运行 git。
+git.committed: 已提交
+git.deleted_file: 文件已删除。
+git.message_needed: 请先填写提交信息。
+git.message_placeholder: 提交信息
+git.new_branch: 新分支
+git.new_branch_placeholder: branch-name
+git.new_file: 新文件。
+git.none: （无）
+git.not_a_repo: 打开的文件夹不在 git 仓库中。
 git.one_change: 1 个更改
+git.pick_file: 选择一个文件以查看其更改。
+git.pull: Pull
+git.pulled: 已拉取最新更改。
+git.push: Push
+git.pushed: "已推送 %{branch}。"
+git.reading: 正在读取…
+git.recent: 最近的提交
+git.same_meaning: 只有格式发生了变化，内容相同。
+git.switching: 正在切换分支…
+git.title: Git
+git.up_to_date: 已是最新。
 grpc.add_protos: 添加文件
 grpc.calling: 调用中…
 grpc.choose_protos: 选择 .proto 文件或描述符集
@@ -357,6 +381,7 @@ menu.environment: 环境
 menu.export_docs: 导出文档…
 menu.export_postman: 导出到 Postman…
 menu.file: 文件
+menu.git: Git…
 menu.group_by: 侧边栏分组方式
 menu.group_collection: 集合
 menu.group_environment: 环境

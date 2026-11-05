@@ -264,7 +264,31 @@ extract.saved_collection: "%{name} = %{value}, koleksiyon değişkenlerine kayde
 extract.saved_env: "%{name} = %{value}, “%{env}” ortamına kaydedildi."
 extract.title: Bir değeri değişken olarak kaydet
 git.changes: "%{count} değişiklik"
+git.changes_count: "Son commit'ten beri değişen: %{count}"
+git.clean: Son commit'ten beri hiçbir şey değişmedi.
+git.commit: Commit
+git.commit_note: Commit bu klasördeki (yalnızca bu klasördeki) tüm değişiklikleri alır. Pull ve Push, git'i sizin ayarlarınız ve kimlik bilgilerinizle çalıştırır.
+git.committed: Commit atıldı
+git.deleted_file: Dosya silindi.
+git.message_needed: Önce bir commit mesajı yazın.
+git.message_placeholder: Commit mesajı
+git.new_branch: Yeni dal
+git.new_branch_placeholder: dal-adı
+git.new_file: Yeni dosya.
+git.none: (yok)
+git.not_a_repo: Açık klasör bir git deposunda değil.
 git.one_change: 1 değişiklik
+git.pick_file: Neyin değiştiğini görmek için bir dosya seçin.
+git.pull: Pull
+git.pulled: Son değişiklikler çekildi.
+git.push: Push
+git.pushed: "%{branch} gönderildi."
+git.reading: Okunuyor…
+git.recent: Son commit'ler
+git.same_meaning: Yalnızca biçim değişti; içerik aynı.
+git.switching: Dal değiştiriliyor…
+git.title: Git
+git.up_to_date: Zaten güncel.
 grpc.add_protos: Dosya ekle
 grpc.calling: Çağrılıyor…
 grpc.choose_protos: .proto dosyalarını ya da descriptor set'leri seçin
@@ -357,6 +381,7 @@ menu.environment: Ortam
 menu.export_docs: Dokümantasyonu dışa aktar…
 menu.export_postman: Postman'a dışa aktar…
 menu.file: Dosya
+menu.git: Git…
 menu.group_by: Kenar çubuğunu grupla
 menu.group_collection: Koleksiyon
 menu.group_environment: Ortam

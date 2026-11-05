@@ -118,7 +118,8 @@ Measurements of the other tools on the same machine are planned.
   (their files, scripts, folder or environment settings), `apix diff` shows
   what changed in requests field by field, and the GitHub Action keeps a
   summary comment on the pull request. The status bar shows the branch and the
-  changed files; the sidebar marks changed requests.
+  changed files; the sidebar marks changed requests. Click the branch for the
+  Git window: what changed in each request, commit, branches, pull and push.
 - **Mock server:** serve the responses saved with requests on a local port
   (`apix mock`, or View › Mock server… in the app), matched by method and path,
   so a front end can be built before the API exists.

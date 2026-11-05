@@ -10,6 +10,7 @@ mod env_editor;
 mod examples_ui;
 mod extract_ui;
 pub(super) mod filter_ui;
+mod git_panel;
 mod git_ui;
 mod graphql_ui;
 mod grpc_editor;
@@ -85,6 +86,7 @@ actions!(
         OpenMonitors,
         OpenMock,
         OpenCapture,
+        OpenGit,
         CloseTab,
         NextTab,
         PrevTab,
@@ -2201,6 +2203,7 @@ impl Render for Workspace {
             .on_action(
                 cx.listener(|this, _: &OpenCapture, window, cx| this.open_capture(window, cx)),
             )
+            .on_action(cx.listener(|this, _: &OpenGit, window, cx| this.open_git(window, cx)))
             // A click anywhere brings focus back inside the workspace (inputs
             // focus themselves first, so they keep it), so shortcuts keep working.
             .on_mouse_down(

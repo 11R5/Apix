@@ -264,7 +264,31 @@ extract.saved_collection: "حُفظ %{name} = %{value} في متغيرات ال�
 extract.saved_env: "حُفظ %{name} = %{value} في «%{env}»."
 extract.title: حفظ قيمة كمتغير
 git.changes: "%{count} تغييرات"
+git.changes_count: "تغيّر منذ آخر إيداع: %{count}"
+git.clean: لم يتغيّر شيء منذ آخر إيداع.
+git.commit: إيداع
+git.commit_note: "يأخذ الإيداع كل التغييرات في هذا المجلد (وفيه فقط). يشغّل Pull وPush أداة git بإعداداتك وبيانات اعتمادك."
+git.committed: تم الإيداع
+git.deleted_file: حُذف الملف.
+git.message_needed: اكتب رسالة الإيداع أولًا.
+git.message_placeholder: رسالة الإيداع
+git.new_branch: فرع جديد
+git.new_branch_placeholder: branch-name
+git.new_file: ملف جديد.
+git.none: (لا شيء)
+git.not_a_repo: المجلد المفتوح ليس داخل مستودع git.
 git.one_change: تغيير واحد
+git.pick_file: اختر ملفًا لترى ما تغيّر فيه.
+git.pull: Pull
+git.pulled: تم سحب أحدث التغييرات.
+git.push: Push
+git.pushed: "تم دفع %{branch}."
+git.reading: جارٍ القراءة…
+git.recent: الإيداعات الأخيرة
+git.same_meaning: تغيّر التنسيق فقط؛ المحتوى نفسه.
+git.switching: جارٍ تبديل الفرع…
+git.title: Git
+git.up_to_date: محدّث بالفعل.
 grpc.add_protos: إضافة ملف
 grpc.calling: جارٍ الاستدعاء…
 grpc.choose_protos: اختر ملفات ‎.proto أو مجموعات الواصفات
@@ -357,6 +381,7 @@ menu.environment: البيئة
 menu.export_docs: تصدير التوثيق…
 menu.export_postman: تصدير إلى Postman…
 menu.file: ملف
+menu.git: Git…
 menu.group_by: تجميع الشريط الجانبي حسب
 menu.group_collection: المجموعة
 menu.group_environment: البيئة

@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:c40bb6f528d4f840 -->
+<!-- translated from en/user-guide.md sha256:c29732dd07a31ee9 -->
 
 # Apix kullanım kılavuzu
 
@@ -950,6 +950,20 @@ isteği işaretler: **M** değişti (dosyası ya da kendi scriptleri), **A** yen
 geldiğinde yeniden okunur; terminalde atılan bir commit onları temizler.
 
 ![Dal ve değişen istekler](images/git-status.png)
+
+Git penceresi için durum çubuğundaki dala (ya da **Görünüm › Git…**) tıklayın.
+Solda son commit'ten beri değişen dosyalar ve son commit'ler durur; bir
+dosya seçince onda neyin değiştiği `apix diff` ile aynı biçimde görünür:
+istek alan alan (`query._limit: 5 → 10`, eklenen bir başlık), scriptler ve
+öteki metinler satır satır; yalnızca biçim değiştiyse hiçbir şey. Altta bir
+mesaj yazıp **Commit**'e basın: açık klasördeki tüm değişiklikleri alır,
+dışındakileri almaz. Dal menüsü dal değiştirir, **Yeni dal** yanına
+yazılan adla bir dal açıp ona geçer; **Pull** (yalnızca ileri sarma) ve
+**Push** (ilk seferde upstream'i de kurar) git'i sizin ayarlarınız, kancalarınız
+ve kimlik bilgilerinizle çalıştırır. Dal değişince kenar çubuğu hemen
+yenilenir.
+
+![Git penceresi](images/git-window.png)
 
 Komut satırında `apix run --changed` yalnızca bir değişikliğin dokunduğu
 istekleri gönderir, `apix diff` onlarda neyin değiştiğini alan alan gösterir;

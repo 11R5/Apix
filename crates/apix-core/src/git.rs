@@ -47,6 +47,16 @@ impl ChangeKind {
     }
 }
 
+/// One commit in [`Repo::log`].
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Commit {
+    /// The short hash.
+    pub hash: String,
+    pub subject: String,
+    /// When it was committed, in seconds since 1970.
+    pub time: u64,
+}
+
 /// One changed file, relative to the [`Repo`]'s folder.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, serde::Serialize)]
 pub struct Change {
@@ -167,6 +177,108 @@ impl Repo {
         }
     }
 
+    /// The local branches, by name.
+    pub fn branches(&self) -> Result<Vec<String>, GitError> {
+        let out = self.git(&["for-each-ref", "--format=%(refname:short)", "refs/heads"])?;
+        Ok(out
+            .lines()
+            .map(str::to_owned)
+            .filter(|l| !l.is_empty())
+            .collect())
+    }
+
+    /// Checks out another branch. Git refuses when changes not committed
+    /// would be lost, and says so.
+    pub fn switch(&self, branch: &str) -> Result<(), GitError> {
+        self.git(&["switch", branch]).map(|_| ())
+    }
+
+    /// Makes a branch at the current commit and checks it out.
+    pub fn create_branch(&self, name: &str) -> Result<(), GitError> {
+        self.git(&["switch", "-c", name]).map(|_| ())
+    }
+
+    /// Commits every change inside the folder (new and deleted files too),
+    /// leaving changes elsewhere in the repository alone. Returns the new
+    /// commit's short hash.
+    pub fn commit_folder(&self, message: &str) -> Result<String, GitError> {
+        if message.trim().is_empty() {
+            return Err(GitError::Failed {
+                command: "commit".into(),
+                message: "the message is empty".into(),
+            });
+        }
+        self.git(&["add", "-A", "--", "."])?;
+        self.git(&["commit", "-m", message, "--", "."])?;
+        Ok(self
+            .git(&["rev-parse", "--short", "HEAD"])?
+            .trim()
+            .to_owned())
+    }
+
+    /// `git pull --ff-only`: brings in the remote branch when that needs no
+    /// merge. Returns what git said.
+    pub fn pull(&self) -> Result<String, GitError> {
+        self.git(&["pull", "--ff-only"])
+            .map(|s| s.trim().to_owned())
+    }
+
+    /// `git push`, setting the upstream to `origin` the first time.
+    pub fn push(&self) -> Result<String, GitError> {
+        let has_upstream = self
+            .git(&["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"])
+            .is_ok();
+        let out = if has_upstream {
+            self.run_text(&["push"])?
+        } else {
+            let branch = self.branch().unwrap_or_else(|| "HEAD".into());
+            self.run_text(&["push", "-u", "origin", &branch])?
+        };
+        Ok(out)
+    }
+
+    /// The last `n` commits that touched the folder: short hash, subject and
+    /// how long ago.
+    pub fn log(&self, n: usize) -> Result<Vec<Commit>, GitError> {
+        if !self.has_commit("HEAD") {
+            return Ok(Vec::new());
+        }
+        let count = format!("-{n}");
+        let out = self.git(&["log", &count, "--format=%h%x09%ct%x09%s", "--", "."])?;
+        Ok(out
+            .lines()
+            .filter_map(|l| {
+                let mut parts = l.splitn(3, '\t');
+                Some(Commit {
+                    hash: parts.next()?.to_owned(),
+                    time: parts.next()?.parse().ok()?,
+                    subject: parts.next()?.to_owned(),
+                })
+            })
+            .collect())
+    }
+
+    /// Like `git`, but with what git printed on stderr (push reports there).
+    fn run_text(&self, args: &[&str]) -> Result<String, GitError> {
+        let mut command = self.command(args);
+        let output = command.output().map_err(GitError::Missing)?;
+        let text = format!(
+            "{}{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        )
+        .trim()
+        .to_owned();
+        if output.status.success() {
+            Ok(text)
+        } else {
+            Err(GitError::Failed {
+                command: args.first().copied().unwrap_or_default().to_owned(),
+                message: text,
+            })
+        }
+    }
+
     fn ensure_commit(&self, rev: &str) -> Result<(), GitError> {
         if self.has_commit(rev) {
             Ok(())
@@ -223,7 +335,7 @@ impl Repo {
             .map(|bytes| String::from_utf8_lossy(&bytes).into_owned())
     }
 
-    fn run(&self, args: &[&str]) -> Result<Vec<u8>, GitError> {
+    fn command(&self, args: &[&str]) -> Command {
         let mut command = Command::new("git");
         command
             .arg("-C")
@@ -231,6 +343,9 @@ impl Repo {
             // Paths come back as they are, not quoted, whatever the user's config.
             .args(["-c", "core.quotepath=off"])
             .args(args)
+            // Never wait for a password typed into a terminal nobody sees;
+            // the system's credential helper still answers.
+            .env("GIT_TERMINAL_PROMPT", "0")
             .stdin(std::process::Stdio::null());
         #[cfg(windows)]
         {
@@ -239,7 +354,11 @@ impl Repo {
             const CREATE_NO_WINDOW: u32 = 0x0800_0000;
             command.creation_flags(CREATE_NO_WINDOW);
         }
-        let output = command.output().map_err(GitError::Missing)?;
+        command
+    }
+
+    fn run(&self, args: &[&str]) -> Result<Vec<u8>, GitError> {
+        let output = self.command(args).output().map_err(GitError::Missing)?;
         if output.status.success() {
             Ok(output.stdout)
         } else {

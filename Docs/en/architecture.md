@@ -695,6 +695,16 @@ for the open folder in the background after each reload and when the window
 is activated, and keeps a map of changed paths for the sidebar marks; a
 request whose own scripts changed counts as changed.
 
+The Git window (`workspace/git_panel.rs`) uses the same `Repo`: `working_changes`
+for the list, `show("HEAD", path)` against the file on disk through
+`diff::file` for the selected file, and `commit_folder` (`git add -A -- .`,
+then `git commit -- .`, so only the open folder), `branches`, `switch`,
+`create_branch` (`switch -c`), `pull` (`--ff-only`), `push` (`-u origin
+<branch>` when there is no upstream) and `log` (hash, time, subject). Git
+runs with `GIT_TERMINAL_PROMPT=0`, so a remote that needs a password fails
+with git's message instead of waiting for input; credential helpers still
+work. Each operation runs in the background and refreshes the status bar.
+
 ## Themes
 
 `theme.rs` holds the colours. A `ThemeDef` is a theme (built in, or read from

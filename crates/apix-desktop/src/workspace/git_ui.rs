@@ -32,12 +32,17 @@ pub(super) struct GitState {
 
 impl Workspace {
     /// Reads the branch and the changed files again, without blocking.
-    pub(super) fn refresh_git(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+    pub(super) fn refresh_git(&mut self, _window: &mut Window, cx: &mut Context<Self>) {
+        self.refresh_git_now(cx);
+    }
+
+    /// The same, from places without a window (the Git window after a commit).
+    pub(super) fn refresh_git_now(&mut self, cx: &mut Context<Self>) {
         let Some(root) = self.workspace_root() else {
             self.git = GitState::default();
             return;
         };
-        let task = cx.spawn_in(window, async move |this, cx| {
+        let task = cx.spawn(async move |this, cx| {
             let found = cx.background_spawn(async move { status_of(&root) }).await;
             this.update(cx, |this, cx| {
                 this.git.status = found;
@@ -68,9 +73,15 @@ impl Workspace {
         };
         Some(
             div()
+                .id("git-status")
                 .flex()
                 .flex_none()
                 .gap_1()
+                .px_1()
+                .rounded_sm()
+                .cursor_pointer()
+                .hover(|s| s.bg(p.hover))
+                .on_click(|_, window, cx| window.dispatch_action(Box::new(super::OpenGit), cx))
                 .child(
                     div()
                         .text_color(p.text)

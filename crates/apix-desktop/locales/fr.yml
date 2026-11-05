@@ -264,7 +264,31 @@ extract.saved_collection: "%{name} = %{value} enregistrée dans les variables de
 extract.saved_env: "%{name} = %{value} enregistrée dans « %{env} »."
 extract.title: Enregistrer une valeur comme variable
 git.changes: "%{count} modifiés"
+git.changes_count: "Modifiés depuis le dernier commit : %{count}"
+git.clean: Rien n’a changé depuis le dernier commit.
+git.commit: Commit
+git.commit_note: Commit prend toutes les modifications de ce dossier (et de lui seul). Pull et Push utilisent git avec vos propres réglages et identifiants.
+git.committed: Commit effectué
+git.deleted_file: Le fichier a été supprimé.
+git.message_needed: Écrivez d’abord un message de commit.
+git.message_placeholder: Message du commit
+git.new_branch: Nouvelle branche
+git.new_branch_placeholder: nom-branche
+git.new_file: Un nouveau fichier.
+git.none: (aucun)
+git.not_a_repo: Le dossier ouvert n’est pas dans un dépôt git.
 git.one_change: 1 modifié
+git.pick_file: Choisissez un fichier pour voir ce qui a changé.
+git.pull: Pull
+git.pulled: Dernières modifications récupérées.
+git.push: Push
+git.pushed: "%{branch} poussée."
+git.reading: Lecture…
+git.recent: Commits récents
+git.same_meaning: Seule la mise en forme a changé ; le contenu est identique.
+git.switching: Changement de branche…
+git.title: Git
+git.up_to_date: Déjà à jour.
 grpc.add_protos: Ajouter un fichier
 grpc.calling: Appel en cours…
 grpc.choose_protos: Choisir des fichiers .proto ou des descriptor sets
@@ -357,6 +381,7 @@ menu.environment: Environnement
 menu.export_docs: Exporter la documentation…
 menu.export_postman: Exporter vers Postman…
 menu.file: Fichier
+menu.git: Git…
 menu.group_by: Grouper la barre latérale par
 menu.group_collection: Collection
 menu.group_environment: Environnement

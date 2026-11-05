@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:4bf5fca05c1bfbd6 -->
+<!-- translated from en/architecture.md sha256:55ed18bb0d92d4e0 -->
 
 # Apix mimarisi
 
@@ -722,6 +722,16 @@ Masaüstü uygulaması (`workspace/git_ui.rs`) açık klasörün dalını ve
 `git status`'unu her yeniden yüklemeden sonra ve pencere etkinleştiğinde arka
 planda okur, kenar çubuğu işaretleri için değişen yolların bir haritasını
 tutar; kendi scriptleri değişen istek de değişmiş sayılır.
+
+Git penceresi (`workspace/git_panel.rs`) aynı `Repo`'yu kullanır: liste için
+`working_changes`, seçilen dosya için `show("HEAD", yol)` ile diskteki dosya
+`diff::file` üzerinden; `commit_folder` (`git add -A -- .`, ardından
+`git commit -- .`, yani yalnızca açık klasör), `branches`, `switch`,
+`create_branch` (`switch -c`), `pull` (`--ff-only`), `push` (upstream yoksa
+`-u origin <dal>`) ve `log` (hash, zaman, konu). Git
+`GIT_TERMINAL_PROMPT=0` ile çalışır; parola isteyen bir uzak depo girdi
+beklemek yerine git'in mesajıyla başarısız olur, kimlik bilgisi yardımcıları
+yine çalışır. Her işlem arka planda koşar ve durum çubuğunu yeniler.
 
 ## Temalar
 

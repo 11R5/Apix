@@ -933,6 +933,20 @@ a terminal clears them.
 
 ![Branch and changed requests](images/git-status.png)
 
+Click the branch in the status bar (or **View › Git…**) for the Git window.
+On the left are the files changed since the last commit and the latest
+commits; pick a file to see what changed in it, the same way `apix diff`
+shows it: a request field by field (`query._limit: 5 → 10`, a header added),
+scripts and other text line by line, and nothing at all when only the
+formatting changed. Below, write a message and **Commit**: it takes every
+change in the open folder and nothing outside it. The branch menu switches
+branches, **New branch** makes one from the name typed next to it and
+switches to it, and **Pull** (fast-forward only) and **Push** (setting the
+upstream the first time) run git with your own settings, hooks and
+credentials. The sidebar follows a branch switch at once.
+
+![The Git window](images/git-window.png)
+
 On the command line, `apix run --changed` sends only the requests a change
 touches and `apix diff` shows what changed in them field by field; on a pull
 request the GitHub Action can comment with the result. See

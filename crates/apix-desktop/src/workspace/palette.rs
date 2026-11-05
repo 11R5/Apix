@@ -428,6 +428,7 @@ impl Workspace {
                 name!("menu.capture"),
                 run(Workspace::open_capture),
             ));
+            out.push(Entry::command(name!("menu.git"), run(Workspace::open_git)));
         }
         if open {
             out.push(Entry::command(

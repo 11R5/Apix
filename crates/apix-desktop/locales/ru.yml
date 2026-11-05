@@ -264,7 +264,31 @@ extract.saved_collection: "%{name} = %{value} сохранено в переме
 extract.saved_env: "%{name} = %{value} сохранено в «%{env}»."
 extract.title: Сохранить значение как переменную
 git.changes: "изменений: %{count}"
+git.changes_count: "Изменено с последнего коммита: %{count}"
+git.clean: С последнего коммита ничего не изменилось.
+git.commit: Коммит
+git.commit_note: Коммит включает все изменения в этой папке (и только в ней). Pull и Push запускают git с вашими настройками и учётными данными.
+git.committed: Коммит создан
+git.deleted_file: Файл удалён.
+git.message_needed: Сначала напишите сообщение коммита.
+git.message_placeholder: Сообщение коммита
+git.new_branch: Новая ветка
+git.new_branch_placeholder: имя-ветки
+git.new_file: Новый файл.
+git.none: (нет)
+git.not_a_repo: Открытая папка не находится в git-репозитории.
 git.one_change: 1 изменение
+git.pick_file: Выберите файл, чтобы увидеть изменения.
+git.pull: Pull
+git.pulled: Последние изменения получены.
+git.push: Push
+git.pushed: "%{branch} отправлена."
+git.reading: Чтение…
+git.recent: Последние коммиты
+git.same_meaning: Изменилось только форматирование; содержимое то же.
+git.switching: Переключение ветки…
+git.title: Git
+git.up_to_date: Уже актуально.
 grpc.add_protos: Добавить файл
 grpc.calling: Вызов…
 grpc.choose_protos: Выберите файлы .proto или наборы дескрипторов
@@ -357,6 +381,7 @@ menu.environment: Окружение
 menu.export_docs: Экспорт документации…
 menu.export_postman: Экспорт в Postman…
 menu.file: Файл
+menu.git: Git…
 menu.group_by: Группировать боковую панель по
 menu.group_collection: Коллекциям
 menu.group_environment: Окружениям

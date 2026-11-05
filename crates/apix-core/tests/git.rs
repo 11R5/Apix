@@ -121,3 +121,57 @@ fn changes_since_a_branch_point() {
     assert!(Repo::at(&std::env::temp_dir().join("apix-surely-not-a-repo-dir")).is_none());
     std::fs::remove_dir_all(&dir).ok();
 }
+
+#[test]
+fn branches_commits_and_a_remote() {
+    let dir = std::env::temp_dir().join(format!("apix-git-ops-{}", std::process::id()));
+    std::fs::remove_dir_all(&dir).ok();
+    let work = dir.join("work");
+    let remote = dir.join("remote.git");
+    std::fs::create_dir_all(&work).unwrap();
+    std::fs::create_dir_all(&remote).unwrap();
+    git(&remote, &["init", "-q", "--bare"]);
+    git(&work, &["init", "-q"]);
+    git(&work, &["config", "user.name", "Apix Test"]);
+    git(&work, &["config", "user.email", "test@example.com"]);
+    git(&work, &["config", "commit.gpgsign", "false"]);
+    git(
+        &work,
+        &["remote", "add", "origin", &remote.to_string_lossy()],
+    );
+    let api = work.join("api");
+    write(&api.join("apix.toml"), "name = \"api\"\n");
+    write(&work.join("notes.txt"), "outside\n");
+
+    let repo = Repo::at(&api).unwrap();
+    assert!(repo.log(5).unwrap().is_empty(), "no commits yet");
+    assert!(repo.commit_folder("  ").is_err());
+    let hash = repo.commit_folder("Add the collection").unwrap();
+    assert!(!hash.is_empty());
+    // Only the folder was committed; the file beside it is still new.
+    let outside = Repo::at(&work).unwrap().working_changes().unwrap();
+    assert_eq!(
+        kinds(&outside),
+        vec![("notes.txt".to_owned(), ChangeKind::Added)]
+    );
+    let log = repo.log(5).unwrap();
+    assert_eq!(log.len(), 1);
+    assert_eq!(log[0].subject, "Add the collection");
+    assert!(log[0].time > 1_700_000_000);
+
+    // The first push sets the upstream; pull then has nothing to bring.
+    repo.push().unwrap();
+    assert!(repo.pull().is_ok());
+
+    repo.create_branch("feature/x").unwrap();
+    assert_eq!(repo.branch().as_deref(), Some("feature/x"));
+    let mut branches = repo.branches().unwrap();
+    branches.sort();
+    assert_eq!(branches.len(), 2);
+    assert!(branches.contains(&"feature/x".to_owned()));
+    let first = branches.iter().find(|b| *b != "feature/x").unwrap().clone();
+    repo.switch(&first).unwrap();
+    assert_eq!(repo.branch(), Some(first));
+    assert!(repo.switch("no-such-branch").is_err());
+    std::fs::remove_dir_all(&dir).ok();
+}

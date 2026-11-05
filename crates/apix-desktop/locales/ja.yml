@@ -264,7 +264,31 @@ extract.saved_collection: "%{name} = %{value} をコレクションの変数に�
 extract.saved_env: "%{name} = %{value} を「%{env}」に保存しました。"
 extract.title: 値を変数として保存
 git.changes: 変更 %{count} 件
+git.changes_count: "前回のコミット以降の変更: %{count}"
+git.clean: 前回のコミット以降、変更はありません。
+git.commit: コミット
+git.commit_note: コミットはこのフォルダー内 (このフォルダーのみ) のすべての変更を含みます。Pull と Push はあなたの設定と認証情報で git を実行します。
+git.committed: コミットしました
+git.deleted_file: ファイルは削除されました。
+git.message_needed: 先にコミットメッセージを書いてください。
+git.message_placeholder: コミットメッセージ
+git.new_branch: 新しいブランチ
+git.new_branch_placeholder: branch-name
+git.new_file: 新しいファイル。
+git.none: (なし)
+git.not_a_repo: 開いているフォルダーは git リポジトリ内にありません。
 git.one_change: 変更 1 件
+git.pick_file: ファイルを選ぶと変更内容が表示されます。
+git.pull: Pull
+git.pulled: 最新の変更を取得しました。
+git.push: Push
+git.pushed: "%{branch} をプッシュしました。"
+git.reading: 読み込み中…
+git.recent: 最近のコミット
+git.same_meaning: 書式だけが変わりました。内容は同じです。
+git.switching: ブランチを切り替え中…
+git.title: Git
+git.up_to_date: すでに最新です。
 grpc.add_protos: ファイルを追加
 grpc.calling: 呼び出し中…
 grpc.choose_protos: .proto ファイルまたはディスクリプタセットを選択
@@ -357,6 +381,7 @@ menu.environment: 環境
 menu.export_docs: ドキュメントをエクスポート…
 menu.export_postman: Postman にエクスポート…
 menu.file: ファイル
+menu.git: Git…
 menu.group_by: サイドバーのグループ化
 menu.group_collection: コレクション
 menu.group_environment: 環境
