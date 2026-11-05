@@ -29,8 +29,9 @@
 - **One engine everywhere.** The desktop app and the `apix` CLI send requests in
   exactly the same way, so `apix run` in CI does what you saw on your machine.
 - **See the network.** A Network tab (and `apix send --network`) shows DNS,
-  connection, waiting and download time, addresses, VPN hints, redirects and the
-  server certificate.
+  TCP, TLS handshake, waiting and download time, addresses, VPN hints,
+  redirects, compression, the TLS version, cipher suite and ALPN, and the whole
+  certificate chain, all from the request's own connection.
 - **In your language.** English, Türkçe, العربية, Deutsch, Français, Русский,
   日本語, 简体中文 and Español, switched at once in Settings; in Arabic the
   window mirrors to right to left.

@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:86f82552dbea64a5 -->
+<!-- translated from en/user-guide.md sha256:87fa16a166c040fb -->
 
 # Apix kullanım kılavuzu
 
@@ -341,13 +341,28 @@ listeler.
 
 **Ağ** sekmesi, sürenin nereye gittiğini ve bağlantının nasıl olduğunu açıklar:
 
-- DNS, bağlanma, bekleme ve indirme olarak bölünmüş bir zamanlama çubuğu
+- DNS, TCP bağlantısı, TLS el sıkışması, bekleme ve indirme olarak bölünmüş
+  bir zamanlama çubuğu
 - DNS yanıtları, sunucu ve yerel adres, ağ arayüzü (VPN kullanılıyorsa bir
   ipucuyla), ağ geçidi, DNS sunucuları ve proxy
 - her yönlendirme
-- sunucu sertifikası: veren, geçerlilik ve kalan gün sayısı
+- sıkıştırılmış gövde: kodlaması, ağdaki ve açılmış boyutu
+- şifreleme: TLS sürümü, şifre takımı, anahtar değişimi, ALPN (sunucu HTTP/2
+  konuşuyorsa `h2`), gönderilen sunucu adı (SNI) ve el sıkışmanın süresi
+- sunucunun gönderdiği hâliyle sertifika zinciri: her sertifika için kime
+  verildiği ve kimin verdiği, geçerliliği ve kalan gün, anahtarı; sunucunun
+  kendi sertifikası için ayrıca adları ve SHA-256 parmak izi
 
 ![Ağ sekmesi](images/network.png)
+
+![Şifreleme ve sertifika zinciri](images/network-tls.png)
+
+Bunların hepsi isteğin kendi bağlantısından gelir, bakmak için açılan ikinci
+bir bağlantıdan değil: her gönderim yeni bir bağlantı açar ve Apix o el
+sıkışmada üzerinde anlaşılanı kaydeder. Apix, istek kendi `Accept-Encoding`
+başlığını vermedikçe sıkıştırılmış yanıt ister (`gzip`, `deflate`, `br`) ve
+`Content-Encoding` ile `Content-Length` başlıklarını sunucunun gönderdiği gibi
+gösterir.
 
 ## WebSocket ve sunucu olayları (SSE)
 

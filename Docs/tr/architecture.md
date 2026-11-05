@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:f1b7537a7a6d4866 -->
+<!-- translated from en/architecture.md sha256:3265a05f09c64d7a -->
 
 # Apix mimarisi
 
@@ -114,6 +114,35 @@ Hiçbir şey `desktop`'a bağımlı değildir.
 **global değişkenler → koleksiyon (`apix.toml`) → ortam → geçersiz kılmalar (CLI `--env-file`, `APIX_VAR_*` ve `--var`, koleksiyondaki adlarla büyük küçük harf gözetmeden eşleşir; betik `pm.variables.set`)**.
 Tanımsız adlar olduğu gibi bırakılır ve raporlanır; böylece arayüz bunların altını
 çizebilir, CLI ise göndermeyi reddedebilir.
+
+### Ağ izi
+
+Her gönderim kendi kısa ömürlü reqwest istemcisini kurar; böylece kaydedilen her
+şey o isteğe aittir (`apix_http::trace`). Bir çözümleyici DNS'i, reqwest'in
+bağlayıcısının etrafındaki bir Tower katmanı her bağlantıyı zamanlar,
+yönlendirme politikası her adımı not eder. reqwest TLS bağlantısını dışarı
+vermez, kendi bağlayıcımızın döndürmesine de izin vermez; bu yüzden TLS
+ayrıntıları rustls'un içinden, Apix'in kendi kurduğu bir istemci
+yapılandırmasıyla gelir (`use_preconfigured_tls`, `tls::traced_config`,
+kancalar `tls_trace.rs` içinde):
+
+- saran bir sertifika doğrulayıcı sunucunun gönderdiği zinciri ve hangi
+  sürümün imzasını denetlediğini (TLS 1.2 ya da 1.3) kaydeder, kararı olağan
+  doğrulayıcıya (denetim kapalıysa "hepsini kabul et"e) bırakır;
+- hiçbir şey saklamayan bir oturum deposuna istemci merhabası yazılırken
+  anahtar değişimi ipucu sorulur; bu, TLS el sıkışmasının başlangıcıdır:
+  bağlantının ondan önceki süresi (DNS'ten sonra) TCP, sonrası TLS'tir; depoya
+  sunucunun seçtiği grup da bildirilir (TLS 1.3);
+- şifre takımları rustls'un kendileridir; bir kez, şifrelemelerinin etrafında
+  hangi takımın kurulduğunu not eden ince bir sarmalayıcıyla yapılır. Takımlar
+  `'static` ve ortak olduğu için sarmalayıcı isteği, isteğin future'ı poll
+  edilirken atanan bir thread-local üzerinden bulur (`Scoped`); el sıkışma o
+  poll'un içinde çalışır.
+
+ALPN yanıtın sürümünden çıkar (TLS üzerinden HTTP/2 yalnızca `h2`'de
+anlaşıldıktan sonra konuşulur). Sıkıştırılmış gövdeleri reqwest değil Apix açar
+(`decode.rs`; gzip, zlib ya da ham deflate, brotli, geldikçe); reqwest
+`Content-Encoding`'i ve ağdaki boyutu düşürürdü.
 
 ## Disk formatı
 

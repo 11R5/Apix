@@ -394,15 +394,18 @@ mqtt.subscribed: "%{topic} を購読しました（QoS %{qos}）"
 mqtt.subscriptions: サブスクリプション
 mqtt.topic: トピック
 mqtt.unsubscribed: "%{topic} の購読を解除しました"
+network.body.compressed: "%{encoding} · 転送 %{wire}、展開後 %{decoded}（%{percent}% 削減）"
+network.body.compression: 圧縮
 network.cert.days_left: "残り %{count} 日"
-network.cert.engine_note: HTTP エンジンが報告するのはサーバーの証明書のみで、TLS のバージョンや暗号スイートは含まれません。
 network.cert.expired_days_ago: "%{count} 日前に期限切れ"
 network.cert.expired_one_day_ago: 1 日前に期限切れ
 network.cert.issued_by: 発行者
 network.cert.issued_to: 発行先
+network.cert.key: 鍵
 network.cert.names: 名前
 network.cert.not_reported: 暗号化されていますが、証明書は報告されませんでした。
 network.cert.one_day_left: 残り 1 日
+network.cert.sha256: SHA-256
 network.cert.valid: 有効期間
 network.cert.valid_range: "%{from} ～ %{to}"
 network.connection.dns_servers: DNS サーバー
@@ -422,17 +425,26 @@ network.dns.lookup_result: "%{host} → %{addrs}（%{duration}）"
 network.note: 注
 network.plain_http: "平文の HTTP: 何も暗号化されていません。"
 network.redirect.followed: 追従済み
+network.section.body: ボディ
 network.section.certificate: 証明書
+network.section.chain: 証明書チェーン (%{count})
 network.section.connection: 接続
 network.section.dns: DNS
 network.section.encryption: 暗号化
 network.section.redirects: リダイレクト
 network.section.timing: タイミング
-network.timing.connect: 接続 (TCP + TLS)
 network.timing.dns: DNS ルックアップ
 network.timing.download: ダウンロード
 network.timing.summary: 合計 %{total} · 最初のバイトまで %{ttfb}
+network.timing.tcp: TCP 接続
+network.timing.tls: TLS ハンドシェイク
 network.timing.waiting: サーバーの応答待ち
+network.tls.alpn: ALPN
+network.tls.cipher: 暗号スイート
+network.tls.group: 鍵交換
+network.tls.handshake: ハンドシェイク
+network.tls.server_name: サーバー名 (SNI)
+network.tls.version: バージョン
 palette.copy_as: "%{format} としてコピー"
 palette.empty: 一致する項目はありません。
 palette.environment: "環境: %{name}"

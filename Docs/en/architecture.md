@@ -108,6 +108,34 @@ Nothing depends on `desktop`.
 Undefined names are left in place and reported, so the UI can underline them
 and the CLI can refuse to send.
 
+### The network trace
+
+Every send builds its own short-lived reqwest client, so whatever it records
+belongs to that request (`apix_http::trace`). A resolver times DNS, a Tower
+layer around reqwest's connector times each connection, and the redirect
+policy notes each hop. reqwest neither hands out its TLS connection nor lets a
+connector of our own return one, so TLS details come from inside rustls,
+through a client config Apix builds itself (`use_preconfigured_tls`,
+`tls::traced_config`, hooks in `tls_trace.rs`):
+
+- a wrapping certificate verifier records the chain the server sent and which
+  version's signature it checks (TLS 1.2 or 1.3), then lets the usual
+  verifier (or "accept any" with checks off) decide;
+- a session store that keeps nothing is asked for a key exchange hint while
+  the client hello is written, which marks the start of the TLS handshake:
+  the connection's time before it (after DNS) is TCP, after it TLS; it is
+  told the group the server chose (TLS 1.3);
+- the cipher suites are rustls' own, made once with a thin wrapper around
+  their encryption that notes which suite was set up. Suites are `'static`
+  and shared, so the wrapper finds the request through a thread-local set
+  while the request's future is polled (`Scoped`); the handshake runs inside
+  that poll.
+
+ALPN follows from the response's version (HTTP/2 over TLS only after `h2` was
+agreed). Compressed bodies are decoded by Apix (`decode.rs`, gzip, zlib or raw
+deflate, brotli, as they arrive) instead of reqwest, which would drop
+`Content-Encoding` and the size on the wire.
+
 ## On-disk format
 
 ```

@@ -394,15 +394,18 @@ mqtt.subscribed: "Suscrito a %{topic} (QoS %{qos})"
 mqtt.subscriptions: Suscripciones
 mqtt.topic: Tema
 mqtt.unsubscribed: "Suscripción a %{topic} cancelada"
+network.body.compressed: "%{encoding} · %{wire} transferidos, %{decoded} descomprimidos (%{percent} % menos)"
+network.body.compression: Compresión
 network.cert.days_left: "Quedan %{count} días"
-network.cert.engine_note: El motor HTTP informa del certificado del servidor, no de la versión de TLS ni del cifrado.
 network.cert.expired_days_ago: caducó hace %{count} días
 network.cert.expired_one_day_ago: caducó hace 1 día
 network.cert.issued_by: Emitido por
 network.cert.issued_to: Emitido para
+network.cert.key: Clave
 network.cert.names: Nombres
 network.cert.not_reported: Cifrado, pero no se informó del certificado.
 network.cert.one_day_left: Queda 1 día
+network.cert.sha256: SHA-256
 network.cert.valid: Válido
 network.cert.valid_range: "%{from} a %{to}"
 network.connection.dns_servers: Servidores DNS
@@ -422,17 +425,26 @@ network.dns.lookup_result: "%{host} → %{addrs} en %{duration}"
 network.note: Nota
 network.plain_http: "HTTP simple: no se cifra nada."
 network.redirect.followed: Seguida
+network.section.body: Cuerpo
 network.section.certificate: Certificado
+network.section.chain: Cadena de certificados (%{count})
 network.section.connection: Conexión
 network.section.dns: DNS
 network.section.encryption: Cifrado
 network.section.redirects: Redirecciones
 network.section.timing: Tiempos
-network.timing.connect: Conexión (TCP + TLS)
 network.timing.dns: Resolución DNS
 network.timing.download: Descarga
 network.timing.summary: Total %{total} · primer byte tras %{ttfb}
+network.timing.tcp: Conexión TCP
+network.timing.tls: Negociación TLS
 network.timing.waiting: Esperando al servidor
+network.tls.alpn: ALPN
+network.tls.cipher: Conjunto de cifrado
+network.tls.group: Intercambio de claves
+network.tls.handshake: Negociación
+network.tls.server_name: Nombre del servidor (SNI)
+network.tls.version: Versión
 palette.copy_as: Copiar como %{format}
 palette.empty: No hay coincidencias.
 palette.environment: "Entorno: %{name}"

@@ -394,15 +394,18 @@ mqtt.subscribed: "Подписка на %{topic} (QoS %{qos})"
 mqtt.subscriptions: Подписки
 mqtt.topic: Топик
 mqtt.unsubscribed: "Подписка на %{topic} отменена"
+network.body.compressed: "%{encoding} · передано %{wire}, после распаковки %{decoded} (меньше на %{percent} %)"
+network.body.compression: Сжатие
 network.cert.days_left: "осталось %{count} дн."
-network.cert.engine_note: HTTP-движок сообщает сертификат сервера, но не версию TLS и не шифр.
 network.cert.expired_days_ago: истёк %{count} дн. назад
 network.cert.expired_one_day_ago: истёк 1 день назад
 network.cert.issued_by: Кем выдан
 network.cert.issued_to: Кому выдан
+network.cert.key: Ключ
 network.cert.names: Имена
 network.cert.not_reported: Соединение зашифровано, но сертификат не передан.
 network.cert.one_day_left: остался 1 день
+network.cert.sha256: SHA-256
 network.cert.valid: Действителен
 network.cert.valid_range: "с %{from} по %{to}"
 network.connection.dns_servers: DNS-серверы
@@ -422,17 +425,26 @@ network.dns.lookup_result: "%{host} → %{addrs} за %{duration}"
 network.note: Примечание
 network.plain_http: "Обычный HTTP: ничего не шифруется."
 network.redirect.followed: Выполнен
+network.section.body: Тело
 network.section.certificate: Сертификат
+network.section.chain: Цепочка сертификатов (%{count})
 network.section.connection: Соединение
 network.section.dns: DNS
 network.section.encryption: Шифрование
 network.section.redirects: Перенаправления
 network.section.timing: Время
-network.timing.connect: Подключение (TCP + TLS)
 network.timing.dns: Разрешение DNS
 network.timing.download: Загрузка
 network.timing.summary: Всего %{total} · первый байт через %{ttfb}
+network.timing.tcp: TCP-соединение
+network.timing.tls: Рукопожатие TLS
 network.timing.waiting: Ожидание сервера
+network.tls.alpn: ALPN
+network.tls.cipher: Набор шифров
+network.tls.group: Обмен ключами
+network.tls.handshake: Рукопожатие
+network.tls.server_name: Имя сервера (SNI)
+network.tls.version: Версия
 palette.copy_as: Копировать как %{format}
 palette.empty: Ничего не найдено.
 palette.environment: "Окружение: %{name}"

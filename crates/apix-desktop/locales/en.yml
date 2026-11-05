@@ -396,15 +396,18 @@ mqtt.subscribed: "Subscribed to %{topic} (QoS %{qos})"
 mqtt.subscriptions: Subscriptions
 mqtt.topic: Topic
 mqtt.unsubscribed: "Unsubscribed from %{topic}"
+network.body.compressed: "%{encoding} · %{wire} on the wire, %{decoded} decoded (%{percent}% smaller)"
+network.body.compression: Compression
 network.cert.days_left: "%{count} days left"
-network.cert.engine_note: The HTTP engine reports the server’s certificate, not the TLS version or cipher.
 network.cert.expired_days_ago: expired %{count} days ago
 network.cert.expired_one_day_ago: expired 1 day ago
 network.cert.issued_by: Issued by
 network.cert.issued_to: Issued to
+network.cert.key: Key
 network.cert.names: Names
 network.cert.not_reported: Encrypted, but the certificate was not reported.
 network.cert.one_day_left: 1 day left
+network.cert.sha256: SHA-256
 network.cert.valid: Valid
 network.cert.valid_range: "%{from} to %{to}"
 network.connection.dns_servers: DNS servers
@@ -424,17 +427,26 @@ network.dns.lookup_result: "%{host} → %{addrs} in %{duration}"
 network.note: Note
 network.plain_http: "Plain HTTP: nothing is encrypted."
 network.redirect.followed: Followed
+network.section.body: Body
 network.section.certificate: Certificate
+network.section.chain: Certificate chain (%{count})
 network.section.connection: Connection
 network.section.dns: DNS
 network.section.encryption: Encryption
 network.section.redirects: Redirects
 network.section.timing: Timing
-network.timing.connect: Connect (TCP + TLS)
 network.timing.dns: DNS lookup
 network.timing.download: Download
 network.timing.summary: Total %{total} · first byte after %{ttfb}
+network.timing.tcp: TCP connection
+network.timing.tls: TLS handshake
 network.timing.waiting: Waiting for the server
+network.tls.alpn: ALPN
+network.tls.cipher: Cipher suite
+network.tls.group: Key exchange
+network.tls.handshake: Handshake
+network.tls.server_name: Server name (SNI)
+network.tls.version: Version
 palette.copy_as: Copy as %{format}
 palette.empty: Nothing matches.
 palette.environment: "Environment: %{name}"

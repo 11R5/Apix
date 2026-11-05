@@ -1,12 +1,14 @@
 //! Turns a resolved [`apix_core::Request`] into a real HTTP call and captures
 //! everything the UI needs to show: status, headers, raw body and timings.
 
+mod decode;
 pub mod graphql;
 mod local;
 pub mod oauth2;
 pub mod socketio;
 pub mod sse;
 pub mod tls;
+mod tls_trace;
 mod trace;
 pub mod ws;
 
@@ -20,7 +22,11 @@ use reqwest::header::{AUTHORIZATION, CONTENT_TYPE, WWW_AUTHENTICATE};
 use reqwest_cookie_store::CookieStoreMutex;
 
 pub use local::{LocalNetwork, local_network};
-pub use trace::{Certificate, DnsLookup, NetTrace, Phases, Redirect, read_certificate};
+use tls_trace::Scoped;
+pub use trace::{
+    Certificate, Compression, Connect, DnsLookup, NetTrace, Phases, Redirect, TlsDetails,
+    read_certificate,
+};
 use trace::{Recorder, TimedResolver, TimingLayer};
 
 #[derive(Debug, thiserror::Error)]
@@ -51,6 +57,23 @@ pub enum HttpError {
     /// A request setting (proxy URL, client certificate) that cannot be used.
     #[error("{0}")]
     Settings(String),
+    /// A compressed body that does not decode.
+    #[error("{0}")]
+    Decode(String),
+}
+
+/// Asks for a compressed answer, unless the request says what it accepts.
+fn accept_compressed(mut request: reqwest::Request) -> reqwest::Request {
+    if !request
+        .headers()
+        .contains_key(reqwest::header::ACCEPT_ENCODING)
+    {
+        request.headers_mut().insert(
+            reqwest::header::ACCEPT_ENCODING,
+            reqwest::header::HeaderValue::from_static(decode::ACCEPT_ENCODING),
+        );
+    }
+    request
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -411,17 +434,22 @@ impl HttpClient {
                 attempt.follow()
             }
         });
+        // Certificates, a trusted CA, a client certificate and skipping checks
+        // are all in this config, which also records the handshake.
+        let tls = tls::traced_config(eff, &[b"h2", b"http/1.1"], recorder)?;
         let mut builder = reqwest::Client::builder()
             .user_agent(USER_AGENT)
+            .use_preconfigured_tls(tls)
             .tls_info(true)
             .dns_resolver(Arc::new(TimedResolver(recorder.clone())))
             .connector_layer(TimingLayer(recorder.clone()))
+            // Bodies are decoded in `send_with`, keeping what was sent (decode.rs).
+            .no_gzip()
+            .no_brotli()
+            .no_deflate()
             .redirect(policy);
         if let Some(timeout) = eff.timeout {
             builder = builder.timeout(timeout);
-        }
-        if !eff.tls_verify {
-            builder = builder.danger_accept_invalid_certs(true);
         }
         match &eff.proxy {
             // reqwest reads HTTP_PROXY/HTTPS_PROXY/ALL_PROXY by itself.
@@ -431,30 +459,6 @@ impl HttpClient {
                 let proxy = reqwest::Proxy::all(url)
                     .map_err(|e| HttpError::Settings(format!("invalid proxy `{url}`: {e}")))?;
                 builder = builder.proxy(proxy);
-            }
-        }
-        if let Some(cert) = &eff.client_cert {
-            let mut pem = read_file(cert)?;
-            if let Some(key) = eff.client_key.as_deref().filter(|key| *key != cert) {
-                pem.push(b'\n');
-                pem.extend(read_file(key)?);
-            }
-            let identity = reqwest::Identity::from_pem(&pem).map_err(|e| {
-                HttpError::Settings(format!("cannot load the client certificate: {e}"))
-            })?;
-            builder = builder.identity(identity);
-        }
-        if let Some(ca) = &eff.ca_cert {
-            let certs = reqwest::Certificate::from_pem_bundle(&read_file(ca)?).map_err(|e| {
-                HttpError::Settings(format!("cannot load the CA certificate {ca}: {e}"))
-            })?;
-            if certs.is_empty() {
-                return Err(HttpError::Settings(format!(
-                    "{ca} holds no PEM certificate"
-                )));
-            }
-            for cert in certs {
-                builder = builder.add_root_certificate(cert);
             }
         }
         if eff.send_cookies {
@@ -494,7 +498,16 @@ impl HttpClient {
         let recorder = Arc::new(Recorder::default());
         let client = self.traced(&recorder, &req.settings.effective())?;
         let started = Instant::now();
-        let mut response = execute(&client, prepare(&client, req)?, &recorder).await?;
+        // The TLS handshake runs inside `execute`; `Scoped` lets it find the recorder.
+        let mut response = Scoped::new(
+            execute(
+                &client,
+                accept_compressed(prepare(&client, req)?),
+                &recorder,
+            ),
+            recorder.clone(),
+        )
+        .await?;
 
         // Digest: the first answer is a 401 with the challenge; answer it once.
         if let Auth::Digest { username, password } = &req.auth
@@ -506,7 +519,7 @@ impl HttpClient {
                 .filter_map(|v| v.to_str().ok())
                 .find_map(sign::parse_digest_challenge)
         {
-            let mut retry = prepare(&client, req)?;
+            let mut retry = accept_compressed(prepare(&client, req)?);
             let url = retry.url();
             let uri = match url.query() {
                 Some(query) => format!("{}?{query}", url.path()),
@@ -526,7 +539,7 @@ impl HttpClient {
                 .insert(AUTHORIZATION, header_value(&value)?);
             // Reading the 401's body lets the retry reuse the connection.
             let _ = response.bytes().await;
-            response = execute(&client, retry, &recorder).await?;
+            response = Scoped::new(execute(&client, retry, &recorder), recorder.clone()).await?;
         }
         let ttfb = started.elapsed();
 
@@ -558,6 +571,12 @@ impl HttpClient {
         });
         let expected = response.content_length().unwrap_or(0).min(64 * 1024 * 1024) as usize;
         let mut body = Vec::with_capacity(expected);
+        let mut decoding = decode::Decoding::for_headers(&headers);
+        let undecodable = |encoding: &str, e: std::io::Error| {
+            HttpError::Decode(format!(
+                "the body is sent as {encoding} but cannot be decoded: {e}"
+            ))
+        };
         loop {
             let chunk = response.chunk().await.map_err(|e| {
                 if e.is_timeout() {
@@ -569,8 +588,33 @@ impl HttpClient {
             let Some(chunk) = chunk else {
                 break;
             };
-            progress(Progress::Chunk(&chunk));
-            body.extend_from_slice(&chunk);
+            match &mut decoding {
+                Some(d) => {
+                    let plain = d.push(&chunk).map_err(|e| undecodable(&d.encoding, e))?;
+                    if !plain.is_empty() {
+                        progress(Progress::Chunk(&plain));
+                        body.extend_from_slice(&plain);
+                    }
+                }
+                None => {
+                    progress(Progress::Chunk(&chunk));
+                    body.extend_from_slice(&chunk);
+                }
+            }
+        }
+        // An empty body (a HEAD request, a 304) has nothing to decode.
+        if let Some(d) = decoding.filter(|d| d.encoded > 0) {
+            let (encoding, encoded) = (d.encoding.clone(), d.encoded);
+            let rest = d.finish().map_err(|e| undecodable(&encoding, e))?;
+            if !rest.is_empty() {
+                progress(Progress::Chunk(&rest));
+                body.extend_from_slice(&rest);
+            }
+            recorder.compression(Compression {
+                encoding,
+                encoded,
+                decoded: body.len() as u64,
+            });
         }
         let body = Bytes::from(body);
         let total = started.elapsed();
@@ -579,7 +623,15 @@ impl HttpClient {
         let mut trace = recorder.take();
         trace.local_addr = connection.map(|(local, _)| local);
         trace.remote_addr = connection.map(|(_, remote)| remote);
-        trace.certificate = certificate;
+        // The chain from the handshake wins; reqwest's leaf is the fallback.
+        if trace.certificate.is_none() {
+            trace.certificate = certificate;
+        }
+        if let Some(tls) = &mut trace.tls {
+            // HTTP/2 over TLS is only spoken when ALPN agreed on `h2`; an
+            // HTTP/1.1 answer may have come with or without ALPN, so say nothing.
+            tls.alpn = (version == "HTTP/2.0").then(|| "h2".to_owned());
+        }
         Ok(Response {
             status: status.as_u16(),
             reason: status.canonical_reason(),

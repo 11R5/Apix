@@ -66,7 +66,8 @@ async fn an_own_authority_can_be_trusted() {
     let (ca, cert, key) = certificates();
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let url = format!("https://{}/", listener.local_addr().unwrap());
-    tokio::spawn(serve(listener, cert, key));
+    // The server sends its whole chain: its own certificate, then the CA's.
+    tokio::spawn(serve(listener, format!("{cert}{ca}"), key));
     let dir = std::env::temp_dir().join(format!("apix-http-tls-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let ca_file = dir.join("ca.pem");
@@ -80,6 +81,36 @@ async fn an_own_authority_can_be_trusted() {
     let response = client.send(&req).await.unwrap();
     assert_eq!(response.status, 200);
     assert_eq!(response.raw_body(), "secure");
+
+    // What the handshake settled on, from the request's own connection.
+    let trace = &response.trace;
+    let tls = trace.tls.as_ref().expect("TLS details");
+    assert_eq!(tls.server_name, "127.0.0.1");
+    assert_eq!(tls.version.as_deref(), Some("TLS 1.3"));
+    assert!(
+        tls.cipher
+            .as_deref()
+            .is_some_and(|c| c.starts_with("TLS13_")),
+        "{tls:?}"
+    );
+    assert!(tls.group.is_some(), "{tls:?}");
+    assert_eq!(tls.alpn, None, "HTTP/1.1 answer");
+    assert_eq!(tls.chain.len(), 2);
+    assert_eq!(tls.chain[0].issuer, "Apix test CA");
+    assert_eq!(tls.chain[1].subject, "Apix test CA");
+    assert!(
+        tls.chain[0].key.starts_with("ECDSA P-256"),
+        "{}",
+        tls.chain[0].key
+    );
+    assert_eq!(tls.chain[0].sha256.len(), 32 * 3 - 1);
+    assert_eq!(trace.certificate.as_ref(), tls.chain.first());
+    let handshake = tls.handshake.expect("handshake time");
+    assert_eq!(trace.connects.len(), 1);
+    assert_eq!(trace.connects[0].tls, Some(handshake));
+    assert!(handshake <= trace.connects[0].total);
+    let phases = trace.phases(response.timing.ttfb, response.timing.total);
+    assert_eq!(phases.tls, handshake);
 
     req.settings.ca_cert = None;
     req.settings.tls_verify = Some(false);

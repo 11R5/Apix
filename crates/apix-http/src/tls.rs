@@ -7,11 +7,14 @@ use std::sync::Arc;
 
 use apix_core::EffectiveSettings;
 use rustls::client::danger::{HandshakeSignatureValid, ServerCertVerified, ServerCertVerifier};
-use rustls::crypto::WebPkiSupportedAlgorithms;
+use rustls::client::{Resumption, WebPkiServerVerifier};
+use rustls::crypto::{CryptoProvider, WebPkiSupportedAlgorithms};
 use rustls::pki_types::pem::PemObject as _;
 use rustls::pki_types::{CertificateDer, PrivateKeyDer, ServerName, UnixTime};
 use rustls::{ClientConfig, DigitallySignedStruct, RootCertStore, SignatureScheme};
 
+use crate::tls_trace::{self, Sessions, Watching};
+use crate::trace::Recorder;
 use crate::{HttpError, read_file};
 
 /// Accepts any server certificate; the handshake signatures are still
@@ -75,12 +78,39 @@ pub fn client_config(
     settings: &EffectiveSettings,
     alpn: &[&[u8]],
 ) -> Result<ClientConfig, HttpError> {
-    let provider = Arc::new(rustls::crypto::ring::default_provider());
-    let algorithms = provider.signature_verification_algorithms;
-    let builder = ClientConfig::builder_with_provider(provider)
-        .with_safe_default_protocol_versions()
-        .map_err(|e| settings_error(e.to_string()))?;
-    let builder = if settings.tls_verify {
+    build(
+        settings,
+        alpn,
+        rustls::crypto::ring::default_provider(),
+        |verifier| verifier,
+    )
+}
+
+/// The same settings for a request whose handshake is recorded in its
+/// network trace (see `tls_trace.rs`).
+pub(crate) fn traced_config(
+    settings: &EffectiveSettings,
+    alpn: &[&[u8]],
+    recorder: &Arc<Recorder>,
+) -> Result<ClientConfig, HttpError> {
+    let mut config = build(settings, alpn, tls_trace::provider(), |inner| {
+        Arc::new(Watching {
+            inner,
+            recorder: recorder.clone(),
+        })
+    })?;
+    config.resumption = Resumption::store(Arc::new(Sessions(recorder.clone())));
+    Ok(config)
+}
+
+fn build(
+    settings: &EffectiveSettings,
+    alpn: &[&[u8]],
+    provider: CryptoProvider,
+    wrap: impl FnOnce(Arc<dyn ServerCertVerifier>) -> Arc<dyn ServerCertVerifier>,
+) -> Result<ClientConfig, HttpError> {
+    let provider = Arc::new(provider);
+    let verifier: Arc<dyn ServerCertVerifier> = if settings.tls_verify {
         let mut roots = RootCertStore::empty();
         roots.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
         if let Some(ca) = &settings.ca_cert {
@@ -90,12 +120,17 @@ pub fn client_config(
                 })?;
             }
         }
-        builder.with_root_certificates(roots)
+        WebPkiServerVerifier::builder_with_provider(Arc::new(roots), provider.clone())
+            .build()
+            .map_err(|e| settings_error(format!("cannot check certificates: {e}")))?
     } else {
-        builder
-            .dangerous()
-            .with_custom_certificate_verifier(Arc::new(AcceptAny(algorithms)))
+        Arc::new(AcceptAny(provider.signature_verification_algorithms))
     };
+    let builder = ClientConfig::builder_with_provider(provider)
+        .with_safe_default_protocol_versions()
+        .map_err(|e| settings_error(e.to_string()))?
+        .dangerous()
+        .with_custom_certificate_verifier(wrap(verifier));
     let mut config = match &settings.client_cert {
         None => builder.with_no_client_auth(),
         Some(cert) => {

@@ -4,8 +4,9 @@
 //! every event recorded here belongs to that one request and the times are
 //! those of a real, fresh connection.
 //!
-//! reqwest reports the server's leaf certificate but not the TLS version or
-//! cipher suite, so those are not shown rather than guessed.
+//! TLS details (version, cipher suite, key exchange group, the whole
+//! certificate chain, when the handshake started) come from the request's
+//! own handshake through rustls' hooks; see `tls_trace.rs`.
 
 use std::future::Future;
 use std::net::{IpAddr, SocketAddr};
@@ -31,11 +32,15 @@ pub struct Redirect {
     pub to: String,
 }
 
-/// The server's certificate (the leaf; reqwest does not hand out the chain).
+/// One certificate the server sent.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Certificate {
     pub subject: String,
     pub issuer: String,
+    /// `ECDSA P-256`, `RSA 2048` …
+    pub key: String,
+    /// The SHA-256 of the certificate, as colon-separated hex.
+    pub sha256: String,
     /// `2026-01-02` (UTC).
     pub not_before: String,
     pub not_after: String,
@@ -45,23 +50,68 @@ pub struct Certificate {
     pub names: Vec<String>,
 }
 
+/// One new connection.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Connect {
+    /// From asking for a connection to having it: DNS, TCP and TLS together.
+    pub total: Duration,
+    /// The TLS handshake alone (from the client's hello to the end).
+    pub tls: Option<Duration>,
+}
+
+/// What the TLS handshake settled on.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct TlsDetails {
+    /// The name the client asked for (SNI).
+    pub server_name: String,
+    /// `TLS 1.3` or `TLS 1.2`.
+    pub version: Option<String>,
+    /// `TLS13_AES_128_GCM_SHA256` …
+    pub cipher: Option<String>,
+    /// The key exchange group, e.g. `X25519` (TLS 1.3).
+    pub group: Option<String>,
+    /// The application protocol agreed through ALPN: `h2` or `http/1.1`.
+    pub alpn: Option<String>,
+    /// The certificates as the server sent them, its own first.
+    pub chain: Vec<Certificate>,
+    /// How long the handshake took.
+    pub handshake: Option<Duration>,
+}
+
+/// A body sent compressed (`Content-Encoding`), decoded for showing.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Compression {
+    /// `gzip`, `br` or `deflate`.
+    pub encoding: String,
+    /// Bytes on the wire.
+    pub encoded: u64,
+    /// Bytes after decoding.
+    pub decoded: u64,
+}
+
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct NetTrace {
     pub dns: Vec<DnsLookup>,
-    /// Connection setups (DNS, TCP and TLS together), one per new connection.
-    pub connects: Vec<Duration>,
+    /// One per new connection.
+    pub connects: Vec<Connect>,
     pub redirects: Vec<Redirect>,
     pub local_addr: Option<SocketAddr>,
     pub remote_addr: Option<SocketAddr>,
+    /// The server's own certificate (the first of `tls.chain`).
     pub certificate: Option<Certificate>,
+    /// The last TLS handshake (the one of the final response).
+    pub tls: Option<TlsDetails>,
+    pub compression: Option<Compression>,
 }
 
 /// Where the time went, for the waterfall.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Phases {
     pub dns: Duration,
-    /// TCP and TLS together (reqwest does not separate them).
-    pub connect: Duration,
+    /// Opening the TCP connection.
+    pub tcp: Duration,
+    /// The TLS handshake.
+    pub tls: Duration,
     /// From the request leaving to the first byte of the answer.
     pub waiting: Duration,
     pub download: Duration,
@@ -72,24 +122,86 @@ impl NetTrace {
     /// from the start of the send; DNS happens inside connection setup.
     pub fn phases(&self, ttfb: Duration, total: Duration) -> Phases {
         let dns: Duration = self.dns.iter().map(|d| d.duration).sum();
-        let setup: Duration = self.connects.iter().sum();
+        let setup: Duration = self.connects.iter().map(|c| c.total).sum();
+        let tls: Duration = self.connects.iter().filter_map(|c| c.tls).sum();
+        let tls = tls.min(setup.saturating_sub(dns));
         Phases {
             dns,
-            connect: setup.saturating_sub(dns),
+            tcp: setup.saturating_sub(dns).saturating_sub(tls),
+            tls,
             waiting: ttfb.saturating_sub(setup.max(dns)),
             download: total.saturating_sub(ttfb),
         }
     }
 }
 
-/// Collects events from the resolver, the connector and the redirect policy.
+/// Collects events from the resolver, the connector, the TLS handshake and
+/// the redirect policy.
 #[derive(Debug, Default)]
-pub(crate) struct Recorder(Mutex<NetTrace>);
+pub(crate) struct Recorder(Mutex<State>);
+
+#[derive(Debug, Default)]
+struct State {
+    trace: NetTrace,
+    /// When the TLS handshake in progress began, if one is.
+    tls_started: Option<Instant>,
+}
 
 impl Recorder {
     fn with(&self, f: impl FnOnce(&mut NetTrace)) {
-        if let Ok(mut trace) = self.0.lock() {
-            f(&mut trace);
+        if let Ok(mut state) = self.0.lock() {
+            f(&mut state.trace);
+        }
+    }
+
+    /// The client is about to say hello to `server_name`.
+    pub(crate) fn tls_started(&self, server_name: String) {
+        if let Ok(mut state) = self.0.lock() {
+            // A second call within one handshake (after a retry request) changes nothing.
+            if state.tls_started.is_none() {
+                state.tls_started = Some(Instant::now());
+                state.trace.tls = Some(TlsDetails {
+                    server_name,
+                    ..TlsDetails::default()
+                });
+            }
+        }
+    }
+
+    /// Something learnt about the handshake in progress.
+    pub(crate) fn tls(&self, f: impl FnOnce(&mut TlsDetails)) {
+        self.with(|t| {
+            if let Some(tls) = &mut t.tls {
+                f(tls);
+            }
+        });
+    }
+
+    pub(crate) fn chain(&self, chain: Vec<Certificate>) {
+        self.with(|t| {
+            t.certificate = chain.first().cloned();
+            if let Some(tls) = &mut t.tls {
+                tls.chain = chain;
+            }
+        });
+    }
+
+    pub(crate) fn compression(&self, compression: Compression) {
+        self.with(|t| t.compression = Some(compression));
+    }
+
+    /// A connection was set up `took` after it was asked for at `started`.
+    fn connected(&self, started: Instant, took: Duration) {
+        if let Ok(mut state) = self.0.lock() {
+            let tls = state
+                .tls_started
+                .take()
+                .filter(|t| *t >= started)
+                .map(|t| (started + took).saturating_duration_since(t));
+            if let (Some(took), Some(details)) = (tls, &mut state.trace.tls) {
+                details.handshake = Some(took);
+            }
+            state.trace.connects.push(Connect { total: took, tls });
         }
     }
 
@@ -100,7 +212,7 @@ impl Recorder {
     pub(crate) fn take(&self) -> NetTrace {
         self.0
             .lock()
-            .map(|mut t| std::mem::take(&mut *t))
+            .map(|mut s| std::mem::take(&mut s.trace))
             .unwrap_or_default()
     }
 }
@@ -174,8 +286,7 @@ where
         Box::pin(async move {
             let connected = connecting.await;
             if connected.is_ok() {
-                let took = started.elapsed();
-                recorder.with(|t| t.connects.push(took));
+                recorder.connected(started, started.elapsed());
             }
             connected
         })
@@ -229,14 +340,52 @@ pub fn read_certificate(der: &[u8]) -> Option<Certificate> {
                 .collect()
         })
         .unwrap_or_default();
+    use sha2::Digest as _;
+    let sha256 = sha2::Sha256::digest(der)
+        .iter()
+        .map(|b| format!("{b:02X}"))
+        .collect::<Vec<_>>()
+        .join(":");
     Some(Certificate {
         subject: name(cert.subject()),
         issuer: name(cert.issuer()),
+        key: key_of(&cert),
+        sha256,
         not_before: date(&validity.not_before),
         not_after: date(&validity.not_after),
         days_left: (validity.not_after.timestamp() - now).div_euclid(86_400),
         names,
     })
+}
+
+/// `RSA 2048`, `ECDSA P-256`, `Ed25519` …
+fn key_of(cert: &x509_parser::certificate::X509Certificate<'_>) -> String {
+    use x509_parser::public_key::PublicKey;
+
+    let info = cert.public_key();
+    match info.parsed() {
+        Ok(PublicKey::RSA(rsa)) => format!("RSA {}", rsa.key_size()),
+        Ok(PublicKey::EC(point)) => {
+            let curve = info
+                .algorithm
+                .parameters
+                .as_ref()
+                .and_then(|p| p.as_oid().ok())
+                .map(|oid| match oid.to_id_string().as_str() {
+                    "1.2.840.10045.3.1.7" => "P-256".to_owned(),
+                    "1.3.132.0.34" => "P-384".to_owned(),
+                    "1.3.132.0.35" => "P-521".to_owned(),
+                    other => other.to_owned(),
+                })
+                .unwrap_or_else(|| format!("{} bits", point.key_size()));
+            format!("ECDSA {curve}")
+        }
+        _ => match info.algorithm.algorithm.to_id_string().as_str() {
+            "1.3.101.112" => "Ed25519".to_owned(),
+            "1.3.101.113" => "Ed448".to_owned(),
+            other => other.to_owned(),
+        },
+    }
 }
 
 #[cfg(test)]
@@ -251,23 +400,27 @@ mod tests {
                 addrs: vec![],
                 duration: Duration::from_millis(20),
             }],
-            connects: vec![Duration::from_millis(80)],
+            connects: vec![Connect {
+                total: Duration::from_millis(80),
+                tls: Some(Duration::from_millis(30)),
+            }],
             ..NetTrace::default()
         };
         let p = trace.phases(Duration::from_millis(200), Duration::from_millis(260));
         assert_eq!(p.dns, Duration::from_millis(20));
-        assert_eq!(p.connect, Duration::from_millis(60));
+        assert_eq!(p.tcp, Duration::from_millis(30));
+        assert_eq!(p.tls, Duration::from_millis(30));
         assert_eq!(p.waiting, Duration::from_millis(120));
         assert_eq!(p.download, Duration::from_millis(60));
         assert_eq!(
-            p.dns + p.connect + p.waiting + p.download,
+            p.dns + p.tcp + p.tls + p.waiting + p.download,
             Duration::from_millis(260)
         );
 
         // A reused or proxied connection: nothing recorded, all waiting.
         let p = NetTrace::default().phases(Duration::from_millis(50), Duration::from_millis(40));
         assert_eq!(
-            (p.dns, p.connect, p.waiting, p.download),
+            (p.dns, p.tcp + p.tls, p.waiting, p.download),
             (
                 Duration::ZERO,
                 Duration::ZERO,

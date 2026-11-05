@@ -334,13 +334,28 @@ the tab bar lists them all.
 
 The **Network** tab explains where the time went and what the connection was:
 
-- a timing bar split into DNS, connecting, waiting and downloading
+- a timing bar split into DNS, TCP connection, TLS handshake, waiting and
+  downloading
 - the DNS answers, the server and local address, the network interface (with a
   hint when a VPN is in use), the gateway, DNS servers and proxy
 - every redirect
-- the server certificate: issuer, validity and days left
+- a compressed body: its encoding, the size on the wire and decoded
+- the encryption: TLS version, cipher suite, key exchange, ALPN (`h2` when the
+  server speaks HTTP/2), the server name sent (SNI) and how long the handshake
+  took
+- the certificate chain as the server sent it: for each certificate who it is
+  for and who issued it, validity and days left, the key; for the server's own
+  also its names and SHA-256 fingerprint
 
 ![The Network tab](images/network.png)
+
+![Encryption and the certificate chain](images/network-tls.png)
+
+All of it comes from the request's own connection, not from a second one
+made to look: each send opens a fresh connection and Apix records what that
+handshake agreed on. Apix asks for compressed answers (`gzip`, `deflate`,
+`br`) unless the request sets its own `Accept-Encoding`, and shows the
+`Content-Encoding` and `Content-Length` headers as the server sent them.
 
 ## WebSocket and server-sent events
 

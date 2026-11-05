@@ -1,4 +1,4 @@
-<!-- translated from en/workflows.md sha256:c8a6ac2a95feaa95 -->
+<!-- translated from en/workflows.md sha256:4169cf5c21669811 -->
 
 # İş akışları
 
@@ -416,11 +416,17 @@ PowerShell olarak verir.
 ## Bir istek neden yavaş ya da başarısız?
 
 1. İsteği gönderin ve yanıtın **Ağ** sekmesini açın.
-2. Zamanlama çubuğu sürenin DNS'e mi, bağlanmaya mı (TCP ve TLS), sunucuyu
-   beklemeye mi yoksa indirmeye mi gittiğini gösterir.
+2. Zamanlama çubuğu sürenin DNS'e mi, TCP bağlantısını açmaya mı, TLS el
+   sıkışmasına mı, sunucuyu beklemeye mi yoksa indirmeye mi gittiğini
+   gösterir. Yavaş bir TCP bağlantısı ağa işaret eder; yavaş bir el sıkışma
+   (bir gidiş-dönüş süren TCP ile karşılaştırıldığında) sunucuya ya da TLS
+   1.2'nin fazladan gidiş-dönüşüne.
 3. Uzak adresi ve yerel arayüzü kontrol edin: bir VPN veya proxy orada görünür.
-4. Yönlendirmeler sırayla listelenir; süresi dolmak üzere olan bir sertifika
-   kalan gün sayısını gösterir.
+4. Yönlendirmeler sırayla listelenir. Şifreleme altında TLS sürümü, şifre
+   takımı ve HTTP/2'de anlaşılıp anlaşılmadığı görünür; sertifika zinciri her
+   sertifikanın vereni ve kalan gününü gösterir, böylece eksik bir ara
+   sertifika ya da süresi dolmak üzere olan biri göze çarpar. Sıkıştırılmış
+   bir gövde ne kadar kazandırdığını gösterir.
 
 Aynı rapor bir terminalde de alınabilir:
 

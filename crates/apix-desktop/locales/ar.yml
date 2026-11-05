@@ -394,15 +394,18 @@ mqtt.subscribed: "تم الاشتراك في %{topic} (QoS %{qos})"
 mqtt.subscriptions: الاشتراكات
 mqtt.topic: الموضوع
 mqtt.unsubscribed: "تم إلغاء الاشتراك في %{topic}"
+network.body.compressed: "%{encoding} · %{wire} عبر الشبكة، و%{decoded} بعد فك الضغط (أصغر بنسبة %{percent}%)"
+network.body.compression: الضغط
 network.cert.days_left: "الأيام المتبقية: %{count}"
-network.cert.engine_note: يُبلغ محرك HTTP عن شهادة الخادم، لا عن إصدار TLS أو مجموعة التشفير.
 network.cert.expired_days_ago: انتهت الصلاحية منذ %{count} يوم
 network.cert.expired_one_day_ago: انتهت الصلاحية منذ يوم واحد
 network.cert.issued_by: صادرة عن
 network.cert.issued_to: صادرة إلى
+network.cert.key: المفتاح
 network.cert.names: الأسماء
 network.cert.not_reported: مشفّر، لكن لم يُبلَغ عن الشهادة.
 network.cert.one_day_left: متبقٍ يوم واحد
+network.cert.sha256: SHA-256
 network.cert.valid: صالحة
 network.cert.valid_range: "من %{from} إلى %{to}"
 network.connection.dns_servers: خوادم DNS
@@ -422,17 +425,26 @@ network.dns.lookup_result: "%{host} → %{addrs} في %{duration}"
 network.note: ملاحظة
 network.plain_http: "HTTP عادي: لا شيء مشفّر."
 network.redirect.followed: تمت المتابعة
+network.section.body: المحتوى
 network.section.certificate: الشهادة
+network.section.chain: سلسلة الشهادات (%{count})
 network.section.connection: الاتصال
 network.section.dns: DNS
 network.section.encryption: التشفير
 network.section.redirects: عمليات إعادة التوجيه
 network.section.timing: التوقيت
-network.timing.connect: الاتصال (TCP + TLS)
 network.timing.dns: بحث DNS
 network.timing.download: التنزيل
 network.timing.summary: الإجمالي %{total} · أول بايت بعد %{ttfb}
+network.timing.tcp: اتصال TCP
+network.timing.tls: مصافحة TLS
 network.timing.waiting: انتظار الخادم
+network.tls.alpn: ALPN
+network.tls.cipher: مجموعة التشفير
+network.tls.group: تبادل المفاتيح
+network.tls.handshake: المصافحة
+network.tls.server_name: اسم الخادم (SNI)
+network.tls.version: الإصدار
 palette.copy_as: نسخ كـ %{format}
 palette.empty: لا توجد نتائج مطابقة.
 palette.environment: "البيئة: %{name}"

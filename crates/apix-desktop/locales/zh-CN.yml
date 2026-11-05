@@ -394,15 +394,18 @@ mqtt.subscribed: "已订阅 %{topic}（QoS %{qos}）"
 mqtt.subscriptions: 订阅
 mqtt.topic: 主题
 mqtt.unsubscribed: "已取消订阅 %{topic}"
+network.body.compressed: "%{encoding} · 传输 %{wire}，解压后 %{decoded}（减少 %{percent}%）"
+network.body.compression: 压缩
 network.cert.days_left: "剩余 %{count} 天"
-network.cert.engine_note: HTTP 引擎只报告服务器证书，不报告 TLS 版本或加密套件。
 network.cert.expired_days_ago: 已于 %{count} 天前过期
 network.cert.expired_one_day_ago: 已于 1 天前过期
 network.cert.issued_by: 颁发者
 network.cert.issued_to: 颁发给
+network.cert.key: 密钥
 network.cert.names: 名称
 network.cert.not_reported: 已加密，但未报告证书。
 network.cert.one_day_left: 剩余 1 天
+network.cert.sha256: SHA-256
 network.cert.valid: 有效期
 network.cert.valid_range: "%{from} 至 %{to}"
 network.connection.dns_servers: DNS 服务器
@@ -422,17 +425,26 @@ network.dns.lookup_result: "%{host} → %{addrs}，用时 %{duration}"
 network.note: 说明
 network.plain_http: "明文 HTTP：所有内容均未加密。"
 network.redirect.followed: 已跟随
+network.section.body: 正文
 network.section.certificate: 证书
+network.section.chain: 证书链 (%{count})
 network.section.connection: 连接
 network.section.dns: DNS
 network.section.encryption: 加密
 network.section.redirects: 重定向
 network.section.timing: 耗时
-network.timing.connect: 连接（TCP + TLS）
 network.timing.dns: DNS 查询
 network.timing.download: 下载
 network.timing.summary: 总计 %{total} · 首字节用时 %{ttfb}
+network.timing.tcp: TCP 连接
+network.timing.tls: TLS 握手
 network.timing.waiting: 等待服务器
+network.tls.alpn: ALPN
+network.tls.cipher: 密码套件
+network.tls.group: 密钥交换
+network.tls.handshake: 握手
+network.tls.server_name: 服务器名称 (SNI)
+network.tls.version: 版本
 palette.copy_as: 复制为 %{format}
 palette.empty: 无匹配项。
 palette.environment: "环境：%{name}"

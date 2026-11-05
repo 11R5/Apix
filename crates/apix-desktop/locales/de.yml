@@ -394,15 +394,18 @@ mqtt.subscribed: "%{topic} abonniert (QoS %{qos})"
 mqtt.subscriptions: Abonnements
 mqtt.topic: Topic
 mqtt.unsubscribed: "Abonnement von %{topic} beendet"
+network.body.compressed: "%{encoding} · %{wire} übertragen, %{decoded} entpackt (%{percent} % kleiner)"
+network.body.compression: Komprimierung
 network.cert.days_left: "Noch %{count} Tage"
-network.cert.engine_note: Die HTTP-Engine meldet das Zertifikat des Servers, nicht die TLS-Version oder die Cipher-Suite.
 network.cert.expired_days_ago: vor %{count} Tagen abgelaufen
 network.cert.expired_one_day_ago: vor 1 Tag abgelaufen
 network.cert.issued_by: Ausgestellt von
 network.cert.issued_to: Ausgestellt für
+network.cert.key: Schlüssel
 network.cert.names: Namen
 network.cert.not_reported: Verschlüsselt, aber das Zertifikat wurde nicht gemeldet.
 network.cert.one_day_left: Noch 1 Tag
+network.cert.sha256: SHA-256
 network.cert.valid: Gültig
 network.cert.valid_range: "%{from} bis %{to}"
 network.connection.dns_servers: DNS-Server
@@ -422,17 +425,26 @@ network.dns.lookup_result: "%{host} → %{addrs} in %{duration}"
 network.note: Hinweis
 network.plain_http: "Reines HTTP: Nichts wird verschlüsselt."
 network.redirect.followed: Gefolgt
+network.section.body: Body
 network.section.certificate: Zertifikat
+network.section.chain: Zertifikatskette (%{count})
 network.section.connection: Verbindung
 network.section.dns: DNS
 network.section.encryption: Verschlüsselung
 network.section.redirects: Weiterleitungen
 network.section.timing: Zeitmessung
-network.timing.connect: Verbindungsaufbau (TCP + TLS)
 network.timing.dns: DNS-Abfrage
 network.timing.download: Download
 network.timing.summary: Gesamt %{total} · erstes Byte nach %{ttfb}
+network.timing.tcp: TCP-Verbindung
+network.timing.tls: TLS-Handshake
 network.timing.waiting: Warten auf den Server
+network.tls.alpn: ALPN
+network.tls.cipher: Cipher-Suite
+network.tls.group: Schlüsselaustausch
+network.tls.handshake: Handshake
+network.tls.server_name: Servername (SNI)
+network.tls.version: Version
 palette.copy_as: Als %{format} kopieren
 palette.empty: Keine Treffer.
 palette.environment: "Umgebung: %{name}"

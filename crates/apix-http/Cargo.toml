@@ -38,8 +38,16 @@ thiserror.workspace = true
 # certificate or no verification (tls.rs). The rustls and roots reqwest builds.
 rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
 webpki-roots = "1"
+# Decoding compressed bodies ourselves, to keep Content-Encoding and the size on
+# the wire (decode.rs); both are already built for reqwest.
+flate2 = "1"
+brotli-decompressor = "6"
+# The SHA-256 fingerprint of certificates.
+sha2 = "0.10"
 
 [dev-dependencies]
+# Brotli test data (decode.rs).
+brotli = "9"
 serde_json.workspace = true
 toml.workspace = true
 tokio = { workspace = true, features = ["net", "io-util", "sync", "macros", "time"] }

@@ -2008,9 +2008,10 @@ fn print_network(style: &Style, response: &Response) {
     line(
         "Timing",
         format!(
-            "DNS {} · connect {} · waiting {} · download {}",
+            "DNS {} · TCP {} · TLS {} · waiting {} · download {}",
             ms(p.dns),
-            ms(p.connect),
+            ms(p.tcp),
+            ms(p.tls),
             ms(p.waiting),
             ms(p.download)
         ),
@@ -2036,19 +2037,72 @@ fn print_network(style: &Style, response: &Response) {
             format!("{} → {}", hop.status, apix_core::display_url(&hop.to)),
         );
     }
-    if let Some(cert) = &trace.certificate {
-        line("Certificate", cert.subject.clone());
+    if let Some(tls) = &trace.tls {
+        let mut facts: Vec<String> = [&tls.version, &tls.cipher, &tls.group]
+            .into_iter()
+            .flatten()
+            .cloned()
+            .collect();
+        if let Some(alpn) = &tls.alpn {
+            facts.push(format!("ALPN {alpn}"));
+        }
+        if let Some(took) = tls.handshake {
+            facts.push(format!("handshake {}", ms(took)));
+        }
+        line("TLS", facts.join(" · "));
+        if tls.server_name
+            != trace
+                .remote_addr
+                .map(|a| a.ip().to_string())
+                .unwrap_or_default()
+        {
+            line("  SNI", tls.server_name.clone());
+        }
+    }
+    if let Some(c) = &trace.compression {
+        line(
+            "Body",
+            format!(
+                "{} · {} on the wire, {} decoded",
+                c.encoding,
+                human_size(c.encoded as usize),
+                human_size(c.decoded as usize)
+            ),
+        );
+    }
+    let chain: Vec<&apix_http::Certificate> = match &trace.tls {
+        Some(tls) if !tls.chain.is_empty() => tls.chain.iter().collect(),
+        _ => trace.certificate.iter().collect(),
+    };
+    for (i, cert) in chain.iter().enumerate() {
+        let label = if i == 0 {
+            "Certificate".to_owned()
+        } else {
+            format!("  then {}", i + 1)
+        };
+        line(&label, format!("{} · {}", cert.subject, cert.key));
         line("  issued by", cert.issuer.clone());
         line(
             "  valid",
             format!(
-                "{} to {} ({} days left)",
-                cert.not_before, cert.not_after, cert.days_left
+                "{} to {} ({})",
+                cert.not_before,
+                cert.not_after,
+                match cert.days_left {
+                    ..0 => format!(
+                        "{}expired {} days ago{}",
+                        style.red, -cert.days_left, style.reset
+                    ),
+                    0 => "ends today".to_owned(),
+                    1 => "1 day left".to_owned(),
+                    n => format!("{n} days left"),
+                }
             ),
         );
-        if !cert.names.is_empty() {
+        if i == 0 && !cert.names.is_empty() {
             line("  names", cert.names.join(", "));
         }
+        line("  SHA-256", cert.sha256.clone());
     }
     let local = apix_http::local_network(trace.local_addr.map(|a| a.ip()));
     let via = match (&local.interface, &local.kind) {

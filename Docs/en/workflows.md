@@ -403,12 +403,16 @@ The other way round, the copy button next to **Send** gives you the request as
 ## Find out why a request is slow or failing
 
 1. Send the request and open the response's **Network** tab.
-2. The timing bar shows whether the time goes into DNS, connecting (TCP and
-   TLS), waiting for the server, or downloading.
+2. The timing bar shows whether the time goes into DNS, opening the TCP
+   connection, the TLS handshake, waiting for the server, or downloading. A
+   slow TCP connection points at the network; a slow handshake (compared with
+   TCP, which takes one round trip) at the server or TLS 1.2's extra round trip.
 3. Check the remote address and the local interface: a VPN or proxy shows up
    there.
-4. Redirects are listed in order; a certificate close to expiry shows its days
-   left.
+4. Redirects are listed in order. Under Encryption: the TLS version, cipher
+   suite and whether HTTP/2 was agreed; the certificate chain shows each
+   certificate's issuer and days left, so a missing intermediate or one close
+   to expiry stands out. A compressed body shows how much it saved.
 
 The same report is available in a terminal:
 

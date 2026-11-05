@@ -394,15 +394,18 @@ mqtt.subscribed: "%{topic} konusuna abone olundu (QoS %{qos})"
 mqtt.subscriptions: Abonelikler
 mqtt.topic: Konu
 mqtt.unsubscribed: "%{topic} aboneliği bırakıldı"
+network.body.compressed: "%{encoding} · ağda %{wire}, açılınca %{decoded} (%%{percent} daha küçük)"
+network.body.compression: Sıkıştırma
 network.cert.days_left: "%{count} gün kaldı"
-network.cert.engine_note: HTTP motoru TLS sürümünü veya şifre takımını değil, sunucunun sertifikasını bildirir.
 network.cert.expired_days_ago: "%{count} gün önce sona erdi"
 network.cert.expired_one_day_ago: 1 gün önce sona erdi
 network.cert.issued_by: Veren
 network.cert.issued_to: Verildiği
+network.cert.key: Anahtar
 network.cert.names: Adlar
 network.cert.not_reported: Şifreli, ancak sertifika bildirilmedi.
 network.cert.one_day_left: 1 gün kaldı
+network.cert.sha256: SHA-256
 network.cert.valid: Geçerlilik
 network.cert.valid_range: "%{from} – %{to}"
 network.connection.dns_servers: DNS sunucuları
@@ -422,17 +425,26 @@ network.dns.lookup_result: "%{host} → %{addrs} (%{duration})"
 network.note: Not
 network.plain_http: "Düz HTTP: hiçbir şey şifrelenmez."
 network.redirect.followed: İzlendi
+network.section.body: Gövde
 network.section.certificate: Sertifika
+network.section.chain: Sertifika zinciri (%{count})
 network.section.connection: Bağlantı
 network.section.dns: DNS
 network.section.encryption: Şifreleme
 network.section.redirects: Yönlendirmeler
 network.section.timing: Zamanlama
-network.timing.connect: Bağlanma (TCP + TLS)
 network.timing.dns: DNS sorgusu
 network.timing.download: İndirme
 network.timing.summary: Toplam %{total} · ilk bayt %{ttfb} sonra
+network.timing.tcp: TCP bağlantısı
+network.timing.tls: TLS el sıkışması
 network.timing.waiting: Sunucu bekleniyor
+network.tls.alpn: ALPN
+network.tls.cipher: Şifre takımı
+network.tls.group: Anahtar değişimi
+network.tls.handshake: El sıkışma
+network.tls.server_name: Sunucu adı (SNI)
+network.tls.version: Sürüm
 palette.copy_as: "%{format} olarak kopyala"
 palette.empty: Eşleşen bir şey yok.
 palette.environment: "Ortam: %{name}"

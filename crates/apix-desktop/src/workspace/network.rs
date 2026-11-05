@@ -1,9 +1,10 @@
 //! The response's Network tab: where the time went (a waterfall), the
-//! connection's two ends, DNS answers, redirects and the server certificate.
+//! connection's two ends, DNS answers, redirects, compression, the TLS
+//! handshake (version, cipher suite, key exchange, ALPN) and the certificate chain.
 
 use std::time::Duration;
 
-use apix_http::human_duration;
+use apix_http::{human_duration, human_size};
 use gpui_kit::component::{h_flex, v_flex};
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
@@ -21,21 +22,28 @@ impl Workspace {
         let phases = trace.phases(response.timing.ttfb, response.timing.total);
         let total = response.timing.total.max(Duration::from_micros(1));
 
-        // One bar per phase, offset by the phases before it.
-        let rows = [
+        // One bar per phase, offset by the phases before it; TLS only when encrypted.
+        let mut rows = vec![
             (
                 tr!("network.timing.dns"),
                 phases.dns,
                 hsla(0.55, 0.7, 0.6, 1.),
             ),
             (
-                tr!("network.timing.connect"),
-                phases.connect,
+                tr!("network.timing.tcp"),
+                phases.tcp,
                 hsla(0.75, 0.6, 0.7, 1.),
             ),
-            (tr!("network.timing.waiting"), phases.waiting, p.warn),
-            (tr!("network.timing.download"), phases.download, p.ok),
         ];
+        if trace.tls.is_some() {
+            rows.push((
+                tr!("network.timing.tls"),
+                phases.tls,
+                hsla(0.85, 0.55, 0.68, 1.),
+            ));
+        }
+        rows.push((tr!("network.timing.waiting"), phases.waiting, p.warn));
+        rows.push((tr!("network.timing.download"), phases.download, p.ok));
         let mut offset = Duration::ZERO;
         let waterfall = rows.into_iter().map(|(label, took, color)| {
             let start = offset.as_secs_f32() / total.as_secs_f32();
@@ -208,58 +216,104 @@ impl Workspace {
             }
         }
 
-        match &trace.certificate {
-            Some(cert) => {
-                let color = match cert.days_left {
-                    ..0 => p.err,
-                    0..30 => p.warn,
-                    _ => p.text,
-                };
-                let left = match cert.days_left {
-                    -1 => tr!("network.cert.expired_one_day_ago"),
-                    ..-1 => tr!("network.cert.expired_days_ago", count = -cert.days_left),
-                    1 => tr!("network.cert.one_day_left"),
-                    _ => tr!("network.cert.days_left", count = cert.days_left),
-                };
-                body = body
-                    .child(section(tr!("network.section.certificate")))
-                    .child(row(
-                        tr!("network.cert.issued_to"),
-                        cert.subject.clone().into(),
-                    ))
-                    .child(row(
-                        tr!("network.cert.issued_by"),
-                        cert.issuer.clone().into(),
-                    ))
-                    .child(
-                        h_flex()
-                            .dir_row()
-                            .gap_3()
-                            .text_sm()
-                            .child(
-                                div()
-                                    .w(px(150.))
-                                    .flex_none()
-                                    .text_color(p.text_muted)
-                                    .child(tr!("network.cert.valid")),
-                            )
-                            .child(div().text_color(p.text).child(bidi::para(tr!(
-                                "network.cert.valid_range",
-                                from = cert.not_before,
-                                to = cert.not_after
-                            ))))
-                            .child(div().text_color(color).child(left)),
-                    )
-                    .when(!cert.names.is_empty(), |b| {
-                        b.child(row(tr!("network.cert.names"), cert.names.join(", ").into()))
-                    })
-                    .child(
-                        div()
-                            .pt_1()
-                            .text_xs()
-                            .text_color(p.text_muted)
-                            .child(bidi::para(tr!("network.cert.engine_note"))),
-                    );
+        if let Some(c) = &trace.compression {
+            let saved = 100u64.saturating_sub(c.encoded * 100 / c.decoded.max(1));
+            body = body.child(section(tr!("network.section.body"))).child(row(
+                tr!("network.body.compression"),
+                tr!(
+                    "network.body.compressed",
+                    encoding = c.encoding,
+                    wire = human_size(c.encoded as usize),
+                    decoded = human_size(c.decoded as usize),
+                    percent = saved
+                ),
+            ));
+        }
+
+        if let Some(tls) = &trace.tls {
+            body = body.child(section(tr!("network.section.encryption")));
+            let facts = [
+                (tr!("network.tls.version"), tls.version.clone()),
+                (tr!("network.tls.cipher"), tls.cipher.clone()),
+                (tr!("network.tls.group"), tls.group.clone()),
+                (tr!("network.tls.alpn"), tls.alpn.clone()),
+                (
+                    tr!("network.tls.server_name"),
+                    Some(tls.server_name.clone()).filter(|s| !s.is_empty()),
+                ),
+                (
+                    tr!("network.tls.handshake"),
+                    tls.handshake.map(human_duration),
+                ),
+            ];
+            for (label, value) in facts {
+                if let Some(value) = value {
+                    body = body.child(row(label, value.into()));
+                }
+            }
+        }
+
+        let chain: Vec<&apix_http::Certificate> = match &trace.tls {
+            Some(tls) if !tls.chain.is_empty() => tls.chain.iter().collect(),
+            _ => trace.certificate.iter().collect(),
+        };
+        match chain.first() {
+            Some(_) => {
+                body = body.child(section(if chain.len() > 1 {
+                    tr!("network.section.chain", count = chain.len())
+                } else {
+                    tr!("network.section.certificate")
+                }));
+                for (i, cert) in chain.iter().enumerate() {
+                    let color = match cert.days_left {
+                        ..0 => p.err,
+                        0..30 => p.warn,
+                        _ => p.text,
+                    };
+                    let left = match cert.days_left {
+                        -1 => tr!("network.cert.expired_one_day_ago"),
+                        ..-1 => tr!("network.cert.expired_days_ago", count = -cert.days_left),
+                        1 => tr!("network.cert.one_day_left"),
+                        _ => tr!("network.cert.days_left", count = cert.days_left),
+                    };
+                    body = body
+                        // The certificates after the server's own, set apart.
+                        .when(i > 0, |b| b.child(div().h(px(1.)).my_1().bg(p.hairline)))
+                        .child(row(
+                            tr!("network.cert.issued_to"),
+                            cert.subject.clone().into(),
+                        ))
+                        .child(row(
+                            tr!("network.cert.issued_by"),
+                            cert.issuer.clone().into(),
+                        ))
+                        .child(
+                            h_flex()
+                                .dir_row()
+                                .gap_3()
+                                .text_sm()
+                                .child(
+                                    div()
+                                        .w(px(150.))
+                                        .flex_none()
+                                        .text_color(p.text_muted)
+                                        .child(tr!("network.cert.valid")),
+                                )
+                                .child(div().text_color(p.text).child(bidi::para(tr!(
+                                    "network.cert.valid_range",
+                                    from = cert.not_before,
+                                    to = cert.not_after
+                                ))))
+                                .child(div().text_color(color).child(left)),
+                        )
+                        .child(row(tr!("network.cert.key"), cert.key.clone().into()))
+                        .when(i == 0 && !cert.names.is_empty(), |b| {
+                            b.child(row(tr!("network.cert.names"), cert.names.join(", ").into()))
+                        })
+                        .when(i == 0, |b| {
+                            b.child(row(tr!("network.cert.sha256"), cert.sha256.clone().into()))
+                        });
+                }
             }
             None if response.version.contains('2')
                 || trace.remote_addr.is_some_and(|a| a.port() == 443) =>

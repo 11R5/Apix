@@ -394,15 +394,18 @@ mqtt.subscribed: "Abonné à %{topic} (QoS %{qos})"
 mqtt.subscriptions: Abonnements
 mqtt.topic: Sujet
 mqtt.unsubscribed: "Abonnement à %{topic} annulé"
+network.body.compressed: "%{encoding} · %{wire} transférés, %{decoded} décompressés (%{percent} % plus petit)"
+network.body.compression: Compression
 network.cert.days_left: "%{count} jours restants"
-network.cert.engine_note: Le moteur HTTP indique le certificat du serveur, mais pas la version TLS ni la suite de chiffrement.
 network.cert.expired_days_ago: expiré depuis %{count} jours
 network.cert.expired_one_day_ago: expiré depuis 1 jour
 network.cert.issued_by: Émis par
 network.cert.issued_to: Émis pour
+network.cert.key: Clé
 network.cert.names: Noms
 network.cert.not_reported: Chiffré, mais le certificat n'a pas été communiqué.
 network.cert.one_day_left: 1 jour restant
+network.cert.sha256: SHA-256
 network.cert.valid: Validité
 network.cert.valid_range: "du %{from} au %{to}"
 network.connection.dns_servers: Serveurs DNS
@@ -422,17 +425,26 @@ network.dns.lookup_result: "%{host} → %{addrs} en %{duration}"
 network.note: Remarque
 network.plain_http: "HTTP en clair : rien n'est chiffré."
 network.redirect.followed: Suivie
+network.section.body: Corps
 network.section.certificate: Certificat
+network.section.chain: Chaîne de certificats (%{count})
 network.section.connection: Connexion
 network.section.dns: DNS
 network.section.encryption: Chiffrement
 network.section.redirects: Redirections
 network.section.timing: Durées
-network.timing.connect: Connexion (TCP + TLS)
 network.timing.dns: Résolution DNS
 network.timing.download: Téléchargement
 network.timing.summary: Total %{total} · premier octet après %{ttfb}
+network.timing.tcp: Connexion TCP
+network.timing.tls: Négociation TLS
 network.timing.waiting: Attente du serveur
+network.tls.alpn: ALPN
+network.tls.cipher: Suite de chiffrement
+network.tls.group: Échange de clés
+network.tls.handshake: Négociation
+network.tls.server_name: Nom du serveur (SNI)
+network.tls.version: Version
 palette.copy_as: Copier en %{format}
 palette.empty: Aucun résultat.
 palette.environment: "Environnement : %{name}"
