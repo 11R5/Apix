@@ -1,6 +1,14 @@
 _version: 1
 # English, the source language. One `key: value` per line, sorted by key.
 # %{name} placeholders must stay the same in every language.
+ai.asking: Asking Claude…
+ai.explain_short: Explain
+ai.explain_title: Why did this fail?
+ai.no_key: Add your Anthropic API key in Settings › AI assist.
+ai.note: Written by Claude from the request and response; credential headers were masked. It can be wrong.
+ai.tests_added: "Tests added to the Tests script: check them, then save."
+ai.tests_short: AI tests
+ai.tests_tooltip: Ask Claude for tests that fit this response; they are added to the Tests script.
 app.error_with_cause: "%{error}: %{cause}"
 app.status.collections: "%{count} collections"
 app.status.env: "env: %{name}"
@@ -770,6 +778,15 @@ settings.accent_purple: "Purple"
 settings.accent_red: "Red"
 settings.accent_theme: "The theme's own"
 settings.accent_yellow: "Yellow"
+settings.ai: AI assist
+settings.ai_description: Buttons next to the response that ask Claude to write tests for it or explain a failure, with your own Anthropic API key. The request and response are sent to Anthropic, credential headers masked. Off by default.
+settings.ai_key: Anthropic API key
+settings.ai_key_description: Kept in the system keychain, never in a file. Save an empty field to remove it. ANTHROPIC_API_KEY is used when none is saved.
+settings.ai_key_kept: a key is saved
+settings.ai_key_placeholder: sk-ant-…
+settings.ai_key_removed: The API key was removed.
+settings.ai_key_save: Save
+settings.ai_key_saved: The API key is in the keychain.
 settings.appearance: "Appearance"
 settings.appearance_dark: "Dark"
 settings.appearance_description: "Dark, light, or follow the system's light/dark setting."

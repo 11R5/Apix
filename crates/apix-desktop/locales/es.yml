@@ -1,4 +1,12 @@
 _version: 1
+ai.asking: Preguntando a Claude…
+ai.explain_short: Explicar
+ai.explain_title: ¿Por qué falló?
+ai.no_key: Añada su clave de API de Anthropic en Ajustes › Asistente de IA.
+ai.note: Escrito por Claude a partir de la solicitud y la respuesta; los encabezados de credenciales se ocultaron. Puede equivocarse.
+ai.tests_added: "Pruebas añadidas al script de Tests: revíselas y guarde."
+ai.tests_short: Pruebas IA
+ai.tests_tooltip: Pedir a Claude pruebas para esta respuesta; se añaden al script de Tests.
 app.error_with_cause: "%{error}: %{cause}"
 app.status.collections: "%{count} colecciones"
 app.status.env: "entorno: %{name}"
@@ -768,6 +776,15 @@ settings.accent_purple: "Morado"
 settings.accent_red: "Rojo"
 settings.accent_theme: "El del tema"
 settings.accent_yellow: "Amarillo"
+settings.ai: Asistente de IA
+settings.ai_description: Botones junto a la respuesta que piden a Claude escribir pruebas para ella o explicar un fallo, con su propia clave de API de Anthropic. La solicitud y la respuesta se envían a Anthropic, con los encabezados de credenciales ocultos. Desactivado por defecto.
+settings.ai_key: Clave de API de Anthropic
+settings.ai_key_description: Se guarda en el llavero del sistema, nunca en un archivo. Guarde el campo vacío para quitarla. Sin clave guardada se usa ANTHROPIC_API_KEY.
+settings.ai_key_kept: hay una clave guardada
+settings.ai_key_placeholder: sk-ant-…
+settings.ai_key_removed: Se quitó la clave de API.
+settings.ai_key_save: Guardar
+settings.ai_key_saved: La clave de API está en el llavero.
 settings.appearance: "Apariencia"
 settings.appearance_dark: "Oscura"
 settings.appearance_description: "Oscura, clara o seguir el ajuste claro/oscuro del sistema."

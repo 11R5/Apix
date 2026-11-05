@@ -40,6 +40,10 @@ pub struct Settings {
     pub density: String,
     /// Ask GitHub once at start whether a newer Apix has been released.
     pub check_updates: bool,
+    /// Offer AI help (writing tests, explaining failures) with the user's own API key.
+    pub ai_assist: bool,
+    /// The Claude model for it; empty for the default.
+    pub ai_model: String,
 }
 
 impl Default for Settings {
@@ -57,6 +61,8 @@ impl Default for Settings {
             confirm_prod: true,
             monitors_in_app: false,
             check_updates: true,
+            ai_assist: false,
+            ai_model: String::new(),
             text_size: 100,
             editor_font_size: 13,
             density: "normal".into(),

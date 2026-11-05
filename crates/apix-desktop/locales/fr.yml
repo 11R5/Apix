@@ -1,4 +1,12 @@
 _version: 1
+ai.asking: Claude réfléchit…
+ai.explain_short: Expliquer
+ai.explain_title: Pourquoi cet échec ?
+ai.no_key: Ajoutez votre clé d’API Anthropic dans Paramètres › Assistant IA.
+ai.note: Écrit par Claude à partir de la requête et de la réponse ; les en-têtes d’identifiants ont été masqués. Peut se tromper.
+ai.tests_added: "Tests ajoutés au script Tests : vérifiez-les, puis enregistrez."
+ai.tests_short: Tests IA
+ai.tests_tooltip: Demander à Claude des tests adaptés à cette réponse ; ils sont ajoutés au script Tests.
 app.error_with_cause: "%{error} : %{cause}"
 app.status.collections: "%{count} collections"
 app.status.env: "env. : %{name}"
@@ -768,6 +776,15 @@ settings.accent_purple: "Violet"
 settings.accent_red: "Rouge"
 settings.accent_theme: "Celle du thème"
 settings.accent_yellow: "Jaune"
+settings.ai: Assistant IA
+settings.ai_description: Des boutons à côté de la réponse pour demander à Claude d’écrire des tests ou d’expliquer un échec, avec votre propre clé d’API Anthropic. La requête et la réponse sont envoyées à Anthropic, en-têtes d’identifiants masqués. Désactivé par défaut.
+settings.ai_key: Clé d’API Anthropic
+settings.ai_key_description: Gardée dans le trousseau du système, jamais dans un fichier. Enregistrez le champ vide pour la retirer. Sans clé enregistrée, ANTHROPIC_API_KEY est utilisée.
+settings.ai_key_kept: une clé est enregistrée
+settings.ai_key_placeholder: sk-ant-…
+settings.ai_key_removed: La clé d’API a été retirée.
+settings.ai_key_save: Enregistrer
+settings.ai_key_saved: La clé d’API est dans le trousseau.
 settings.appearance: "Apparence"
 settings.appearance_dark: "Sombre"
 settings.appearance_description: "Sombre, clair, ou suivre le réglage clair/sombre du système."

@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:552aa6444522455a -->
+<!-- translated from en/user-guide.md sha256:6cfe9457b70a2edc -->
 
 # Apix kullanım kılavuzu
 
@@ -46,6 +46,7 @@ veya CI'da çalıştırır.
 - [Insomnia, OpenAPI ve HAR'dan içe aktarma](#insomnia-openapi-ve-hardan-içe-aktarma)
 - [Geçmiş](#geçmiş)
 - [Yanıtları karşılaştırma](#yanıtları-karşılaştırma)
+- [AI yardımcısı](#ai-yardımcısı)
 - [Komut paleti](#komut-paleti)
 - [Ayarlar ve dil](#ayarlar-ve-dil)
 - [Klavye kısayolları](#klavye-kısayolları)
@@ -1170,6 +1171,31 @@ ikisinde de gönderir ve farkları yazar; farklıysa 1 ile çıkar, böylece bir
 işlem hattı iki ortamın aynı yanıtı verdiğini denetleyebilir. Geçmiş
 gövdeleri 256 KB'a kadar saklar; daha uzunlar saklandıkları kadarıyla
 karşılaştırılır.
+
+## AI yardımcısı
+
+AI yardımcısı, **Dosya › Ayarlar… › AI yardımcısı**'ndan açıp altındaki
+satıra kendi Anthropic API anahtarınızı verene kadar kapalıdır (anahtar
+dosyada değil sistem anahtarlığında tutulur; alanı boş kaydetmek siler;
+anahtar yoksa `ANTHROPIC_API_KEY` kullanılır). Sonra yanıtın yanında bir
+düğme daha belirir:
+
+- Başarılı yanıtta **AI testleri**: Claude durumu, içerik türünü ve gövdenin
+  yapısını denetleyen bir Tests betiği yazar; Apix onu isteğin Tests'ine
+  (Claude'un yazdığı belirtilerek, kaydedilmemiş olarak) ekler, siz okuyup
+  sonra saklarsınız.
+- Başarısız yanıtta (400 ve üstü) **Açıkla**: Claude yanıtın ne dediğini,
+  olası nedenleri ve neyin denetleneceğini uygulamanın dilinde anlatır.
+
+![Başarısız bir yanıtın açıklanması](images/ai-explain.png)
+
+Anthropic'e gönderilenler: isteğin yöntemi, URL'si, başlıkları ve gövdesi ile
+yanıtın durumu, başlıkları ve gövdesi (12 KB'ta kesilir). Authorization,
+çerezler ve adında key, token, secret ya da signature geçen başlıklar •••
+olarak gizlenir. Model, `settings.toml` içindeki `ai_model` başka birini
+söylemedikçe Claude Opus 5.5'tir. Claude yanılabilir; siz istemeden hiçbir
+şey değişmez ya da başka yere gönderilmez. Ekran görüntüsü gerçek bir yanıt
+değil, yerel bir test sunucusuyla alındı.
 
 ## Komut paleti
 

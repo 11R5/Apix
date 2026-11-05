@@ -1,4 +1,12 @@
 _version: 1
+ai.asking: Claude wird gefragt…
+ai.explain_short: Erklären
+ai.explain_title: Warum ist das fehlgeschlagen?
+ai.no_key: Fügen Sie Ihren Anthropic-API-Schlüssel unter Einstellungen › KI-Assistent hinzu.
+ai.note: Von Claude aus Anfrage und Antwort geschrieben; Zugangsdaten-Header wurden maskiert. Kann falsch sein.
+ai.tests_added: "Tests zum Tests-Skript hinzugefügt: prüfen, dann speichern."
+ai.tests_short: KI-Tests
+ai.tests_tooltip: Claude um passende Tests für diese Antwort bitten; sie werden dem Tests-Skript hinzugefügt.
 app.error_with_cause: "%{error}: %{cause}"
 app.status.collections: "%{count} Sammlungen"
 app.status.env: "Umgebung: %{name}"
@@ -768,6 +776,15 @@ settings.accent_purple: "Lila"
 settings.accent_red: "Rot"
 settings.accent_theme: "Die des Themes"
 settings.accent_yellow: "Gelb"
+settings.ai: KI-Assistent
+settings.ai_description: Schaltflächen neben der Antwort, mit denen Claude Tests dafür schreibt oder einen Fehler erklärt, mit Ihrem eigenen Anthropic-API-Schlüssel. Anfrage und Antwort werden an Anthropic gesendet, Zugangsdaten-Header maskiert. Standardmäßig aus.
+settings.ai_key: Anthropic-API-Schlüssel
+settings.ai_key_description: Im Schlüsselbund des Systems, nie in einer Datei. Leer speichern entfernt ihn. Ohne gespeicherten Schlüssel wird ANTHROPIC_API_KEY verwendet.
+settings.ai_key_kept: ein Schlüssel ist gespeichert
+settings.ai_key_placeholder: sk-ant-…
+settings.ai_key_removed: Der API-Schlüssel wurde entfernt.
+settings.ai_key_save: Speichern
+settings.ai_key_saved: Der API-Schlüssel liegt im Schlüsselbund.
 settings.appearance: "Erscheinungsbild"
 settings.appearance_dark: "Dunkel"
 settings.appearance_description: "Dunkel, hell oder der Hell/Dunkel-Einstellung des Systems folgen."

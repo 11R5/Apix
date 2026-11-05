@@ -1,4 +1,12 @@
 _version: 1
+ai.asking: 正在询问 Claude…
+ai.explain_short: 解释
+ai.explain_title: 为什么失败了？
+ai.no_key: 请在 设置 › AI 助手 中添加你的 Anthropic API 密钥。
+ai.note: 由 Claude 根据请求和响应撰写；凭据标头已隐藏。可能有误。
+ai.tests_added: 测试已添加到 Tests 脚本：请检查后保存。
+ai.tests_short: AI 测试
+ai.tests_tooltip: 让 Claude 为此响应编写测试；测试会添加到 Tests 脚本。
 app.error_with_cause: "%{error}：%{cause}"
 app.status.collections: "%{count} 个集合"
 app.status.env: "环境：%{name}"
@@ -768,6 +776,15 @@ settings.accent_purple: "紫色"
 settings.accent_red: "红色"
 settings.accent_theme: "主题自带"
 settings.accent_yellow: "黄色"
+settings.ai: AI 助手
+settings.ai_description: 在响应旁显示按钮，让 Claude 为其编写测试或解释失败原因，使用你自己的 Anthropic API 密钥。请求和响应会发送给 Anthropic，凭据标头已隐藏。默认关闭。
+settings.ai_key: Anthropic API 密钥
+settings.ai_key_description: 保存在系统钥匙串中，从不写入文件。保存空值即可删除。未保存时使用 ANTHROPIC_API_KEY。
+settings.ai_key_kept: 已保存密钥
+settings.ai_key_placeholder: sk-ant-…
+settings.ai_key_removed: API 密钥已删除。
+settings.ai_key_save: 保存
+settings.ai_key_saved: API 密钥已存入钥匙串。
 settings.appearance: "外观模式"
 settings.appearance_dark: "深色"
 settings.appearance_description: "深色、浅色，或跟随系统的深浅设置。"

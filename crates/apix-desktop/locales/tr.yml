@@ -1,4 +1,12 @@
 _version: 1
+ai.asking: Claude'a soruluyor…
+ai.explain_short: Açıkla
+ai.explain_title: Bu neden başarısız oldu?
+ai.no_key: Anthropic API anahtarınızı Ayarlar › AI yardımcısı'na ekleyin.
+ai.note: İstek ve yanıttan Claude yazdı; kimlik bilgisi başlıkları gizlendi. Yanılıyor olabilir.
+ai.tests_added: "Testler Tests betiğine eklendi: gözden geçirip kaydedin."
+ai.tests_short: AI testleri
+ai.tests_tooltip: Claude'dan bu yanıta uyan testler isteyin; Tests betiğine eklenir.
 app.error_with_cause: "%{error}: %{cause}"
 app.status.collections: "%{count} koleksiyon"
 app.status.env: "ortam: %{name}"
@@ -768,6 +776,15 @@ settings.accent_purple: "Mor"
 settings.accent_red: "Kırmızı"
 settings.accent_theme: "Temanın kendi rengi"
 settings.accent_yellow: "Sarı"
+settings.ai: AI yardımcısı
+settings.ai_description: Yanıtın yanında, Claude'dan onun için test yazmasını ya da bir hatayı açıklamasını isteyen düğmeler; kendi Anthropic API anahtarınızla. İstek ve yanıt, kimlik bilgisi başlıkları gizlenerek Anthropic'e gönderilir. Varsayılan olarak kapalı.
+settings.ai_key: Anthropic API anahtarı
+settings.ai_key_description: Dosyada değil, sistem anahtarlığında tutulur. Silmek için alanı boş kaydedin. Kayıtlı anahtar yoksa ANTHROPIC_API_KEY kullanılır.
+settings.ai_key_kept: bir anahtar kayıtlı
+settings.ai_key_placeholder: sk-ant-…
+settings.ai_key_removed: API anahtarı silindi.
+settings.ai_key_save: Kaydet
+settings.ai_key_saved: API anahtarı anahtarlıkta.
 settings.appearance: "Görünüm"
 settings.appearance_dark: "Koyu"
 settings.appearance_description: "Koyu, açık ya da sistemin açık/koyu ayarını izle."

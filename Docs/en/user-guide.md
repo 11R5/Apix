@@ -43,6 +43,7 @@ command line runs the same requests in a terminal or CI.
 - [Importing from Insomnia, OpenAPI and HAR](#importing-from-insomnia-openapi-and-har)
 - [History](#history)
 - [Comparing responses](#comparing-responses)
+- [AI assist](#ai-assist)
 - [Command palette](#command-palette)
 - [Settings and language](#settings-and-language)
 - [Keyboard shortcuts](#keyboard-shortcuts)
@@ -1139,6 +1140,30 @@ sends the request in both and prints the differences; it exits with 1 when
 they differ, so a pipeline can check that two environments answer alike.
 History keeps bodies up to 256 KB, so longer ones are compared as far as they
 were kept.
+
+## AI assist
+
+AI assist is off until you turn it on in **File › Settings… › AI assist** and
+give your own Anthropic API key in the row below it (kept in the system
+keychain, never in a file; saving an empty field removes it; without one,
+`ANTHROPIC_API_KEY` is used). Then the response gets one more button:
+
+- **AI tests** on a successful response: Claude writes a Tests script that
+  checks the status, content type and the shape of the body, and Apix adds it
+  to the request's Tests (marked as written by Claude, unsaved), so you read
+  it before you keep it.
+- **Explain** on a failed response (400 and above): Claude says what the
+  response means, the likely causes and what to check, in the app's language.
+
+![Explaining a failed response](images/ai-explain.png)
+
+What is sent to Anthropic: the request's method, URL, headers and body and
+the response's status, headers and body (cut at 12 KB). Authorization,
+cookies and headers with key, token, secret or signature in their name are
+masked as •••. The model is Claude Opus 5.5 unless `ai_model` in
+`settings.toml` names another. Claude can be wrong; nothing is changed or
+sent anywhere else without you. The screenshot was taken against a local
+test server, not a real answer.
 
 ## Command palette
 

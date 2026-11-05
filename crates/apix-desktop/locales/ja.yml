@@ -1,4 +1,12 @@
 _version: 1
+ai.asking: Claude に問い合わせています…
+ai.explain_short: 説明
+ai.explain_title: なぜ失敗したのか
+ai.no_key: 設定 › AI アシストで Anthropic API キーを追加してください。
+ai.note: リクエストとレスポンスから Claude が書きました。認証ヘッダーは伏せています。誤りがあり得ます。
+ai.tests_added: Tests スクリプトにテストを追加しました。確認してから保存してください。
+ai.tests_short: AI テスト
+ai.tests_tooltip: このレスポンスに合うテストを Claude に頼みます。Tests スクリプトに追加されます。
 app.error_with_cause: "%{error}: %{cause}"
 app.status.collections: "コレクション %{count} 件"
 app.status.env: "環境: %{name}"
@@ -768,6 +776,15 @@ settings.accent_purple: "パープル"
 settings.accent_red: "レッド"
 settings.accent_theme: "テーマの色"
 settings.accent_yellow: "イエロー"
+settings.ai: AI アシスト
+settings.ai_description: レスポンスの横に、Claude にテストを書かせたり失敗を説明させたりするボタンを出します。ご自身の Anthropic API キーを使います。リクエストとレスポンスは認証ヘッダーを伏せて Anthropic に送られます。既定ではオフ。
+settings.ai_key: Anthropic API キー
+settings.ai_key_description: ファイルではなくシステムのキーチェーンに保存します。空で保存すると削除されます。保存されていなければ ANTHROPIC_API_KEY を使います。
+settings.ai_key_kept: キーは保存済み
+settings.ai_key_placeholder: sk-ant-…
+settings.ai_key_removed: API キーを削除しました。
+settings.ai_key_save: 保存
+settings.ai_key_saved: API キーをキーチェーンに保存しました。
 settings.appearance: "外観モード"
 settings.appearance_dark: "ダーク"
 settings.appearance_description: "ダーク、ライト、またはシステムのライト/ダーク設定に従います。"

@@ -1,5 +1,6 @@
 //! The main window: collection sidebar, request editor and response viewer.
 
+mod ai_ui;
 mod auth_editor;
 mod body_editor;
 mod capture_ui;
@@ -1892,6 +1893,37 @@ impl Workspace {
                                     .on_click(cx.listener(|this, _: &ClickEvent, window, cx| {
                                         this.prompt_extract(window, cx)
                                     })),
+                            )
+                            .when(self.settings.ai_assist && done.response.status < 400, |d| {
+                                d.child(
+                                    Button::new("ai-tests")
+                                        .ghost()
+                                        .xsmall()
+                                        .label(tr!("ai.tests_short"))
+                                        .tooltip(tr!("ai.tests_tooltip"))
+                                        .on_click(cx.listener(
+                                            |this, _: &ClickEvent, window, cx| {
+                                                this.ai_write_tests(window, cx)
+                                            },
+                                        )),
+                                )
+                            })
+                            .when(
+                                self.settings.ai_assist && done.response.status >= 400,
+                                |d| {
+                                    d.child(
+                                        Button::new("ai-explain")
+                                            .ghost()
+                                            .xsmall()
+                                            .label(tr!("ai.explain_short"))
+                                            .tooltip(tr!("ai.explain_title"))
+                                            .on_click(cx.listener(
+                                                |this, _: &ClickEvent, window, cx| {
+                                                    this.ai_explain(window, cx)
+                                                },
+                                            )),
+                                    )
+                                },
                             )
                             .child(
                                 Button::new("compare-responses")

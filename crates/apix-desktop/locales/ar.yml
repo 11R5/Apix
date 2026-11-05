@@ -1,4 +1,12 @@
 _version: 1
+ai.asking: جارٍ سؤال Claude…
+ai.explain_short: اشرح
+ai.explain_title: لماذا فشل هذا؟
+ai.no_key: أضف مفتاح Anthropic API في الإعدادات › مساعد الذكاء الاصطناعي.
+ai.note: كتبه Claude من الطلب والاستجابة؛ أُخفيت ترويسات بيانات الاعتماد. قد يخطئ.
+ai.tests_added: "أُضيفت الاختبارات إلى برنامج Tests: راجعها ثم احفظ."
+ai.tests_short: اختبارات AI
+ai.tests_tooltip: اطلب من Claude اختبارات تناسب هذه الاستجابة؛ تُضاف إلى برنامج Tests.
 app.error_with_cause: "%{error}: %{cause}"
 app.status.collections: "المجموعات: %{count}"
 app.status.env: "البيئة: %{name}"
@@ -768,6 +776,15 @@ settings.accent_purple: "بنفسجي"
 settings.accent_red: "أحمر"
 settings.accent_theme: "لون السمة"
 settings.accent_yellow: "أصفر"
+settings.ai: مساعد الذكاء الاصطناعي
+settings.ai_description: "أزرار بجانب الاستجابة تطلب من Claude كتابة اختبارات لها أو شرح فشلها، بمفتاح Anthropic API الخاص بك. يُرسل الطلب والاستجابة إلى Anthropic مع إخفاء ترويسات بيانات الاعتماد. معطّل افتراضيًا."
+settings.ai_key: مفتاح Anthropic API
+settings.ai_key_description: يُحفظ في سلسلة مفاتيح النظام لا في ملف. احفظ الحقل فارغًا لحذفه. إن لم يُحفظ مفتاح يُستخدم ANTHROPIC_API_KEY.
+settings.ai_key_kept: هناك مفتاح محفوظ
+settings.ai_key_placeholder: sk-ant-…
+settings.ai_key_removed: حُذف مفتاح API.
+settings.ai_key_save: حفظ
+settings.ai_key_saved: مفتاح API في سلسلة المفاتيح.
 settings.appearance: "نمط المظهر"
 settings.appearance_dark: "داكن"
 settings.appearance_description: "داكن أو فاتح أو اتباع إعداد النظام."

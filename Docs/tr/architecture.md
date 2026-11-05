@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:0569a873e708bc13 -->
+<!-- translated from en/architecture.md sha256:18127ecded0cd331 -->
 
 # Apix mimarisi
 
@@ -733,6 +733,24 @@ Git penceresi (`workspace/git_panel.rs`) aynı `Repo`'yu kullanır: liste için
 `GIT_TERMINAL_PROMPT=0` ile çalışır; parola isteyen bir uzak depo girdi
 beklemek yerine git'in mesajıyla başarısız olur, kimlik bilgisi yardımcıları
 yine çalışır. Her işlem arka planda koşar ve durum çubuğunu yeniler.
+
+## AI yardımcısı
+
+`apix_core::ai` bir Messages API isteğini elle kurar (Rust için resmî
+Anthropic SDK'sı yok): `POST https://api.anthropic.com/v1/messages`,
+`x-api-key`, `anthropic-version: 2026-10-21`, model `claude-opus-5-5`
+(uyarlanabilir düşünme onun varsayılanı), `max_tokens` 16000, Apix'in betik
+ortamını anlatan kısa bir sistem istemi ve alışverişi (`Context::describe`,
+kimlik bilgisi başlıkları gizli, gövdeler 12 KB'ta kesik), görevin
+talimatını ve uygulamanın dil kodunu taşıyan tek bir kullanıcı mesajı.
+Varsayılan modelde sunucu tarafı yedekleri de ister (`fallbacks: "default"`,
+beta `server-side-fallback-2026-07-01`). `answer` metin bloklarını okur,
+hata nesnelerini ve `refusal` durdurma nedenini iletiye çevirir; `script`
+ilk kod bloğunu alır. `APIX_AI_URL` testler için isteği başka yere yöneltir.
+Anahtar anahtarlıkta durur (`apix_vault::keychain::save_text`, hesap
+`ai:anthropic-api-key`). Uygulama (`workspace/ai_ui.rs`) `net::send` ile
+gönderir, testleri `ScriptEditor::append_test` ile ekler, açıklamaları bir
+pencerede gösterir.
 
 ## MCP sunucusu
 

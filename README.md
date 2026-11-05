@@ -133,6 +133,8 @@ Measurements of the other tools on the same machine are planned.
   location database (`apix trace`, View › Route and map…).
 - **API documentation:** one HTML page or Markdown from a collection
   (`apix docs`, File › Export documentation…), with no secrets in it.
+- **AI assist (optional, off by default):** with your own Anthropic API key,
+  Claude writes tests for a response or explains why one failed.
 - **AI agents (MCP):** `apix mcp` lets Claude or any MCP client list, send and
   run a collection's requests with their tests, without seeing its secrets.
 - **Compare responses:** today's answer against yesterday's from the

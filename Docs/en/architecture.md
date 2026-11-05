@@ -706,6 +706,23 @@ runs with `GIT_TERMINAL_PROMPT=0`, so a remote that needs a password fails
 with git's message instead of waiting for input; credential helpers still
 work. Each operation runs in the background and refreshes the status bar.
 
+## AI assist
+
+`apix_core::ai` builds a Messages API request by hand (Rust has no official
+Anthropic SDK): `POST https://api.anthropic.com/v1/messages` with `x-api-key`,
+`anthropic-version: 2026-10-21`, model `claude-opus-5-5` (adaptive thinking is
+its default), `max_tokens` 16000, a short system prompt about Apix's script
+sandbox, and one user message with the exchange (`Context::describe`,
+credential headers masked, bodies cut at 12 KB), the task's instruction and
+the app's language code. With the default model it also asks for server-side
+fallbacks (`fallbacks: "default"`, beta `server-side-fallback-2026-07-01`).
+`answer` reads the text blocks and turns error objects and a `refusal` stop
+reason into messages; `script` takes the first code block. `APIX_AI_URL`
+points the request elsewhere for tests. The key lives in the keychain
+(`apix_vault::keychain::save_text`, account `ai:anthropic-api-key`). The app
+(`workspace/ai_ui.rs`) sends through `net::send`, appends tests with
+`ScriptEditor::append_test` and shows explanations in a dialog.
+
 ## MCP server
 
 `apix mcp` (`apix-cli/src/mcp.rs`) reads one JSON-RPC 2.0 message per line

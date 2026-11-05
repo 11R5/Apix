@@ -104,6 +104,8 @@ pub(super) struct SettingsView {
     secrets: Entity<Picker>,
     prod: Entity<Picker>,
     updates: Entity<Picker>,
+    ai: Entity<Picker>,
+    ai_key: Entity<gpui_kit::component::input::InputState>,
     dark_themes: ThemeList,
     light_themes: ThemeList,
     accents: Vec<String>,
@@ -223,6 +225,18 @@ impl SettingsView {
         );
         let prod_ix = if settings.confirm_prod { 0 } else { 1 };
         let prod = picker(history_choices(), Some(IndexPath::new(prod_ix)), window, cx);
+        let ai_ix = if settings.ai_assist { 0 } else { 1 };
+        let ai = picker(history_choices(), Some(IndexPath::new(ai_ix)), window, cx);
+        let has_key = apix_core::ai::load_key().is_some();
+        let ai_key = cx.new(|cx| {
+            gpui_kit::component::input::InputState::new(window, cx)
+                .masked(true)
+                .placeholder(if has_key {
+                    tr!("settings.ai_key_kept")
+                } else {
+                    tr!("settings.ai_key_placeholder")
+                })
+        });
         let updates_ix = if settings.check_updates { 0 } else { 1 };
         let updates = picker(
             history_choices(),
@@ -232,6 +246,11 @@ impl SettingsView {
         );
 
         let subscriptions = vec![
+            cx.subscribe_in(&ai, window, |this, state, _: &Changed, _, cx| {
+                if let Some(ix) = state.read(cx).selected_index(cx) {
+                    this.change(|s| s.ai_assist = ix.row == 0, cx);
+                }
+            }),
             cx.subscribe_in(&updates, window, |this, state, _: &Changed, _, cx| {
                 if let Some(ix) = state.read(cx).selected_index(cx) {
                     this.change(|s| s.check_updates = ix.row == 0, cx);
@@ -368,6 +387,8 @@ impl SettingsView {
             secrets,
             prod,
             updates,
+            ai,
+            ai_key,
             dark_themes,
             light_themes,
             accents,
@@ -506,6 +527,7 @@ impl SettingsView {
             (&self.secrets, secrets_choices()),
             (&self.prod, history_choices()),
             (&self.updates, history_choices()),
+            (&self.ai, history_choices()),
         ];
         for (picker, items) in lists {
             picker.update(cx, |state, cx| state.set_items(items, window, cx));
@@ -615,6 +637,35 @@ impl Render for SettingsView {
                 tr!("settings.check_updates"),
                 tr!("settings.check_updates_description"),
                 Select::new(&self.updates).small(),
+            ))
+            .child(line())
+            .child(self.row(
+                tr!("settings.ai"),
+                tr!("settings.ai_description"),
+                Select::new(&self.ai).small(),
+            ))
+            .child(self.row(
+                tr!("settings.ai_key"),
+                tr!("settings.ai_key_description"),
+                h_flex()
+                    .gap_1()
+                    .child(div().w(px(150.)).child(gpui_kit::component::input::Input::new(&self.ai_key).small()))
+                    .child(
+                        Button::new("ai-key-save")
+                            .small()
+                            .outline()
+                            .label(tr!("settings.ai_key_save"))
+                            .on_click(cx.listener(|this, _: &ClickEvent, window, cx| {
+                                let key = this.ai_key.read(cx).value().to_string();
+                                let note = match apix_core::ai::save_key(&key) {
+                                    Ok(()) if key.trim().is_empty() => gpui_kit::component::notification::Notification::info(tr!("settings.ai_key_removed")),
+                                    Ok(()) => gpui_kit::component::notification::Notification::success(tr!("settings.ai_key_saved")),
+                                    Err(e) => gpui_kit::component::notification::Notification::error(e),
+                                };
+                                this.ai_key.update(cx, |s, cx| s.set_value("", window, cx));
+                                window.push_notification(note, cx);
+                            })),
+                    ),
             ))
             .child(line())
             .child(self.row(

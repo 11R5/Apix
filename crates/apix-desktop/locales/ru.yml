@@ -1,4 +1,12 @@
 _version: 1
+ai.asking: Спрашиваем Claude…
+ai.explain_short: Объяснить
+ai.explain_title: Почему это не удалось?
+ai.no_key: Добавьте ключ Anthropic API в Настройки › ИИ-помощник.
+ai.note: Написано Claude по запросу и ответу; заголовки с учётными данными скрыты. Может ошибаться.
+ai.tests_added: "Тесты добавлены в скрипт Tests: проверьте и сохраните."
+ai.tests_short: ИИ-тесты
+ai.tests_tooltip: Попросить Claude тесты для этого ответа; они добавятся в скрипт Tests.
 app.error_with_cause: "%{error}: %{cause}"
 app.status.collections: "Коллекций: %{count}"
 app.status.env: "окружение: %{name}"
@@ -768,6 +776,15 @@ settings.accent_purple: "Фиолетовый"
 settings.accent_red: "Красный"
 settings.accent_theme: "Цвет темы"
 settings.accent_yellow: "Жёлтый"
+settings.ai: ИИ-помощник
+settings.ai_description: "Кнопки рядом с ответом: попросить Claude написать для него тесты или объяснить ошибку, с вашим ключом Anthropic API. Запрос и ответ отправляются в Anthropic, заголовки с учётными данными скрыты. По умолчанию выключено."
+settings.ai_key: Ключ Anthropic API
+settings.ai_key_description: Хранится в системной связке ключей, а не в файле. Сохраните пустое поле, чтобы удалить. Без сохранённого ключа используется ANTHROPIC_API_KEY.
+settings.ai_key_kept: ключ сохранён
+settings.ai_key_placeholder: sk-ant-…
+settings.ai_key_removed: Ключ API удалён.
+settings.ai_key_save: Сохранить
+settings.ai_key_saved: Ключ API в связке ключей.
 settings.appearance: "Оформление"
 settings.appearance_dark: "Тёмное"
 settings.appearance_description: "Тёмное, светлое или как в системе."
