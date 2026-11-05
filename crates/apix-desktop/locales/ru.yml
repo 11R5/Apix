@@ -410,6 +410,7 @@ menu.project_settings: Настройки запросов проекта…
 menu.quit: Выход
 menu.report_problem: Сообщить о проблеме
 menu.request: Запрос
+menu.route: Маршрут и карта…
 menu.runner: "Runner…"
 menu.save: Сохранить
 menu.send: Отправить
@@ -643,6 +644,22 @@ response.tab.pretty: Форматированный
 response.tab.raw: Исходный
 response.tab.tests: Тесты
 response.tab.tests_count: "Тесты %{passed}/%{total}"
+route.about: Маршрутизаторы между этим компьютером и сервером — по системному traceroute, с местами из базы геолокации IP на этом компьютере. Ничего не запрашивается в сети.
+route.download: Скачать DB-IP Lite
+route.downloaded: "База геолокации сохранена: %{file}"
+route.downloading: Скачивание базы геолокации…
+route.empty: Введите хост или адрес и нажмите «Трассировка».
+route.from_network: Проследить маршрут и показать на карте…
+route.geo_file: "Места: %{file}"
+route.geo_loading: Чтение базы геолокации…
+route.local: локальная сеть
+route.no_geo: "Базы геолокации IP пока нет, поэтому на карте нет мест. Скачайте бесплатную базу DB-IP (около 130 МБ, CC BY 4.0) или положите файл .mmdb (DB-IP Lite, GeoLite2 City) в %{folder}."
+route.open_folder: Открыть папку
+route.running: Трассировка… если маршрутизатор не отвечает, узел может занять несколько секунд.
+route.target: Сервер
+route.title: Маршрут и карта
+route.trace: Трассировка
+route.waiting: Ожидание первого узла…
 runner.all: "Все"
 runner.bad_number: "Итерации и пауза должны быть целыми числами."
 runner.bail: "Остановиться на первой ошибке"

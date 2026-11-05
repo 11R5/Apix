@@ -412,6 +412,7 @@ menu.project_settings: Project request settings…
 menu.quit: Quit
 menu.report_problem: Report a problem
 menu.request: Request
+menu.route: Route and map…
 menu.runner: "Runner…"
 menu.save: Save
 menu.send: Send
@@ -645,6 +646,22 @@ response.tab.pretty: Pretty
 response.tab.raw: Raw
 response.tab.tests: Tests
 response.tab.tests_count: "Tests %{passed}/%{total}"
+route.about: The routers between this computer and the server, from the system's own traceroute, placed with an IP location database on this computer. Nothing is looked up online.
+route.download: Download DB-IP Lite
+route.downloaded: "Location database saved: %{file}"
+route.downloading: Downloading the location database…
+route.empty: Type a host or address and press Trace.
+route.from_network: Trace the route and see it on a map…
+route.geo_file: "Locations: %{file}"
+route.geo_loading: Reading the location database…
+route.local: local network
+route.no_geo: "No IP location database yet, so the map shows no places. Download DB-IP's free one (about 130 MB, CC BY 4.0), or put a .mmdb file (DB-IP Lite, GeoLite2 City) in %{folder}."
+route.open_folder: Open folder
+route.running: Tracing… each hop can take a few seconds when a router does not answer.
+route.target: Server
+route.title: Route and map
+route.trace: Trace
+route.waiting: Waiting for the first hop…
 runner.all: "All"
 runner.bad_number: "Iterations and delay must be whole numbers."
 runner.bail: "Stop at the first failure"

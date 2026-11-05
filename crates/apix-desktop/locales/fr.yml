@@ -410,6 +410,7 @@ menu.project_settings: Réglages de requête du projet…
 menu.quit: Quitter
 menu.report_problem: Signaler un problème
 menu.request: Requête
+menu.route: Route et carte…
 menu.runner: "Runner…"
 menu.save: Enregistrer
 menu.send: Envoyer
@@ -643,6 +644,22 @@ response.tab.pretty: Formaté
 response.tab.raw: Brut
 response.tab.tests: Tests
 response.tab.tests_count: "Tests %{passed}/%{total}"
+route.about: Les routeurs entre cet ordinateur et le serveur, d’après le traceroute du système, placés avec une base de géolocalisation IP sur cet ordinateur. Rien n’est consulté en ligne.
+route.download: Télécharger DB-IP Lite
+route.downloaded: "Base de géolocalisation enregistrée : %{file}"
+route.downloading: Téléchargement de la base de géolocalisation…
+route.empty: Saisissez un hôte ou une adresse puis Tracer.
+route.from_network: Tracer la route et la voir sur une carte…
+route.geo_file: "Localisations : %{file}"
+route.geo_loading: Lecture de la base de géolocalisation…
+route.local: réseau local
+route.no_geo: "Pas encore de base de géolocalisation IP, la carte n’affiche donc aucun lieu. Téléchargez celle, gratuite, de DB-IP (environ 130 Mo, CC BY 4.0) ou placez un fichier .mmdb (DB-IP Lite, GeoLite2 City) dans %{folder}."
+route.open_folder: Ouvrir le dossier
+route.running: Traçage… chaque saut peut prendre quelques secondes si un routeur ne répond pas.
+route.target: Serveur
+route.title: Route et carte
+route.trace: Tracer
+route.waiting: En attente du premier saut…
 runner.all: "Toutes"
 runner.bad_number: "Les itérations et le délai doivent être des nombres entiers."
 runner.bail: "S'arrêter au premier échec"

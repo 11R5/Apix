@@ -153,6 +153,18 @@ enum Command {
         #[arg(long)]
         no_save: bool,
     },
+    /// Trace the route to a server with the system's traceroute, with where each
+    /// hop is when an IP location database is in <config>/Apix/geo (or --geo)
+    Trace {
+        /// A URL, host name or address
+        target: String,
+        /// Stop after this many hops
+        #[arg(long, default_value_t = 30, value_name = "N")]
+        max_hops: u32,
+        /// An IP location database (.mmdb), instead of the one in <config>/Apix/geo
+        #[arg(long, value_name = "FILE")]
+        geo: Option<PathBuf>,
+    },
     /// Check whether a newer Apix has been released (one request to GitHub;
     /// nothing is downloaded)
     Update,
@@ -1097,6 +1109,77 @@ async fn run(cli: Cli) -> Result<bool> {
             )
             .await?;
             Ok(true)
+        }
+        Command::Trace {
+            target,
+            max_hops,
+            geo,
+        } => {
+            let geo = match geo {
+                Some(path) => Some(apix_route::Geo::open(&path).map_err(anyhow::Error::msg)?),
+                None => match apix_route::default_geo() {
+                    Some(Ok(geo)) => Some(geo),
+                    Some(Err(e)) => {
+                        eprintln!("{}{e}{}", style.dim, style.reset);
+                        None
+                    }
+                    None => None,
+                },
+            };
+            let host = apix_route::host_of(&target);
+            let trace = apix_route::Trace::start(&host, max_hops).map_err(anyhow::Error::msg)?;
+            println!("Route to {host}");
+            let mut previous: Option<apix_route::Place> = None;
+            let mut answered = 0;
+            for hop in trace {
+                let address = hop.ip.map_or_else(|| "*".to_owned(), |ip| ip.to_string());
+                let time = match hop.rtt_ms {
+                    Some(ms) if ms < 1.0 => "<1 ms".to_owned(),
+                    Some(ms) => format!("{ms:.0} ms"),
+                    None => String::new(),
+                };
+                let place = match hop.ip {
+                    Some(ip) if apix_route::is_local(ip) => "local network".to_owned(),
+                    Some(ip) => match geo.as_ref().and_then(|g| g.locate(ip)) {
+                        Some(place) => {
+                            let jump = previous
+                                .as_ref()
+                                .map(|p| apix_route::distance_km(p, &place))
+                                .filter(|km| *km >= 100.0)
+                                .map(|km| format!("  (+{km:.0} km)"))
+                                .unwrap_or_default();
+                            let label = format!("{}{jump}", place.label());
+                            previous = Some(place);
+                            label
+                        }
+                        None => String::new(),
+                    },
+                    None => String::new(),
+                };
+                if hop.ip.is_some() {
+                    answered += 1;
+                }
+                println!(
+                    "{:>3}  {address:<40} {time:>7}  {}{place}{}",
+                    hop.ttl, style.dim, style.reset
+                );
+            }
+            if geo.is_none() {
+                println!(
+                    "{}No IP location database: put a .mmdb file (DB-IP Lite or GeoLite2 City) in {} to see where hops are.{}",
+                    style.dim,
+                    apix_route::geo_dir()
+                        .map(|d| d.display().to_string())
+                        .unwrap_or_default(),
+                    style.reset
+                );
+            } else if geo
+                .as_ref()
+                .is_some_and(|g| g.path.to_string_lossy().contains("dbip"))
+            {
+                println!("{}{}{}", style.dim, apix_route::DBIP_CREDIT, style.reset);
+            }
+            Ok(answered > 0)
         }
         Command::Update => {
             let current = apix_core::update::Version::current();

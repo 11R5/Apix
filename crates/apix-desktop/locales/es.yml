@@ -410,6 +410,7 @@ menu.project_settings: Ajustes de petición del proyecto…
 menu.quit: Salir
 menu.report_problem: Informar de un problema
 menu.request: Solicitud
+menu.route: Ruta y mapa…
 menu.runner: "Runner…"
 menu.save: Guardar
 menu.send: Enviar
@@ -643,6 +644,22 @@ response.tab.pretty: Formateado
 response.tab.raw: Sin formato
 response.tab.tests: Pruebas
 response.tab.tests_count: "Pruebas %{passed}/%{total}"
+route.about: Los routers entre este equipo y el servidor, según el traceroute del sistema, ubicados con una base de datos de ubicación IP en este equipo. No se consulta nada en línea.
+route.download: Descargar DB-IP Lite
+route.downloaded: "Base de datos de ubicación guardada: %{file}"
+route.downloading: Descargando la base de datos de ubicación…
+route.empty: Escriba un host o una dirección y pulse Trazar.
+route.from_network: Trazar la ruta y verla en un mapa…
+route.geo_file: "Ubicaciones: %{file}"
+route.geo_loading: Leyendo la base de datos de ubicación…
+route.local: red local
+route.no_geo: "Aún no hay base de datos de ubicación IP, así que el mapa no muestra lugares. Descargue la gratuita de DB-IP (unos 130 MB, CC BY 4.0) o ponga un archivo .mmdb (DB-IP Lite, GeoLite2 City) en %{folder}."
+route.open_folder: Abrir carpeta
+route.running: Trazando… cada salto puede tardar unos segundos si un router no responde.
+route.target: Servidor
+route.title: Ruta y mapa
+route.trace: Trazar
+route.waiting: Esperando el primer salto…
 runner.all: "Todas"
 runner.bad_number: "Las iteraciones y la espera deben ser números enteros."
 runner.bail: "Parar en el primer fallo"

@@ -410,6 +410,7 @@ menu.project_settings: 项目请求设置…
 menu.quit: 退出
 menu.report_problem: 报告问题
 menu.request: 请求
+menu.route: 路由与地图…
 menu.runner: "Runner…"
 menu.save: 保存
 menu.send: 发送
@@ -643,6 +644,22 @@ response.tab.pretty: 美化
 response.tab.raw: 原始
 response.tab.tests: 测试
 response.tab.tests_count: "测试 %{passed}/%{total}"
+route.about: 本机与服务器之间的路由器，来自系统自带的 traceroute，并用本机上的 IP 地理位置数据库定位。不进行任何在线查询。
+route.download: 下载 DB-IP Lite
+route.downloaded: "位置数据库已保存：%{file}"
+route.downloading: 正在下载位置数据库…
+route.empty: 输入主机名或地址，然后点击追踪。
+route.from_network: 追踪路由并在地图上查看…
+route.geo_file: "位置：%{file}"
+route.geo_loading: 正在读取位置数据库…
+route.local: 本地网络
+route.no_geo: "尚无 IP 地理位置数据库，因此地图上不显示地点。下载 DB-IP 的免费数据库（约 130 MB，CC BY 4.0），或将 .mmdb 文件（DB-IP Lite、GeoLite2 City）放入 %{folder}。"
+route.open_folder: 打开文件夹
+route.running: 正在追踪… 路由器不响应时每一跳可能需要几秒。
+route.target: 服务器
+route.title: 路由与地图
+route.trace: 追踪
+route.waiting: 正在等待第一跳…
 runner.all: "全选"
 runner.bad_number: "迭代次数和间隔必须是整数。"
 runner.bail: "首次失败时停止"

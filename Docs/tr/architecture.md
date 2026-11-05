@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:7e070f6b51e366c6 -->
+<!-- translated from en/architecture.md sha256:c7f73329a2fd1316 -->
 
 # Apix mimarisi
 
@@ -46,6 +46,7 @@ crates/
 ├── apix-proto    diğer protokoller: MQTT (rumqttc)
 ├── apix-mock     kayıtlı örneklerden yanıt veren yerel mock sunucu (hyper)
 ├── apix-capture  kaydeden proxy: düz HTTP, CONNECT tünelleri, yerel CA ile açılan HTTPS (rcgen, rustls)
+├── apix-route    sunucuya giden rota (sistemin traceroute aracı) ve atlamaların yeri (çevrimdışı .mmdb veritabanı)
 ├── apix-cli      `apix` binary'si: terminalden ve CI'dan send / run / diff / schema / import / shell
 └── apix-desktop  GPUI masaüstü uygulaması (tek crate'ten Windows, macOS ve Linux)
 tools/
@@ -732,6 +733,33 @@ Git penceresi (`workspace/git_panel.rs`) aynı `Repo`'yu kullanır: liste için
 `GIT_TERMINAL_PROMPT=0` ile çalışır; parola isteyen bir uzak depo girdi
 beklemek yerine git'in mesajıyla başarısız olur, kimlik bilgisi yardımcıları
 yine çalışır. Her işlem arka planda koşar ve durum çubuğunu yeniler.
+
+## Rota ve harita
+
+`apix-route`, `apix_core::git`'in git'i başlattığı gibi sistemin aracını
+başlatır: Windows'ta `tracert -d -h N -w 1000`, macOS ve Linux'ta
+`traceroute -n -q 1 -w 1 -m N`, traceroute yoksa `tracepath -n -m N`.
+Hiçbiri yönetici izni istemez; ICMP'yi kendimiz göndermek Windows'ta isterdi.
+`parse_line` her birinin satırını yalnızca sayı ve adreslerinden okur (önce
+atlama numarası, her `N ms`, adres olarak ayrışan ilk sözcük); bu yüzden
+kendi kod sayfasındaki çevrilmiş bir Windows da aynı okunur. Bir atlamanın
+süresi denemelerinin en iyisidir, `<1 ms` yarım milisaniye sayılır. `Trace`
+atlamaları araç yazdıkça verir, bırakılınca ya da durdurulunca aracı kapatır.
+
+`Geo` bir MaxMind DB dosyasını açar (`maxminddb`) ve genel adresler için bir
+`Place` verir (enlem, boylam, İngilizce şehir adı, ISO ülke kodu); özel,
+loopback, link-local, CGNAT ve multicast adreslere hiç bakılmaz. Veritabanı
+`<config>/Apix/geo` içindeki ilk `.mmdb` dosyasıdır; `install` bir indirmeyi
+açar (gzip), açılabildiğini denetler ve ancak ondan sonra eskisinin yerine
+koyar. `dbip_urls` bu ayın ve geçen ayın DB-IP Lite adresini verir
+(`APIX_GEO_URL` onların yerine geçer). Harita, `land::LAND`'in eşdikdörtgen
+izdüşümüdür: kıtalar ve büyük adalar elle, yaklaşık iki derece doğrulukla
+çizilmiştir (Karadeniz ve Hazar `land::WATER` içinde); bu yüzden harita verisi
+indirilmez ya da lisanslanmaz. Masaüstü penceresi (`workspace/route_ui.rs`)
+izlemeyi bir iş parçacığında koşturur, atlamaları geldikçe yerleştirir,
+veritabanını uygulama açıkken bir kez okur ve haritayı GPUI yollarıyla çizer.
+`apix trace` atlamaları yerleriyle ve 100 km'yi aşan her sıçramanın
+uzaklığıyla yazar.
 
 ## Güncelleme denetimi
 

@@ -1,0 +1,16 @@
+[package]
+name = "apix-route"
+description = "The route to a server (the system's traceroute) and where its hops are (an offline IP location database)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+serde = { workspace = true }
+# Reads the IP location database (MaxMind DB format: DB-IP Lite, GeoLite2).
+maxminddb = "0.24"
+# Where the database is kept: <config>/Apix/geo.
+dirs = "6"
+# DB-IP publishes the database gzip-compressed.
+flate2 = "1"

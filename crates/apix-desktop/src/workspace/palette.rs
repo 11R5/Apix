@@ -413,6 +413,10 @@ impl Workspace {
         ));
         out.push(Entry::command(name!("menu.history"), run(Workspace::open_history)).keys("H"));
         out.push(Entry::command(
+            name!("menu.route"),
+            run(Workspace::open_route),
+        ));
+        out.push(Entry::command(
             name!("menu.check_updates"),
             run(Workspace::check_updates_now),
         ));

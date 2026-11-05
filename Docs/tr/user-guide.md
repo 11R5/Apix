@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:55c01d41c8386592 -->
+<!-- translated from en/user-guide.md sha256:15e5125d294b1e0e -->
 
 # Apix kullanım kılavuzu
 
@@ -382,6 +382,30 @@ sıkışmada üzerinde anlaşılanı kaydeder. Apix, istek kendi `Accept-Encodin
 başlığını vermedikçe sıkıştırılmış yanıt ister (`gzip`, `deflate`, `br`) ve
 `Content-Encoding` ile `Content-Length` başlıklarını sunucunun gönderdiği gibi
 gösterir.
+
+### Rota ve harita
+
+Sunucunun adresinin altındaki **Rotayı izle ve haritada gör…** (ya da
+**Görünüm › Rota ve harita…**) bu bilgisayarla sunucu arasındaki
+yönlendiricileri her birine kadar geçen süreyle listeler ve bir dünya
+haritasına çizer. Atlamalar sistemin kendi aracından gelir (Windows'ta
+`tracert`, başka sistemlerde `traceroute` ya da `tracepath`); yönetici izni
+gerekmez. Yanıt vermeyen yönlendirici `*` olarak görünür. Kendi ağınızdaki
+adresler öyle işaretlenir.
+
+Her yönlendiricinin yeri bu bilgisayardaki bir IP konum veritabanından gelir;
+çevrimiçi hiçbir sorgu yapılmaz. Veritabanı yoksa liste yine çalışır, harita
+boş kalır: **DB-IP Lite'ı indir** DB-IP'nin ücretsiz veritabanını (yaklaşık
+130 MB, CC BY 4.0) `<config>/Apix/geo` klasörüne indirir; ya da oraya
+herhangi bir `.mmdb` şehir veritabanı koyun (DB-IP Lite, MaxMind GeoLite2
+City). Bu veritabanları bir adresi en iyi ihtimalle bir şehre yerleştirir ve
+omurga yönlendiricilerinde bazen yanılır. Terminalde `apix trace <url ya da
+sunucu>` aynı listeyi yazar.
+
+![Haritada rota](images/route.png)
+
+Ekran görüntüsü gerçek sorgular değil, küçük bir gösterim veritabanı kullanır
+(`cargo run -p apix-route --example demo_geo`).
 
 ## WebSocket ve sunucu olayları (SSE)
 

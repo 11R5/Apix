@@ -1,4 +1,4 @@
-<!-- translated from en/technical.md sha256:d09a5d2a9145c9a5 -->
+<!-- translated from en/technical.md sha256:0f818e9848aa657d -->
 
 # Teknik notlar
 
@@ -20,6 +20,7 @@ crates/
 ├── apix-proto      diğer protokoller: MQTT
 ├── apix-mock       kayıtlı örneklerden yanıt veren yerel mock sunucu
 ├── apix-capture    geçen istekleri kaydeden proxy
+├── apix-route      sunucuya giden rota ve atlamaların yeri
 ├── apix-cli        `apix` komutu
 └── apix-desktop    masaüstü uygulaması (GPUI); arayüz metinleri locales/ içinde
 tools/
@@ -73,7 +74,7 @@ Masaüstü uygulamasının tam bir release derlemesi birkaç dakika sürer.
 | Arayüz | `gpui-kit` 0.7 (GPUI ve bileşen kütüphanesi), JSON ve GraphQL için tree-sitter gramerleri |
 | HTTP | rustls ile `reqwest` 0.12, `tokio`, `hyper-util`, zamanlama için `tower` katmanları |
 | gRPC | `tonic` 0.14 (istemci, aynı hyper ve rustls üzerinde), `prost-reflect` (çalışma anında bilinen mesajlar, JSON), `protox` (.proto dosyalarını `protoc` olmadan okur), `regex` (üretilmiş kod ve tipleri okuma), `tonic-reflection` (reflection istemcisi), sertifika denetimi kapalı gRPC için `rustls` ve `tokio-rustls`; `rcgen` test sertifikaları üretir (yalnızca testlerde) |
-| Ağ ayrıntıları | `x509-parser` (sertifikalar), `sha2` (parmak izleri), `netdev` (ağ arayüzleri, ağ geçidi, DNS sunucuları); TLS ayrıntıları rustls'un kendi kancalarından (ek crate yok); `flate2` ve `brotli-decompressor` sıkıştırılmış gövdeleri açar (reqwest için zaten derleniyorlar) |
+| Ağ ayrıntıları | `x509-parser` (sertifikalar), `sha2` (parmak izleri), `netdev` (ağ arayüzleri, ağ geçidi, DNS sunucuları); TLS ayrıntıları rustls'un kendi kancalarından (ek crate yok); `flate2` ve `brotli-decompressor` sıkıştırılmış gövdeleri açar (reqwest için zaten derleniyorlar); rota sistemin `tracert`, `traceroute` ya da `tracepath` aracından, yerler `maxminddb` ile |
 | İmzalama | `sha2`, `sha1`, `hmac`, `md-5`, `base64`, `rand_core` (AWS SigV4, OAuth 1.0, Digest, PKCE) |
 | Şifreleme | `chacha20poly1305` (XChaCha20-Poly1305), `argon2`, `zeroize`, `keyring` (işletim sistemi kimlik bilgisi deposu) |
 | Scriptler | `rquickjs` (QuickJS, sistemin C derleyicisiyle derlenir); `require` kütüphaneleri Apix'in kendi JavaScript kodu, özetler `sha1`, `sha2`, `md-5`, `hmac` ile |
@@ -87,6 +88,7 @@ Masaüstü uygulamasının tam bir release derlemesi birkaç dakika sürer.
 |---|---|
 | `<config>/Apix/settings.toml` | dil, görünüm, koyu ve açık tema, vurgu rengi, saydamlık, otomatik kilit süresi, geçmişin açık ya da kapalı olması, ortam gizli değerlerinin nereye yazılacağı, uygulama açıkken monitörlerin çalışıp çalışmayacağı |
 | `<config>/Apix/capture-ca.pem`, `capture-ca.key` | yakalama proxy'sinin yerel sertifika yetkilisi; HTTPS ilk açıldığında oluşturulur, yalnızca siz eklerseniz güvenilir |
+| `<config>/Apix/geo/*.mmdb` | rota haritası için IP konum veritabanı (Rota ve harita penceresinden indirilir ya da oraya konur) |
 | `<config>/Apix/monitors/` | her monitörün son 500 sonucu, koşu başına bir JSON satırı (`<koleksiyon klasörünün özeti>-<monitör adı>.jsonl`); `apix monitor` ve uygulama yazar |
 | `<config>/Apix/state.toml` | son açılan koleksiyonlar, koleksiyon ya da proje başına seçilen ortam ve açık sekmeler (şifreli koleksiyonlar hariç) |
 | `<config>/Apix/cookies.json` | çerez kavanozu (oturum çerezleri kalıcı değildir) |
@@ -108,6 +110,8 @@ parolaları asla diske yazılmaz.
 | `APIX_THEME` | bir tema kimliği (`obsidian`, `cyber`, `dracula`, `nord`, `solarized-dark`, `daylight`, `solarized-light` ya da bir tema dosyasının adı); ayarlar ne derse desin o temayı gösterir. |
 | `APIX_BENCH` | `startup` veya `json:<url>`: ölç ve çık (aşağıya bakın). |
 | `APIX_BENCH_OUT` | Ölçümlerin sonuna ekleneceği dosya. |
+| `APIX_UPDATE_URL` | Güncelleme denetiminin GitHub'ın son sürümü yerine sorduğu adres (bir çatal, bir ayna, bir test sunucusu). |
+| `APIX_GEO_URL` | **DB-IP Lite'ı indir**'in DB-IP yerine indirdiği adres. |
 | `GITHUB_BASE_REF` | GitHub Actions'ın pull request'lerde atadığı değişken: değer verilmeyen `apix run --changed` `origin/<değeri>` ile karşılaştırır. |
 
 ## Performans ölçümü
@@ -206,6 +210,7 @@ alır; yeni bir commit yeniden derler, değişmeyen kaynak öncekini kullanır.
 | apix-runner | CSV (tırnaklar, satır sonları, `;`, BOM) ve JSON veri dosyaları, dotenv dosyaları ve `APIX_VAR_*` adları, tekrar sayıları ve veri satırları, duraklatma/durdurma zamanlaması, JUnit/JSON/HTML/Markdown çıktısı ve kaçışlar (pull request için Markdown: işaret, kaçışlar, başarısız olanlar, `--changed` seçimi), tarihler; yerel bir sunucuya karşı bütün koşular (veri satırları, kenar çubuğu sırası, `bail`, `setNextRequest`), yavaş bir sunucuya karşı yan yana koşan tekrarlar (sırayla koşmaktan hızlı, tekrar sırasıyla listelenir); monitörler: durumun dönmesi, son sonuçlarla sınırlı ve koleksiyona göre ayrı günlükler, günlüğe uyan zamanlama, webhook mesajları |
 | apix-mock | yol kalıpları (`{{base_url}}/users/:id`, sunucular, sorgular), en çok sabit parçalı eşleşme, `x-mock-response-name` ve `-code` ile seçim, önce 2xx, `Content-Encoding`'siz açılmış gövdeler, 404 listesi, ön istekler; bir portta HTTP istemcisiyle yanıtlayan gerçek sunucu, CORS ve çalışırken eklenen örneğin sunulması |
 | apix-capture | kaydedilen isteklerde çerez ve kimlik bilgisi olmaması, sunucu süzgeçleri; gerçek yerel sunucularla: düz HTTP'nin kaydı, HTTPS'in yerel yetkiliyle açılması (istemci yalnızca ona güvenirken), HTTPS tünellerinin okunmadan geçmesi |
+| apix-route | tracert (çevrilmiş olanı da), traceroute ve tracepath satırları; yerel adresler; harita izdüşümü ve uzaklıklar; MaxMind DB formatında yazılan bir veritabanı: yerler, bilinmeyen adresler, özel adresler, dosya seçimi; bir indirmenin kurulması (gzip, veritabanı değilse ret, eskisi ancak sonra değişir); sistemin kendi aracıyla 127.0.0.1'e izleme |
 | apix-vault | şifreleme formatı, kurcalama (tampering), parola değişikliği, kurtarma anahtarı, anahtarlık kayıtları (gerçek kimlik bilgisi deposunda, test servis adıyla; depo yoksa atlanır) |
 | apix-desktop | çevirilerin eksiksizliği, dil yardımcıları, dosya yolları, vurgulama sorgusu, tema dosyaları (okuma, hatalar, gidiş-dönüş), vurgu ve saydamlık renkleri, GraphQL şema dosyası adları, geçmişte bir gRPC çağrısının günlüğü |
 | docs-check | belge yapısı ve damgalar |

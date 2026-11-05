@@ -293,6 +293,7 @@ impl MenuState {
             .menu(tr!("menu.mock"), Box::new(OpenMock))
             .menu(tr!("menu.capture"), Box::new(OpenCapture))
             .menu(tr!("menu.git"), Box::new(OpenGit))
+            .menu(tr!("menu.route"), Box::new(OpenRoute))
             .separator()
             .menu(tr!("menu.next_tab"), Box::new(NextTab))
             .menu(tr!("menu.previous_tab"), Box::new(PrevTab))

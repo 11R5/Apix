@@ -142,6 +142,24 @@ impl Workspace {
                 tr!("network.connection.server"),
                 format!("{remote} · {}", response.version).into(),
             ));
+            body = body.child(
+                h_flex()
+                    .dir_row()
+                    .gap_3()
+                    .child(div().w(px(150.)).flex_none())
+                    .child(
+                        div()
+                            .id("network-route")
+                            .text_xs()
+                            .text_color(p.accent)
+                            .cursor_pointer()
+                            .hover(|s| s.underline())
+                            .child(tr!("route.from_network"))
+                            .on_click(|_, window, cx| {
+                                window.dispatch_action(Box::new(super::OpenRoute), cx)
+                            }),
+                    ),
+            );
         }
         let via: SharedString = match (&local.interface, &local.kind) {
             (Some(name), Some(kind)) if name != kind => format!("{name} ({kind})").into(),

@@ -22,6 +22,7 @@ mod mock_ui;
 mod monitors_ui;
 mod network;
 mod palette;
+mod route_ui;
 mod runner_ui;
 mod script_editor;
 mod script_run;
@@ -89,6 +90,7 @@ actions!(
         OpenCapture,
         OpenGit,
         CheckForUpdates,
+        OpenRoute,
         CloseTab,
         NextTab,
         PrevTab,
@@ -2209,6 +2211,7 @@ impl Render for Workspace {
                 cx.listener(|this, _: &OpenCapture, window, cx| this.open_capture(window, cx)),
             )
             .on_action(cx.listener(|this, _: &OpenGit, window, cx| this.open_git(window, cx)))
+            .on_action(cx.listener(|this, _: &OpenRoute, window, cx| this.open_route(window, cx)))
             .on_action(cx.listener(|this, _: &CheckForUpdates, window, cx| {
                 this.check_updates(true, window, cx)
             }))

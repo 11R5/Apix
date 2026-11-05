@@ -410,6 +410,7 @@ menu.project_settings: Anfrage-Einstellungen des Projekts…
 menu.quit: Beenden
 menu.report_problem: Problem melden
 menu.request: Anfrage
+menu.route: Route und Karte…
 menu.runner: "Runner…"
 menu.save: Speichern
 menu.send: Senden
@@ -643,6 +644,22 @@ response.tab.pretty: Formatiert
 response.tab.raw: Roh
 response.tab.tests: Tests
 response.tab.tests_count: "Tests %{passed}/%{total}"
+route.about: Die Router zwischen diesem Computer und dem Server, aus dem traceroute des Systems, verortet mit einer IP-Standortdatenbank auf diesem Computer. Nichts wird online abgefragt.
+route.download: DB-IP Lite herunterladen
+route.downloaded: "Standortdatenbank gespeichert: %{file}"
+route.downloading: Standortdatenbank wird heruntergeladen…
+route.empty: Host oder Adresse eingeben und auf Verfolgen klicken.
+route.from_network: Route verfolgen und auf einer Karte zeigen…
+route.geo_file: "Standorte: %{file}"
+route.geo_loading: Standortdatenbank wird gelesen…
+route.local: lokales Netz
+route.no_geo: "Noch keine IP-Standortdatenbank, daher zeigt die Karte keine Orte. Laden Sie die kostenlose von DB-IP (etwa 130 MB, CC BY 4.0) oder legen Sie eine .mmdb-Datei (DB-IP Lite, GeoLite2 City) in %{folder}."
+route.open_folder: Ordner öffnen
+route.running: Verfolgung läuft… ein Hop kann einige Sekunden dauern, wenn ein Router nicht antwortet.
+route.target: Server
+route.title: Route und Karte
+route.trace: Verfolgen
+route.waiting: Warte auf den ersten Hop…
 runner.all: "Alle"
 runner.bad_number: "Durchläufe und Pause müssen ganze Zahlen sein."
 runner.bail: "Beim ersten Fehler anhalten"

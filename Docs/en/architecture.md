@@ -43,6 +43,7 @@ crates/
 ├── apix-proto    other protocols: MQTT (rumqttc)
 ├── apix-mock     a local mock server answering from saved examples (hyper)
 ├── apix-capture  a recording proxy: plain HTTP, CONNECT tunnels, HTTPS opened with a local CA (rcgen, rustls)
+├── apix-route    the route to a server (the system's traceroute) and where its hops are (an offline .mmdb database)
 │                 or server reflection
 ├── apix-cli      `apix` binary: send / run / diff / schema / import / shell from terminal & CI
 └── apix-desktop  GPUI desktop app (Windows, macOS and Linux from one crate)
@@ -704,6 +705,33 @@ then `git commit -- .`, so only the open folder), `branches`, `switch`,
 runs with `GIT_TERMINAL_PROMPT=0`, so a remote that needs a password fails
 with git's message instead of waiting for input; credential helpers still
 work. Each operation runs in the background and refreshes the status bar.
+
+## Route and map
+
+`apix-route` starts the system's tool, like `apix_core::git` starts git:
+`tracert -d -h N -w 1000` on Windows, `traceroute -n -q 1 -w 1 -m N` on macOS
+and Linux, `tracepath -n -m N` when traceroute is missing. None of them needs
+administrator rights, which sending ICMP ourselves would on Windows.
+`parse_line` reads a line of any of them by its numbers and addresses only
+(the hop number first, every `N ms`, the first word that parses as an
+address), so a translated Windows in its own code page reads the same; a
+hop's time is the best of its tries, `<1 ms` counts as half a millisecond.
+`Trace` iterates the hops as the tool prints them and kills it when dropped
+or stopped.
+
+`Geo` opens a MaxMind DB file (`maxminddb`) and gives a `Place` (latitude,
+longitude, English city name, ISO country) for public addresses; private,
+loopback, link-local, CGNAT and multicast addresses are never looked up. The
+database is whichever `.mmdb` comes first in `<config>/Apix/geo`; `install`
+unpacks a download (gzip), checks that it opens and only then replaces the
+old one. `dbip_urls` gives this month's and last month's DB-IP Lite address
+(`APIX_GEO_URL` replaces them). The map is an equirectangular projection of
+`land::LAND`, continents and large islands drawn by hand to within about two
+degrees (with the Black and Caspian seas in `land::WATER`), so no map data is
+downloaded or licensed. The desktop window (`workspace/route_ui.rs`) runs the
+trace on a thread, places hops as they come, reads the database once per run
+of the app and paints the map with GPUI paths. `apix trace` prints the hops
+with their places and the distance of each jump over 100 km.
 
 ## Update check
 

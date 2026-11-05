@@ -410,6 +410,7 @@ menu.project_settings: Proje istek ayarları…
 menu.quit: Çıkış
 menu.report_problem: Sorun bildir
 menu.request: İstek
+menu.route: Rota ve harita…
 menu.runner: "Runner…"
 menu.save: Kaydet
 menu.send: Gönder
@@ -643,6 +644,22 @@ response.tab.pretty: Biçimli
 response.tab.raw: Ham
 response.tab.tests: Testler
 response.tab.tests_count: "Testler %{passed}/%{total}"
+route.about: Bu bilgisayarla sunucu arasındaki yönlendiriciler; sistemin kendi traceroute aracından gelir, bu bilgisayardaki bir IP konum veritabanıyla yerleştirilir. Çevrimiçi hiçbir sorgu yapılmaz.
+route.download: DB-IP Lite'ı indir
+route.downloaded: "Konum veritabanı kaydedildi: %{file}"
+route.downloading: Konum veritabanı indiriliyor…
+route.empty: Bir sunucu adı ya da adres yazıp İzle'ye basın.
+route.from_network: Rotayı izle ve haritada gör…
+route.geo_file: "Konumlar: %{file}"
+route.geo_loading: Konum veritabanı okunuyor…
+route.local: yerel ağ
+route.no_geo: "Henüz bir IP konum veritabanı yok, bu yüzden haritada yer görünmez. DB-IP'nin ücretsiz veritabanını indirin (yaklaşık 130 MB, CC BY 4.0) ya da %{folder} klasörüne bir .mmdb dosyası (DB-IP Lite, GeoLite2 City) koyun."
+route.open_folder: Klasörü aç
+route.running: İzleniyor… bir yönlendirici yanıt vermezse her atlama birkaç saniye sürebilir.
+route.target: Sunucu
+route.title: Rota ve harita
+route.trace: İzle
+route.waiting: İlk atlama bekleniyor…
 runner.all: "Hepsi"
 runner.bad_number: "Tekrar ve bekleme tam sayı olmalı."
 runner.bail: "İlk hatada dur"

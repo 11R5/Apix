@@ -128,6 +128,9 @@ Measurements of the other tools on the same machine are planned.
 - **Capture proxy:** traffic through a local proxy becomes requests with their
   answers (`apix capture`, View › Capture proxy…); HTTPS too, with a local
   certificate authority you choose to trust.
+- **Route and map:** the routers between you and the server (the system's
+  traceroute, no admin rights) on a world map, placed with an offline IP
+  location database (`apix trace`, View › Route and map…).
 - **API documentation:** one HTML page or Markdown from a collection
   (`apix docs`, File › Export documentation…), with no secrets in it.
 - **Monitors:** run a collection or folder every few minutes and hear about it
@@ -200,6 +203,7 @@ apix mock my-api --port 4010                 # serve saved examples as a mock AP
 apix docs my-api --out api.html              # API documentation (or --out API.md)
 apix capture my-api/captured --only api.test # record traffic through a proxy on :8888
 apix update                                  # is a newer Apix out? (nothing is downloaded)
+apix trace https://api.example.com          # the route to the server, hop by hop
 apix run my-api --data users.csv -p 8        # 8 iterations at once
 apix send chat/socket.apix --message '{"join":"room-1"}' --listen 10   # a ws:// request
 apix send events/live.apix                   # server-sent events, printed as they arrive

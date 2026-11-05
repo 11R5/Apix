@@ -410,6 +410,7 @@ menu.project_settings: プロジェクトのリクエスト設定…
 menu.quit: 終了
 menu.report_problem: 問題を報告
 menu.request: リクエスト
+menu.route: 経路と地図…
 menu.runner: "Runner…"
 menu.save: 保存
 menu.send: 送信
@@ -643,6 +644,22 @@ response.tab.pretty: 整形
 response.tab.raw: 生データ
 response.tab.tests: テスト
 response.tab.tests_count: "テスト %{passed}/%{total}"
+route.about: このコンピューターとサーバーの間のルーター。システムの traceroute で調べ、このコンピューター上の IP 位置データベースで位置を求めます。オンラインでの照会は行いません。
+route.download: DB-IP Lite をダウンロード
+route.downloaded: "位置データベースを保存しました: %{file}"
+route.downloading: 位置データベースをダウンロードしています…
+route.empty: ホスト名かアドレスを入力して「追跡」を押してください。
+route.from_network: 経路を追跡して地図で見る…
+route.geo_file: "位置情報: %{file}"
+route.geo_loading: 位置データベースを読み込んでいます…
+route.local: ローカルネットワーク
+route.no_geo: "IP 位置データベースがまだないため、地図に場所は表示されません。DB-IP の無料データベース (約 130 MB、CC BY 4.0) をダウンロードするか、.mmdb ファイル (DB-IP Lite、GeoLite2 City) を %{folder} に置いてください。"
+route.open_folder: フォルダーを開く
+route.running: 追跡中… 応答しないルーターがあると各ホップに数秒かかることがあります。
+route.target: サーバー
+route.title: 経路と地図
+route.trace: 追跡
+route.waiting: 最初のホップを待っています…
 runner.all: "すべて"
 runner.bad_number: "反復回数と待機は整数で指定してください。"
 runner.bail: "最初の失敗で止める"

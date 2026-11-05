@@ -20,6 +20,7 @@ apix-import.workspace = true
 apix-runner.workspace = true
 apix-mock.workspace = true
 apix-capture.workspace = true
+apix-route.workspace = true
 apix-script.workspace = true
 # The OS config folder for recent collections and chosen environments.
 dirs = "6"

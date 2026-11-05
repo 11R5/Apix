@@ -410,6 +410,7 @@ menu.project_settings: إعدادات طلبات المشروع…
 menu.quit: إنهاء
 menu.report_problem: الإبلاغ عن مشكلة
 menu.request: الطلب
+menu.route: المسار والخريطة…
 menu.runner: "Runner…"
 menu.save: حفظ
 menu.send: إرسال
@@ -643,6 +644,22 @@ response.tab.pretty: منسّق
 response.tab.raw: خام
 response.tab.tests: الاختبارات
 response.tab.tests_count: "الاختبارات %{passed}/%{total}"
+route.about: "الموجّهات بين هذا الحاسوب والخادم، من أداة traceroute في النظام، مع مواقعها من قاعدة بيانات مواقع IP على هذا الحاسوب. لا يُستعلم عن أي شيء عبر الإنترنت."
+route.download: تنزيل DB-IP Lite
+route.downloaded: "حُفظت قاعدة بيانات المواقع: %{file}"
+route.downloading: جارٍ تنزيل قاعدة بيانات المواقع…
+route.empty: اكتب اسم مضيف أو عنوانًا واضغط تتبّع.
+route.from_network: تتبّع المسار وعرضه على خريطة…
+route.geo_file: "المواقع: %{file}"
+route.geo_loading: جارٍ قراءة قاعدة بيانات المواقع…
+route.local: شبكة محلية
+route.no_geo: "لا توجد قاعدة بيانات لمواقع IP بعد، لذا لا تعرض الخريطة أماكن. نزّل القاعدة المجانية من DB-IP (نحو 130 ميغابايت، CC BY 4.0) أو ضع ملف ‎.mmdb (DB-IP Lite أو GeoLite2 City) في %{folder}."
+route.open_folder: فتح المجلد
+route.running: جارٍ التتبّع… قد تستغرق كل قفزة بضع ثوانٍ إذا لم يستجب موجّه.
+route.target: الخادم
+route.title: المسار والخريطة
+route.trace: تتبّع
+route.waiting: بانتظار القفزة الأولى…
 runner.all: "الكل"
 runner.bad_number: "يجب أن تكون التكرارات والانتظار أعدادًا صحيحة."
 runner.bail: "التوقف عند أول فشل"

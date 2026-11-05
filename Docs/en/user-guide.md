@@ -376,6 +376,28 @@ handshake agreed on. Apix asks for compressed answers (`gzip`, `deflate`,
 `br`) unless the request sets its own `Accept-Encoding`, and shows the
 `Content-Encoding` and `Content-Length` headers as the server sent them.
 
+### Route and map
+
+**Trace the route and see it on a map…** under the server's address (or
+**View › Route and map…**) lists the routers between this computer and the
+server, with the time to each, and draws them on a world map. The hops come
+from the system's own tool (`tracert` on Windows, `traceroute` or `tracepath`
+elsewhere), so no administrator rights are needed; a router that does not
+answer shows as `*`. Addresses on your own network are marked as such.
+
+Where each router is comes from an IP location database on this computer;
+nothing is looked up online. Without one the list still works and the map
+stays empty: **Download DB-IP Lite** fetches DB-IP's free database (about
+130 MB, CC BY 4.0) into `<config>/Apix/geo`, or put any `.mmdb` city
+database there (DB-IP Lite, MaxMind GeoLite2 City). Such databases place
+an address in a city at best and are sometimes wrong for backbone routers.
+In a terminal, `apix trace <url or host>` prints the same list.
+
+![The route on a map](images/route.png)
+
+The screenshot uses a small demonstration database (`cargo run -p apix-route
+--example demo_geo`), not real lookups.
+
 ## WebSocket and server-sent events
 
 **WebSocket.** A request whose URL starts with `ws://` or `wss://` is a
