@@ -319,7 +319,7 @@ impl ScriptEditor {
         let scripts = self.scripts(cx);
         let checks = self.asserts.len();
         bidi::fill_tabs(
-            TabBar::new("script-event").segmented().small(),
+            TabBar::new("script-event").segmented().xsmall(),
             Some(match self.view {
                 View::Script(Event::PreRequest) => 0,
                 View::Script(Event::Test) => 1,
@@ -349,34 +349,42 @@ impl ScriptEditor {
 impl Render for ScriptEditor {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let p = crate::theme::current();
+        // The hint explains an empty script; once there is one it is in the way.
         let (content, note) = match self.view {
             View::Asserts => (
                 self.render_asserts(cx).into_any_element(),
-                tr!("scripts.asserts_hint"),
+                self.asserts.is_empty().then(|| tr!("scripts.asserts_hint")),
             ),
             View::Script(event) => {
                 let (editor, hint, around) = match event {
                     Event::PreRequest => (&self.pre, tr!("scripts.pre_hint"), self.around.0),
                     Event::Test => (&self.test, tr!("scripts.test_hint"), self.around.1),
                 };
+                let empty = editor.read(cx).value().trim().is_empty();
                 let note = if around > 0 {
-                    tr!("scripts.around", hint = hint, count = around)
+                    Some(tr!("scripts.around", hint = hint, count = around))
                 } else {
-                    hint
+                    empty.then_some(hint)
                 };
-                (Editor::new(editor).h_full().into_any_element(), note)
+                (
+                    Editor::new(editor)
+                        .bordered(false)
+                        .h_full()
+                        .into_any_element(),
+                    note,
+                )
             }
         };
         v_flex()
             .size_full()
             .gap_2()
             .child(h_flex().dir_row().w_full().min_w_0().child(self.picker(cx)))
-            .child(
+            .children(note.map(|note| {
                 div()
                     .text_xs()
                     .text_color(p.text_muted)
-                    .child(bidi::para(note)),
-            )
+                    .child(bidi::para(note))
+            }))
             .child(div().flex_1().min_h_0().child(content))
     }
 }
