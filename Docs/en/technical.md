@@ -30,11 +30,13 @@ tools/
 vendor/
 └── gpui-pre-windows  gpui's Windows backend with a right-to-left text fix
 scripts/
+├── package-*.sh/.ps1  release packages: Windows installer and zip, macOS .dmg, .deb, tarball, Arch package
 └── measure.ps1     performance measurements for the README
 examples/
 ├── jsonplaceholder a small collection the app opens when run from the repo
 └── ci/             GitHub Actions (also scheduled monitors), GitLab CI and Azure Pipelines examples
 plugins/            example plugins (.wasm), built from apix-plugin-sdk's examples
+site/               the download page (GitHub Pages), reading the latest release from GitHub
 action.yml          the GitHub Action (`uses: 11R5/Apix@…`)
 Dockerfile          the `apix` command line as a container image
 .github/workflows/  CI on three systems, and the image published on version tags
@@ -209,6 +211,20 @@ crate is fixed.
 | Desktop app | the same for `apix-desktop` on the three systems (Linux installs the window, font and keychain libraries first) |
 | GitHub Action | the repository's own action (`uses: ./`) against `examples/jsonplaceholder`, on Linux and Windows, and that it wrote its reports |
 
+`.github/workflows/release.yml` builds the release packages on a version tag
+(`v1.2.3`, which must match `Cargo.toml`) and publishes them as a GitHub
+release with `SHA256SUMS.txt`; started by hand it only builds them, as the
+run's artifacts. Windows: `scripts/package-windows.ps1` (Inno Setup 6,
+`packaging/windows/apix.iss`: per-user or per-machine install, optional PATH
+and `.apix` association, uninstaller). macOS: `scripts/package-macos.sh`
+builds both architectures, joins them with `lipo` into `Apix.app` (ad-hoc
+signed) and makes a `.dmg`. Linux (on Ubuntu 22.04, so glibc 2.35 is enough):
+`scripts/package-linux.sh` makes the tarball with `install.sh`, the `.deb`
+(dependencies from `dpkg-shlibdeps`, plus `libvulkan1`) and a filled-in
+`PKGBUILD`; `scripts/package-arch.sh` builds the Arch package from them in
+an `archlinux` container. The `.deb` and the Arch package are installed in
+the workflow and checked for missing libraries. `.github/workflows/pages.yml`
+publishes `site/` to https://11r5.github.io/Apix/ .
 `.github/workflows/docker.yml` publishes the container image on version tags.
 The action caches the `apix` it builds under a hash of the engine's sources,
 so a new commit rebuilds it and an unchanged one reuses it.

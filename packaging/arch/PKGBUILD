@@ -1,0 +1,30 @@
+# Maintainer: Ahmet Demir <46265066+AhmetVDemir@users.noreply.github.com>
+# The prebuilt Apix release for Arch Linux (and Manjaro, EndeavourOS, …).
+# scripts/package-linux.sh fills in @VERSION@ and @SHA256@; the release
+# carries the filled-in file and the package made from it.
+pkgname=apix
+pkgver=@VERSION@
+pkgrel=1
+pkgdesc="Fast, native API client, with the apix command line"
+arch=('x86_64')
+url="https://github.com/11R5/Apix"
+license=('Apache-2.0')
+depends=('gcc-libs' 'glibc' 'dbus' 'fontconfig' 'freetype2' 'libx11' 'libxcb'
+         'libxkbcommon' 'libxkbcommon-x11' 'wayland' 'vulkan-icd-loader')
+optdepends=('vulkan-driver: GPU drawing (mesa provides one for most cards)')
+options=('!strip' '!debug')
+source=("https://github.com/11R5/Apix/releases/download/v${pkgver}/apix-${pkgver}-linux-x64.tar.gz")
+sha256sums=('@SHA256@')
+
+package() {
+    cd "apix-${pkgver}-linux-x64"
+    install -Dm755 apix-desktop "$pkgdir/usr/bin/apix-desktop"
+    install -Dm755 apix "$pkgdir/usr/bin/apix"
+    install -Dm644 apix.desktop "$pkgdir/usr/share/applications/apix.desktop"
+    install -Dm644 apix.xml "$pkgdir/usr/share/mime/packages/apix.xml"
+    install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+    for dir in icons/hicolor/*/; do
+        size="$(basename "$dir")"
+        install -Dm644 "$dir/apps/apix.png" "$pkgdir/usr/share/icons/hicolor/$size/apps/apix.png"
+    done
+}

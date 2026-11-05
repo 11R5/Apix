@@ -10,6 +10,7 @@ command line runs the same requests in a terminal or CI.
 
 ## Contents
 
+- [Installing Apix](#installing-apix)
 - [Opening a collection](#opening-a-collection)
 - [The window](#the-window)
 - [Sending a request](#sending-a-request)
@@ -50,6 +51,28 @@ command line runs the same requests in a terminal or CI.
 - [Setup](#setup)
 - [Settings and language](#settings-and-language)
 - [Keyboard shortcuts](#keyboard-shortcuts)
+
+## Installing Apix
+
+The download page, **https://11r5.github.io/Apix/**, offers the latest
+release for the system you are on; every file is also on the
+[releases page](https://github.com/11R5/Apix/releases). Each one has the
+desktop app and the `apix` command line.
+
+| System | File | How |
+|---|---|---|
+| Windows 10/11 | `Apix-<version>-windows-x64-setup.exe` | Run it. It installs for your user without admin rights (or for everyone, if you choose), adds Apix to the Start menu and can put `apix` on the PATH and open `.apix` files. `…-windows-x64.zip` is the same without installing. |
+| macOS 11+ | `Apix-<version>-macos-universal.dmg` | Open it and drag Apix to Applications; one app for Apple silicon and Intel. The command line is `/Applications/Apix.app/Contents/MacOS/apix`. |
+| Debian, Ubuntu, Mint, … | `apix_<version>_amd64.deb` | `sudo apt install ./apix_<version>_amd64.deb` |
+| Arch, Manjaro, EndeavourOS, … | `apix-<version>-1-x86_64.pkg.tar.zst` | `sudo pacman -U ./apix-<version>-1-x86_64.pkg.tar.zst`, or `makepkg -si` with the release's `PKGBUILD` |
+| Other Linux (glibc 2.35+) | `apix-<version>-linux-x64.tar.gz` | Unpack it and run `./install.sh` (for your user; `--system` for everyone, `--uninstall` to remove) |
+
+The builds are not code-signed yet. On Windows, SmartScreen may stop the
+installer: **More info › Run anyway**. On macOS, open Apix the first time with
+right-click › **Open**, or run `xattr -dr com.apple.quarantine
+/Applications/Apix.app`. On Linux, Apix draws with Vulkan, so the graphics
+driver needs Vulkan support (Mesa provides it on most systems).
+`SHA256SUMS.txt` in each release lists the files' checksums.
 
 ## Opening a collection
 

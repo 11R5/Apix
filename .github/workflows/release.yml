@@ -1,0 +1,153 @@
+# Builds the installers and packages for Windows, macOS and Linux. A version
+# tag (v1.2.3, the same as Cargo.toml) publishes them as a GitHub release,
+# which the download page links to; started by hand from the Actions tab it
+# only builds them, as artifacts of the run, to try.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: v
+        shell: bash
+        run: |
+          cargo_version="$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -n1)"
+          if [ "${GITHUB_REF_TYPE}" = tag ]; then
+            tag="${GITHUB_REF_NAME#v}"
+            if [ "$tag" != "$cargo_version" ]; then
+              echo "::error::tag v$tag does not match Cargo.toml version $cargo_version"
+              exit 1
+            fi
+          fi
+          echo "version=$cargo_version" >> "$GITHUB_OUTPUT"
+
+  windows:
+    needs: version
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: release
+      - name: Inno Setup
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) { choco install innosetup -y --no-progress }
+      - shell: pwsh
+        run: scripts/package-windows.ps1 -Version ${{ needs.version.outputs.version }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: dist/Apix-*
+          if-no-files-found: error
+
+  macos:
+    needs: version
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin, x86_64-apple-darwin
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: release
+      - run: bash scripts/package-macos.sh ${{ needs.version.outputs.version }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: dist/*.dmg
+          if-no-files-found: error
+
+  linux:
+    needs: version
+    # The oldest supported runner: what is built here runs on newer systems too.
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Libraries for the window, fonts and keychain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            pkg-config cmake clang libssl-dev libdbus-1-dev \
+            libxkbcommon-dev libxkbcommon-x11-dev libwayland-dev \
+            libx11-dev libx11-xcb-dev libxcb1-dev libvulkan-dev \
+            libfontconfig1-dev libfreetype-dev libzstd-dev libasound2-dev \
+            dpkg-dev
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: release
+      - run: bash scripts/package-linux.sh ${{ needs.version.outputs.version }}
+      - name: The package installs and both programs start
+        run: |
+          sudo apt-get install -y ./dist/apix_*_amd64.deb
+          apix --version
+          ldd /usr/bin/apix-desktop | (! grep "not found")
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: |
+            dist/*.deb
+            dist/*.tar.gz
+            dist/PKGBUILD
+          if-no-files-found: error
+
+  arch:
+    needs: linux
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux
+          path: dist
+      - run: bash scripts/package-arch.sh
+      - name: The package installs and both programs start
+        run: |
+          pacman -Syu --noconfirm
+          pacman -U --noconfirm dist/apix-*.pkg.tar.zst
+          apix --version
+          ldd /usr/bin/apix-desktop | (! grep "not found")
+      - uses: actions/upload-artifact@v4
+        with:
+          name: arch
+          path: dist/*.pkg.tar.zst
+          if-no-files-found: error
+
+  publish:
+    if: github.ref_type == 'tag'
+    needs: [version, windows, macos, linux, arch]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Checksums
+        working-directory: dist
+        run: sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt
+      - name: GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "Apix ${{ needs.version.outputs.version }}" \
+            --generate-notes

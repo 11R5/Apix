@@ -1,4 +1,4 @@
-<!-- translated from en/technical.md sha256:9d94c00312cff84e -->
+<!-- translated from en/technical.md sha256:d027ba5585ffd037 -->
 
 # Teknik notlar
 
@@ -31,11 +31,13 @@ tools/
 vendor/
 └── gpui-pre-windows  sağdan sola metin düzeltmesi içeren gpui Windows backend'i
 scripts/
+├── package-*.sh/.ps1  sürüm paketleri: Windows kurulumu ve zip, macOS .dmg, .deb, tarball, Arch paketi
 └── measure.ps1     README için performans ölçümleri
 examples/
 ├── jsonplaceholder repodan çalıştırıldığında uygulamanın açtığı küçük bir koleksiyon
 └── ci/             GitHub Actions (zamanlanmış monitörler de), GitLab CI ve Azure Pipelines örnekleri
 plugins/            örnek eklentiler (.wasm), apix-plugin-sdk örneklerinden derlenir
+site/               indirme sayfası (GitHub Pages), son sürümü GitHub'dan okur
 action.yml          GitHub Action (`uses: 11R5/Apix@…`)
 Dockerfile          konteyner imajı olarak `apix` komutu
 .github/workflows/  üç sistemde CI ve sürüm etiketlerinde imaj yayımı
@@ -210,6 +212,21 @@ patch ile devreye alır. Upstream crate düzeltildiğinde kaldırılabilir.
 | Motor ve CLI | masaüstü uygulaması dışındaki her şey için `cargo clippy -D warnings` ve `cargo test`; Windows, macOS ve Linux'ta |
 | Masaüstü uygulaması | aynısı `apix-desktop` için üç sistemde (Linux önce pencere, yazı tipi ve anahtarlık kütüphanelerini kurar) |
 | GitHub Action | deponun kendi action'ı (`uses: ./`) `examples/jsonplaceholder` ile, Linux ve Windows'ta; raporların yazıldığı da denetlenir |
+
+`.github/workflows/release.yml` bir sürüm etiketinde (`v1.2.3`, `Cargo.toml`
+ile aynı olmalı) sürüm paketlerini derler ve `SHA256SUMS.txt` ile bir GitHub
+sürümü olarak yayımlar; elle başlatılırsa yalnızca derler, çalıştırmanın
+yapıtları olarak. Windows: `scripts/package-windows.ps1` (Inno Setup 6,
+`packaging/windows/apix.iss`: kullanıcıya ya da makineye kurulum, isteğe bağlı
+PATH ve `.apix` ilişkilendirmesi, kaldırıcı). macOS: `scripts/package-macos.sh`
+iki mimariyi derler, `lipo` ile `Apix.app`'te birleştirir (ad-hoc imzalı) ve
+bir `.dmg` yapar. Linux (Ubuntu 22.04'te, böylece glibc 2.35 yeter):
+`scripts/package-linux.sh` `install.sh`'li tarball'u, `.deb`'i (bağımlılıklar
+`dpkg-shlibdeps`'ten, artı `libvulkan1`) ve doldurulmuş `PKGBUILD`'i yapar;
+`scripts/package-arch.sh` bunlardan bir `archlinux` konteynerinde Arch paketini
+derler. `.deb` ve Arch paketi iş akışında kurulur ve eksik kütüphane için
+denetlenir. `.github/workflows/pages.yml` `site/` klasörünü
+https://11r5.github.io/Apix/ adresine yayımlar.
 
 `.github/workflows/docker.yml` sürüm etiketlerinde konteyner imajını
 yayımlar. Action derlediği `apix`'i motor kaynaklarının özetiyle önbelleğe

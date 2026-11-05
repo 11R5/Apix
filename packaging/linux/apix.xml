@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- The .apix request file type, so file managers open it with Apix. -->
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <mime-type type="application/x-apix">
+    <sub-class-of type="application/toml"/>
+    <comment>Apix request</comment>
+    <glob pattern="*.apix"/>
+    <icon name="apix"/>
+  </mime-type>
+</mime-info>

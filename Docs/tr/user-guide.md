@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:c296a2c59a6e5bd2 -->
+<!-- translated from en/user-guide.md sha256:1a48d72911134fb5 -->
 
 # Apix kullanım kılavuzu
 
@@ -13,6 +13,7 @@ veya CI'da çalıştırır.
 
 ## İçindekiler
 
+- [Apix'i yükleme](#apixi-yükleme)
 - [Koleksiyon açma](#koleksiyon-açma)
 - [Pencere](#pencere)
 - [Bir istek gönderme](#bir-istek-gönderme)
@@ -53,6 +54,27 @@ veya CI'da çalıştırır.
 - [Kurulum](#kurulum)
 - [Ayarlar ve dil](#ayarlar-ve-dil)
 - [Klavye kısayolları](#klavye-kısayolları)
+
+## Apix'i yükleme
+
+İndirme sayfası, **https://11r5.github.io/Apix/**, kullandığınız sistem için
+son sürümü sunar; tüm dosyalar [sürümler sayfasında](https://github.com/11R5/Apix/releases)
+da vardır. Her birinde masaüstü uygulaması ve `apix` komut satırı bulunur.
+
+| Sistem | Dosya | Nasıl |
+|---|---|---|
+| Windows 10/11 | `Apix-<sürüm>-windows-x64-setup.exe` | Çalıştırın. Yönetici izni istemeden kullanıcınıza (isterseniz herkese) kurar, Başlat menüsüne ekler; `apix`'i PATH'e ekleyebilir ve `.apix` dosyalarını açabilir. `…-windows-x64.zip` kurulumsuz hâlidir. |
+| macOS 11+ | `Apix-<sürüm>-macos-universal.dmg` | Açın ve Apix'i Uygulamalar'a sürükleyin; Apple silicon ve Intel için tek uygulama. Komut satırı `/Applications/Apix.app/Contents/MacOS/apix`'tir. |
+| Debian, Ubuntu, Mint, … | `apix_<sürüm>_amd64.deb` | `sudo apt install ./apix_<sürüm>_amd64.deb` |
+| Arch, Manjaro, EndeavourOS, … | `apix-<sürüm>-1-x86_64.pkg.tar.zst` | `sudo pacman -U ./apix-<sürüm>-1-x86_64.pkg.tar.zst` ya da sürümdeki `PKGBUILD` ile `makepkg -si` |
+| Diğer Linux (glibc 2.35+) | `apix-<sürüm>-linux-x64.tar.gz` | Açın ve `./install.sh` çalıştırın (kullanıcınız için; herkes için `--system`, kaldırmak için `--uninstall`) |
+
+Derlemeler henüz kod imzalı değildir. Windows'ta SmartScreen kurulumu
+durdurabilir: **Ek bilgi › Yine de çalıştır**. macOS'te Apix'i ilk seferde
+sağ tık › **Aç** ile açın ya da `xattr -dr com.apple.quarantine
+/Applications/Apix.app` çalıştırın. Linux'ta Apix Vulkan ile çizer; ekran
+kartı sürücüsünün Vulkan desteği olmalıdır (çoğu sistemde Mesa sağlar).
+Her sürümdeki `SHA256SUMS.txt` dosyaların özetlerini listeler.
 
 ## Koleksiyon açma
 

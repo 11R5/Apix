@@ -25,3 +25,8 @@ rustc-ice-*.txt
 
 # Apix: local environment overrides hold secrets, never commit them
 *.local.toml
+
+# Release files made by scripts/package-*.
+/dist
+# Copied in by the Pages workflow (from packaging/icons and Docs/*/images).
+/site/*.png

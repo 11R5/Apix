@@ -1,0 +1,44 @@
+# Publishes the download page (site/) on GitHub Pages:
+# https://11r5.github.io/Apix/ . The page reads the latest release from
+# GitHub's API, so a release needs no new deployment.
+name: Download page
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "site/**"
+      - "packaging/icons/**"
+      - "Docs/*/images/main.png"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Images
+        run: |
+          cp packaging/icons/apix-256.png site/apix.png
+          cp packaging/icons/apix-64.png site/favicon.png
+          cp Docs/en/images/main.png site/screenshot-en.png
+          cp Docs/tr/images/main.png site/screenshot-tr.png
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -3,3 +3,8 @@
 
 # What real code generators wrote, byte for byte; some of it is binary.
 crates/apix-grpc/tests/fixtures/generated/* -text
+
+# Scripts and package recipes run on Linux and macOS: keep LF endings.
+*.sh text eol=lf
+PKGBUILD text eol=lf
+packaging/linux/apix.desktop text eol=lf

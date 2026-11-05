@@ -14,6 +14,13 @@
 
 ![Apix](Docs/en/images/main.png)
 
+## Download
+
+**[Download page](https://11r5.github.io/Apix/)**: a Windows installer, a macOS
+app (Apple silicon and Intel), `.deb` for Debian and Ubuntu, a package for
+Arch, and a tarball for other Linux systems, each with the `apix` command line.
+How to install each one: [user guide](Docs/en/user-guide.md#installing-apix).
+
 ## Why Apix
 
 - **Native and GPU-rendered.** No Electron, no web view: the interface is drawn
