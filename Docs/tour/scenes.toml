@@ -277,7 +277,7 @@ dialog = "settings"
 name = "look"
 tabs = ["users/list-users.apix"]
 dialog = "settings"
-steps = ["settings.scroll 1000"]
+steps = ["settings.section 1"]
 
 [[scene]]
 name = "capture"

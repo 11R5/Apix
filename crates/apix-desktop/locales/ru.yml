@@ -482,6 +482,7 @@ load.starting: Запуск…
 load.title: Нагрузочный тест
 load.total: Запросов
 load.undefined: "Неопределённые переменные: %{names}"
+menu.about_apix: О программе Apix
 menu.active_environment: Активное окружение
 menu.cancel: Отменить
 menu.capture: Прокси для записи…
@@ -493,8 +494,11 @@ menu.command_palette: Палитра команд…
 menu.compare: Сравнить ответы…
 menu.connect_claude: Подключить к Claude (MCP)…
 menu.cookies: Cookie…
+menu.copy: Копировать
 menu.copy_as: Копировать как
+menu.cut: Вырезать
 menu.documentation: Документация
+menu.edit: Правка
 menu.encrypt_collection: Зашифровать эту коллекцию…
 menu.environment: Окружение
 menu.export_docs: Экспорт документации…
@@ -506,6 +510,8 @@ menu.group_by: Группировать боковую панель по
 menu.group_collection: Коллекциям
 menu.group_environment: Окружениям
 menu.help: Справка
+menu.hide_apix: Скрыть Apix
+menu.hide_others: Скрыть остальные
 menu.history: История…
 menu.import_postman: Импорт (Postman, Insomnia, OpenAPI, HAR, WSDL)…
 menu.import_url: Импорт по URL…
@@ -524,20 +530,26 @@ menu.new_request_with_method: Новый запрос с методом
 menu.next_tab: Следующая вкладка
 menu.open: Открыть…
 menu.open_recent: Открыть недавние
+menu.paste: Вставить
 menu.plugins: Плагины…
 menu.previous_tab: Предыдущая вкладка
 menu.project_auth: Авторизация проекта…
 menu.project_settings: Настройки запросов проекта…
 menu.quit: Выход
+menu.redo: Повторить
 menu.report_problem: Сообщить о проблеме
 menu.request: Запрос
 menu.route: Маршрут и карта…
 menu.runner: "Runner…"
 menu.save: Сохранить
+menu.select_all: Выбрать все
 menu.send: Отправить
+menu.services: Службы
 menu.settings: Настройки…
 menu.setup: Настройка…
+menu.show_all: Показать все
 menu.source_code: Исходный код
+menu.undo: Отменить
 menu.variables: Переменные и окружения…
 menu.view: Вид
 mock.about: Отвечает примерами, сохранёнными в запросах этой коллекции, сопоставляя метод и путь ({{base_url}}/users/:id обслуживает /users/что-угодно). Запрос может выбрать пример заголовком x-mock-response-name или x-mock-response-code. Чтобы использовать сервер, направьте на него base_url окружения.
@@ -905,8 +917,10 @@ settings.secrets: Секреты окружений
 settings.secrets_description: Где на этом компьютере хранятся секретные значения окружений. Оба варианта не попадают в git; хранилище ключей к тому же не держит их на диске открытым текстом.
 settings.secrets_file: Файл .local.toml
 settings.secrets_keychain: Системное хранилище ключей
+settings.search: Поиск
+settings.section_ai: ИИ
 settings.section_general: "Общие"
-settings.section_look: "Внешний вид"
+settings.section_security: Безопасность
 settings.text_size: Размер текста
 settings.text_size_description: Масштабирует текст во всём окне.
 settings.text_size_value: "%{value} %"

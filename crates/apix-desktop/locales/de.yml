@@ -482,6 +482,7 @@ load.starting: Startet…
 load.title: Lasttest
 load.total: Anfragen
 load.undefined: "Undefinierte Variablen: %{names}"
+menu.about_apix: Über Apix
 menu.active_environment: Aktive Umgebung
 menu.cancel: Abbrechen
 menu.capture: Mitschnitt-Proxy…
@@ -493,8 +494,11 @@ menu.command_palette: Befehlspalette…
 menu.compare: Antworten vergleichen…
 menu.connect_claude: Mit Claude verbinden (MCP)…
 menu.cookies: Cookies…
+menu.copy: Kopieren
 menu.copy_as: Kopieren als
+menu.cut: Ausschneiden
 menu.documentation: Dokumentation
+menu.edit: Bearbeiten
 menu.encrypt_collection: Diese Sammlung verschlüsseln…
 menu.environment: Umgebung
 menu.export_docs: Dokumentation exportieren…
@@ -506,6 +510,8 @@ menu.group_by: Seitenleiste gruppieren nach
 menu.group_collection: Sammlung
 menu.group_environment: Umgebung
 menu.help: Hilfe
+menu.hide_apix: Apix ausblenden
+menu.hide_others: Andere ausblenden
 menu.history: Verlauf…
 menu.import_postman: Importieren (Postman, Insomnia, OpenAPI, HAR, WSDL)…
 menu.import_url: Von URL importieren…
@@ -524,20 +530,26 @@ menu.new_request_with_method: Neue Anfrage mit Methode
 menu.next_tab: Nächster Tab
 menu.open: Öffnen…
 menu.open_recent: Zuletzt geöffnet
+menu.paste: Einfügen
 menu.plugins: Plugins…
 menu.previous_tab: Vorheriger Tab
 menu.project_auth: Projekt-Authentifizierung…
 menu.project_settings: Anfrage-Einstellungen des Projekts…
 menu.quit: Beenden
+menu.redo: Wiederholen
 menu.report_problem: Problem melden
 menu.request: Anfrage
 menu.route: Route und Karte…
 menu.runner: "Runner…"
 menu.save: Speichern
+menu.select_all: Alles auswählen
 menu.send: Senden
+menu.services: Dienste
 menu.settings: Einstellungen…
 menu.setup: Einrichtung…
+menu.show_all: Alle einblenden
 menu.source_code: Quellcode
+menu.undo: Widerrufen
 menu.variables: Variablen und Umgebungen…
 menu.view: Ansicht
 mock.about: Antwortet mit den Beispielen, die bei den Anfragen dieser Sammlung gespeichert sind, zugeordnet nach Methode und Pfad ({{base_url}}/users/:id bedient /users/beliebig). Eine Anfrage kann mit dem Header x-mock-response-name oder x-mock-response-code ein Beispiel wählen. Richten Sie base_url einer Umgebung auf den Server, um ihn zu nutzen.
@@ -905,8 +917,10 @@ settings.secrets: Geheime Umgebungswerte
 settings.secrets_description: Wo geheime Umgebungswerte auf diesem Computer liegen. Beides bleibt außerhalb von git; der Schlüsselbund speichert sie zudem nicht als Klartext auf der Festplatte.
 settings.secrets_file: .local.toml-Datei
 settings.secrets_keychain: Schlüsselbund des Systems
+settings.search: Suchen
+settings.section_ai: KI
 settings.section_general: "Allgemein"
-settings.section_look: "Theme"
+settings.section_security: Sicherheit
 settings.text_size: Textgröße
 settings.text_size_description: Skaliert den Text des ganzen Fensters.
 settings.text_size_value: "%{value} %"

@@ -17,23 +17,23 @@ use super::collections::method_items;
 use super::*;
 use crate::bidi::{self, Bidi as _};
 
-const REPO: &str = "https://github.com/11R5/Apix";
+pub(super) const REPO: &str = "https://github.com/11R5/Apix";
 
 /// What the menus show, read when the bar renders.
-#[derive(Clone)]
-struct MenuState {
-    view: WeakEntity<Workspace>,
-    focus: FocusHandle,
-    open: bool,
-    has_project: bool,
-    group_by: Option<GroupBy>,
-    environment: Option<String>,
-    environments: Vec<String>,
-    recent: Vec<PathBuf>,
+#[derive(Clone, PartialEq)]
+pub(super) struct MenuState {
+    pub(super) view: WeakEntity<Workspace>,
+    pub(super) focus: FocusHandle,
+    pub(super) open: bool,
+    pub(super) has_project: bool,
+    pub(super) group_by: Option<GroupBy>,
+    pub(super) environment: Option<String>,
+    pub(super) environments: Vec<String>,
+    pub(super) recent: Vec<PathBuf>,
     /// Some encrypted collection is unlocked.
-    unlocked: bool,
+    pub(super) unlocked: bool,
     /// The open collection, when it is a single plain one that could be encrypted.
-    plain_collection: Option<PathBuf>,
+    pub(super) plain_collection: Option<PathBuf>,
 }
 
 impl MenuState {
@@ -317,11 +317,8 @@ impl MenuState {
 }
 
 impl Workspace {
-    /// The File · Request · Environment · View · Help buttons. They occlude the
-    /// title bar's drag area, so on Windows a click opens the menu instead of
-    /// grabbing the window.
-    pub(super) fn render_menu_bar(&self, cx: &mut Context<Self>) -> impl IntoElement {
-        let state = MenuState {
+    pub(super) fn menu_state(&self, cx: &mut Context<Self>) -> MenuState {
+        MenuState {
             view: cx.entity().downgrade(),
             focus: self.focus.clone(),
             open: self.workspace_root().is_some(),
@@ -341,7 +338,14 @@ impl Workspace {
                 .take(8)
                 .cloned()
                 .collect(),
-        };
+        }
+    }
+
+    /// The File · Request · Environment · View · Help buttons. They occlude the
+    /// title bar's drag area, so on Windows a click opens the menu instead of
+    /// grabbing the window.
+    pub(super) fn render_menu_bar(&self, cx: &mut Context<Self>) -> impl IntoElement {
+        let state = self.menu_state(cx);
         let button =
             |id: &'static str, label: SharedString| Button::new(id).ghost().xsmall().label(label);
         let (file, request, env, view, help) = (

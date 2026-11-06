@@ -1,13 +1,18 @@
-//! The Settings dialog (Ctrl+,). Every change applies and is saved at once.
+//! The Settings dialog (Ctrl+,): sections on the left, grouped rows on the
+//! right. Every change applies and is saved at once.
 
 use gpui_kit::component::button::{Button, ButtonVariants as _};
+use gpui_kit::component::input::{Input, InputEvent, InputState};
 use gpui_kit::component::select::{Select, SelectEvent, SelectState};
 use gpui_kit::component::slider::{Slider, SliderEvent, SliderState};
-use gpui_kit::component::{IndexPath, Sizable, WindowExt as _, h_flex, v_flex};
+use gpui_kit::component::switch::Switch;
+use gpui_kit::component::tooltip::Tooltip;
+use gpui_kit::component::{Icon, IconName, IndexPath, Sizable, WindowExt as _, h_flex, v_flex};
+use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
 use super::Workspace;
-use crate::bidi::{self, Bidi as _, DialogBidi as _};
+use crate::bidi::{self, Bidi as _};
 use crate::i18n;
 use crate::net;
 use crate::settings::Settings;
@@ -17,6 +22,21 @@ use apix_core::ai::Provider;
 
 type Picker = SelectState<Vec<SharedString>>;
 type Changed = SelectEvent<Vec<SharedString>>;
+
+/// Each side's share of the window, so the dialog covers about 45% of it.
+const DIALOG_SHARE: f32 = 0.67;
+
+/// The dialog's size in this window, never too small for its rows.
+fn dialog_size(window: &Window) -> Size<Pixels> {
+    let viewport = window.viewport_size();
+    size(
+        (viewport.width * DIALOG_SHARE).max(px(680.).min(viewport.width - px(32.))),
+        (viewport.height * DIALOG_SHARE).max(px(420.).min(viewport.height - px(32.))),
+    )
+}
+
+/// General, appearance, security and AI.
+const SECTIONS: usize = 4;
 
 /// Auto-lock choices, in minutes; 0 never locks.
 const AUTO_LOCK_MINUTES: [u32; 5] = [5, 15, 30, 60, 0];
@@ -29,21 +49,12 @@ fn auto_lock_label(minutes: u32) -> SharedString {
     }
 }
 
-/// "On" / "Off", in picker order.
-fn history_choices() -> Vec<SharedString> {
-    vec![tr!("reqset.on"), tr!("reqset.off")]
-}
-
 /// Where environment secrets go, in picker order: file, keychain.
 fn secrets_choices() -> Vec<SharedString> {
     vec![
         tr!("settings.secrets_file"),
         tr!("settings.secrets_keychain"),
     ]
-}
-
-fn appearance_choices() -> Vec<SharedString> {
-    Appearance::ALL.map(Appearance::label).to_vec()
 }
 
 /// The themes of one kind, as the pickers list them.
@@ -135,17 +146,12 @@ pub(super) struct SettingsView {
     appearance: Entity<Picker>,
     dark_theme: Entity<Picker>,
     light_theme: Entity<Picker>,
-    accent: Entity<Picker>,
     transparency: Entity<SliderState>,
     text_size: Entity<Picker>,
     editor_font: Entity<Picker>,
     density: Entity<Picker>,
     auto_lock: Entity<Picker>,
-    history: Entity<Picker>,
     secrets: Entity<Picker>,
-    prod: Entity<Picker>,
-    updates: Entity<Picker>,
-    ai: Entity<Picker>,
     ai_key: Entity<gpui_kit::component::input::InputState>,
     ai_provider: Entity<Picker>,
     ai_model: Entity<Picker>,
@@ -160,8 +166,10 @@ pub(super) struct SettingsView {
     /// The appearance picker shows this on the next paint (picking a theme
     /// of the other kind switches it).
     pending_appearance: Option<usize>,
-    /// The rows, scrolled by the documentation tour.
-    scroll: ScrollHandle,
+    /// The section shown: general, appearance, security or AI.
+    section: usize,
+    /// Filters the settings of every section.
+    search: Entity<InputState>,
     _subscriptions: Vec<Subscription>,
 }
 
@@ -176,18 +184,19 @@ impl SettingsView {
         let language_ix = i18n::LANGUAGES.iter().position(|l| l.code == current);
         let language = picker(i18n::names(), language_ix.map(IndexPath::new), window, cx);
 
+        let search = cx.new(|cx| InputState::new(window, cx).placeholder(tr!("settings.search")));
         let (themes, theme_errors) = theme::themes();
-        let dark_themes = ThemeList::of(&themes, false);
-        let light_themes = ThemeList::of(&themes, true);
         let appearance_ix = Appearance::ALL
             .iter()
             .position(|a| *a == Appearance::from_id(&settings.appearance));
         let appearance = picker(
-            appearance_choices(),
+            Appearance::ALL.map(Appearance::label).to_vec(),
             appearance_ix.map(IndexPath::new),
             window,
             cx,
         );
+        let dark_themes = ThemeList::of(&themes, false);
+        let light_themes = ThemeList::of(&themes, true);
         let dark_theme = picker(
             dark_themes.labels.clone(),
             dark_themes.index_of(&settings.theme),
@@ -201,13 +210,6 @@ impl SettingsView {
             cx,
         );
         let accents = accent_ids(&settings.accent);
-        let accent_ix = accents.iter().position(|a| *a == settings.accent);
-        let accent = picker(
-            accents.iter().map(|a| theme::accent_label(a)).collect(),
-            accent_ix.map(IndexPath::new),
-            window,
-            cx,
-        );
         let transparency = cx.new(|_| {
             SliderState::new()
                 .min(0.)
@@ -257,13 +259,6 @@ impl SettingsView {
             window,
             cx,
         );
-        let history_ix = if settings.history { 0 } else { 1 };
-        let history = picker(
-            history_choices(),
-            Some(IndexPath::new(history_ix)),
-            window,
-            cx,
-        );
         let secrets_ix = if settings.secrets_in_keychain { 1 } else { 0 };
         let secrets = picker(
             secrets_choices(),
@@ -271,10 +266,6 @@ impl SettingsView {
             window,
             cx,
         );
-        let prod_ix = if settings.confirm_prod { 0 } else { 1 };
-        let prod = picker(history_choices(), Some(IndexPath::new(prod_ix)), window, cx);
-        let ai_ix = if settings.ai_assist { 0 } else { 1 };
-        let ai = picker(history_choices(), Some(IndexPath::new(ai_ix)), window, cx);
         let provider = Provider::from_id(&settings.ai_provider);
         let ai_provider = picker(
             Provider::ALL
@@ -295,15 +286,14 @@ impl SettingsView {
         });
         let (items, ix) = model_items(provider, &[], &settings.ai_model);
         let ai_model = picker(items, Some(IndexPath::new(ix)), window, cx);
-        let updates_ix = if settings.check_updates { 0 } else { 1 };
-        let updates = picker(
-            history_choices(),
-            Some(IndexPath::new(updates_ix)),
-            window,
-            cx,
-        );
 
-        let subscriptions = vec![
+        let mut subscriptions = vec![
+            cx.subscribe_in(&appearance, window, |this, state, _: &Changed, _, cx| {
+                if let Some(ix) = state.read(cx).selected_index(cx) {
+                    let id = Appearance::ALL[ix.row].id();
+                    this.change_theme(|s| s.appearance = id.to_owned(), cx);
+                }
+            }),
             cx.subscribe_in(
                 &ai_provider,
                 window,
@@ -349,21 +339,6 @@ impl SettingsView {
                 };
                 this.change(|s| s.ai_model = model, cx);
             }),
-            cx.subscribe_in(&ai, window, |this, state, _: &Changed, _, cx| {
-                if let Some(ix) = state.read(cx).selected_index(cx) {
-                    this.change(|s| s.ai_assist = ix.row == 0, cx);
-                }
-            }),
-            cx.subscribe_in(&updates, window, |this, state, _: &Changed, _, cx| {
-                if let Some(ix) = state.read(cx).selected_index(cx) {
-                    this.change(|s| s.check_updates = ix.row == 0, cx);
-                }
-            }),
-            cx.subscribe_in(&prod, window, |this, state, _: &Changed, _, cx| {
-                if let Some(ix) = state.read(cx).selected_index(cx) {
-                    this.change(|s| s.confirm_prod = ix.row == 0, cx);
-                }
-            }),
             cx.subscribe_in(&secrets, window, |this, state, _: &Changed, window, cx| {
                 let Some(ix) = state.read(cx).selected_index(cx) else {
                     return;
@@ -374,11 +349,6 @@ impl SettingsView {
                 this.workspace
                     .update(cx, |ws, cx| ws.move_environment_secrets(window, cx))
                     .ok();
-            }),
-            cx.subscribe_in(&history, window, |this, state, _: &Changed, _, cx| {
-                if let Some(ix) = state.read(cx).selected_index(cx) {
-                    this.change(|s| s.history = ix.row == 0, cx);
-                }
             }),
             cx.subscribe_in(&language, window, |this, state, _: &Changed, window, cx| {
                 let Some(ix) = state.read(cx).selected_index(cx).map(|ix| ix.row) else {
@@ -392,12 +362,6 @@ impl SettingsView {
                     .update(cx, |ws, cx| ws.retranslate(window, cx))
                     .ok();
                 window.refresh();
-            }),
-            cx.subscribe_in(&appearance, window, |this, state, _: &Changed, _, cx| {
-                if let Some(ix) = state.read(cx).selected_index(cx) {
-                    let id = Appearance::ALL[ix.row].id();
-                    this.change_theme(|s| s.appearance = id.to_owned(), cx);
-                }
             }),
             cx.subscribe_in(&dark_theme, window, |this, state, _: &Changed, _, cx| {
                 let picked = state.read(cx).selected_index(cx);
@@ -426,12 +390,6 @@ impl SettingsView {
                         },
                         cx,
                     );
-                }
-            }),
-            cx.subscribe_in(&accent, window, |this, state, _: &Changed, _, cx| {
-                let picked = state.read(cx).selected_index(cx);
-                if let Some(id) = picked.and_then(|ix| this.accents.get(ix.row).cloned()) {
-                    this.change_theme(|s| s.accent = id, cx);
                 }
             }),
             // The window follows the slider as it moves; the file is written on release.
@@ -474,23 +432,23 @@ impl SettingsView {
                 }
             }),
         ];
+        subscriptions.push(cx.subscribe(&search, |_, _, event: &InputEvent, cx| {
+            if matches!(event, InputEvent::Change) {
+                cx.notify();
+            }
+        }));
         Self {
             workspace,
             language,
             appearance,
             dark_theme,
             light_theme,
-            accent,
             transparency,
             text_size,
             editor_font,
             density,
             auto_lock,
-            history,
             secrets,
-            prod,
-            updates,
-            ai,
             ai_key,
             ai_provider,
             ai_model,
@@ -500,8 +458,9 @@ impl SettingsView {
             light_themes,
             accents,
             theme_errors,
+            section: 0,
             pending_appearance: None,
-            scroll: ScrollHandle::new(),
+            search,
             _subscriptions: subscriptions,
         }
     }
@@ -584,6 +543,11 @@ impl SettingsView {
             .ok();
         if let Some(settings) = settings {
             theme::set(theme::from_settings(&settings, cx), cx);
+            let want = Appearance::from_id(&settings.appearance);
+            let ix = Appearance::ALL.iter().position(|a| *a == want);
+            if ix != self.appearance.read(cx).selected_index(cx).map(|ix| ix.row) {
+                self.pending_appearance = ix;
+            }
         }
         cx.notify();
     }
@@ -595,11 +559,6 @@ impl SettingsView {
             return;
         };
         theme::set(theme::from_settings(&settings, cx), cx);
-        let want = Appearance::from_id(&settings.appearance);
-        let ix = Appearance::ALL.iter().position(|a| *a == want);
-        if ix != self.appearance.read(cx).selected_index(cx).map(|ix| ix.row) {
-            self.pending_appearance = ix;
-        }
         cx.notify();
     }
 
@@ -671,25 +630,18 @@ impl SettingsView {
         let (themes, _) = theme::themes();
         self.dark_themes = ThemeList::of(&themes, false);
         self.light_themes = ThemeList::of(&themes, true);
-        let accents: Vec<SharedString> = self
-            .accents
-            .iter()
-            .map(|a| theme::accent_label(a))
-            .collect();
         let lists = [
-            (&self.appearance, appearance_choices()),
+            (
+                &self.appearance,
+                Appearance::ALL.map(Appearance::label).to_vec(),
+            ),
             (&self.dark_theme, self.dark_themes.labels.clone()),
             (&self.light_theme, self.light_themes.labels.clone()),
-            (&self.accent, accents),
             (
                 &self.auto_lock,
                 AUTO_LOCK_MINUTES.map(auto_lock_label).to_vec(),
             ),
-            (&self.history, history_choices()),
             (&self.secrets, secrets_choices()),
-            (&self.prod, history_choices()),
-            (&self.updates, history_choices()),
-            (&self.ai, history_choices()),
         ];
         for (picker, items) in lists {
             picker.update(cx, |state, cx| state.set_items(items, window, cx));
@@ -697,43 +649,430 @@ impl SettingsView {
         cx.notify();
     }
 
+    /// A setting: what it is on the left, its control on the right.
     fn row(
         &self,
         title: SharedString,
         description: SharedString,
         control: impl IntoElement,
-    ) -> impl IntoElement {
+    ) -> Row {
+        Row {
+            title,
+            description,
+            control: control.into_any_element(),
+        }
+    }
+
+    /// An on/off setting.
+    fn toggle(
+        &self,
+        id: &'static str,
+        title: SharedString,
+        description: SharedString,
+        checked: bool,
+        set: fn(&mut Settings, bool),
+        cx: &mut Context<Self>,
+    ) -> Row {
+        self.row(
+            title,
+            description,
+            Switch::new(id).checked(checked).on_click(cx.listener(
+                move |this, on: &bool, _, cx| {
+                    let on = *on;
+                    this.change(|s| set(s, on), cx);
+                    cx.notify();
+                },
+            )),
+        )
+    }
+
+    /// One accent per dot, in the order of `accents`.
+    fn accent_dots(&self, settings: &Settings, cx: &mut Context<Self>) -> AnyElement {
+        let p = crate::theme::current();
+        let dots = self.accents.iter().enumerate().map(|(ix, id)| {
+            let selected = *id == settings.accent;
+            let label = theme::accent_label(id);
+            let id = id.clone();
+            let color = theme::accent_swatch(&id, p.light);
+            div()
+                .id(("settings-accent", ix))
+                .size(px(18.))
+                .flex_none()
+                .rounded_full()
+                .bg(color)
+                .border_2()
+                .border_color(if selected {
+                    p.text
+                } else {
+                    gpui_kit::transparent_black()
+                })
+                .cursor_pointer()
+                .tooltip(move |window, cx| Tooltip::new(label.clone()).build(window, cx))
+                .on_click(cx.listener(move |this, _: &ClickEvent, _, cx| {
+                    let id = id.clone();
+                    this.change_theme(|s| s.accent = id, cx);
+                }))
+        });
+        h_flex()
+            .dir_row()
+            .flex_wrap()
+            .justify_end()
+            .gap_1()
+            .children(dots)
+            .into_any_element()
+    }
+
+    fn general(&self, settings: &Settings, cx: &mut Context<Self>) -> Vec<Vec<Row>> {
+        vec![vec![
+            self.row(
+                tr!("settings.language"),
+                tr!("settings.language_description"),
+                Select::new(&self.language).small(),
+            ),
+            self.toggle(
+                "settings-history",
+                tr!("settings.history"),
+                tr!("settings.history_description"),
+                settings.history,
+                |s, on| s.history = on,
+                cx,
+            ),
+            self.toggle(
+                "settings-updates",
+                tr!("settings.check_updates"),
+                tr!("settings.check_updates_description"),
+                settings.check_updates,
+                |s, on| s.check_updates = on,
+                cx,
+            ),
+        ]]
+    }
+
+    fn appearance_rows(&self, settings: &Settings, cx: &mut Context<Self>) -> Vec<Vec<Row>> {
+        let p = crate::theme::current();
+        let dots = self.accent_dots(settings, cx);
+        let transparency = self.transparency.read(cx).value().start().round() as u32;
+        vec![
+            vec![
+                self.row(
+                    tr!("settings.appearance"),
+                    tr!("settings.appearance_description"),
+                    Select::new(&self.appearance).small(),
+                ),
+                self.row(
+                    tr!("settings.accent"),
+                    tr!("settings.accent_description"),
+                    dots,
+                ),
+                self.row(
+                    tr!("settings.dark_theme"),
+                    tr!("settings.dark_theme_description"),
+                    Select::new(&self.dark_theme).small(),
+                ),
+                self.row(
+                    tr!("settings.light_theme"),
+                    tr!("settings.light_theme_description"),
+                    Select::new(&self.light_theme).small(),
+                ),
+                self.row(
+                    tr!("settings.transparency"),
+                    tr!("settings.transparency_description"),
+                    h_flex()
+                        .dir_row()
+                        .w_full()
+                        .gap_3()
+                        .items_center()
+                        .child(Slider::new(&self.transparency).flex_1())
+                        .child(
+                            div()
+                                .flex_none()
+                                .text_xs()
+                                .text_color(p.text_muted)
+                                .child(tr!("settings.transparency_value", value = transparency)),
+                        ),
+                ),
+            ],
+            vec![
+                self.row(
+                    tr!("settings.text_size"),
+                    tr!("settings.text_size_description"),
+                    Select::new(&self.text_size).small(),
+                ),
+                self.row(
+                    tr!("settings.editor_font_size"),
+                    tr!("settings.editor_font_size_description"),
+                    Select::new(&self.editor_font).small(),
+                ),
+                self.row(
+                    tr!("settings.density"),
+                    tr!("settings.density_description"),
+                    Select::new(&self.density).small(),
+                ),
+            ],
+            vec![
+                self.row(
+                    tr!("settings.theme_files"),
+                    tr!(
+                        "settings.theme_files_description",
+                        folder = themes_folder_label()
+                    ),
+                    Button::new("settings-themes-folder")
+                        .small()
+                        .outline()
+                        .label(tr!("settings.theme_files_open"))
+                        .on_click(cx.listener(|this, _: &ClickEvent, window, cx| {
+                            this.open_themes_folder(window, cx)
+                        })),
+                ),
+            ],
+        ]
+    }
+
+    fn security(&self, settings: &Settings, cx: &mut Context<Self>) -> Vec<Vec<Row>> {
+        vec![vec![
+            self.row(
+                tr!("settings.auto_lock"),
+                tr!("settings.auto_lock_description"),
+                Select::new(&self.auto_lock).small(),
+            ),
+            self.row(
+                tr!("settings.secrets"),
+                tr!("settings.secrets_description"),
+                Select::new(&self.secrets).small(),
+            ),
+            self.toggle(
+                "settings-prod",
+                tr!("settings.confirm_prod"),
+                tr!("settings.confirm_prod_description"),
+                settings.confirm_prod,
+                |s, on| s.confirm_prod = on,
+                cx,
+            ),
+        ]]
+    }
+
+    fn ai_rows(&self, settings: &Settings, cx: &mut Context<Self>) -> Vec<Vec<Row>> {
+        vec![vec![
+            self.toggle(
+                "settings-ai",
+                tr!("settings.ai"),
+                tr!("settings.ai_description"),
+                settings.ai_assist,
+                |s, on| s.ai_assist = on,
+                cx,
+            ),
+            self.row(
+                tr!("settings.ai_provider"),
+                tr!("settings.ai_provider_description"),
+                Select::new(&self.ai_provider).small(),
+            ),
+            self.row(
+                tr!("settings.ai_model"),
+                tr!("settings.ai_model_description"),
+                h_flex()
+                    .w_full()
+                    .gap_1()
+                    .child(
+                        div()
+                            .flex_1()
+                            .min_w_0()
+                            .child(Select::new(&self.ai_model).small()),
+                    )
+                    .child(
+                        Button::new("ai-models")
+                            .small()
+                            .ghost()
+                            .label("↻")
+                            .tooltip(tr!("settings.ai_models_load"))
+                            .on_click(cx.listener(|this, _: &ClickEvent, window, cx| {
+                                this.load_models(window, cx)
+                            })),
+                    ),
+            ),
+            self.row(
+                tr!("settings.ai_key"),
+                tr!("settings.ai_key_description"),
+                h_flex()
+                    .w_full()
+                    .gap_1()
+                    .child(
+                        div()
+                            .flex_1()
+                            .min_w_0()
+                            .child(Input::new(&self.ai_key).small()),
+                    )
+                    .child(
+                        Button::new("ai-key-save")
+                            .small()
+                            .outline()
+                            .label(tr!("settings.ai_key_save"))
+                            .on_click(cx.listener(|this, _: &ClickEvent, window, cx| {
+                                let key = this.ai_key.read(cx).value().to_string();
+                                let provider = this.provider(cx);
+                                this.ai_key.update(cx, |s, cx| {
+                                    s.set_placeholder(
+                                        key_placeholder_after(provider, &key),
+                                        window,
+                                        cx,
+                                    )
+                                });
+                                let note = match apix_core::ai::save_key(provider, &key) {
+                                    Ok(()) if key.trim().is_empty() => {
+                                        gpui_kit::component::notification::Notification::info(tr!(
+                                            "settings.ai_key_removed"
+                                        ))
+                                    }
+                                    Ok(()) => {
+                                        gpui_kit::component::notification::Notification::success(
+                                            tr!("settings.ai_key_saved"),
+                                        )
+                                    }
+                                    Err(e) => {
+                                        gpui_kit::component::notification::Notification::error(e)
+                                    }
+                                };
+                                this.ai_key.update(cx, |s, cx| s.set_value("", window, cx));
+                                window.push_notification(note, cx);
+                            })),
+                    ),
+            ),
+        ]]
+    }
+
+    fn rows_of(
+        &self,
+        section: usize,
+        settings: &Settings,
+        cx: &mut Context<Self>,
+    ) -> Vec<Vec<Row>> {
+        match section {
+            1 => self.appearance_rows(settings, cx),
+            2 => self.security(settings, cx),
+            3 => self.ai_rows(settings, cx),
+            _ => self.general(settings, cx),
+        }
+    }
+
+    fn section_title(section: usize) -> SharedString {
+        match section {
+            1 => tr!("settings.appearance"),
+            2 => tr!("settings.section_security"),
+            3 => tr!("settings.section_ai"),
+            _ => tr!("settings.section_general"),
+        }
+    }
+
+    fn nav(&self, searching: bool, cx: &mut Context<Self>) -> impl IntoElement {
+        let p = crate::theme::current();
+        let icons = [
+            "icons/settings.svg",
+            "icons/palette.svg",
+            "icons/shield.svg",
+            "icons/sparkles.svg",
+        ];
+        v_flex()
+            .w(px(200.))
+            .flex_none()
+            .h_full()
+            .p_3()
+            .gap_1()
+            .bg(p.hover)
+            .border_e_1()
+            .border_color(p.hairline)
+            .child(
+                div().pb_3().child(
+                    Input::new(&self.search)
+                        .small()
+                        .prefix(Icon::new(IconName::Search).xsmall())
+                        .cleanable(true),
+                ),
+            )
+            .children(icons.into_iter().enumerate().map(|(ix, icon)| {
+                let selected = !searching && self.section == ix;
+                h_flex()
+                    .id(("settings-section", ix))
+                    .dir_row()
+                    .h(px(32.))
+                    .px_2p5()
+                    .gap_2p5()
+                    .items_center()
+                    .rounded_lg()
+                    .text_sm()
+                    .cursor_pointer()
+                    .text_color(if selected { p.text } else { p.text_muted })
+                    .when(selected, |d| d.bg(p.accent.opacity(0.16)))
+                    .hover(|d| d.bg(crate::theme::current().hover))
+                    .on_click(cx.listener(move |this, _: &ClickEvent, window, cx| {
+                        this.section = ix;
+                        this.search.update(cx, |s, cx| s.set_value("", window, cx));
+                        cx.notify();
+                    }))
+                    .child(
+                        Icon::empty()
+                            .path(icon)
+                            .small()
+                            .when(selected, |i| i.text_color(p.accent)),
+                    )
+                    .child(Self::section_title(ix))
+            }))
+    }
+}
+
+/// One line of settings.
+struct Row {
+    title: SharedString,
+    description: SharedString,
+    control: AnyElement,
+}
+
+impl Row {
+    fn matches(&self, words: &str) -> bool {
+        let text = format!("{} {}", self.title, self.description).to_lowercase();
+        words.split_whitespace().all(|word| text.contains(word))
+    }
+
+    fn render(self) -> impl IntoElement {
         let p = crate::theme::current();
         h_flex()
             .dir_row()
+            .flex_none()
             .gap_4()
             .items_center()
-            .py_2()
+            .py_2p5()
             .child(
                 v_flex()
                     .flex_1()
                     .min_w_0()
                     .gap_0p5()
-                    .child(div().text_sm().text_color(p.text).child(title))
+                    .child(div().text_sm().text_color(p.text).child(self.title))
                     .child(
                         div()
                             .text_xs()
                             .text_color(p.text_muted)
-                            .child(bidi::para(description)),
+                            .child(bidi::para(self.description)),
                     ),
             )
-            .child(div().w(px(220.)).flex_none().child(control))
+            .child(
+                h_flex()
+                    .dir_row()
+                    .w(px(200.))
+                    .flex_none()
+                    .justify_end()
+                    .child(self.control),
+            )
     }
+}
 
-    fn heading(&self, text: SharedString) -> impl IntoElement {
-        div()
-            .pt_3()
-            .pb_1()
-            .text_xs()
-            .font_weight(FontWeight::SEMIBOLD)
-            .text_color(crate::theme::current().accent)
-            .child(text)
-    }
+/// Rows with a line between them.
+fn group(rows: Vec<Row>) -> impl IntoElement {
+    let p = crate::theme::current();
+    let last = rows.len().saturating_sub(1);
+    v_flex()
+        .flex_none()
+        .children(rows.into_iter().enumerate().flat_map(|(ix, row)| {
+            let line = (ix < last).then(|| div().h_px().bg(p.hairline).into_any_element());
+            std::iter::once(row.render().into_any_element()).chain(line)
+        }))
 }
 
 /// The themes folder as people write it: `%APPDATA%\Apix\themes` on
@@ -763,193 +1102,107 @@ impl Render for SettingsView {
             });
         }
         let p = crate::theme::current();
-        let line = || div().w_full().flex_none().h_px().bg(p.hairline);
-        let folder = themes_folder_label();
-        v_flex()
-            .id("settings-rows")
-            .track_scroll(&self.scroll)
-            .max_h(px(560.))
-            .overflow_y_scroll()
-            .pr_2()
-            .child(self.heading(tr!("settings.section_general")))
-            .child(self.row(
-                tr!("settings.language"),
-                tr!("settings.language_description"),
-                Select::new(&self.language).small(),
-            ))
-            .child(line())
-            .child(self.row(
-                tr!("settings.auto_lock"),
-                tr!("settings.auto_lock_description"),
-                Select::new(&self.auto_lock).small(),
-            ))
-            .child(line())
-            .child(self.row(
-                tr!("settings.secrets"),
-                tr!("settings.secrets_description"),
-                Select::new(&self.secrets).small(),
-            ))
-            .child(line())
-            .child(self.row(
-                tr!("settings.confirm_prod"),
-                tr!("settings.confirm_prod_description"),
-                Select::new(&self.prod).small(),
-            ))
-            .child(line())
-            .child(self.row(
-                tr!("settings.check_updates"),
-                tr!("settings.check_updates_description"),
-                Select::new(&self.updates).small(),
-            ))
-            .child(line())
-            .child(self.row(
-                tr!("settings.ai"),
-                tr!("settings.ai_description"),
-                Select::new(&self.ai).small(),
-            ))
-            .child(self.row(
-                tr!("settings.ai_provider"),
-                tr!("settings.ai_provider_description"),
-                Select::new(&self.ai_provider).small(),
-            ))
-            .child(self.row(
-                tr!("settings.ai_model"),
-                tr!("settings.ai_model_description"),
-                h_flex()
-                    .gap_1()
-                    .child(div().w(px(170.)).child(Select::new(&self.ai_model).small()))
-                    .child(
-                        Button::new("ai-models")
-                            .small()
-                            .ghost()
-                            .label("↻")
-                            .tooltip(tr!("settings.ai_models_load"))
-                            .on_click(cx.listener(|this, _: &ClickEvent, window, cx| {
-                                this.load_models(window, cx)
-                            })),
-                    ),
-            ))
-            .child(self.row(
-                tr!("settings.ai_key"),
-                tr!("settings.ai_key_description"),
-                h_flex()
-                    .gap_1()
-                    .child(div().w(px(150.)).child(gpui_kit::component::input::Input::new(&self.ai_key).small()))
-                    .child(
-                        Button::new("ai-key-save")
-                            .small()
-                            .outline()
-                            .label(tr!("settings.ai_key_save"))
-                            .on_click(cx.listener(|this, _: &ClickEvent, window, cx| {
-                                let key = this.ai_key.read(cx).value().to_string();
-                                let provider = this.provider(cx);
-                                this.ai_key.update(cx, |s, cx| {
-                                    s.set_placeholder(key_placeholder_after(provider, &key), window, cx)
-                                });
-                                let note = match apix_core::ai::save_key(provider, &key) {
-                                    Ok(()) if key.trim().is_empty() => gpui_kit::component::notification::Notification::info(tr!("settings.ai_key_removed")),
-                                    Ok(()) => gpui_kit::component::notification::Notification::success(tr!("settings.ai_key_saved")),
-                                    Err(e) => gpui_kit::component::notification::Notification::error(e),
-                                };
-                                this.ai_key.update(cx, |s, cx| s.set_value("", window, cx));
-                                window.push_notification(note, cx);
-                            })),
-                    ),
-            ))
-            .child(line())
-            .child(self.row(
-                tr!("settings.history"),
-                tr!("settings.history_description"),
-                Select::new(&self.history).small(),
-            ))
-            .child(self.heading(tr!("settings.section_look")))
-            .child(self.row(
-                tr!("settings.appearance"),
-                tr!("settings.appearance_description"),
-                Select::new(&self.appearance).small(),
-            ))
-            .child(line())
-            .child(self.row(
-                tr!("settings.dark_theme"),
-                tr!("settings.dark_theme_description"),
-                Select::new(&self.dark_theme).small(),
-            ))
-            .child(line())
-            .child(self.row(
-                tr!("settings.light_theme"),
-                tr!("settings.light_theme_description"),
-                Select::new(&self.light_theme).small(),
-            ))
-            .child(line())
-            .child(self.row(
-                tr!("settings.accent"),
-                tr!("settings.accent_description"),
-                Select::new(&self.accent).small(),
-            ))
-            .child(line())
-            .child(
-                self.row(
-                    tr!("settings.transparency"),
-                    tr!("settings.transparency_description"),
-                    h_flex()
-                        .dir_row()
-                        .gap_3()
-                        .items_center()
-                        .child(Slider::new(&self.transparency).flex_1())
-                        .child(
-                            div()
-                                .w(px(36.))
-                                .flex_none()
-                                .text_sm()
-                                .text_color(p.text_muted)
-                                .child(tr!(
-                                    "settings.transparency_value",
-                                    value =
-                                        self.transparency.read(cx).value().start().round() as u32
-                                )),
-                        ),
-                ),
-            )
-            .child(line())
-            .child(self.row(
-                tr!("settings.text_size"),
-                tr!("settings.text_size_description"),
-                Select::new(&self.text_size).small(),
-            ))
-            .child(line())
-            .child(self.row(
-                tr!("settings.editor_font_size"),
-                tr!("settings.editor_font_size_description"),
-                Select::new(&self.editor_font).small(),
-            ))
-            .child(line())
-            .child(self.row(
-                tr!("settings.density"),
-                tr!("settings.density_description"),
-                Select::new(&self.density).small(),
-            ))
-            .child(line())
-            .child(
-                self.row(
-                    tr!("settings.theme_files"),
-                    tr!("settings.theme_files_description", folder = folder),
-                    Button::new("settings-themes-folder")
-                        .small()
-                        .outline()
-                        .w_full()
-                        .label(tr!("settings.theme_files_open"))
-                        .on_click(cx.listener(|this, _: &ClickEvent, window, cx| {
-                            this.open_themes_folder(window, cx)
-                        })),
-                ),
-            )
-            .children(self.theme_errors.iter().map(|error| {
+        let Some(settings) = self.settings(cx) else {
+            return div().into_any_element();
+        };
+        let words = self.search.read(cx).value().trim().to_lowercase();
+        let searching = !words.is_empty();
+        // A search looks through every section.
+        let groups: Vec<Vec<Row>> = if searching {
+            (0..SECTIONS)
+                .map(|section| {
+                    self.rows_of(section, &settings, cx)
+                        .into_iter()
+                        .flatten()
+                        .filter(|row| row.matches(&words))
+                        .collect()
+                })
+                .filter(|rows: &Vec<Row>| !rows.is_empty())
+                .collect()
+        } else {
+            self.rows_of(self.section, &settings, cx)
+        };
+        let empty = groups.is_empty().then(|| {
+            div()
+                .py_2()
+                .text_sm()
+                .text_color(p.text_muted)
+                .child(tr!("sidebar.search_none"))
+        });
+        let errors = (!searching && self.section == 1).then(|| {
+            self.theme_errors.iter().map(|error| {
                 div()
                     .ltr()
                     .text_xs()
                     .text_color(p.err)
                     .child(tr!("settings.theme_file_error", error = error))
-            }))
+            })
+        });
+        let close_view = self.workspace.clone();
+        let nav = self.nav(searching, cx);
+        v_flex()
+            .w_full()
+            .h(dialog_size(window).height)
+            .child(
+                h_flex()
+                    .dir_row()
+                    .h(px(44.))
+                    .flex_none()
+                    .px_4()
+                    .items_center()
+                    .justify_between()
+                    .border_b_1()
+                    .border_color(p.hairline)
+                    .child(
+                        div()
+                            .text_sm()
+                            .font_weight(FontWeight::SEMIBOLD)
+                            .child(tr!("settings.title")),
+                    )
+                    .child(
+                        Button::new("settings-close")
+                            .ghost()
+                            .small()
+                            .icon(IconName::Close)
+                            .on_click(move |_, window, cx| {
+                                super::collections::close_dialog(&close_view, window, cx)
+                            }),
+                    ),
+            )
+            .child(
+                h_flex()
+                    .dir_row()
+                    .flex_1()
+                    .min_h_0()
+                    .items_start()
+                    .child(nav)
+                    .child(
+                        v_flex()
+                            .id(("settings-rows", self.section))
+                            .flex_1()
+                            .min_w_0()
+                            .h_full()
+                            .px_5()
+                            .pt_4()
+                            .pb_3()
+                            .overflow_y_scroll()
+                            .when(!searching, |d| {
+                                d.child(
+                                    div()
+                                        .pb_1()
+                                        .text_base()
+                                        .font_weight(FontWeight::SEMIBOLD)
+                                        .child(Self::section_title(self.section)),
+                                )
+                            })
+                            .children(groups.into_iter().enumerate().map(|(ix, rows)| {
+                                div().when(ix > 0, |d| d.pt_4()).child(group(rows))
+                            }))
+                            .children(empty)
+                            .children(errors.into_iter().flatten()),
+                    ),
+            )
+            .into_any_element()
     }
 }
 
@@ -959,34 +1212,27 @@ impl Workspace {
         let settings = self.settings.clone();
         let editor = cx.new(|cx| SettingsView::new(view.clone(), &settings, window, cx));
         super::tour::keep(&editor);
-        window.open_dialog(cx, move |dialog, _, _| {
-            let close_view = view.clone();
+        window.open_dialog(cx, move |dialog, window, _| {
+            let (size, viewport) = (dialog_size(window), window.viewport_size());
             dialog
                 .on_close(super::collections::refocus(view.clone()))
-                .bidi_title(tr!("settings.title"))
-                .width(px(640.))
+                .bg(crate::theme::current().surface_raised)
+                .text_start()
+                .close_button(false)
+                .p_0()
+                .width(size.width)
+                .margin_top((viewport.height - size.height) / 2.)
                 .child(editor.clone())
-                .on_ok(|_, _, _| false)
-                .footer(
-                    h_flex().dir_row().w_full().justify_end().child(
-                        Button::new("settings-close")
-                            .primary()
-                            .label(tr!("dialog.close"))
-                            .on_click(move |_, window, cx| {
-                                super::collections::close_dialog(&close_view, window, cx)
-                            }),
-                    ),
-                )
         });
     }
 }
 
 impl SettingsView {
-    /// The documentation's screenshot tour: `scroll <px>` scrolls the rows.
+    /// The documentation's screenshot tour: `section <n>` shows a section
+    /// (0 general, 1 appearance, 2 security, 3 AI).
     pub(super) fn tour(&mut self, step: &str, arg: &str, cx: &mut Context<Self>) -> u64 {
-        if step == "scroll" {
-            let y = arg.parse::<f32>().unwrap_or(0.);
-            self.scroll.set_offset(point(px(0.), px(-y)));
+        if step == "section" {
+            self.section = arg.parse().unwrap_or(0);
             cx.notify();
         }
         200

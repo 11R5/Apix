@@ -141,14 +141,14 @@ pub fn fill_tabs(
         .on_click(move |ix: &usize, window, cx| on_click(&flip(*ix), window, cx))
 }
 
-/// An underlined tab strip across its pane, tabs starting from the reading side.
+/// A segmented control across its pane, tabs starting from the reading side.
 pub fn tab_bar(
     id: &'static str,
     selected: usize,
     tabs: Vec<Tab>,
     on_click: impl Fn(&usize, &mut Window, &mut App) + 'static,
 ) -> TabBar {
-    let bar = TabBar::new(id).underline();
+    let bar = TabBar::new(id).segmented().small();
     if !rtl() {
         return fill_tabs(bar, Some(selected), tabs, on_click);
     }

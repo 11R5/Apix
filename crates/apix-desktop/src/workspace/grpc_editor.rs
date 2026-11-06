@@ -573,14 +573,14 @@ impl GrpcEditor {
                 div()
                     .flex_none()
                     .h(px(84.))
-                    .child(Editor::new(&self.source).h_full()),
+                    .child(Editor::new(&self.source).bordered(false).h_full()),
             )
             .child(label(tr!("grpc.def_response")))
             .child(
                 div()
                     .flex_none()
                     .h(px(44.))
-                    .child(Editor::new(&self.response).h_full()),
+                    .child(Editor::new(&self.response).bordered(false).h_full()),
             )
             .child(
                 h_flex()
@@ -659,7 +659,7 @@ impl GrpcEditor {
                     .flex_none()
                     .h(px(260.))
                     .ltr()
-                    .child(Editor::new(&self.definition).h_full()),
+                    .child(Editor::new(&self.definition).bordered(false).h_full()),
             )
             .into_any_element()
     }
@@ -725,7 +725,7 @@ impl Render for GrpcEditor {
                     div()
                         .flex_1()
                         .min_h_0()
-                        .child(Editor::new(&self.message).h_full()),
+                        .child(Editor::new(&self.message).bordered(false).h_full()),
                 )
                 .into_any_element()
         };

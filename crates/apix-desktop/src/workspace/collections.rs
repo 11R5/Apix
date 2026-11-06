@@ -1364,74 +1364,43 @@ impl Workspace {
             Button::new(id).ghost().xsmall().icon(icon).tooltip(tooltip)
         };
 
-        let (kind, title) = match (&self.project, self.collections.first()) {
-            (Some(project), _) => (
-                tr!("sidebar.kind_project"),
-                SharedString::from(project.meta.name.clone()),
-            ),
-            (None, Some(c)) => (
-                tr!("sidebar.kind_collection"),
-                SharedString::from(c.meta.name.clone()),
-            ),
-            (None, None) => (SharedString::from("APIX"), tr!("sidebar.nothing_open")),
-        };
-        // Opening, creating and project settings live in the menu bar above.
-        let header = v_flex()
-            .px_3()
-            .pt_2()
-            .pb_1()
-            .child(div().px_1().text_xs().text_color(p.text_muted).child(kind))
-            .child(
-                h_flex()
-                    .dir_row()
-                    .gap_1()
-                    .items_center()
-                    .h(px(28.))
-                    .child(
-                        div()
-                            .flex_1()
-                            .min_w_0()
-                            .px_1()
-                            .truncate()
-                            .text_sm()
-                            .font_weight(FontWeight::SEMIBOLD)
-                            .child(title),
+        // Search and adding on top; what is open and in which environment at the bottom.
+        let header = open.then(|| {
+            h_flex()
+                .dir_row()
+                .px_3()
+                .pb_2()
+                .gap_1()
+                .items_center()
+                .child(self.render_sidebar_search())
+                .child(
+                    icon_button(
+                        "sidebar-new",
+                        IconName::Plus,
+                        tr!("sidebar.new_request_tooltip", key = key_hint("N")),
                     )
-                    .when(open, |bar| {
-                        bar.child(
-                            icon_button(
-                                "sidebar-new",
-                                IconName::Plus,
-                                tr!("sidebar.new_request_tooltip", key = key_hint("N")),
-                            )
-                            .dropdown_menu_with_anchor(
-                                bidi::menu_anchor(),
-                                {
-                                    let view = cx.entity().downgrade();
-                                    move |menu, _, _| method_items(menu, view.clone(), None)
-                                },
-                            ),
-                        )
-                        .child(
-                            icon_button(
-                                "sidebar-folder",
-                                IconName::FolderClosed,
-                                tr!("sidebar.new_folder"),
-                            )
-                            .on_click(cx.listener(
-                                |this, _: &ClickEvent, window, cx| {
-                                    this.new_folder(None, window, cx)
-                                },
-                            )),
-                        )
+                    .dropdown_menu_with_anchor(bidi::menu_anchor(), {
+                        let view = cx.entity().downgrade();
+                        move |menu, _, _| method_items(menu, view.clone(), None)
                     }),
-            );
+                )
+                .child(
+                    icon_button(
+                        "sidebar-folder",
+                        IconName::FolderClosed,
+                        tr!("sidebar.new_folder"),
+                    )
+                    .on_click(cx.listener(
+                        |this, _: &ClickEvent, window, cx| this.new_folder(None, window, cx),
+                    )),
+                )
+        });
 
         let env_row = (open && !by_environment).then(|| {
             h_flex()
                 .dir_row()
                 .px_3()
-                .pb_2()
+                .pt_2()
                 .gap_2()
                 .items_center()
                 .child(
@@ -1446,7 +1415,7 @@ impl Workspace {
                     div()
                         .flex_1()
                         .min_w_0()
-                        .child(Select::new(&self.env_select).small()),
+                        .child(Select::new(&self.env_select).small().appearance(false)),
                 )
                 .child(
                     icon_button(
@@ -1514,14 +1483,21 @@ impl Workspace {
         };
 
         v_flex()
-            .w(px(248.))
-            .flex_none()
-            .h_full()
-            .border_e_1()
-            .border_color(p.hairline)
-            .child(header)
-            .when(open, |d| d.child(self.render_sidebar_search()))
-            .children(env_row)
+            .size_full()
+            .bg(p.surface)
+            // The sidebar runs to the top of a Mac window, under its controls.
+            .when(cfg!(target_os = "macos"), |d| {
+                d.child(
+                    div()
+                        .id("sidebar-drag")
+                        .h(gpui_kit::component::TITLE_BAR_HEIGHT)
+                        .flex_none()
+                        .on_mouse_down(MouseButton::Left, |_, window, _| {
+                            window.start_window_move()
+                        }),
+                )
+            })
+            .children(header)
             .child({
                 let list = div()
                     .id("sidebar-list")
@@ -1543,6 +1519,73 @@ impl Workspace {
                     .text_color(p.err)
                     .child(bidi::para(e.clone()))
             }))
+            .child(div().flex_none().h_px().bg(p.hairline))
+            .children(env_row)
+            .child(self.render_collection_switcher(cx))
+    }
+
+    /// What is open, at the foot of the sidebar: a click opens another one.
+    fn render_collection_switcher(&self, cx: &mut Context<Self>) -> impl IntoElement {
+        let title = match (&self.project, self.collections.first()) {
+            (Some(project), _) => SharedString::from(project.meta.name.clone()),
+            (None, Some(c)) => SharedString::from(c.meta.name.clone()),
+            (None, None) => tr!("sidebar.nothing_open"),
+        };
+        let root = self.workspace_root();
+        let recent: Vec<PathBuf> = self
+            .app_state
+            .recent_collections()
+            .filter(|r| Some(*r) != root.as_ref())
+            .take(8)
+            .cloned()
+            .collect();
+        let (view, focus) = (cx.entity().downgrade(), self.focus.clone());
+        div().p_2().child(
+            Button::new("sidebar-collection")
+                .ghost()
+                .small()
+                .w_full()
+                .child(
+                    h_flex()
+                        .dir_row()
+                        .w_full()
+                        .min_w_0()
+                        .gap_2()
+                        .items_center()
+                        .child(Icon::new(IconName::FolderClosed).xsmall())
+                        .child(
+                            div()
+                                .flex_1()
+                                .min_w_0()
+                                .truncate()
+                                .text_start()
+                                .child(title),
+                        )
+                        .child(Icon::new(IconName::ChevronUp).xsmall()),
+                )
+                .dropdown_menu_with_anchor(Anchor::BottomLeft, move |menu, _, _| {
+                    let menu = recent.iter().fold(menu, |menu, dir| {
+                        let (view, target) = (view.clone(), dir.clone());
+                        let name = dir
+                            .file_name()
+                            .map(|n| n.to_string_lossy().into_owned())
+                            .unwrap_or_else(|| dir.display().to_string());
+                        menu.item(PopupMenuItem::new(name).on_click(move |_, window, cx| {
+                            view.update(cx, |this, cx| {
+                                this.open_or_create(target.clone(), window, cx)
+                            })
+                            .ok();
+                        }))
+                    });
+                    let menu = if recent.is_empty() {
+                        menu
+                    } else {
+                        menu.separator()
+                    };
+                    menu.action_context(focus.clone())
+                        .menu(tr!("menu.open"), Box::new(super::OpenCollection))
+                }),
+        )
     }
 
     /// Green for an active environment, red for production, grey for none.
@@ -1988,7 +2031,10 @@ impl Workspace {
         } else if mqtt {
             ("MQTT".into(), theme::mqtt_color())
         } else {
-            (method.as_str().into(), theme::method_color(method))
+            (
+                super::tabs::short(method).into(),
+                theme::method_color(method),
+            )
         };
         let view = cx.entity().downgrade();
         let open_path = path.to_path_buf();
@@ -2004,10 +2050,10 @@ impl Workspace {
             }))
             .child(
                 div()
-                    .w(px(46.))
+                    .w(px(36.))
                     .flex_none()
-                    .text_xs()
-                    .font_weight(FontWeight::BOLD)
+                    .text_size(px(10.))
+                    .font_weight(FontWeight::SEMIBOLD)
                     .text_color(badge_color)
                     .child(badge),
             )
@@ -2019,7 +2065,7 @@ impl Workspace {
                     .child(request.name.clone()),
             )
             .when(dirty, |row| {
-                row.child(div().flex_none().text_color(p.warn).child("\u{25cf}"))
+                row.child(div().size(px(6.)).flex_none().rounded_full().bg(p.warn))
             })
             .children(self.git_change(path).map(|kind| {
                 let (colour, letter) = super::git_ui::change_mark(kind);
@@ -2061,8 +2107,9 @@ fn row_base(path: &Path, depth: usize) -> Stateful<Div> {
         .dir_row()
         .items_center()
         .gap_2()
-        .ps(px(8. + 14. * depth as f32))
+        .ps(px(8. + 12. * depth as f32))
         .pe(px(8.))
+        .min_h(px(26.))
         .py(crate::theme::row_padding())
         .rounded_md()
         .text_sm()

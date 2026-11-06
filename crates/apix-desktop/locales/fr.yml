@@ -482,6 +482,7 @@ load.starting: Démarrage…
 load.title: Test de charge
 load.total: Requêtes
 load.undefined: "Variables non définies : %{names}"
+menu.about_apix: À propos d'Apix
 menu.active_environment: Environnement actif
 menu.cancel: Annuler
 menu.capture: Proxy de capture…
@@ -493,8 +494,11 @@ menu.command_palette: Palette de commandes…
 menu.compare: Comparer les réponses…
 menu.connect_claude: Connecter à Claude (MCP)…
 menu.cookies: Cookies…
+menu.copy: Copier
 menu.copy_as: Copier en
+menu.cut: Couper
 menu.documentation: Documentation
+menu.edit: Édition
 menu.encrypt_collection: Chiffrer cette collection…
 menu.environment: Environnement
 menu.export_docs: Exporter la documentation…
@@ -506,6 +510,8 @@ menu.group_by: Grouper la barre latérale par
 menu.group_collection: Collection
 menu.group_environment: Environnement
 menu.help: Aide
+menu.hide_apix: Masquer Apix
+menu.hide_others: Masquer les autres
 menu.history: Historique…
 menu.import_postman: Importer (Postman, Insomnia, OpenAPI, HAR, WSDL)…
 menu.import_url: Importer depuis une URL…
@@ -524,20 +530,26 @@ menu.new_request_with_method: Nouvelle requête avec la méthode
 menu.next_tab: Onglet suivant
 menu.open: Ouvrir…
 menu.open_recent: Ouvrir récent
+menu.paste: Coller
 menu.plugins: Extensions…
 menu.previous_tab: Onglet précédent
 menu.project_auth: Authentification du projet…
 menu.project_settings: Réglages de requête du projet…
 menu.quit: Quitter
+menu.redo: Rétablir
 menu.report_problem: Signaler un problème
 menu.request: Requête
 menu.route: Route et carte…
 menu.runner: "Runner…"
 menu.save: Enregistrer
+menu.select_all: Tout sélectionner
 menu.send: Envoyer
+menu.services: Services
 menu.settings: Paramètres…
 menu.setup: Configuration…
+menu.show_all: Tout afficher
 menu.source_code: Code source
+menu.undo: Annuler
 menu.variables: Variables et environnements…
 menu.view: Affichage
 mock.about: Répond avec les exemples enregistrés avec les requêtes de cette collection, choisis par méthode et chemin ({{base_url}}/users/:id sert /users/n’importe-quoi). Une requête peut choisir un exemple avec l’en-tête x-mock-response-name ou x-mock-response-code. Pointez la base_url d’un environnement vers le serveur pour l’utiliser.
@@ -905,8 +917,10 @@ settings.secrets: Valeurs secrètes des environnements
 settings.secrets_description: Où les valeurs secrètes des environnements sont conservées sur cet ordinateur. Les deux restent hors de git ; le trousseau évite en plus de les garder en clair sur le disque.
 settings.secrets_file: Fichier .local.toml
 settings.secrets_keychain: Trousseau du système
+settings.search: Rechercher
+settings.section_ai: IA
 settings.section_general: "Général"
-settings.section_look: "Thème"
+settings.section_security: Sécurité
 settings.text_size: Taille du texte
 settings.text_size_description: Agrandit ou réduit le texte de toute la fenêtre.
 settings.text_size_value: "%{value} %"

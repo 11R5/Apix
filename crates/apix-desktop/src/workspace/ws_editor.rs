@@ -759,7 +759,7 @@ impl Render for WsEditor {
                         160.
                     }))
                     .flex_none()
-                    .child(Editor::new(&self.composer).h_full()),
+                    .child(Editor::new(&self.composer).bordered(false).h_full()),
             )
             .child(
                 h_flex()

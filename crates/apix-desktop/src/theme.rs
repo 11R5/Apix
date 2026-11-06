@@ -81,9 +81,9 @@ pub fn from_settings(settings: &Settings, cx: &App) -> Palette {
             Appearance::System => system_is_light(cx),
         };
         let (id, fallback) = if light {
-            (&settings.light_theme, DAYLIGHT)
+            (&settings.light_theme, PORCELAIN)
         } else {
-            (&settings.theme, OBSIDIAN)
+            (&settings.theme, GRAPHITE)
         };
         find(id)
             .filter(|t| t.light == light)
@@ -224,7 +224,12 @@ fn apply(palette: &Palette, embedded_fonts: bool, cx: &mut App) {
     let p = *palette;
     Theme::update(cx, |t| {
         if embedded_fonts {
-            t.font_family = crate::fonts::UI.into();
+            // A Mac app reads as one in the system's own typeface.
+            t.font_family = if cfg!(target_os = "macos") {
+                ".SystemUIFont".into()
+            } else {
+                crate::fonts::UI.into()
+            };
             t.mono_font_family = crate::fonts::MONO.into();
         }
         // gpui-kit paints this under the whole window, so a see-through
@@ -260,9 +265,9 @@ fn apply(palette: &Palette, embedded_fonts: bool, cx: &mut App) {
         t.slider_thumb = p.surface_raised;
         t.popover = p.surface_raised;
         t.popover_foreground = p.text;
-        t.tab_bar = transparent_black();
+        t.tab_bar = p.hover;
         t.tab = transparent_black();
-        t.tab_active = transparent_black();
+        t.tab_active = p.input;
         t.tab_foreground = p.text_muted;
         t.tab_active_foreground = p.text;
         t.title_bar = transparent_black();
@@ -276,16 +281,20 @@ fn apply(palette: &Palette, embedded_fonts: bool, cx: &mut App) {
         let mut highlight = (*t.highlight_theme).clone();
         highlight.style.editor_background = Some(transparent_black());
         highlight.style.editor_gutter_background = Some(transparent_black());
-        highlight.style.editor_active_line = Some(p.hover.opacity(0.8));
+        highlight.style.editor_active_line = Some(p.hover.opacity(0.5));
         highlight.style.editor_line_number = Some(p.text_muted.opacity(0.6));
         highlight.style.syntax = syntax_colors(&p, &highlight.style.syntax);
         t.highlight_theme = Arc::new(highlight);
 
         // Every rem-based size (text_sm, text_xs …) follows the root size.
-        t.font_size = px(16. * p.text_scale);
+        t.font_size = px(BASE_FONT_SIZE * p.text_scale);
         t.mono_font_size = px(p.editor_font);
     });
 }
+
+/// The root size. Spacing is in rems too, so this sets how compact the app is:
+/// at 15, `text_sm` is the 13 px of native Mac controls.
+const BASE_FONT_SIZE: f32 = 15.;
 
 /// `0xRRGGBB` + opacity (0.0–1.0).
 fn hex(color: u32, alpha: f32) -> Hsla {
@@ -365,6 +374,16 @@ pub const ACCENTS: [(&str, u32, u32); 8] = [
     ("yellow", 0xFACC15, 0xCA8A04),
     ("green", 0x34D399, 0x059669),
 ];
+
+/// The colour a settings dot shows for an accent; muted for "the theme's own".
+pub fn accent_swatch(id: &str, light: bool) -> Hsla {
+    ACCENTS
+        .iter()
+        .find(|(accent, _, _)| *accent == id)
+        .map(|(_, dark, deep)| hex(if light { *deep } else { *dark }, 1.0))
+        .or_else(|| parse_color(id))
+        .unwrap_or_else(|| current().text_muted)
+}
 
 pub fn accent_label(id: &str) -> SharedString {
     match id {
@@ -468,6 +487,8 @@ impl ThemeDef {
     }
 }
 
+const GRAPHITE: &str = "graphite";
+const PORCELAIN: &str = "porcelain";
 const OBSIDIAN: &str = "obsidian";
 const DAYLIGHT: &str = "daylight";
 
@@ -519,6 +540,52 @@ pub fn builtin() -> Vec<ThemeDef> {
         def
     };
 
+    // Flat, neutral and quiet, in the colours of macOS: a window, a slightly
+    // lighter sidebar and one blue.
+    let mut graphite = dark(
+        GRAPHITE,
+        "Graphite",
+        (0x1C1C1E, 0x1C1C1E, 1.0),
+        0x2C2C2E,
+        0x2C2C2E,
+    );
+    graphite.colors = Colors {
+        surface: hex(0x2C2C2E, 0.75),
+        border: hex(0xFFFFFF, 0.09),
+        accent: hex(0x0A84FF, 1.0),
+        text: hex(0xF5F5F7, 1.0),
+        muted: hex(0x98989D, 1.0),
+        ok: hex(0x30D158, 1.0),
+        warning: hex(0xFFD60A, 1.0),
+        error: hex(0xFF453A, 1.0),
+        string: hex(0x7BD88F, 1.0),
+        number: hex(0xFFB454, 1.0),
+        keyword: hex(0xC9A0F5, 1.0),
+        ..graphite.colors
+    };
+    let mut porcelain = light(
+        PORCELAIN,
+        "Porcelain",
+        (0xFFFFFF, 0xFFFFFF),
+        0xF2F2F7,
+        0xFFFFFF,
+    );
+    porcelain.colors = Colors {
+        background: hex(0xFFFFFF, 1.0),
+        background_end: hex(0xFFFFFF, 1.0),
+        surface: hex(0xF2F2F7, 1.0),
+        border: hex(0x000000, 0.09),
+        accent: hex(0x007AFF, 1.0),
+        text: hex(0x1D1D1F, 1.0),
+        muted: hex(0x6E6E73, 1.0),
+        ok: hex(0x1F9D45, 1.0),
+        warning: hex(0xB25000, 1.0),
+        error: hex(0xD70015, 1.0),
+        string: hex(0x1A7F4B, 1.0),
+        number: hex(0xB25000, 1.0),
+        keyword: hex(0x8944AB, 1.0),
+        ..porcelain.colors
+    };
     let obsidian = dark(
         OBSIDIAN,
         "Obsidian",
@@ -617,11 +684,13 @@ pub fn builtin() -> Vec<ThemeDef> {
     );
     solarized_light.colors.border = hex(0x586E75, 0.18);
     vec![
+        graphite,
         obsidian,
         cyber,
         dracula,
         nord,
         solarized_dark,
+        porcelain,
         daylight,
         solarized_light,
     ]
@@ -795,7 +864,7 @@ impl Palette {
         let (hover, input) = if def.light {
             (hsla(0., 0., 0., 0.05), hsla(0., 0., 0., 0.06))
         } else {
-            (hsla(0., 0., 1., 0.05), hsla(0., 0., 1., 0.12))
+            (hsla(0., 0., 1., 0.05), hsla(0., 0., 1., 0.08))
         };
         Self {
             bg_from: window(c.background),
@@ -805,8 +874,8 @@ impl Palette {
             hairline,
             border_active: accent.opacity(0.6),
             accent,
-            // Above ~0.18, dark text has more contrast than white (WCAG).
-            accent_fg: if luminance(accent) > 0.18 {
+            // Dark text only on a really light accent: system blue takes white.
+            accent_fg: if luminance(accent) > 0.26 {
                 hex(0x04121A, 1.0)
             } else {
                 hex(0xFFFFFF, 1.0)
@@ -920,12 +989,12 @@ pub fn method_color(method: Method) -> Hsla {
     let light = current().light;
     let pick = |dark: u32, deep: u32| hex(if light { deep } else { dark }, 1.0);
     match method {
-        Method::Get => pick(0x34D399, 0x059669),
-        Method::Post => pick(0x22D3EE, 0x0891B2),
-        Method::Put => pick(0xFBBF24, 0xB45309),
-        Method::Patch => pick(0xFB923C, 0xC2410C),
-        Method::Delete => pick(0xF87171, 0xDC2626),
-        Method::Head | Method::Options => pick(0xA78BFA, 0x7C3AED),
+        Method::Get => pick(0x30D158, 0x1F9D45),
+        Method::Post => pick(0x64A8FF, 0x007AFF),
+        Method::Put => pick(0xFFB340, 0xB25000),
+        Method::Patch => pick(0xC9A0F5, 0x8944AB),
+        Method::Delete => pick(0xFF6961, 0xD70015),
+        Method::Head | Method::Options => pick(0x98989D, 0x6E6E73),
     }
 }
 
@@ -966,7 +1035,8 @@ mod tests {
         assert!(!def.light);
         assert_eq!(color_text(def.colors.accent), "#FF0000");
         assert_eq!(color_text(def.colors.background), "#000000CC");
-        let obsidian = &builtin()[0];
+        let themes = builtin();
+        let obsidian = themes.iter().find(|t| t.id == OBSIDIAN).unwrap();
         assert_eq!(def.colors.text, obsidian.colors.text);
 
         let light = parse_theme("paper", "light = true\n").unwrap();
@@ -993,7 +1063,7 @@ mod tests {
     #[test]
     fn accent_and_transparency() {
         let themes = builtin();
-        let obsidian = &themes[0];
+        let obsidian = themes.iter().find(|t| t.id == OBSIDIAN).unwrap();
         let daylight = themes.iter().find(|t| t.id == "daylight").unwrap();
         let p = Palette::build(obsidian, "purple", 20);
         assert_eq!(color_text(p.accent), "#A78BFA");
