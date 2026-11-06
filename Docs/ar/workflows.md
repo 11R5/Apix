@@ -1,4 +1,4 @@
-<!-- translated from en/workflows.md sha256:96cb14d5eeb691a0 -->
+<!-- translated from en/workflows.md sha256:ced46a4d6c27e0a9 -->
 
 # سير العمل
 
@@ -201,11 +201,6 @@ JUnit وHTML. عند استخدامه بوسم إصدار، ينزّل `apix` ا
   env:
     APIX_VAR_TOKEN: ${{ secrets.API_TOKEN }}
 ```
-
-الإجراء نفسه مُدرج في GitHub Marketplace باسم
-[`11R5/apix-action`](https://github.com/11R5/apix-action). وهو ينزّل دائمًا
-`apix` من إصدار منشور: `uses: 11R5/apix-action@v1` يأخذ أحدث إصدار،
-و`@v0.1.1` ذلك الإصدار تحديدًا، و`apix-version` يتجاوز الاثنين.
 
 [examples/ci/github-actions.yml](../../examples/ci/github-actions.yml) سير عمل
 كامل: يشغّل المجموعة مرة لكل بيئة (مصفوفة من

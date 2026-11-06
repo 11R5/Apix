@@ -141,7 +141,7 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [x] GitHub Actions: test on Windows, macOS and Linux (CI foundation); build on version tags
 - [x] Prebuilt binaries on GitHub Releases, which the GitHub Action downloads instead of building (at a release tag, or with `apix-version`)
 - [ ] Build, try and publish the Docker image (ghcr.io)
-- [x] A small [`apix-action`](https://github.com/11R5/apix-action) repository for the GitHub Marketplace (it does not list repositories that have workflow files), written by `scripts/action-repo.sh`; it always downloads a released `apix`
+- ~~A separate `apix-action` repository for the GitHub Marketplace~~: dropped (6 Nov); the Apix repository itself is the action (`uses: 11R5/Apix@v0.1.1` downloads that release's `apix`)
 - [ ] Meet the start-up (150 ms) and idle memory (60 MB) budgets: 222 ms and 88 MB in 0.1.1 (was 278 ms); the Direct3D device is now created on its own thread from the first moment. About 150 ms and most of the memory are the graphics driver loading (NVIDIA here; the integrated GPU was slower and bigger), so the rest has to come from GPUI and Apix itself
 - [x] Installers and packages, using the M3 icons: Windows setup `.exe` (Inno Setup, per-user, optional PATH and `.apix` association) and portable `.zip`, a universal macOS `.dmg`, `.deb`, an Arch package and `PKGBUILD`, a Linux tarball with `install.sh`; built by `release.yml` on version tags
 - [x] Download page on GitHub Pages (`site/`): the right file for the visitor's system, from the latest release, in English and Turkish

@@ -1,4 +1,4 @@
-<!-- translated from en/workflows.md sha256:96cb14d5eeb691a0 -->
+<!-- translated from en/workflows.md sha256:ced46a4d6c27e0a9 -->
 
 # Рабочие процессы
 
@@ -207,11 +207,6 @@ APIX_VAR_TOKEN="$API_TOKEN" apix run api --env staging
   env:
     APIX_VAR_TOKEN: ${{ secrets.API_TOKEN }}
 ```
-
-Тот же action есть в GitHub Marketplace как
-[`11R5/apix-action`](https://github.com/11R5/apix-action). Он всегда скачивает
-выпущенный `apix`: `uses: 11R5/apix-action@v1` берёт последний выпуск,
-`@v0.1.1` — именно этот, а `apix-version` переопределяет оба.
 
 [examples/ci/github-actions.yml](../../examples/ci/github-actions.yml) — это
 полный workflow: он запускает коллекцию по разу для каждого окружения (матрица

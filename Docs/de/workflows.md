@@ -1,4 +1,4 @@
-<!-- translated from en/workflows.md sha256:96cb14d5eeb691a0 -->
+<!-- translated from en/workflows.md sha256:ced46a4d6c27e0a9 -->
 
 # Workflows
 
@@ -214,12 +214,6 @@ schreibt JUnit- und HTML-Berichte. An einem Release-Tag verwendet, lädt sie das
   env:
     APIX_VAR_TOKEN: ${{ secrets.API_TOKEN }}
 ```
-
-Dieselbe Action ist im GitHub Marketplace als
-[`11R5/apix-action`](https://github.com/11R5/apix-action) gelistet. Sie lädt
-immer ein veröffentlichtes `apix` herunter: `uses: 11R5/apix-action@v1` nimmt
-das neueste Release, `@v0.1.1` genau dieses, und `apix-version` überschreibt
-beides.
 
 [examples/ci/github-actions.yml](../../examples/ci/github-actions.yml) ist ein
 vollständiger Workflow: Er führt die Sammlung einmal pro Umgebung aus (eine

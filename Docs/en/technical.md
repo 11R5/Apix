@@ -233,11 +233,7 @@ Each release also carries a filled-in Homebrew cask (`apix.rb`, from
 `packaging/homebrew`) and winget manifests (`AhmetDemir.Apix*.yaml`, from
 `packaging/winget`), made by `scripts/channel-manifests.sh`, to copy into the
 tap repository ([11R5/homebrew-apix](https://github.com/11R5/homebrew-apix))
-and a `microsoft/winget-pkgs` pull request. `scripts/action-repo.sh` writes
-the files of [11R5/apix-action](https://github.com/11R5/apix-action), the
-Marketplace copy of `action.yml` that always downloads a release (the
-Marketplace does not list a repository with workflow files); after each
-release it gets a `v<version>` tag and `v1` moves to the new commit.
+and a `microsoft/winget-pkgs` pull request.
 `.github/workflows/docker.yml` publishes the container image on version tags.
 The action caches the `apix` it builds under a hash of the engine's sources,
 so a new commit rebuilds it and an unchanged one reuses it.

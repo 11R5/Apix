@@ -1,4 +1,4 @@
-<!-- translated from en/workflows.md sha256:96cb14d5eeb691a0 -->
+<!-- translated from en/workflows.md sha256:ced46a4d6c27e0a9 -->
 
 # ワークフロー
 
@@ -198,11 +198,6 @@ APIX_VAR_TOKEN="$API_TOKEN" apix run api --env staging
   env:
     APIX_VAR_TOKEN: ${{ secrets.API_TOKEN }}
 ```
-
-同じアクションが GitHub Marketplace に
-[`11R5/apix-action`](https://github.com/11R5/apix-action) として掲載されています。こちらは常に
-リリース済みの `apix` をダウンロードします。`uses: 11R5/apix-action@v1` は最新のリリースを、
-`@v0.1.1` はそのリリースを使い、`apix-version` はどちらよりも優先されます。
 
 [examples/ci/github-actions.yml](../../examples/ci/github-actions.yml) は完全なワークフローです。
 環境ごとに 1 回ずつコレクションを実行し（`test` と `staging` のマトリックス）、JUnit の結果を

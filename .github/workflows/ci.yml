@@ -91,7 +91,7 @@ jobs:
         shell: bash
         run: test -s reports/apix.xml && test -s reports/apix.html
 
-  # The Marketplace copy (11R5/apix-action) and a released apix, downloaded.
+  # The action at a release tag: it downloads that release's apix.
   released-action:
     name: Released action (${{ matrix.os }})
     strategy:
@@ -101,7 +101,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: 11R5/apix-action@v1
+      - uses: 11R5/Apix@v0.1.1
         with:
           path: examples/jsonplaceholder
           junit: reports/apix.xml

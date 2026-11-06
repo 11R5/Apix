@@ -1,4 +1,4 @@
-<!-- translated from en/technical.md sha256:40c5e638c106f35d -->
+<!-- translated from en/technical.md sha256:20fbf0a60187a9e2 -->
 
 # 技術ノート
 
@@ -231,11 +231,7 @@ https://11r5.github.io/Apix/ に公開します。
 winget マニフェスト（`AhmetDemir.Apix*.yaml`、`packaging/winget` から）も付きます。
 これらは `scripts/channel-manifests.sh` が作り、tap リポジトリ
 （[11R5/homebrew-apix](https://github.com/11R5/homebrew-apix)）へのコピーと
-`microsoft/winget-pkgs` へのプルリクエストに使います。`scripts/action-repo.sh` は
-[11R5/apix-action](https://github.com/11R5/apix-action) のファイルを書き出します。これは
-常にリリースをダウンロードする `action.yml` の Marketplace 用コピーです（Marketplace は
-ワークフローファイルを含むリポジトリを掲載しないため）。リリースのたびに `v<version>` タグが付き、
-`v1` が新しいコミットに移ります。
+`microsoft/winget-pkgs` へのプルリクエストに使います。
 `.github/workflows/docker.yml` はバージョンタグでコンテナイメージを公開します。
 アクションは自分でビルドした `apix` をエンジンのソースのハッシュでキャッシュするので、
 新しいコミットでは再ビルドし、変更のないコミットでは再利用します。

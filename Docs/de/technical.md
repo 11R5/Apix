@@ -1,4 +1,4 @@
-<!-- translated from en/technical.md sha256:40c5e638c106f35d -->
+<!-- translated from en/technical.md sha256:20fbf0a60187a9e2 -->
 
 # Technische Hinweise
 
@@ -242,11 +242,7 @@ Jedes Release enthält außerdem einen ausgefüllten Homebrew-Cask (`apix.rb`, a
 `packaging/homebrew`) und winget-Manifeste (`AhmetDemir.Apix*.yaml`, aus
 `packaging/winget`), erstellt von `scripts/channel-manifests.sh`, zum Kopieren
 in das Tap-Repository ([11R5/homebrew-apix](https://github.com/11R5/homebrew-apix))
-und für einen Pull Request an `microsoft/winget-pkgs`. `scripts/action-repo.sh`
-schreibt die Dateien von [11R5/apix-action](https://github.com/11R5/apix-action),
-der Marketplace-Kopie von `action.yml`, die immer ein Release herunterlädt (der
-Marketplace listet kein Repository mit Workflow-Dateien); nach jedem Release
-bekommt es einen Tag `v<version>`, und `v1` wandert auf den neuen Commit.
+und für einen Pull Request an `microsoft/winget-pkgs`.
 `.github/workflows/docker.yml` veröffentlicht das Container-Image bei
 Versions-Tags. Die Action speichert das von ihr gebaute `apix` unter einem Hash
 der Engine-Quellen im Cache, sodass ein neuer Commit es neu baut und ein

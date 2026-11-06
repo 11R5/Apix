@@ -1,4 +1,4 @@
-<!-- translated from en/workflows.md sha256:96cb14d5eeb691a0 -->
+<!-- translated from en/workflows.md sha256:ced46a4d6c27e0a9 -->
 
 # Flujos de trabajo
 
@@ -211,11 +211,6 @@ lugar una versión publicada:
   env:
     APIX_VAR_TOKEN: ${{ secrets.API_TOKEN }}
 ```
-
-La misma action aparece en el GitHub Marketplace como
-[`11R5/apix-action`](https://github.com/11R5/apix-action). Siempre descarga un
-`apix` publicado: `uses: 11R5/apix-action@v1` toma la última versión,
-`@v0.1.1` esa versión concreta, y `apix-version` tiene prioridad sobre ambas.
 
 [examples/ci/github-actions.yml](../../examples/ci/github-actions.yml) es un
 workflow completo: ejecuta la colección una vez por entorno (una matriz de

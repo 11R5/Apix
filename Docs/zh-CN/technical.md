@@ -1,4 +1,4 @@
-<!-- translated from en/technical.md sha256:40c5e638c106f35d -->
+<!-- translated from en/technical.md sha256:20fbf0a60187a9e2 -->
 
 # 技术说明
 
@@ -187,7 +187,7 @@ GPUI 的 Windows 文本渲染器（crate `gpui-pre-windows` 0.3.9）把每一串
 | GitHub Action | 在 Linux 和 Windows 上，用仓库自己的 action（`uses: ./`）运行 `examples/jsonplaceholder`，并检查它写出了报告 |
 
 `.github/workflows/release.yml` 在版本标签（`v1.2.3`，必须与 `Cargo.toml` 一致）上构建发布包，并连同 `SHA256SUMS.txt` 作为 GitHub release 发布；手动启动时只构建，作为该次运行的产物。Windows：`scripts/package-windows.ps1`（Inno Setup 6，`packaging/windows/apix.iss`：按用户或按机器安装、可选的 PATH 和 `.apix` 关联、卸载程序）。macOS：`scripts/package-macos.sh` 构建两种架构，用 `lipo` 合并成 `Apix.app`（ad-hoc 签名），并制作 `.dmg`。Linux（在 Ubuntu 22.04 上，因此 glibc 2.35 即可）：`scripts/package-linux.sh` 制作带 `install.sh` 的 tarball、`.deb`（依赖来自 `dpkg-shlibdeps`，外加 `libvulkan1`）和一个已填好的 `PKGBUILD`；`scripts/package-arch.sh` 在 `archlinux` 容器中用它们构建 Arch 包。`.deb` 和 Arch 包会在工作流中安装，并检查是否缺少库。`.github/workflows/pages.yml` 把 `site/` 发布到 https://11r5.github.io/Apix/ 。
-每个发布还附带一个已填好的 Homebrew cask（`apix.rb`，来自 `packaging/homebrew`）和 winget 清单（`AhmetDemir.Apix*.yaml`，来自 `packaging/winget`），由 `scripts/channel-manifests.sh` 生成，用于复制到 tap 仓库（[11R5/homebrew-apix](https://github.com/11R5/homebrew-apix)）和提交 `microsoft/winget-pkgs` 拉取请求。`scripts/action-repo.sh` 写出 [11R5/apix-action](https://github.com/11R5/apix-action) 的文件，它是 `action.yml` 在 Marketplace 上的副本，总是下载一个发布版（Marketplace 不会列出带有工作流文件的仓库）；每次发布后它会得到一个 `v<version>` 标签，`v1` 移到新的提交。
+每个发布还附带一个已填好的 Homebrew cask（`apix.rb`，来自 `packaging/homebrew`）和 winget 清单（`AhmetDemir.Apix*.yaml`，来自 `packaging/winget`），由 `scripts/channel-manifests.sh` 生成，用于复制到 tap 仓库（[11R5/homebrew-apix](https://github.com/11R5/homebrew-apix)）和提交 `microsoft/winget-pkgs` 拉取请求。
 `.github/workflows/docker.yml` 在版本标签上发布容器镜像。action 把它构建的 `apix` 缓存在引擎源码的哈希之下，因此新的提交会重新构建，未改动的提交会复用。
 
 ## 测试

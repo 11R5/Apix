@@ -1,4 +1,4 @@
-<!-- translated from en/technical.md sha256:40c5e638c106f35d -->
+<!-- translated from en/technical.md sha256:20fbf0a60187a9e2 -->
 
 # Технические заметки
 
@@ -238,11 +238,7 @@ GitHub с `SHA256SUMS.txt`; при ручном запуске он только
 `packaging/homebrew`) и манифесты winget (`AhmetDemir.Apix*.yaml`, из
 `packaging/winget`), которые делает `scripts/channel-manifests.sh`, чтобы
 скопировать их в репозиторий tap ([11R5/homebrew-apix](https://github.com/11R5/homebrew-apix))
-и в pull request к `microsoft/winget-pkgs`. `scripts/action-repo.sh` пишет
-файлы [11R5/apix-action](https://github.com/11R5/apix-action) — копии
-`action.yml` для Marketplace, которая всегда скачивает выпуск (Marketplace не
-показывает репозиторий с файлами workflow); после каждого выпуска она получает
-тег `v<version>`, а `v1` переносится на новый коммит.
+и в pull request к `microsoft/winget-pkgs`.
 `.github/workflows/docker.yml` публикует образ контейнера по тегам версий.
 Action кэширует собранный им `apix` под хешем исходников движка, поэтому новый
 коммит пересобирает его, а неизменённый использует повторно.

@@ -1,4 +1,4 @@
-<!-- translated from en/technical.md sha256:40c5e638c106f35d -->
+<!-- translated from en/technical.md sha256:20fbf0a60187a9e2 -->
 
 # Teknik notlar
 
@@ -236,11 +236,6 @@ Her sürüm ayrıca doldurulmuş bir Homebrew cask'i (`apix.rb`,
 `packaging/winget`'ten) taşır; bunları `scripts/channel-manifests.sh` yapar,
 tap deposuna ([11R5/homebrew-apix](https://github.com/11R5/homebrew-apix)) ve
 bir `microsoft/winget-pkgs` pull request'ine kopyalanır.
-`scripts/action-repo.sh`, [11R5/apix-action](https://github.com/11R5/apix-action)
-deposunun dosyalarını yazar: `action.yml`'nin her zaman bir sürümü indiren
-Marketplace kopyası (Marketplace iş akışı dosyası olan depoyu listelemez);
-her sürümden sonra oraya `v<sürüm>` etiketi eklenir ve `v1` yeni commit'e
-taşınır.
 
 `.github/workflows/docker.yml` sürüm etiketlerinde konteyner imajını
 yayımlar. Action derlediği `apix`'i motor kaynaklarının özetiyle önbelleğe

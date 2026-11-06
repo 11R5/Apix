@@ -1,4 +1,4 @@
-<!-- translated from en/workflows.md sha256:96cb14d5eeb691a0 -->
+<!-- translated from en/workflows.md sha256:ced46a4d6c27e0a9 -->
 
 # 工作流程
 
@@ -167,8 +167,6 @@ APIX_VAR_TOKEN="$API_TOKEN" apix run api --env staging
   env:
     APIX_VAR_TOKEN: ${{ secrets.API_TOKEN }}
 ```
-
-同一个 action 以 [`11R5/apix-action`](https://github.com/11R5/apix-action) 的名称列在 GitHub Marketplace 上。它总是下载已发布的 `apix`：`uses: 11R5/apix-action@v1` 使用最新发布版，`@v0.1.1` 使用该版本，`apix-version` 优先于两者。
 
 [examples/ci/github-actions.yml](../../examples/ci/github-actions.yml) 是一个完整的工作流：它对每个环境运行一次集合（`test` 和 `staging` 组成的矩阵），在运行页面上显示 JUnit 结果，并保留 HTML 报告。action 还会把它的 Markdown 摘要添加到任务页面上。
 

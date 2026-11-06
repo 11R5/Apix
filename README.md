@@ -10,7 +10,7 @@ Your requests are plain files in your repository. No Electron, no account, no cl
 <a href="https://github.com/11R5/Apix/actions/workflows/ci.yml"><img src="https://github.com/11R5/Apix/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
 <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="Apache-2.0"></a>
 <a href="https://11r5.github.io/Apix/docs/"><img src="https://img.shields.io/badge/docs-9%20languages-8b5cf6" alt="Documentation in 9 languages"></a>
-<a href="https://github.com/11R5/apix-action"><img src="https://img.shields.io/badge/GitHub%20Action-apix--action-2ea44f" alt="GitHub Action"></a>
+<a href="Docs/en/workflows.md#github-actions"><img src="https://img.shields.io/badge/GitHub%20Action-uses%3A%2011R5%2FApix-2ea44f" alt="GitHub Action"></a>
 </p>
 
 <p align="center">
@@ -119,7 +119,7 @@ How to install each one: [user guide](Docs/en/user-guide.md#installing-apix).
 32. **Collections as plain TOML files**, in folders, with projects that share environments and auth, a colour per collection, and drag to move and reorder.
 33. **Git in the app:** branch and changed files in the status bar, changed requests marked, a Git window with field-by-field changes, commit, branches, pull and push.
 34. **Git-aware command line:** `apix run --changed` sends only what a change touched, `apix diff` shows what changed in requests field by field.
-35. **GitHub Action** ([`11R5/apix-action`](https://github.com/11R5/apix-action)) with a summary comment on the pull request, a Docker image, GitLab and Azure examples.
+35. **GitHub Action** (`uses: 11R5/Apix@v0.1.1`, downloads that release's `apix` in seconds) with a summary comment on the pull request, a Docker image, GitLab and Azure examples.
 36. **Import** Postman (collections, environments, whole "Export data" zips), Insomnia, OpenAPI 3 and Swagger 2, HAR and WSDL from a file or a URL; **export** to Postman.
 37. **Copy as** curl, curl.exe, PowerShell, HTTPie or wget, or code in fetch, axios, Python, Go, Rust, C#, Java, PHP, Swift and Kotlin; **paste** a curl command to fill a request.
 38. **API documentation** as one HTML page or Markdown, with no secrets in it.
@@ -218,7 +218,7 @@ In GitHub Actions:
 
 ```yaml
 - uses: actions/checkout@v4
-- uses: 11R5/apix-action@v1
+- uses: 11R5/Apix@v0.1.1
   with:
     path: api
     environment: staging

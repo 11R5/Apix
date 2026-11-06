@@ -1,4 +1,4 @@
-<!-- translated from en/technical.md sha256:40c5e638c106f35d -->
+<!-- translated from en/technical.md sha256:20fbf0a60187a9e2 -->
 
 # ملاحظات تقنية
 
@@ -234,11 +234,7 @@ Windows: ‏`scripts/package-windows.ps1` ‏(Inno Setup 6،
 `packaging/homebrew`) وبيانات winget ‏(`AhmetDemir.Apix*.yaml`، من
 `packaging/winget`)، يصنعها `scripts/channel-manifests.sh`، لتُنسخ إلى
 مستودع الـ tap ‏([11R5/homebrew-apix](https://github.com/11R5/homebrew-apix))
-وإلى طلب دمج في `microsoft/winget-pkgs`. يكتب `scripts/action-repo.sh`
-ملفات [11R5/apix-action](https://github.com/11R5/apix-action)، وهي
-نسخة Marketplace من `action.yml` التي تنزّل إصدارًا دائمًا (لا يُدرج
-Marketplace مستودعًا فيه ملفات سير عمل)؛ وبعد كل إصدار يحصل على وسم `v<version>`
-وينتقل `v1` إلى الإيداع الجديد.
+وإلى طلب دمج في `microsoft/winget-pkgs`.
 ينشر `.github/workflows/docker.yml` صورة الحاوية عند وسوم الإصدارات.
 يخزّن الإجراء نسخة `apix` التي يبنيها مؤقتًا تحت تجزئة لمصادر المحرك،
 فيعيد الإيداع الجديد بناءها ويعيد الإيداع غير المتغيّر استخدامها.

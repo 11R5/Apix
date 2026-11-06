@@ -200,11 +200,6 @@ caches it, and `apix-version: latest` (or `0.1.1`) downloads a release instead:
     APIX_VAR_TOKEN: ${{ secrets.API_TOKEN }}
 ```
 
-The same action is listed on the GitHub Marketplace as
-[`11R5/apix-action`](https://github.com/11R5/apix-action). It always downloads
-a released `apix`: `uses: 11R5/apix-action@v1` takes the latest release,
-`@v0.1.1` that one, and `apix-version` overrides both.
-
 [examples/ci/github-actions.yml](../../examples/ci/github-actions.yml) is a
 complete workflow: it runs the collection once per environment (a matrix of
 `test` and `staging`), shows the JUnit results on the run's page and keeps the

@@ -1,4 +1,4 @@
-<!-- translated from en/workflows.md sha256:96cb14d5eeb691a0 -->
+<!-- translated from en/workflows.md sha256:ced46a4d6c27e0a9 -->
 
 # Workflows
 
@@ -209,11 +209,6 @@ compile `apix` la première fois et le met en cache, et `apix-version: latest`
   env:
     APIX_VAR_TOKEN: ${{ secrets.API_TOKEN }}
 ```
-
-La même action est listée sur la GitHub Marketplace sous le nom
-[`11R5/apix-action`](https://github.com/11R5/apix-action). Elle télécharge
-toujours un `apix` publié : `uses: 11R5/apix-action@v1` prend la dernière
-version, `@v0.1.1` celle-ci, et `apix-version` l’emporte sur les deux.
 
 [examples/ci/github-actions.yml](../../examples/ci/github-actions.yml) est un
 workflow complet : il exécute la collection une fois par environnement (une
