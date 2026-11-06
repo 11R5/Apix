@@ -1,0 +1,21 @@
+name = "Chat"
+method = "GET"
+url = "http://127.0.0.1:8771"
+
+[socketio]
+namespace = "/chat"
+
+[[message]]
+event = "echo"
+body = '{"text": "Hi there"}'
+ack = true
+
+[[message]]
+event = "ask"
+body = '"Ready?"'
+
+[[message]]
+event = "echo"
+name = "Picture"
+body = "iVBORw0KGgo="
+format = "base64"

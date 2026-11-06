@@ -1,0 +1,14 @@
+name = "Signed order (plugin)"
+method = "POST"
+url = "{{base_url}}/posts"
+
+[body]
+json = '{ "item": "keyboard", "quantity": 2 }'
+
+[auth.plugin]
+plugin = "hmac-signature"
+
+[auth.plugin.config]
+key_id = "docs"
+secret = "{{signing_secret}}"
+header = "X-Signature"

@@ -39,6 +39,7 @@ mod sidebar_search;
 mod socket_ui;
 mod stream_ui;
 mod tabs;
+mod tour;
 mod update_ui;
 mod url_sync;
 mod var_chips;
@@ -502,6 +503,8 @@ pub struct Workspace {
     runner: Option<Entity<runner_ui::RunnerView>>,
     /// The event list of a finished event stream.
     events_scroll: ScrollHandle,
+    /// The Network tab, scrolled by the documentation tour.
+    network_scroll: ScrollHandle,
     _subscriptions: Vec<Subscription>,
 }
 
@@ -723,6 +726,7 @@ impl Workspace {
             drop_hint: None,
             runner: None,
             events_scroll: ScrollHandle::new(),
+            network_scroll: ScrollHandle::new(),
             _subscriptions: subscriptions,
         };
         this._auto_lock = Some(Self::auto_lock_task(window, cx));
@@ -750,6 +754,12 @@ impl Workspace {
         if let Some(dir) = dir {
             cx.defer_in(window, move |this, window, cx| {
                 this.open_or_create(dir, window, cx)
+            });
+        }
+        // The documentation's screenshot tour (scripts/docs-tour.ps1).
+        if let Some(file) = tour::active() {
+            cx.defer_in(window, move |this, window, cx| {
+                this.start_tour(file, window, cx)
             });
         }
         this.url.update(cx, |state, cx| state.focus(window, cx));

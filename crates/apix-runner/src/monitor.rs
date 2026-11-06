@@ -191,7 +191,7 @@ pub async fn run_once(
 
 /// Where monitor logs go by default: `<config>/Apix/monitors`.
 pub fn default_dir() -> Option<PathBuf> {
-    Some(dirs::config_dir()?.join("Apix").join("monitors"))
+    Some(apix_core::app_dir()?.join("monitors"))
 }
 
 /// The outcomes of one monitor, newest last, as JSON lines.

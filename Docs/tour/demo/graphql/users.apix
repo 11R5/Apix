@@ -1,0 +1,17 @@
+name = "Users"
+method = "POST"
+url = "http://127.0.0.1:8769/graphql"
+
+[body.graphql]
+query = '''
+query Users($role: Role) {
+  users(role: $role) {
+    id
+    name
+    posts {
+      title
+    }
+  }
+}
+'''
+variables = '{ "role": "ADMIN" }'

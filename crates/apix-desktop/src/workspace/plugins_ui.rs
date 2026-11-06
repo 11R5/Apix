@@ -19,6 +19,7 @@ impl Workspace {
         let view = cx.new(|_| PluginsView {
             workspace: workspace.clone(),
         });
+        super::tour::keep(&view);
         window.open_dialog(cx, move |dialog, _, _| {
             dialog
                 .on_close(super::collections::refocus(workspace.clone()))

@@ -291,7 +291,13 @@ impl Geo {
 
 /// Where Apix keeps the location database: `<config>/Apix/geo`.
 pub fn geo_dir() -> Option<PathBuf> {
-    Some(dirs::config_dir()?.join("Apix").join("geo"))
+    Some(
+        match std::env::var_os("APIX_CONFIG_DIR") {
+            Some(dir) => PathBuf::from(dir),
+            None => dirs::config_dir()?.join("Apix"),
+        }
+        .join("geo"),
+    )
 }
 
 /// The database in [`geo_dir`], opened, when there is one.

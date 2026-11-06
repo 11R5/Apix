@@ -164,8 +164,7 @@ fn cache_file(url: &str) -> Option<PathBuf> {
         (h ^ u64::from(b)).wrapping_mul(0x0100_0000_01b3)
     });
     Some(
-        dirs::config_dir()?
-            .join("Apix")
+        apix_core::app_dir()?
             .join("graphql")
             .join(format!("{hash:016x}.json")),
     )

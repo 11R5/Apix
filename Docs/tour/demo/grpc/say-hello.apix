@@ -1,0 +1,8 @@
+name = "Say hello"
+url = "grpc://127.0.0.1:8770"
+
+[body]
+json = '{"name": "Ada", "mood": "HAPPY"}'
+
+[grpc]
+method = "apix.test.Greeter/SayHello"

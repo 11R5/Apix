@@ -1,0 +1,310 @@
+# The user guide's pictures: scripts/docs-tour.ps1 runs these scenes in
+# every language and saves each as Docs/<language>/images/<name>.png. The
+# fields and steps are described in crates/apix-desktop/src/workspace/tour.rs.
+# Servers: the example servers (127.0.0.1:8767-8773), jsonplaceholder.typicode.com,
+# and the demo collection's own mock server on 4011 (started by the load test).
+
+[[scene]]
+name = "main"
+open = "demo"
+env = ""
+closed = ["auth", "graphql", "grpc", "realtime", "soap"]
+tabs = ["users/create-user.apix", "users/list-users.apix"]
+send = true
+
+[[scene]]
+name = "open-collection"
+open = "-"
+wait = 600
+
+[[scene]]
+name = "path-variables"
+open = "demo"
+closed = ["auth", "graphql", "grpc", "realtime", "soap"]
+tabs = ["users/get-user.apix"]
+request_tab = 0
+
+[[scene]]
+name = "header-hints"
+tabs = ["users/create-user.apix"]
+steps = ["header Con"]
+
+[[scene]]
+name = "body"
+tabs = ["users/upload-avatar.apix"]
+request_tab = 3
+
+[[scene]]
+name = "graphql"
+closed = ["auth", "grpc", "realtime", "soap", "users"]
+tabs = ["graphql/users.apix"]
+request_tab = 3
+steps = ["schema", "complete 3 4"]
+
+[[scene]]
+name = "auth"
+closed = ["graphql", "grpc", "realtime", "soap", "users"]
+tabs = ["auth/oauth.apix"]
+request_tab = 2
+
+[[scene]]
+name = "request-settings"
+closed = ["auth", "graphql", "grpc", "realtime", "soap"]
+tabs = ["users/slow-report.apix"]
+request_tab = 5
+
+[[scene]]
+name = "variables"
+tabs = ["users/create-user.apix"]
+dialog = "variables"
+
+[[scene]]
+name = "response-filter"
+tabs = ["users/list-users.apix"]
+send = true
+filter = "$[*].email"
+
+[[scene]]
+name = "visual-table"
+tabs = ["users/list-users.apix"]
+send = true
+filter = "[.[] | {id, name, email, city: .address.city}]"
+visual = "table"
+
+[[scene]]
+name = "visual-chart"
+tabs = ["users/list-users.apix"]
+send = true
+filter = "[.[] | {name: .username, \"name length\": (.name | length)}]"
+visual = "chart"
+
+[[scene]]
+name = "examples"
+tabs = ["users/get-user.apix"]
+request_tab = 6
+steps = ["example 0"]
+
+[[scene]]
+name = "scripts"
+tabs = ["users/get-user.apix"]
+request_tab = 4
+send = true
+response_tab = 5
+
+[[scene]]
+name = "network"
+tabs = ["users/create-user.apix", "users/list-users.apix"]
+send = true
+response_tab = 3
+
+[[scene]]
+name = "network-tls"
+tabs = ["users/create-user.apix", "users/list-users.apix"]
+send = true
+response_tab = 3
+steps = ["scroll_network 440"]
+
+[[scene]]
+name = "route"
+tabs = ["users/list-users.apix"]
+dialog = "route"
+steps = ["route.start 45000"]
+
+[[scene]]
+name = "websocket"
+closed = ["auth", "graphql", "grpc", "soap", "users"]
+tabs = ["realtime/echo.apix"]
+request_tab = 3
+send = true
+steps = ["wait 1200", "message 0", "message 1"]
+
+[[scene]]
+name = "socketio"
+closed = ["auth", "graphql", "grpc", "soap", "users"]
+tabs = ["realtime/chat.apix"]
+request_tab = 3
+send = true
+steps = ["wait 1200", "message 0", "message 1", "message 2"]
+
+[[scene]]
+name = "mqtt"
+closed = ["auth", "graphql", "grpc", "soap", "users"]
+tabs = ["realtime/sensors.apix"]
+request_tab = 3
+send = true
+steps = ["wait 1500", "message 0", "message 1", "wait 1500"]
+
+[[scene]]
+name = "soap"
+closed = ["auth", "graphql", "grpc", "realtime", "users"]
+tabs = ["soap/divide.apix"]
+request_tab = 3
+send = true
+
+[[scene]]
+name = "grpc"
+closed = ["auth", "graphql", "realtime", "soap", "users"]
+tabs = ["grpc/say-hello.apix"]
+request_tab = 3
+send = true
+
+[[scene]]
+name = "grpc-definition"
+closed = ["auth", "graphql", "realtime", "soap", "users"]
+tabs = ["grpc/guessed.apix"]
+request_tab = 3
+steps = ["grpc_convert {\"mood\": \"HAPPY\", \"name\": \"Ada\"}", "wait 1500", "send"]
+
+[[scene]]
+name = "runner"
+closed = ["auth", "graphql", "grpc", "realtime", "soap"]
+tabs = ["users/get-user.apix"]
+dialog = "runner users"
+steps = ["runner.data data/users.csv", "runner.run 12000", "runner.expand 6"]
+
+[[scene]]
+name = "flows"
+tabs = ["users/create-user.apix"]
+dialog = "flows"
+steps = ["flows.open new-user.flow", "flows.select get-user", "flows.run 8000"]
+
+[[scene]]
+name = "load-test"
+env = "local"
+tabs = ["users/get-user.apix"]
+dialog = "load"
+steps = ["mock 4011", "wait 500", "load.set rate 300", "load.start 11500"]
+
+[[scene]]
+name = "mock"
+env = "local"
+tabs = ["users/get-user.apix"]
+dialog = "mock"
+
+[[scene]]
+name = "cookies"
+env = "local"
+closed = ["graphql", "grpc", "realtime", "soap", "users"]
+tabs = ["auth/login.apix"]
+send = true
+dialog = "cookies"
+
+[[scene]]
+name = "monitors"
+env = ""
+closed = ["auth", "graphql", "grpc", "realtime", "soap", "users"]
+tabs = ["health.apix"]
+dialog = "monitors"
+steps = ["monitor Health", "wait 3000", "monitor Status page", "wait 3000"]
+
+[[scene]]
+name = "ai-explain"
+closed = ["auth", "graphql", "grpc", "realtime", "soap", "users"]
+tabs = ["status.apix"]
+send = true
+dialog = "explain ai/{lang}.md"
+
+[[scene]]
+name = "compare"
+closed = ["auth", "graphql", "grpc", "realtime", "soap"]
+tabs = ["users/create-user.apix"]
+send = true
+steps = ["send", "send"]
+dialog = "compare"
+
+[[scene]]
+name = "history"
+tabs = ["users/create-user.apix"]
+dialog = "history"
+
+[[scene]]
+name = "tabs"
+closed = ["auth", "realtime", "soap"]
+tabs = ["users/create-user.apix", "graphql/users.apix", "grpc/say-hello.apix", "users/list-users.apix", "users/get-user.apix"]
+request_tab = 0
+steps = ["url {{base_url}}/users/:id?draft=1"]
+
+[[scene]]
+name = "plugins"
+closed = ["auth", "graphql", "grpc", "realtime", "soap"]
+tabs = ["users/list-users.apix"]
+dialog = "plugins"
+
+[[scene]]
+name = "plugin-auth"
+closed = ["graphql", "grpc", "realtime", "soap", "users"]
+tabs = ["auth/signed.apix"]
+request_tab = 2
+send = true
+
+[[scene]]
+name = "plugin-view"
+closed = ["auth", "graphql", "grpc", "realtime", "soap"]
+tabs = ["users/list-users.apix"]
+send = true
+visual = "plugin"
+
+[[scene]]
+name = "palette"
+tabs = ["users/list-users.apix"]
+dialog = "palette"
+
+[[scene]]
+name = "import"
+tabs = ["users/list-users.apix"]
+dialog = "import https://petstore3.swagger.io/api/v3/openapi.json"
+
+[[scene]]
+name = "setup"
+tabs = ["users/list-users.apix"]
+dialog = "setup"
+
+[[scene]]
+name = "claude-connect"
+tabs = ["users/list-users.apix"]
+dialog = "claude"
+
+[[scene]]
+name = "update"
+tabs = ["users/list-users.apix"]
+dialog = "update"
+
+[[scene]]
+name = "settings"
+tabs = ["users/list-users.apix"]
+dialog = "settings"
+
+[[scene]]
+name = "look"
+tabs = ["users/list-users.apix"]
+dialog = "settings"
+steps = ["settings.scroll 1000"]
+
+[[scene]]
+name = "capture"
+env = "local"
+closed = ["auth", "graphql", "grpc", "realtime", "soap"]
+tabs = ["users/get-user.apix"]
+dialog = "capture"
+steps = ["capture 8888 127.0.0.1:4011", "wait 1500"]
+
+[[scene]]
+name = "projects"
+open = "project"
+tabs = ["accounts/sign-up.apix"]
+
+[[scene]]
+name = "git-status"
+open = "$WORK/git-demo"
+closed = ["auth", "graphql", "grpc", "realtime", "soap"]
+tabs = ["users/create-user.apix"]
+
+[[scene]]
+name = "git-window"
+tabs = ["users/create-user.apix"]
+dialog = "git"
+
+[[scene]]
+name = "encrypted"
+open = "$WORK/encrypted"
+wait = 1200

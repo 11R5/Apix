@@ -51,6 +51,7 @@ impl Workspace {
         let workspace = cx.entity().downgrade();
         let view =
             cx.new(|cx| FlowsView::new(collection, project, environment, script_vars, window, cx));
+        super::tour::keep(&view);
         window.open_dialog(cx, move |dialog, _, _| {
             dialog
                 .on_close(super::collections::refocus(workspace.clone()))
@@ -1357,5 +1358,34 @@ impl FlowsView {
                             })),
                     ),
             )
+    }
+}
+
+impl FlowsView {
+    /// Steps of the documentation's screenshot tour: `open <file>`, `select
+    /// <node>`, `run [ms]`.
+    pub(super) fn tour(
+        &mut self,
+        step: &str,
+        arg: &str,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> u64 {
+        match step {
+            "open" => {
+                let path = self.collection.root.join(arg);
+                self.open(path, window, cx);
+                0
+            }
+            "select" => {
+                self.select(Some(arg.to_string()), window, cx);
+                0
+            }
+            "run" => {
+                self.run(window, cx);
+                arg.parse().unwrap_or(5000)
+            }
+            _ => 0,
+        }
     }
 }

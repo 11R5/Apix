@@ -1,0 +1,3 @@
+name = "Refund"
+method = "POST"
+url = "{{base_url}}/payments/7/refund"

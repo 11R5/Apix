@@ -349,6 +349,7 @@ impl Workspace {
 
         div()
             .id("network")
+            .track_scroll(&self.network_scroll)
             .size_full()
             .overflow_y_scroll()
             .px_2()

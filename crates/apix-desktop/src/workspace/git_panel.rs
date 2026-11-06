@@ -36,6 +36,7 @@ impl Workspace {
         };
         let workspace = cx.entity().downgrade();
         let view = cx.new(|cx| GitView::new(workspace.clone(), base, repo, window, cx));
+        super::tour::keep(&view);
         window.open_dialog(cx, move |dialog, _, _| {
             dialog
                 .on_close(super::collections::refocus(workspace.clone()))

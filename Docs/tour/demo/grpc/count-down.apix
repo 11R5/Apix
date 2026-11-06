@@ -1,0 +1,8 @@
+name = "Count down"
+url = "grpc://127.0.0.1:8770"
+
+[body]
+json = '{"from": 3}'
+
+[grpc]
+method = "apix.test.Greeter/CountDown"

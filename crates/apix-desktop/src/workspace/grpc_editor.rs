@@ -898,3 +898,19 @@ fn kind_label(method: &MethodInfo) -> SharedString {
         (true, true) => tr!("grpc.kind_bidi"),
     }
 }
+
+impl GrpcEditor {
+    /// The documentation's screenshot tour: makes a definition from `source`
+    /// (a JSON example of the message), as Convert would.
+    pub(super) fn tour_convert(
+        &mut self,
+        source: String,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        self.view = View::Definition;
+        self.source
+            .update(cx, |state, cx| state.set_value(source, window, cx));
+        self.convert(None, window, cx);
+    }
+}

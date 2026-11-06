@@ -24,9 +24,7 @@ use crate::tr;
 
 /// `<config>/Apix/history`, next to the settings.
 fn store() -> Option<History> {
-    Some(History::new(
-        dirs::config_dir()?.join("Apix").join("history"),
-    ))
+    Some(History::new(apix_core::app_dir()?.join("history")))
 }
 
 /// A send that will be written to the history once its answer is in.
@@ -403,6 +401,7 @@ impl Workspace {
         let state = view.read(cx).state.clone();
         let refocus = cx.entity().downgrade();
         let first = Cell::new(true);
+        super::tour::keep(&view);
         window.open_dialog(cx, move |dialog, window, cx| {
             if first.replace(false) {
                 state.update(cx, |state, cx| state.focus(window, cx));

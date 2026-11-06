@@ -59,6 +59,7 @@ impl Workspace {
         let workspace = cx.entity().downgrade();
         let folder = collection.root.join("captured");
         let view = cx.new(|cx| CaptureView::new(workspace.clone(), folder, window, cx));
+        super::tour::keep(&view);
         window.open_dialog(cx, move |dialog, _, _| {
             dialog
                 .on_close(super::collections::refocus(workspace.clone()))
@@ -414,5 +415,44 @@ impl Render for CaptureView {
                     .into_any_element()
             })
             .into_any_element()
+    }
+}
+
+impl Workspace {
+    /// The documentation's screenshot tour: starts the capture proxy on
+    /// `port` and sends a few requests for `host` through it, as a browser
+    /// set to use the proxy would.
+    pub(super) fn tour_capture(
+        &mut self,
+        port: u16,
+        host: String,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let Some(collection) = self.collection.clone() else {
+            return;
+        };
+        self.start_capture(
+            collection.root.join("captured"),
+            port,
+            false,
+            Vec::new(),
+            window,
+            cx,
+        );
+        std::thread::spawn(move || {
+            use std::io::{Read as _, Write as _};
+            std::thread::sleep(Duration::from_millis(400));
+            for path in ["/users/1", "/users?_limit=3", "/orders/7"] {
+                if let Ok(mut stream) = std::net::TcpStream::connect(("127.0.0.1", port)) {
+                    let _ = write!(
+                        stream,
+                        "GET http://{host}{path} HTTP/1.1\r\nHost: {host}\r\nAccept: application/json\r\nConnection: close\r\n\r\n"
+                    );
+                    let mut answer = Vec::new();
+                    let _ = stream.read_to_end(&mut answer);
+                }
+            }
+        });
     }
 }

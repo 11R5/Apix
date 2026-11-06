@@ -1,0 +1,15 @@
+name = "Echo"
+method = "GET"
+url = "ws://127.0.0.1:8768/"
+
+[[message]]
+name = "Hello"
+body = "Hello from Apix"
+
+[[message]]
+name = "Order"
+body = '{"type": "order", "id": 42}'
+
+[[message]]
+name = "Bye"
+body = "bye"

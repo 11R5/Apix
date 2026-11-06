@@ -47,6 +47,7 @@ impl Workspace {
         }
         let workspace = cx.entity().downgrade();
         let view = cx.new(|cx| LoadView::new(request, window, cx));
+        super::tour::keep(&view);
         window.open_dialog(cx, move |dialog, _, _| {
             dialog
                 .on_close(super::collections::refocus(workspace.clone()))
@@ -478,5 +479,37 @@ impl Render for LoadView {
                         .child(tr!("load.running")),
                 )
             })
+    }
+}
+
+impl LoadView {
+    /// Steps of the documentation's screenshot tour: `set <field> <value>`
+    /// (at_once, requests, for, rate), `start [ms]`.
+    pub(super) fn tour(
+        &mut self,
+        step: &str,
+        arg: &str,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> u64 {
+        match step {
+            "set" => {
+                let (field, value) = arg.split_once(' ').unwrap_or((arg, ""));
+                let input = match field {
+                    "at_once" => &self.concurrency,
+                    "requests" => &self.requests,
+                    "for" => &self.duration,
+                    _ => &self.rate,
+                };
+                let value = value.to_string();
+                input.update(cx, |state, cx| state.set_value(value, window, cx));
+                0
+            }
+            "start" => {
+                self.start(cx);
+                arg.parse().unwrap_or(11_000)
+            }
+            _ => 0,
+        }
     }
 }

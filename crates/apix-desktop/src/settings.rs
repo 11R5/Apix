@@ -78,7 +78,7 @@ impl Default for Settings {
 
 impl Settings {
     fn path() -> Option<PathBuf> {
-        Some(dirs::config_dir()?.join("Apix").join("settings.toml"))
+        Some(apix_core::app_dir()?.join("settings.toml"))
     }
 
     pub fn load() -> Self {

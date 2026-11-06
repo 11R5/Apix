@@ -1,0 +1,23 @@
+name = "Sensors"
+method = "GET"
+url = "mqtt://127.0.0.1:8772"
+
+[mqtt]
+client_id = "apix-docs"
+
+[[mqtt.subscribe]]
+topic = "clock"
+
+[[mqtt.subscribe]]
+topic = "sensors/#"
+qos = 1
+
+[[message]]
+topic = "sensors/kitchen/temperature"
+body = '{"celsius": 21.5}'
+qos = 1
+
+[[message]]
+topic = "sensors/door"
+body = "open"
+retain = true

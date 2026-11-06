@@ -1,0 +1,9 @@
+name = "Slow report"
+method = "GET"
+url = "{{base_url}}/posts"
+
+[settings]
+timeout_ms = 5000
+follow_redirects = false
+tls_verify = true
+send_cookies = false

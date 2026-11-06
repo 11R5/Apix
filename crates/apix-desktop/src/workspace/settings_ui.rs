@@ -160,6 +160,8 @@ pub(super) struct SettingsView {
     /// The appearance picker shows this on the next paint (picking a theme
     /// of the other kind switches it).
     pending_appearance: Option<usize>,
+    /// The rows, scrolled by the documentation tour.
+    scroll: ScrollHandle,
     _subscriptions: Vec<Subscription>,
 }
 
@@ -499,6 +501,7 @@ impl SettingsView {
             accents,
             theme_errors,
             pending_appearance: None,
+            scroll: ScrollHandle::new(),
             _subscriptions: subscriptions,
         }
     }
@@ -764,6 +767,7 @@ impl Render for SettingsView {
         let folder = themes_folder_label();
         v_flex()
             .id("settings-rows")
+            .track_scroll(&self.scroll)
             .max_h(px(560.))
             .overflow_y_scroll()
             .pr_2()
@@ -954,6 +958,7 @@ impl Workspace {
         let view = cx.entity().downgrade();
         let settings = self.settings.clone();
         let editor = cx.new(|cx| SettingsView::new(view.clone(), &settings, window, cx));
+        super::tour::keep(&editor);
         window.open_dialog(cx, move |dialog, _, _| {
             let close_view = view.clone();
             dialog
@@ -973,5 +978,17 @@ impl Workspace {
                     ),
                 )
         });
+    }
+}
+
+impl SettingsView {
+    /// The documentation's screenshot tour: `scroll <px>` scrolls the rows.
+    pub(super) fn tour(&mut self, step: &str, arg: &str, cx: &mut Context<Self>) -> u64 {
+        if step == "scroll" {
+            let y = arg.parse::<f32>().unwrap_or(0.);
+            self.scroll.set_offset(point(px(0.), px(-y)));
+            cx.notify();
+        }
+        200
     }
 }

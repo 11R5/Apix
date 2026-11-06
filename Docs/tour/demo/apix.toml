@@ -1,0 +1,25 @@
+name = "Demo API"
+
+[vars]
+base_url = "https://jsonplaceholder.typicode.com"
+user_id = "1"
+token = "demo-token"
+client_secret = "s3cret"
+signing_secret = "hmac-secret"
+password = "pa55word"
+
+[[monitor]]
+name = "Health"
+every = "10s"
+run = "health.apix"
+
+[[monitor]]
+name = "Status page"
+every = "1m"
+run = "status.apix"
+webhook = "{{alerts_webhook}}"
+
+[[monitor]]
+name = "Nightly"
+every = "1d"
+enabled = false

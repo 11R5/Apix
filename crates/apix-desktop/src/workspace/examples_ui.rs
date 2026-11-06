@@ -104,7 +104,7 @@ impl Workspace {
     }
 
     /// An example in the response pane, as if it had just come back.
-    fn open_example(&mut self, ix: usize, window: &mut Window, cx: &mut Context<Self>) {
+    pub(super) fn open_example(&mut self, ix: usize, window: &mut Window, cx: &mut Context<Self>) {
         let Some(row) = self.examples.get(ix) else {
             return;
         };

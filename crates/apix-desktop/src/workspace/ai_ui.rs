@@ -184,3 +184,28 @@ impl Render for ExplainView {
             )
     }
 }
+
+impl Workspace {
+    /// The documentation's screenshot tour: the Explain window with a
+    /// written answer, as the provider would give it.
+    pub(super) fn tour_explain(
+        &mut self,
+        answer: String,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let provider = ai::Provider::from_id(&self.settings.ai_provider);
+        let view = cx.new(|_| ExplainView {
+            answer: Some(Ok(answer)),
+            provider,
+        });
+        let workspace = cx.entity().downgrade();
+        window.open_dialog(cx, move |dialog, _, _| {
+            dialog
+                .on_close(super::collections::refocus(workspace.clone()))
+                .bidi_title(tr!("ai.explain_title"))
+                .width(px(720.))
+                .child(div().pb_2().child(view.clone()))
+        });
+    }
+}

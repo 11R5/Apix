@@ -130,6 +130,7 @@ impl Workspace {
         .unwrap_or_default();
         let workspace = cx.entity().downgrade();
         let view = cx.new(|cx| RouteView::new(target, window, cx));
+        super::tour::keep(&view);
         window.open_dialog(cx, move |dialog, _, _| {
             dialog
                 .on_close(super::collections::refocus(workspace.clone()))
@@ -596,5 +597,18 @@ impl Render for RouteView {
                         .child(tr!("route.running")),
                 )
             })
+    }
+}
+
+impl RouteView {
+    /// The documentation's screenshot tour: `start [ms]` traces the route.
+    pub(super) fn tour(&mut self, step: &str, arg: &str, cx: &mut Context<Self>) -> u64 {
+        match step {
+            "start" => {
+                self.start(cx);
+                arg.parse().unwrap_or(30_000)
+            }
+            _ => 0,
+        }
     }
 }

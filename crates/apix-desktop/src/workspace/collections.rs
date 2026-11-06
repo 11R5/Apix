@@ -2659,3 +2659,22 @@ fn file_stem(path: &Path) -> String {
         .map(|s| s.to_string_lossy().into_owned())
         .unwrap_or_default()
 }
+
+impl Workspace {
+    /// The documentation's screenshot tour: Import from URL with `url` typed in.
+    pub(super) fn tour_import_url(
+        &mut self,
+        url: String,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        self.prompt_name(
+            tr!("import.url_title"),
+            url,
+            tr!("import.url_ok"),
+            window,
+            cx,
+            |this, url, window, cx| this.import_url(url, window, cx),
+        );
+    }
+}

@@ -1,0 +1,9 @@
+name = "Shop"
+
+[vars]
+base_url = "https://jsonplaceholder.typicode.com"
+
+[colors]
+accounts = "blue"
+payments = "green"
+catalog = "orange"

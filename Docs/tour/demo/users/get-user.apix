@@ -1,0 +1,37 @@
+name = "Get user"
+method = "GET"
+url = "{{base_url}}/users/:id"
+
+[[query]]
+key = "_embed"
+value = "posts"
+enabled = false
+
+[[path]]
+key = "id"
+value = "{{user_id}}"
+
+[[headers]]
+key = "Accept"
+value = "application/json"
+
+[[example]]
+name = "Found"
+status = 200
+body = '''
+{
+  "id": 1,
+  "name": "Leanne Graham",
+  "username": "Bret",
+  "email": "Sincere@april.biz"
+}
+'''
+
+[example.request]
+method = "GET"
+url = "{{base_url}}/users/1"
+
+[[example]]
+name = "Not found"
+status = 404
+body = "{}"

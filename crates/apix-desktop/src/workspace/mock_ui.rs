@@ -51,6 +51,7 @@ impl Workspace {
         };
         let workspace = cx.entity().downgrade();
         let view = cx.new(|cx| MockView::new(workspace.clone(), collection.root, window, cx));
+        super::tour::keep(&view);
         window.open_dialog(cx, move |dialog, _, _| {
             dialog
                 .on_close(super::collections::refocus(workspace.clone()))
@@ -362,5 +363,15 @@ impl Render for MockView {
                     .into_any_element()
             })
             .into_any_element()
+    }
+}
+
+impl Workspace {
+    /// The documentation's screenshot tour: starts the mock server of the
+    /// open collection on `port`.
+    pub(super) fn tour_mock(&mut self, port: u16, window: &mut Window, cx: &mut Context<Self>) {
+        if let Some(collection) = self.collection.clone() {
+            self.start_mock(collection.root, port, window, cx);
+        }
     }
 }

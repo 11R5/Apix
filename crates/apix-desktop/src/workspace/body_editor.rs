@@ -944,6 +944,22 @@ fn relative_to(path: &Path, dir: &Path) -> Option<PathBuf> {
     Some(out)
 }
 
+impl BodyEditor {
+    /// The documentation's screenshot tour: the cursor in the GraphQL query
+    /// at `line`:`column` (from 0), with the suggestions open.
+    pub(super) fn tour_complete(&self, line: u32, column: u32, window: &mut Window, cx: &mut App) {
+        self.query.update(cx, |state, cx| {
+            state.focus(window, cx);
+            state.set_cursor_position(
+                gpui_kit::component::input::Position::new(line, column),
+                window,
+                cx,
+            );
+        });
+        window.dispatch_action(Box::new(gpui_kit::component::input::ShowCompletions), cx);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::{Path, stored_path};

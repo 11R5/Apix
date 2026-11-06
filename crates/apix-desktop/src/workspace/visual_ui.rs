@@ -106,7 +106,7 @@ impl Workspace {
         result
     }
 
-    fn set_visual(&mut self, mode: VisualMode, cx: &mut Context<Self>) {
+    pub(super) fn set_visual(&mut self, mode: VisualMode, cx: &mut Context<Self>) {
         self.visual.mode = mode;
         cx.notify();
     }

@@ -251,6 +251,7 @@ impl Workspace {
         self.monitors.last.clear();
         let workspace = cx.entity().downgrade();
         let view = cx.new(|cx| MonitorsView::new(workspace.clone(), cx));
+        super::tour::keep(&view);
         window.open_dialog(cx, move |dialog, _, _| {
             dialog
                 .on_close(super::collections::refocus(workspace.clone()))
@@ -843,5 +844,23 @@ impl Render for MonitorsView {
             .overflow_y_scroll()
             .child(body)
             .into_any_element()
+    }
+}
+
+impl Workspace {
+    /// The documentation's screenshot tour: runs the monitor called `name`.
+    pub(super) fn tour_monitor(&mut self, name: &str, window: &mut Window, cx: &mut Context<Self>) {
+        let Some(collection) = self.collection.clone() else {
+            return;
+        };
+        if let Some(m) = collection
+            .meta
+            .monitors
+            .iter()
+            .find(|m| m.name == name)
+            .cloned()
+        {
+            self.run_monitor(collection, m, window, cx);
+        }
     }
 }

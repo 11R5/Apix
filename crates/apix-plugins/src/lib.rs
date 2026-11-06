@@ -341,7 +341,13 @@ impl Plugin {
 
 /// Where plugins are kept: `<config>/Apix/plugins`.
 pub fn plugins_dir() -> Option<PathBuf> {
-    Some(dirs::config_dir()?.join("Apix").join("plugins"))
+    Some(
+        match std::env::var_os("APIX_CONFIG_DIR") {
+            Some(dir) => PathBuf::from(dir),
+            None => dirs::config_dir()?.join("Apix"),
+        }
+        .join("plugins"),
+    )
 }
 
 /// A plugin file: loaded, or its path and why it could not be.

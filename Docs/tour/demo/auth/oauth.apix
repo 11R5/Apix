@@ -1,0 +1,12 @@
+name = "My profile (OAuth 2.0)"
+method = "GET"
+url = "https://api.example.com/me"
+
+[auth.oauth2]
+grant = "authorization_code"
+auth_url = "https://login.example.com/authorize"
+token_url = "https://login.example.com/token"
+client_id = "apix-docs"
+client_secret = "{{client_secret}}"
+scope = "profile email"
+pkce = true

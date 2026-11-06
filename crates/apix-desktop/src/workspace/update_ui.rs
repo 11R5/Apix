@@ -30,40 +30,62 @@ impl Workspace {
                 .await
                 .and_then(|r| update::interpret(r.status, &r.body, &current));
             this.update_in(cx, |_, window, cx| {
-                let note = match result {
-                    Ok(Check::Newer(release)) => {
-                        let url = release.url.clone();
-                        Notification::info(tr!(
-                            "update.available",
-                            version = release.version.to_string(),
-                            current = current.to_string()
-                        ))
-                        .title(tr!("update.title"))
-                        .action(move |_, _, _| {
-                            let url = url.clone();
-                            Button::new("update-open")
-                                .primary()
-                                .small()
-                                .label(tr!("update.open"))
-                                .on_click(move |_, _, cx| cx.open_url(&url))
-                        })
-                    }
-                    _ if !manual => return,
-                    Ok(Check::UpToDate { .. }) => Notification::success(tr!(
-                        "update.up_to_date",
-                        current = current.to_string()
-                    )),
-                    Ok(Check::NoReleases) => {
-                        Notification::info(tr!("update.no_releases", current = current.to_string()))
-                    }
-                    Err(e) => Notification::error(tr!("update.failed", error = e)),
-                };
-                window.push_notification(note, cx);
+                if let Some(note) = notification(result, &current, manual) {
+                    window.push_notification(note, cx);
+                }
             })
             .ok();
         })
         .detach();
     }
+
+    /// The documentation's screenshot tour: the notice of a newer release.
+    pub(super) fn tour_update(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let current = Version::current();
+        let newer = Version::parse("0.2.0").unwrap_or_else(Version::current);
+        let release = update::Release {
+            version: newer,
+            url: "https://github.com/11R5/Apix/releases".into(),
+        };
+        if let Some(note) = notification(Ok(Check::Newer(release)), &current, true) {
+            window.push_notification(note, cx);
+        }
+    }
+}
+
+/// What to tell about a check; `None` when nothing is worth telling.
+fn notification(
+    result: Result<Check, String>,
+    current: &Version,
+    manual: bool,
+) -> Option<Notification> {
+    Some(match result {
+        Ok(Check::Newer(release)) => {
+            let url = release.url.clone();
+            Notification::info(tr!(
+                "update.available",
+                version = release.version.to_string(),
+                current = current.to_string()
+            ))
+            .title(tr!("update.title"))
+            .action(move |_, _, _| {
+                let url = url.clone();
+                Button::new("update-open")
+                    .primary()
+                    .small()
+                    .label(tr!("update.open"))
+                    .on_click(move |_, _, cx| cx.open_url(&url))
+            })
+        }
+        _ if !manual => return None,
+        Ok(Check::UpToDate { .. }) => {
+            Notification::success(tr!("update.up_to_date", current = current.to_string()))
+        }
+        Ok(Check::NoReleases) => {
+            Notification::info(tr!("update.no_releases", current = current.to_string()))
+        }
+        Err(e) => Notification::error(tr!("update.failed", error = e)),
+    })
 }
 
 impl Workspace {

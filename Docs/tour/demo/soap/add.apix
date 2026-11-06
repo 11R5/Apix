@@ -1,0 +1,26 @@
+name = "Add"
+description = "Adds two numbers."
+method = "POST"
+url = "http://127.0.0.1:8773/calculator"
+
+[[headers]]
+key = "Content-Type"
+value = "text/xml; charset=utf-8"
+
+[[headers]]
+key = "SOAPAction"
+value = '"urn:apix:calculator/Add"'
+
+[body]
+xml = """
+<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
+               xmlns:tns="urn:apix:calculator">
+  <soap:Body>
+    <tns:Add>
+      <tns:a>1</tns:a>
+      <tns:b>1</tns:b>
+    </tns:Add>
+  </soap:Body>
+</soap:Envelope>
+"""

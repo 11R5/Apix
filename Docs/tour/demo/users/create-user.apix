@@ -1,0 +1,22 @@
+name = "Create user"
+method = "POST"
+url = "{{base_url}}/users"
+
+[[headers]]
+key = "Accept"
+value = "application/json"
+
+[[headers]]
+key = "X-Request-Id"
+value = "{{$guid}}"
+
+[body]
+json = '''
+{
+  "name": "Ada Lovelace",
+  "email": "ada@example.com"
+}
+'''
+
+[auth.bearer]
+token = "{{token}}"

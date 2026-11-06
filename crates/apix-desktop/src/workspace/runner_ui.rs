@@ -1171,3 +1171,34 @@ impl Workspace {
         });
     }
 }
+
+impl RunnerView {
+    /// Steps of the documentation's screenshot tour: `data <file>`, `run
+    /// [ms]`, `expand <result>`.
+    pub(super) fn tour(
+        &mut self,
+        step: &str,
+        arg: &str,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> u64 {
+        match step {
+            "data" => {
+                let path = super::tour::path(arg);
+                if let Ok(rows) = apix_runner::data::load(&path) {
+                    self.data = Some((path, rows));
+                }
+                0
+            }
+            "run" => {
+                self.start(window, cx);
+                arg.parse().unwrap_or(6000)
+            }
+            "expand" => {
+                self.expanded = arg.parse().ok();
+                0
+            }
+            _ => 0,
+        }
+    }
+}

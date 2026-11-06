@@ -1,0 +1,23 @@
+name = "Log in"
+method = "POST"
+url = "{{base_url}}/login"
+
+[body]
+json = '{ "user": "ada", "password": "{{password}}" }'
+
+[[example]]
+name = "Signed in"
+status = 200
+body = '{ "ok": true }'
+
+[[example.headers]]
+key = "Set-Cookie"
+value = "session=6f1c0e2a9b; Path=/; HttpOnly; Max-Age=86400"
+
+[[example.headers]]
+key = "Set-Cookie"
+value = "theme=dark; Path=/; Max-Age=31536000"
+
+[example.request]
+method = "POST"
+url = "{{base_url}}/login"

@@ -46,7 +46,7 @@ const CA_NAME: &str = "Apix capture authority (local)";
 
 /// Where the authority is kept by default: `<config>/Apix`.
 pub fn default_dir() -> Option<PathBuf> {
-    Some(dirs::config_dir()?.join("Apix"))
+    apix_core::app_dir()
 }
 
 /// How to make the system trust the authority, for the user to run.

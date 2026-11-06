@@ -629,7 +629,7 @@ pub fn builtin() -> Vec<ThemeDef> {
 
 /// `<config>/Apix/themes`.
 pub fn themes_dir() -> Option<PathBuf> {
-    Some(dirs::config_dir()?.join("Apix").join("themes"))
+    Some(apix_core::app_dir()?.join("themes"))
 }
 
 #[derive(Deserialize)]

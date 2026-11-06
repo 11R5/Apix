@@ -48,6 +48,7 @@ impl Workspace {
             collection,
             _task: None,
         });
+        super::tour::keep(&view);
         window.open_dialog(cx, move |dialog, _, _| {
             dialog
                 .on_close(super::collections::refocus(workspace.clone()))
@@ -76,6 +77,7 @@ impl Workspace {
             busy: false,
             _task: None,
         });
+        super::tour::keep(&view);
         window.open_dialog(cx, move |dialog, _, _| {
             dialog
                 .on_close(super::collections::refocus(workspace.clone()))

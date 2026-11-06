@@ -1,0 +1,17 @@
+name = "Upload avatar"
+method = "POST"
+url = "{{base_url}}/posts"
+
+[[body.multipart]]
+key = "user"
+value = "{{user_id}}"
+
+[[body.multipart]]
+key = "avatar"
+value = "../../data/avatar.png"
+file = true
+content_type = "image/png"
+
+[[body.multipart]]
+key = "caption"
+value = "Ada at the Analytical Engine"

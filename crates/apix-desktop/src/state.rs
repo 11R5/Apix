@@ -34,7 +34,7 @@ pub struct OpenTabs {
 
 impl AppState {
     fn path() -> Option<PathBuf> {
-        Some(dirs::config_dir()?.join("Apix").join("state.toml"))
+        Some(apix_core::app_dir()?.join("state.toml"))
     }
 
     pub fn load() -> Self {

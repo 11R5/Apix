@@ -37,3 +37,13 @@ pub use model::{
 pub use project::{GroupBy, Project};
 pub use store::{Collection, Environment, StoreError};
 pub use vars::{Resolved, Variables};
+
+/// Where Apix keeps its settings and data: `APIX_CONFIG_DIR` when it is set
+/// (a separate folder, for tests and the documentation's screenshot tour),
+/// otherwise `Apix` in the system's configuration folder.
+pub fn app_dir() -> Option<std::path::PathBuf> {
+    if let Some(dir) = std::env::var_os("APIX_CONFIG_DIR") {
+        return Some(dir.into());
+    }
+    Some(dirs::config_dir()?.join("Apix"))
+}

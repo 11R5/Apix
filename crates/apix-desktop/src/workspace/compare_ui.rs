@@ -83,6 +83,7 @@ impl Workspace {
             busy: false,
             _task: None,
         });
+        super::tour::keep(&view);
         window.open_dialog(cx, move |dialog, _, _| {
             dialog
                 .on_close(super::collections::refocus(workspace.clone()))
@@ -94,9 +95,7 @@ impl Workspace {
 }
 
 fn history_store() -> Option<History> {
-    Some(History::new(
-        dirs::config_dir()?.join("Apix").join("history"),
-    ))
+    Some(History::new(apix_core::app_dir()?.join("history")))
 }
 
 pub(super) struct CompareView {
@@ -426,5 +425,27 @@ impl Render for CompareView {
                         })),
                 ),
             )
+    }
+}
+
+impl CompareView {
+    /// The documentation's screenshot tour: `earlier <n>` compares with the
+    /// n-th earlier response, `env <n>` with the n-th other environment.
+    pub(super) fn tour(&mut self, step: &str, arg: &str, cx: &mut Context<Self>) -> u64 {
+        match step {
+            "earlier" => {
+                let n = arg.parse().unwrap_or(0);
+                if let Some(s) = self.earlier.get(n) {
+                    let label = super::history_ui::ago(s.at).to_string();
+                    self.pick_history(s.id.clone(), label, cx);
+                }
+                0
+            }
+            "env" => {
+                self.pick_environment(arg.parse().unwrap_or(0), cx);
+                3000
+            }
+            _ => 0,
+        }
     }
 }

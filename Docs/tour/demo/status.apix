@@ -1,0 +1,8 @@
+name = "Status page"
+method = "GET"
+url = "{{base_url}}/status"
+
+[[assert]]
+target = "status"
+op = "=="
+value = "200"
