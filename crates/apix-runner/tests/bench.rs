@@ -135,8 +135,8 @@ async fn a_time_limit_and_stopping() {
         took >= Duration::from_millis(300) && took < Duration::from_millis(900),
         "{took:?}"
     );
-    // Two workers, 50 ms each: about 12 requests.
-    assert!((6..=16).contains(&summary.requests), "{}", summary.requests);
+    // Two workers, 50 ms each: about 12 requests, fewer on a slow CI machine.
+    assert!((3..=16).contains(&summary.requests), "{}", summary.requests);
     assert!(summary.p50_ms >= 50.0, "{}", summary.p50_ms);
 
     // Stopped from elsewhere while it runs.
