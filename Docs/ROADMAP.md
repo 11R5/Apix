@@ -47,7 +47,7 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [x] Variable chips in the URL bar (defined, dynamic or missing, by colour); hovering one shows its value, with secrets masked, and the scope it comes from
 - [x] The same chips in Params, Headers and form/multipart body fields (done in M4); not yet in the raw body editor
 - [x] Auth tab (inherit, none, Bearer, Basic, API key); folders (`folder.toml`), collections and projects can set auth that requests inherit, in the app and the CLI; Postman imports keep auth where it was set
-- [ ] OAuth 2.0 flows (moved to M4)
+- [x] OAuth 2.0 flows (done in M4)
 - [x] Command palette (Ctrl+K or Ctrl+P): fuzzy search over every request and command (new request by method, environments, copy as, auth, grouping, recent folders)
 - [x] Menu bar in the title bar (File, Request, Environment, View, Help) with shortcuts; it replaces the sidebar's "Open or create" menu and works on Windows' drag area
 - [x] From M2: tabs (each keeps its draft, response and in-flight request; Ctrl+W, Ctrl+Tab, middle-click), drag to move requests and folders, also across collections
@@ -64,7 +64,7 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
   - [x] TLS version and cipher, the full certificate chain, separate TCP and TLS times, compressed size (done in M7)
 - [x] **Bodies**: editable URL-encoded form, multipart (text and file fields, each with its own Content-Type), binary file and GraphQL (highlighted query, JSON variables) in the app, the CLI, "Copy as", curl paste (`-F`, `--form-string`, `--data-binary @file`) and Postman import; relative file paths resolve against the request's folder
 - [x] **Auth types**: Digest (MD5, SHA-256), OAuth 1.0 (HMAC-SHA1/SHA256, PLAINTEXT, header or query), OAuth 2.0 (client credentials, password, authorization code with PKCE in the browser; token refresh; tokens kept in memory only) and AWS Signature V4, in the app, the CLI, "Copy as", curl paste and Postman import
-- [ ] **Settings and UI language** (moved from M7): settings screen; English, Turkish, Arabic, German, French, Russian, Japanese, Chinese and Spanish; right-to-left layout for Arabic; switch without restarting; a new language is one file plus one line
+- [x] **Settings and UI language** (moved from M7): settings screen; English, Turkish, Arabic, German, French, Russian, Japanese, Chinese and Spanish; right-to-left layout for Arabic; switch without restarting; a new language is one file plus one line
   - [x] Settings dialog (Ctrl+,): language, theme, auto-lock time for encrypted collections; saved to `settings.toml` at once
   - [x] Every UI text behind a key (about 414), nine languages, switch without restarting, first start follows the system language, a test for missing keys and placeholders
   - [x] Right-to-left layout for Arabic: sidebar, panes, window controls, menus, tabs, form rows, dialogs and the status bar mirror; code, URLs and key–value tables stay left to right; switches at once
@@ -76,7 +76,7 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [x] **Postman, complete**: Postman exports in an opened or dropped folder are recognised by content; a folder or "Export data" zip becomes one project (globals as project variables); export a collection to Postman v2.1 with its environments (`apix import <folder|zip>`, `apix export`)
 - [x] **Content types**: HTML request bodies; XML and HTML colouring and indentation (bodies and responses); response kind detection; image preview; a Hex tab; save the response body to a file
 - [x] **More importers**: Insomnia v4, OpenAPI 3 / Swagger 2 (JSON or YAML) and HAR, recognised by content in a file, a folder or a zip (`apix import` reads them all)
-- [ ] gRPC (unary and streaming, `.proto` or server reflection) — asked for on 2026-10-23, after the importers
+- [x] gRPC (unary and streaming, `.proto` or server reflection; done in M6)
 
 ## M5 — Scripting, testing, runner
 - [x] `apix-script` on QuickJS with a `pm.*`-compatible API: variable scopes, `pm.request` (editable in pre-request scripts), `pm.response`, `pm.test`, Chai-style `pm.expect`, `pm.response.to.have.*`, the older `tests[...]` / `postman.*` API, `console`
@@ -122,7 +122,6 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [x] Git in the app: the Git window (the branch in the status bar, or View › Git…) lists the files changed since the last commit with each one compared field by field like `apix diff`, commits the open folder, switches and makes branches, pulls (fast-forward) and pushes with the user's own git
 - [x] Route and map: `apix-route` runs the system's traceroute (tracert, traceroute, tracepath; no admin rights) and places hops with an offline MaxMind DB file (DB-IP Lite downloaded from the window, or GeoLite2); a hand-drawn world outline; View › Route and map…, a link in the Network tab, `apix trace`
 - [x] Update check: at start (Settings › Check for updates, on by default) and from Help › Check for updates…, one request to GitHub's latest release, a newer one announced with a button to its page; `apix update` in a terminal
-- [ ] Installing updates in place (needs published, signed releases)
 - [x] Everyday gaps: ~~search in the response (Ctrl+F), JSONPath/jq filter~~ (done: search in every body tab and the large viewer, a JSONPath/jq filter on JSON responses, `apix send --filter`), ~~params ↔ URL sync, `/users/:id` path variables~~ (done: the URL bar and Params follow each other; `:name` segments filled from `[[path]]`, in the app, CLI, runs and generated code; Postman import and export keep them), ~~header autocomplete, sidebar search~~ (done: names and usual values suggested under the row; the sidebar narrowed to requests with every word in name, method or URL), ~~save examples~~ (done: `[[example]]` with status, headers, body and the request as written; saved from the response pane or `apix send --save-example`, listed, renamed, shown again; Postman's saved responses imported and exported)
 - [x] Git-aware CLI: `apix run --changed` (only the requests a change touches: their files and scripts, folder and collection settings, environments, the project, files they name; since the pull request's base or a given commit, from where the branch started), `apix diff` (requests compared field by field, headers by name, bodies and scripts line by line, moves; text, Markdown or JSON), `apix run --markdown` (a summary for pull requests and job pages); the GitHub Action runs only what a pull request touches and keeps one comment on it up to date; the desktop app shows the branch and changed files in the status bar and marks changed requests in the sidebar
 - [x] Monitors (scheduled runs): `[[monitor]]` in `apix.toml` (interval, folder or request, environment, webhook, on/off); `apix monitor` (on schedules, `--once` for cron and CI, `--list`, `--only`, `--log-dir`); a shared log of results; webhooks told when a monitor starts failing or passes again (Slack, Discord, Mattermost, Google Chat); a Monitors window in the app (add, edit, delete, run now, last result, next run) that runs them while the app is open and notifies; the action runs them (`monitor: "true"`) with a scheduled workflow example. `apix run --parallel` and "At once" in the Runner: iterations side by side, each in order with its own script state
@@ -140,20 +139,21 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 ## M9 — Release & distribution
 - [x] GitHub Actions: test on Windows, macOS and Linux (CI foundation); build on version tags
 - [x] Prebuilt binaries on GitHub Releases, which the GitHub Action downloads instead of building (at a release tag, or with `apix-version`)
-- [ ] Build, try and publish the Docker image (ghcr.io)
 - ~~A separate `apix-action` repository for the GitHub Marketplace~~: dropped (6 Nov); the Apix repository itself is the action (`uses: 11R5/Apix@v0.1.1` downloads that release's `apix`)
 - [ ] Meet the start-up (150 ms) and idle memory (60 MB) budgets: 222 ms and 88 MB in 0.1.1 (was 278 ms); the Direct3D device is now created on its own thread from the first moment. About 150 ms and most of the memory are the graphics driver loading (NVIDIA here; the integrated GPU was slower and bigger), so the rest has to come from GPUI and Apix itself
 - [x] Installers and packages, using the M3 icons: Windows setup `.exe` (Inno Setup, per-user, optional PATH and `.apix` association) and portable `.zip`, a universal macOS `.dmg`, `.deb`, an Arch package and `PKGBUILD`, a Linux tarball with `install.sh`; built by `release.yml` on version tags
 - [x] Download page on GitHub Pages (`site/`): the right file for the visitor's system, from the latest release, in English and Turkish
 - [x] AppImage (one file for any Linux; `… cli` runs the command line)
 - [x] Homebrew cask in the [`11R5/homebrew-apix`](https://github.com/11R5/homebrew-apix) tap: `brew install --cask 11r5/apix/apix`
-- [ ] winget, Flatpak, the AUR: the winget manifests are made for every release (`scripts/channel-manifests.sh`) and wait for a winget-pkgs pull request; the AUR needs an account
-- [ ] Keep the release binary under 100 MB (54.4 MB in 0.1.1); speed and smoothness come first
+- [x] Keep the release binary under 100 MB (54.4 MB in 0.1.1); speed and smoothness come first
 - ~~Signed Windows builds and notarized macOS builds~~: dropped (5 Nov), they cost money every year; the download page and the user guide explain how to open the unsigned builds
 - [x] Documentation in all nine languages (user guide, architecture, technical notes, workflows; interface words taken from each language's UI texts) and a [docs site](https://11r5.github.io/Apix/docs/) with a language picker, made by `docs-check -- site`; `docs-check` also checks every link and heading anchor
 - [x] Screenshots taken from each language's UI: 48 pictures × 9 languages, taken by a screenshot tour (`APIX_TOUR`, `Docs/tour/scenes.toml`, `scripts/docs-tour.ps1`) from a demo collection and the example servers, so they can be taken again after any interface change; every section of the user guide that shows a window has its picture
-- [ ] Side-by-side performance numbers against Postman, Insomnia, Bruno and Hoppscotch, measured on one machine with one script
-- [ ] Launch post (r/rust, Hacker News)
+- [x] Side-by-side performance numbers against Postman, Insomnia, Bruno and Hoppscotch, measured on one machine with one script (`scripts/compare-apps.ps1`; in the README)
+- [x] Launch post drafts for r/rust and Hacker News (`Docs/launch.md`); posting them is the owner's
 
-## Later (decide after M9)
+## Later (planned for a future version, not now)
 - [ ] Team mode over Tailscale: share projects across a tailnet without a cloud; to be weighed against git-based collaboration
+- [ ] The Docker image built and tried on Linux (the release workflow already publishes it to ghcr.io on version tags)
+- [ ] winget, Flatpak and the AUR (the winget manifests are already made for every release); until then the download page's packages, Homebrew, or building from source (`cargo build --release`, see CONTRIBUTING.md)
+- [ ] Installing updates in place (needs signed releases)

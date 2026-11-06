@@ -176,19 +176,30 @@ HTTPie is best known for its `http` command; its desktop app is in beta.
 
 ## Performance
 
-| Measure | Apix 0.1.1 |
+Side by side on one Windows 11 machine (Ryzen 9 7900X, RTX 5070), measured
+the same way for every app with [`scripts/compare-apps.ps1`](scripts/compare-apps.ps1)
+(median of the runs after a warm-up, November 2026):
+
+| | Apix 0.1.1 | Postman 12.35 | Insomnia 13.4 | Bruno 4.3 | Hoppscotch 26.10 |
+|---|---|---|---|---|---|
+| Memory when idle (all its processes) | **87 MB** | 718 MB | 947 MB | 719 MB | 551 MB |
+| Processes | **1** | 5 | 6 | 4 | 7 |
+| On disk | **55 MB** | 1 123 MB | 2 424 MB | 538 MB | 65 MB + Windows' WebView2 |
+| First window on screen | 0.87 s, the whole interface | 0.39 s, empty at first | 1.21 s | 2.59 s | 0.42 s, empty at first |
+
+Apix opens its window once the interface is drawn; Postman and Hoppscotch show
+an empty window first and fill it afterwards. The times include starting the
+process, which is about 0.6 s of Apix's 0.87 s: from its own start the first
+frame takes 222 ms, about 150 ms of it the graphics driver loading.
+
+| Apix on its own | |
 |---|---|
 | Release binary | 54.4 MB |
-| Start to first frame | 222 ms |
-| Memory when idle (working set) | 88 MB |
+| Start to first frame (inside the app) | 222 ms |
 | 100 MB JSON response on screen | 299 ms |
 
-Measured with `scripts/measure.ps1` (7 runs, median) on a Ryzen 9 7900X with an
-NVIDIA RTX 5070, Windows 11. About 150 ms of the start and most of the idle
-memory are the graphics driver loading (Direct3D 11), which Apix starts first,
-on its own thread, while the rest gets ready. See the
-[technical notes](Docs/en/technical.md#measuring-performance). Measurements of
-the other tools on the same machine are planned.
+Measured with `scripts/measure.ps1` (7 runs, median); see the
+[technical notes](Docs/en/technical.md#measuring-performance).
 
 ## Command line
 
