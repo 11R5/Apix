@@ -83,6 +83,8 @@ A **collection** is a folder that holds an `apix.toml` file and your requests
 (Ctrl+O), or start a new one with **File › New collection…**. If you pick a
 folder that is not a collection yet, Apix offers to make it one.
 
+![Apix with no collection open](images/open-collection.png)
+
 Recently opened collections are under **File › Open recent**. Starting the app
 with a folder (`apix-desktop path/to/collection`) opens it directly.
 
@@ -225,6 +227,8 @@ for a whole project. Requests whose auth is *Inherit from parent* use it.
 
 ## Request settings
 
+![The Settings tab of a request](images/request-settings.png)
+
 The Settings tab controls how the request travels:
 
 | Setting | Default |
@@ -274,6 +278,8 @@ sent with later requests to the same site, including across restarts
 **Request › Cookies…** lists them, deletes single cookies, or empties the jar.
 The Settings tab's **Send cookies** turns the jar off for a request, a folder,
 a collection or a project. The CLI starts with an empty jar on every run.
+
+![The saved cookies](images/cookies.png)
 
 ## Variables and environments
 
@@ -710,6 +716,8 @@ warnings; a run's report does not include them.
 
 ## Scripts and tests
 
+![A test script and its results](images/scripts.png)
+
 The **Scripts** tab holds two JavaScript scripts for the request:
 
 - **Pre-request** runs before the request is sent. It can change the request
@@ -1052,6 +1060,8 @@ that were open come back the next time you open the same collection or
 project (tabs of encrypted collections are not remembered, as their file names
 are secret too).
 
+![Several open tabs, one with unsaved changes](images/tabs.png)
+
 ## Organising requests
 
 **Search** at the top of the sidebar narrows it to the requests whose name,
@@ -1074,6 +1084,8 @@ A **project** groups several collections that belong together and shares
 environments and auth between them. Create one with **File › New project…**.
 In a project, **Environment › Group the sidebar by** can show the sidebar as
 Project › Environment › Collections.
+
+![A project with three collections](images/projects.png)
 
 - Drag a collection's header above or below another one to change their order.
 - Right-click a collection › **Colour** gives it a colour; a dot shows it in the
@@ -1119,6 +1131,8 @@ request the GitHub Action can comment with the result. See
 An encrypted collection keeps every request, environment and even file name
 sealed on disk (XChaCha20-Poly1305 with an Argon2id password key). Git only sees
 which encrypted blob changed.
+
+![Unlocking an encrypted collection](images/encrypted.png)
 
 - **File › Encrypt this collection…** or right-click a collection › **Encrypt…**
   encrypts an existing collection in place.
@@ -1191,6 +1205,8 @@ On the command line: `apix import <file, folder or zip>` and
 
 ## Importing from Insomnia, OpenAPI and HAR
 
+![Importing from a URL](images/import.png)
+
 **File › Import…** (or dropping the file on the window) also reads these; the
 format is recognised by content, and a folder or zip may mix them:
 
@@ -1212,6 +1228,8 @@ was sent; type to search by any of these. Pick an entry and the request comes
 back in the tab it was sent from, as unsaved edits, together with the response
 it got. Press Ctrl+Enter to send it again, Ctrl+S to keep that version. If the
 request file is gone, the entry opens in the editor without a tab.
+
+![The history of sent requests](images/history.png)
 
 History stays on this computer (the `history` folder next to the settings),
 never inside a collection. Requests are stored as written, with `{{variables}}`

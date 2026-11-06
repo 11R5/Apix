@@ -209,8 +209,7 @@ name = "compare"
 closed = ["auth", "graphql", "grpc", "realtime", "soap"]
 tabs = ["users/create-user.apix"]
 send = true
-steps = ["send", "send"]
-dialog = "compare"
+steps = ["send", "send", "dialog compare", "compare.earlier 1"]
 
 [[scene]]
 name = "history"

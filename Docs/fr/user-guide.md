@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:302bcb1b0e41cc49 -->
+<!-- translated from en/user-guide.md sha256:930abab97809ed62 -->
 
 # Guide d'utilisation d'Apix
 
@@ -9,7 +9,7 @@ vivre dans git à côté de votre code. Ce guide présente l'application ; les
 [workflows](workflows.md) décrivent pas à pas les tâches courantes, et la ligne
 de commande `apix` exécute les mêmes requêtes dans un terminal ou en CI.
 
-![La fenêtre d'Apix](../en/images/main.png)
+![La fenêtre d'Apix](images/main.png)
 
 ## Sommaire
 
@@ -89,6 +89,8 @@ une avec **Fichier › Ouvrir…** (Ctrl+O), ou commencez-en une nouvelle avec
 **Fichier › Nouvelle collection…**. Si vous choisissez un dossier qui n'est pas
 encore une collection, Apix propose d'en faire une.
 
+![Apix sans collection ouverte](images/open-collection.png)
+
 Les collections ouvertes récemment se trouvent sous **Fichier › Ouvrir
 récent**. Lancer l'application avec un dossier
 (`apix-desktop path/to/collection`) l'ouvre directement.
@@ -151,7 +153,7 @@ qu'elle est écrite. Les valeurs sont gardées dans le fichier sous forme de
 `[[path]]`, et les collections Postman apportent les leurs (et les récupèrent à
 l'export).
 
-![Paramètres et variables de chemin](../en/images/path-variables.png)
+![Paramètres et variables de chemin](images/path-variables.png)
 
 **Suggestions d'en-têtes.** Pendant la saisie du nom d'un en-tête, les noms
 d'en-têtes usuels qui correspondent s'affichent sous la ligne (d'abord ceux
@@ -160,7 +162,7 @@ sa valeur reçoit les valeurs usuelles de cet en-tête, comme `application/json`
 pour `Content-Type`. Enter prend la première suggestion, un clic prend
 n'importe laquelle, et après un nom, c'est au tour de la valeur.
 
-![Noms d'en-têtes suggérés pendant la saisie](../en/images/header-hints.png)
+![Noms d'en-têtes suggérés pendant la saisie](images/header-hints.png)
 
 ## Corps
 
@@ -175,7 +177,7 @@ L'onglet Corps propose :
 | Binaire | Les octets d'un fichier, en `application/octet-stream` sauf si un en-tête dit autre chose. Apix affiche la taille du fichier, ou « Fichier introuvable ». |
 | GraphQL | Un éditeur de requête et un éditeur JSON de variables ; envoyé sous forme de JSON `{"query", "variables"}`. |
 
-![Corps multipart](../en/images/body.png)
+![Corps multipart](images/body.png)
 
 Les chemins de fichiers situés dans la collection sont enregistrés relativement
 au fichier de la requête, si bien que la collection continue de fonctionner sur
@@ -203,7 +205,7 @@ protégé par un jeton fonctionne. Ensuite :
   leurs valeurs.
 - **Afficher le schéma** place tout le schéma à côté de la requête, en SDL.
 
-![Complétion à partir du schéma](../en/images/graphql.png)
+![Complétion à partir du schéma](images/graphql.png)
 
 Apix garde le schéma de chaque point d'accès (dans le dossier de
 configuration, sous `graphql/`) et le recharge quand vous ouvrez une requête
@@ -230,7 +232,7 @@ L'onglet Auth définit comment la requête prouve son identité :
 | OAuth 2.0 | Client credentials, mot de passe, ou authorization code avec PKCE. Apix obtient le jeton lui-même et l'envoie comme jeton Bearer. |
 | AWS Signature | AWS Signature Version 4 avec clé d'accès, clé secrète, jeton de session facultatif, région et service. |
 
-![OAuth 2.0 dans l'onglet Auth](../en/images/auth.png)
+![OAuth 2.0 dans l'onglet Auth](images/auth.png)
 
 **Jetons OAuth 2.0.** Le premier envoi récupère un jeton ; les envois suivants
 le réutilisent et le renouvellent avec le refresh token quand il expire.
@@ -247,6 +249,8 @@ Authentification du projet…** fait de même pour tout un projet. Les requêtes
 dont l'authentification est *Hériter du parent* l'utilisent.
 
 ## Réglages de requête
+
+![L’onglet Réglages d’une requête](images/request-settings.png)
 
 L'onglet Réglages contrôle la façon dont la requête voyage :
 
@@ -302,6 +306,8 @@ pot. **Envoyer les cookies** dans l'onglet Réglages désactive le pot pour une
 requête, un dossier, une collection ou un projet. La CLI commence avec un pot
 vide à chaque exécution.
 
+![Les cookies enregistrés](images/cookies.png)
+
 ## Variables et environnements
 
 Écrivez `{{name}}` dans une URL, un en-tête, un corps ou un champ
@@ -331,7 +337,7 @@ tout de suite les secrets de la collection ou du projet ouvert ; les autres
 sont déplacés la prochaine fois que vous les enregistrez. Les secrets d'une
 collection chiffrée restent toujours à l'intérieur de celle-ci.
 
-![La fenêtre Variables](../en/images/variables.png)
+![La fenêtre Variables](images/variables.png)
 
 Les **variables dynamiques** prennent une nouvelle valeur à chaque
 utilisation : `{{$guid}}`, `{{$timestamp}}`, `{{$isoTimestamp}}`,
@@ -375,7 +381,7 @@ $.users[?@.active].email
 .users[] | select(.active) | {name, email}
 ```
 
-![Une réponse JSON filtrée avec JSONPath](../en/images/response-filter.png)
+![Une réponse JSON filtrée avec JSONPath](images/response-filter.png)
 
 Le résultat remplace le corps dans **Formaté** tant que la zone contient une
 expression (le compteur à côté indique combien de valeurs) ; **Brut** et
@@ -399,9 +405,9 @@ retient). Les modèles `pm.visualizer.set` de Postman ne sont pas dessinés,
 car Apix n'a pas de vue web ; les scripts qui l'appellent obtiennent une note
 dans la console.
 
-![La vue Tableau d'une réponse filtrée](../en/images/visual-table.png)
+![La vue Tableau d'une réponse filtrée](images/visual-table.png)
 
-![La vue Graphique](../en/images/visual-chart.png)
+![La vue Graphique](images/visual-chart.png)
 
 **Exemples.** Le bouton plateau de la ligne d'état garde la réponse comme
 exemple de la requête : son statut, ses en-têtes et son corps, ainsi que la
@@ -416,7 +422,7 @@ arrivent comme exemples à l'import et repartent à l'export.
 `apix send --save-example '<name>'` garde la réponse depuis la ligne de
 commande.
 
-![Un exemple affiché dans le volet de réponse](../en/images/examples.png)
+![Un exemple affiché dans le volet de réponse](images/examples.png)
 
 Quand le volet est trop étroit pour tous les onglets de la requête, la flèche
 au bout de la barre d'onglets les liste tous.
@@ -442,9 +448,9 @@ connexion :
   restants, la clé ; pour celui du serveur, aussi ses noms et son empreinte
   SHA-256
 
-![L'onglet Réseau](../en/images/network.png)
+![L'onglet Réseau](images/network.png)
 
-![Le chiffrement et la chaîne de certificats](../en/images/network-tls.png)
+![Le chiffrement et la chaîne de certificats](images/network-tls.png)
 
 Tout cela vient de la connexion de la requête elle-même, pas d'une seconde
 connexion ouverte pour regarder : chaque envoi ouvre une nouvelle connexion et
@@ -473,7 +479,7 @@ City). Ces bases situent au mieux une adresse dans une ville et se trompent
 parfois pour les routeurs de cœur de réseau. Dans un terminal,
 `apix trace <url or host>` affiche la même liste.
 
-![La route sur une carte](../en/images/route.png)
+![La route sur une carte](images/route.png)
 
 La capture d'écran utilise une petite base de démonstration (`cargo run -p
 apix-route --example demo_geo`), pas de vraies recherches.
@@ -486,7 +492,7 @@ WebSocket : **Envoyer** devient **Se connecter**, et l'onglet Corps devient
 l'authentification de la requête (Bearer, Basic, clé d'API, OAuth 2.0 …),
 comme n'importe quelle requête.
 
-![Une connexion WebSocket et son onglet Messages](../en/images/websocket.png)
+![Une connexion WebSocket et son onglet Messages](images/websocket.png)
 
 - Saisissez un message et appuyez sur **Envoyer** (ou Ctrl+Enter). Les
   `{{variables}}` sont remplies à l'envoi. Sans connexion, Apix se connecte
@@ -557,7 +563,7 @@ l'URL peut alors être `http://`, `https://`, `ws://` ou `wss://`, comme dans un
 client Socket.IO. Le fichier de la requête reçoit une table `[socketio]`, et
 une requête Socket.IO s'ouvre sur son onglet Messages.
 
-![Une connexion Socket.IO : événements, acks et une pièce jointe binaire](../en/images/socketio.png)
+![Une connexion Socket.IO : événements, acks et une pièce jointe binaire](images/socketio.png)
 
 - **Espace de noms :** celui à rejoindre, comme `/chat`. Laissé vide, c'est le
   chemin de l'URL (`http://localhost:3000/chat` rejoint `/chat`), ou `/`.
@@ -601,7 +607,7 @@ affichent **MQTT**, **Envoyer** devient **Se connecter**, et l'onglet Corps
 devient **Messages**. Le port est 1883, ou 8883 avec TLS, sauf si l'URL en
 indique un.
 
-![Une connexion MQTT : abonnements, messages publiés et reçus](../en/images/mqtt.png)
+![Une connexion MQTT : abonnements, messages publiés et reçus](images/mqtt.png)
 
 - **Identifiants :** le nom d'utilisateur et le mot de passe du type Basic de
   l'onglet Auth, ou de l'URL (`mqtt://user:password@host`). Les autres types
@@ -655,7 +661,7 @@ variable par port quand elles diffèrent), et les documents que le WSDL importe
 sont lus aussi. Ce qui n'a pas pu être lu, et les ports qui ne sont pas SOAP,
 sont listés à la fin de l'import.
 
-![Une requête SOAP issue d'un WSDL, avec le fault renvoyé par le serveur](../en/images/soap.png)
+![Une requête SOAP issue d'un WSDL, avec le fault renvoyé par le serveur](images/soap.png)
 
 - Les **en-têtes** suivent la version : SOAP 1.1 envoie
   `Content-Type: text/xml` et `SOAPAction` ; SOAP 1.2 envoie
@@ -690,7 +696,7 @@ Une requête dont l'URL commence par `grpc://` (ou `grpcs://` pour TLS) appelle
 une méthode gRPC : la barre d'URL affiche **gRPC**, et l'onglet Corps devient
 **Message**.
 
-![Un appel gRPC](../en/images/grpc.png)
+![Un appel gRPC](images/grpc.png)
 
 1. Écrivez l'adresse, par exemple `grpc://localhost:50051`.
 2. **Charger les méthodes** demande au serveur ce qu'il propose (gRPC server
@@ -746,7 +752,7 @@ Collez-le (ou **Lire un fichier**, ou **Utiliser le message**), indiquez la
 **Convertir**. Le résultat est un texte `.proto` modifiable, gardé dans la
 requête ; **Enregistrer dans un fichier** l'écrit sur le disque.
 
-![Une définition construite à partir d'un exemple JSON, et l'avertissement quand elle ne correspond pas](../en/images/grpc-definition.png)
+![Une définition construite à partir d'un exemple JSON, et l'avertissement quand elle ne correspond pas](images/grpc-definition.png)
 
 | Vous avez | Ce qu'on en tire |
 |---|---|
@@ -799,6 +805,8 @@ et `apix send` affiche les mêmes avertissements ; le rapport d'une exécution
 ne les inclut pas.
 
 ## Scripts et tests
+
+![Un script de test et ses résultats](images/scripts.png)
 
 L'onglet **Scripts** contient deux scripts JavaScript pour la requête :
 
@@ -877,7 +885,7 @@ Ouvrez-le avec **Affichage › Runner…** ou Ctrl+Shift+R pour la collection o�
 vous êtes, ou avec **Exécuter…** sur une collection ou un dossier dans la barre
 latérale pour cette partie seulement.
 
-![Le Runner après une exécution pilotée par les données](../en/images/runner.png)
+![Le Runner après une exécution pilotée par les données](images/runner.png)
 
 - **Requêtes** : toutes les requêtes dans l'ordre de la barre latérale,
   cochées. Décochez celles à laisser de côté, et déplacez-en une avec ↑ ↓ pour
@@ -933,7 +941,7 @@ revenu. Chaque flux est un fichier `.flow` dans la collection, à côté des
 requêtes ; il va donc dans git avec elles. Ouvrez **Affichage › Flux…** ;
 saisissez un nom et appuyez sur **Créer** pour en créer un.
 
-![La fenêtre Flux](../en/images/flows.png)
+![La fenêtre Flux](images/flows.png)
 
 Il existe quatre sortes de nœuds :
 
@@ -1016,7 +1024,7 @@ centiles et le temps le plus lent, et un graphique seconde par seconde des
 requêtes (celles en échec en rouge) avec la latence moyenne marquée d'un trait
 jaune.
 
-![Un test de charge](../en/images/load-test.png)
+![Un test de charge](images/load-test.png)
 
 - **En même temps** : requêtes en vol au même moment (1 à 10 000).
 - **Requêtes** : s'arrêter après ce nombre ; vide pour aucune limite.
@@ -1051,7 +1059,7 @@ Un **moniteur** exécute la collection, ou l'un de ses dossiers ou l'une de ses
 requêtes, selon un planning, et le signale quand elle commence à échouer ou
 réussit de nouveau. Ouvrez **Affichage › Moniteurs…**.
 
-![Moniteurs](../en/images/monitors.png)
+![Moniteurs](images/monitors.png)
 
 - **Ajouter un moniteur** demande un nom, une fréquence (`30s`, `5m`, `1h`,
   `1d`, ou combinés comme dans `1h30m` ; au moins `10s`), un dossier ou une
@@ -1098,7 +1106,7 @@ de la collection (voir Exemples), si bien qu'on peut construire un front-end
 ou lancer un test avant que la vraie API n'existe. Ouvrez **Affichage ›
 Serveur fictif…**, choisissez un port et **Démarrer**.
 
-![Le serveur fictif](../en/images/mock.png)
+![Le serveur fictif](images/mock.png)
 
 - Une requête est mise en correspondance par méthode et par chemin : l'URL de
   la requête après son hôte ou après une `{{variable}}` initiale, si bien que
@@ -1158,7 +1166,7 @@ passe est enregistrée dans le dossier `captured/` de la collection sous forme
 de fichier de requête, avec sa réponse comme exemple `Captured`, et listée
 dans la fenêtre.
 
-![Le proxy de capture](../en/images/capture.png)
+![Le proxy de capture](images/capture.png)
 
 - **Seulement** limite l'enregistrement à certains hôtes (`example.com` prend
   aussi `api.example.com`) ; le reste passe sans être enregistré.
@@ -1187,6 +1195,8 @@ qui étaient ouverts reviennent la prochaine fois que vous ouvrez la même
 collection ou le même projet (les onglets des collections chiffrées ne sont pas
 mémorisés, car leurs noms de fichiers sont secrets eux aussi).
 
+![Plusieurs onglets ouverts, dont un avec des modifications non enregistrées](images/tabs.png)
+
 ## Organiser les requêtes
 
 La **recherche** en haut de la barre latérale la restreint aux requêtes dont
@@ -1214,6 +1224,8 @@ entre elles les environnements et l'authentification. Créez-en un avec
 barre latérale par** peut afficher la barre latérale sous la forme Projet ›
 Environnement › Collections.
 
+![Un projet avec trois collections](images/projects.png)
+
 - Faites glisser l'en-tête d'une collection au-dessus ou en dessous d'une
   autre pour changer leur ordre.
 - Clic droit sur une collection › **Couleur** lui donne une couleur ; un point
@@ -1235,7 +1247,7 @@ Ces marques suivent chaque enregistrement et chaque changement sur le disque,
 et sont relues quand la fenêtre revient au premier plan, si bien qu'un commit
 fait dans un terminal les efface.
 
-![Branche et requêtes modifiées](../en/images/git-status.png)
+![Branche et requêtes modifiées](images/git-status.png)
 
 Cliquez sur la branche dans la barre d'état (ou **Affichage › Git…**) pour
 ouvrir la fenêtre Git. À gauche se trouvent les fichiers modifiés depuis le
@@ -1250,7 +1262,7 @@ passe dessus, et **Pull** (fast-forward seulement) et **Push** (en définissant
 l'upstream la première fois) lancent git avec vos propres réglages, hooks et
 identifiants. La barre latérale suit immédiatement un changement de branche.
 
-![La fenêtre Git](../en/images/git-window.png)
+![La fenêtre Git](images/git-window.png)
 
 En ligne de commande, `apix run --changed` n'envoie que les requêtes touchées
 par une modification et `apix diff` montre ce qui y a changé champ par champ ;
@@ -1262,6 +1274,8 @@ sur une pull request, la GitHub Action peut commenter avec le résultat. Voir
 Une collection chiffrée garde chaque requête, chaque environnement et même
 chaque nom de fichier scellés sur le disque (XChaCha20-Poly1305 avec une clé de
 mot de passe Argon2id). Git voit seulement quel blob chiffré a changé.
+
+![Déverrouiller une collection chiffrée](images/encrypted.png)
 
 - **Fichier › Chiffrer cette collection…** ou clic droit sur une collection ›
   **Chiffrer…** chiffre sur place une collection existante.
@@ -1346,6 +1360,8 @@ En ligne de commande : `apix import <file, folder or zip>` et
 
 ## Importer depuis Insomnia, OpenAPI et HAR
 
+![Importer depuis une URL](images/import.png)
+
 **Fichier › Importer…** (ou déposer le fichier sur la fenêtre) lit aussi ces
 formats ; le format est reconnu par le contenu, et un dossier ou un zip peut
 les mélanger :
@@ -1372,6 +1388,8 @@ de modifications non enregistrées, avec la réponse qu'elle a obtenue. Appuyez
 sur Ctrl+Enter pour la renvoyer, sur Ctrl+S pour garder cette version. Si le
 fichier de la requête n'existe plus, l'entrée s'ouvre dans l'éditeur sans
 onglet.
+
+![L’historique des requêtes envoyées](images/history.png)
 
 L'historique reste sur cet ordinateur (le dossier `history` à côté des
 paramètres), jamais dans une collection. Les requêtes sont stockées telles
@@ -1403,7 +1421,7 @@ les autres textes ligne par ligne. Les en-têtes qui changent à chaque réponse
 (Date, identifiants de requête, mise en cache, façon dont le corps a été
 envoyé) sont omis et listés à la fin. **Copier en texte** copie le résultat.
 
-![Comparaison avec une réponse antérieure](../en/images/compare.png)
+![Comparaison avec une réponse antérieure](images/compare.png)
 
 Dans un terminal, `apix compare <request> --env staging --against production`
 envoie la requête dans les deux et affiche les différences ; il se termine avec
@@ -1436,7 +1454,7 @@ La réponse reçoit alors un bouton de plus :
   réponse, les causes probables et ce qu'il faut vérifier, dans la langue de
   l'application.
 
-![Explication d'une réponse en échec](../en/images/ai-explain.png)
+![Explication d'une réponse en échec](images/ai-explain.png)
 
 Ce qui est envoyé au fournisseur : la méthode, l'URL, les en-têtes et le corps
 de la requête, et le statut, les en-têtes et le corps de la réponse (coupé à
@@ -1462,7 +1480,7 @@ copie dans le dossier des extensions (`<config>/Apix/plugins`), **Retirer** le
 supprime, **Ouvrir le dossier** montre le dossier et **Recharger** le relit
 après que vous y avez copié des fichiers vous-même.
 
-![La fenêtre Extensions](../en/images/plugins.png)
+![La fenêtre Extensions](images/plugins.png)
 
 - Les **types d'authentification** apparaissent dans la liste de l'onglet Auth
   sous la forme « … (extension) », avec les champs que l'extension demande
@@ -1471,13 +1489,13 @@ après que vous y avez copié des fichiers vous-même.
   en-têtes ou des paramètres de requête. Une requête dont l'extension n'est
   pas installée le signale et n'est pas envoyée.
 
-  ![Une requête signée par une extension](../en/images/plugin-auth.png)
+  ![Une requête signée par une extension](images/plugin-auth.png)
 
 - Les **vues** apparaissent à côté de Texte, Tableau et Graphique au-dessus
   d'une réponse JSON ; l'extension lit le statut, les en-têtes et le corps et
   répond par un tableau ou du texte.
 
-  ![Une vue fournie par une extension](../en/images/plugin-view.png)
+  ![Une vue fournie par une extension](images/plugin-view.png)
 
 - Les **importateurs** ont un bouton **Importer un fichier…** dans la fenêtre
   Extensions : le fichier devient une nouvelle collection à côté, qui s'ouvre
@@ -1559,7 +1577,7 @@ Ctrl+K (ou Ctrl+P) ouvre la palette de commandes : saisissez quelques lettres
 d'un nom de requête ou d'une commande et appuyez sur Enter. Les commandes
 peuvent être trouvées par leur nom anglais dans toutes les langues.
 
-![La palette de commandes](../en/images/palette.png)
+![La palette de commandes](images/palette.png)
 
 ## Configuration
 
@@ -1578,7 +1596,7 @@ fonctionne sans aucun d'eux.
 - **Claude (MCP)** : **Connecter à Claude** (aussi **Aide › Connecter à Claude
   (MCP)…**) pour la collection ouverte, voir ci-dessous.
 
-![Configuration](../en/images/setup.png)
+![Configuration](images/setup.png)
 
 ### Connecter Claude
 
@@ -1599,7 +1617,7 @@ leurs tests sans voir les valeurs des variables (voir
 - L'entrée et la commande sont toutes deux affichées avec **Copier**, pour les
   ajouter à la main.
 
-![Connecter à Claude](../en/images/claude-connect.png)
+![Connecter à Claude](images/claude-connect.png)
 
 La même chose depuis un terminal : `apix mcp my-api --add-to claude-desktop`,
 `apix mcp my-api --add-to claude-code`, `apix mcp my-api
@@ -1630,7 +1648,7 @@ La même chose depuis un terminal : `apix mcp my-api --add-to claude-desktop`,
   jour…** pose la question à tout moment, et `apix update` fait de même dans
   un terminal.
 
-![Une nouvelle version annoncée](../en/images/update.png)
+![Une nouvelle version annoncée](images/update.png)
 
 - **Historique :** activé ou désactivé (voir [Historique](#historique)).
 
@@ -1665,7 +1683,7 @@ sans redémarrage :
   fonctions dans la couleur d'accent, les commentaires et la ponctuation
   atténués.
 
-![Taille du texte, taille de la police du code et densité](../en/images/look.png)
+![Taille du texte, taille de la police du code et densité](images/look.png)
 
 - **Vos thèmes :** **Ouvrir le dossier** ouvre `<config>/Apix/themes` et, la
   première fois, y écrit `my-theme.toml` comme point de départ. Chaque fichier
@@ -1673,7 +1691,7 @@ sans redémarrage :
   un thème intégré (`nord.toml`) le remplace. Un fichier illisible est affiché
   en rouge avec la raison.
 
-![Paramètres](../en/images/settings.png)
+![Paramètres](images/settings.png)
 
 Un fichier de thème définit un nom, s'il est clair, et n'importe laquelle de
 ces couleurs (`#RRGGBB`, ou `#RRGGBBAA` avec opacité) ; celles qu'il omet

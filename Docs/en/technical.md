@@ -194,6 +194,8 @@ cargo run -p docs-check -- stamps            # prints the current stamp of each 
 cargo run -p docs-check -- site site/docs    # the documentation as web pages (GitHub Pages)
 ```
 
+The user guide's pictures are taken by `scripts/docs-tour.ps1`. It starts the example servers and runs the desktop app once per language with `APIX_TOUR=Docs/tour/scenes.toml`: the app sets up each scene itself (opens requests of the demo collection in `Docs/tour/demo`, sends them, opens a window) and the script saves the window as `Docs/<language>/images/<scene>.png`. `APIX_CONFIG_DIR` keeps the app's settings, history and cookies in a separate folder during the tour, so yours are not touched.
+
 ## The vendored gpui backend
 
 GPUI's Windows text renderer (crate `gpui-pre-windows` 0.3.9) placed every run

@@ -1,4 +1,4 @@
-<!-- translated from en/technical.md sha256:2fedbe12e4a6ee20 -->
+<!-- translated from en/technical.md sha256:40c5e638c106f35d -->
 
 # Technische Hinweise
 
@@ -200,6 +200,8 @@ cargo run -p docs-check                      # listet fehlende oder veraltete Ü
 cargo run -p docs-check -- stamps            # gibt den aktuellen Stempel jedes englischen Dokuments aus
 cargo run -p docs-check -- site site/docs    # die Dokumentation als Webseiten (GitHub Pages)
 ```
+
+Die Bilder des Benutzerhandbuchs nimmt `scripts/docs-tour.ps1` auf. Es startet die Beispielserver und führt die Desktop-App einmal pro Sprache mit `APIX_TOUR=Docs/tour/scenes.toml` aus: Die App baut jede Szene selbst auf (öffnet Anfragen der Demo-Sammlung in `Docs/tour/demo`, sendet sie, öffnet ein Fenster), und das Skript speichert das Fenster als `Docs/<Sprache>/images/<Szene>.png`. `APIX_CONFIG_DIR` hält Einstellungen, Verlauf und Cookies der App während der Tour in einem eigenen Ordner, sodass Ihre unberührt bleiben.
 
 ## Das mitgelieferte gpui-Backend
 

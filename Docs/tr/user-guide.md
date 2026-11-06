@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:302bcb1b0e41cc49 -->
+<!-- translated from en/user-guide.md sha256:930abab97809ed62 -->
 
 # Apix kullanım kılavuzu
 
@@ -85,6 +85,8 @@ barındıran, isteğe bağlı olarak alt klasörler de içerebilen bir klasörd�
 koleksiyonu **Dosya › Aç…** (Ctrl+O) ile açın ya da **Dosya › Yeni koleksiyon…**
 ile yeni bir tane başlatın. Henüz koleksiyon olmayan bir klasör seçerseniz Apix
 onu koleksiyona dönüştürmeyi önerir.
+
+![Koleksiyon açık değilken Apix](images/open-collection.png)
 
 Son açılan koleksiyonlar **Dosya › Son açılanlar** altındadır. Uygulamayı bir
 klasörle başlatmak (`apix-desktop path/to/collection`) o klasörü doğrudan açar.
@@ -230,6 +232,8 @@ Yetkilendirmesi *Üst öğeden devral* olan istekler bunu kullanır.
 
 ## İstek ayarları
 
+![Bir isteğin Ayarlar sekmesi](images/request-settings.png)
+
 Ayarlar sekmesi isteğin nasıl yol alacağını belirler:
 
 | Ayar | Varsayılan |
@@ -280,6 +284,8 @@ uygulamayla birlikte silinir). **İstek › Çerezler…** hepsini listeler, tek
 siler ya da kavanozu boşaltır. Ayarlar sekmesindeki **Çerez gönder**, kavanozu
 bir istek, klasör, koleksiyon veya proje için kapatır. CLI her çalıştırmada boş
 bir kavanozla başlar.
+
+![Kayıtlı çerezler](images/cookies.png)
 
 ## Değişkenler ve ortamlar
 
@@ -720,6 +726,8 @@ uyarılar yer almaz.
 
 ## Scriptler ve testler
 
+![Bir test betiği ve sonuçları](images/scripts.png)
+
 **Scriptler** sekmesi istek için iki JavaScript scripti tutar:
 
 - **İstek öncesi**, istek gönderilmeden önce çalışır. İsteği değiştirebilir
@@ -1074,6 +1082,8 @@ kapatmadan önce sorar. Açık olan sekmeler aynı koleksiyon ya da proje bir
 sonraki açılışta yeniden gelir (şifreli koleksiyonların sekmeleri hatırlanmaz,
 çünkü dosya adları da gizlidir).
 
+![Birkaç açık sekme, biri kaydedilmemiş değişikliklerle](images/tabs.png)
+
 ## Kenar çubuğunda istekleri düzenleme
 
 Kenar çubuğunun üstündeki **arama**, onu adında, metodunda ya da URL'sinde yazılan
@@ -1097,6 +1107,8 @@ aktarma da sizin sıranızı izler.
 yetkilendirmeyi aralarında paylaştırır. **Dosya › Yeni proje…** ile bir tane
 oluşturun. Bir projede **Ortam › Kenar çubuğunu grupla** kenar çubuğunu
 Proje › Ortam › Koleksiyonlar düzeninde gösterebilir.
+
+![Üç koleksiyonlu bir proje](images/projects.png)
 
 - Sıralarını değiştirmek için bir koleksiyon başlığını başka birinin üstüne ya
   da altına sürükleyin.
@@ -1142,6 +1154,8 @@ GitHub Action pull request'e sonucu yorum olarak yazabilir. Bkz.
 Şifreli bir koleksiyon her isteği, ortamı ve hatta dosya adlarını diskte mühürlü
 tutar (Argon2id ile paroladan türetilen anahtarla XChaCha20-Poly1305). Git
 yalnızca hangi şifreli blob'un değiştiğini görür.
+
+![Şifreli bir koleksiyonun kilidini açma](images/encrypted.png)
 
 - **Dosya › Bu koleksiyonu şifrele…** ya da bir koleksiyona sağ tıklayıp ›
   **Şifrele…** mevcut bir koleksiyonu yerinde şifreler.
@@ -1219,6 +1233,8 @@ Komut satırında: `apix import <dosya, klasör veya zip>` ve
 
 ## Insomnia, OpenAPI ve HAR'dan içe aktarma
 
+![Bir adresten içe aktarma](images/import.png)
+
 **Dosya › İçe aktar…** (veya dosyayı pencereye bırakmak) bunları da okur; biçim
 içerikten tanınır, bir klasör ya da zip bunları karışık içerebilir:
 
@@ -1241,6 +1257,8 @@ seçtiğinizde istek, gönderildiği sekmeye kaydedilmemiş değişiklik olarak,
 aldığı yanıtla birlikte geri gelir. Yeniden göndermek için Ctrl+Enter, o hâlini
 saklamak için Ctrl+S'ye basın. İstek dosyası artık yoksa kayıt düzenleyicide
 sekmesiz açılır.
+
+![Gönderilen isteklerin geçmişi](images/history.png)
 
 Geçmiş yalnızca bu bilgisayarda kalır (ayarların yanındaki `history`
 klasörü), hiçbir zaman bir koleksiyonun içine yazılmaz. İstekler yazıldığı

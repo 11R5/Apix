@@ -23,7 +23,7 @@ $work = Join-Path $env:TEMP "apix-tour"
 New-Item -ItemType Directory -Force $work | Out-Null
 
 if (-not $NoBuild) {
-    cargo build --release -p apix-desktop -p apix-cli
+    cargo build --release -p apix-desktop -p apix-cli -p shrink-png
     if ($LASTEXITCODE) { throw "build failed" }
     cargo build -p apix-http --example ws_server --example sse_server --example graphql_server --example socketio_server --example soap_server
     cargo build -p apix-grpc --example grpc_server
@@ -141,6 +141,9 @@ try {
         }
         $images = Join-Path $repo "Docs\$lang\images"
         New-Item -ItemType Directory -Force $images | Out-Null
+        # 256 colours: the same to the eye, a third smaller.
+        $pictures = @(Get-ChildItem $out -Filter *.png | ForEach-Object { $_.FullName })
+        if ($pictures.Count) { & (Join-Path $repo "target\release\shrink-png.exe") @pictures }
         Get-ChildItem $out -Filter *.png | Copy-Item -Destination $images -Force
         Write-Host "$lang`: $taken pictures"
         # What the tour wrote into the demo collection (captured requests).

@@ -1,4 +1,4 @@
-<!-- translated from en/technical.md sha256:2fedbe12e4a6ee20 -->
+<!-- translated from en/technical.md sha256:40c5e638c106f35d -->
 
 # 技術ノート
 
@@ -193,6 +193,8 @@ cargo run -p docs-check                      # 欠けている翻訳や古くな
 cargo run -p docs-check -- stamps            # 英語の各ドキュメントの現在のスタンプを出力する
 cargo run -p docs-check -- site site/docs    # ドキュメントを Web ページとして書き出す（GitHub Pages）
 ```
+
+ユーザーガイドの画像は `scripts/docs-tour.ps1` が撮影します。サンプルサーバーを起動し、`APIX_TOUR=Docs/tour/scenes.toml` を付けてデスクトップアプリを言語ごとに 1 回ずつ実行します。アプリは各シーンを自分で準備し（`Docs/tour/demo` のデモコレクションのリクエストを開いて送信し、ウィンドウを開きます）、スクリプトがウィンドウを `Docs/<言語>/images/<シーン>.png` として保存します。ツアー中は `APIX_CONFIG_DIR` によってアプリの設定、履歴、Cookie が別のフォルダーに置かれるため、あなたの設定には影響しません。
 
 ## 同梱した gpui バックエンド
 

@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:302bcb1b0e41cc49 -->
+<!-- translated from en/user-guide.md sha256:930abab97809ed62 -->
 
 # Guía de usuario de Apix
 
@@ -9,7 +9,7 @@ guía recorre la aplicación; los [flujos de trabajo](workflows.md) explican pas
 a paso las tareas habituales, y la línea de comandos `apix` ejecuta las mismas
 solicitudes en una terminal o en CI.
 
-![La ventana de Apix](../en/images/main.png)
+![La ventana de Apix](images/main.png)
 
 ## Contenido
 
@@ -88,6 +88,8 @@ solicitudes (archivos `.apix`), opcionalmente en subcarpetas. Abre una con
 colección…**. Si eliges una carpeta que todavía no es una colección, Apix se
 ofrece a convertirla en una.
 
+![Apix sin ninguna colección abierta](images/open-collection.png)
+
 Las colecciones abiertas recientemente están en **Archivo › Abrir recientes**.
 Si inicias la aplicación con una carpeta (`apix-desktop path/to/collection`),
 la abre directamente.
@@ -148,7 +150,7 @@ codificado como un único segmento (`a b/c` se convierte en `a%20b%2Fc`), y las
 como está escrita. Los valores se guardan como `[[path]]` en el archivo, y las
 colecciones de Postman traen los suyos (y los recuperan al exportar).
 
-![Parámetros y variables de ruta](../en/images/path-variables.png)
+![Parámetros y variables de ruta](images/path-variables.png)
 
 **Sugerencias de encabezados.** Mientras escribes el nombre de un encabezado,
 aparecen bajo la fila los nombres habituales que encajan (primero los que
@@ -157,7 +159,7 @@ valores habituales de ese encabezado, como `application/json` para
 `Content-Type`. Intro toma el primero, un clic toma cualquiera, y después de un
 nombre sigue el valor.
 
-![Nombres de encabezados sugeridos al escribir](../en/images/header-hints.png)
+![Nombres de encabezados sugeridos al escribir](images/header-hints.png)
 
 ## Cuerpo
 
@@ -172,7 +174,7 @@ La pestaña Cuerpo ofrece:
 | Binario | Los bytes de un archivo, como `application/octet-stream` salvo que un encabezado diga otra cosa. Apix muestra el tamaño del archivo, o «Archivo no encontrado». |
 | GraphQL | Un editor de consultas y un editor de variables JSON; se envía como JSON `{"query", "variables"}`. |
 
-![Cuerpo multipart](../en/images/body.png)
+![Cuerpo multipart](images/body.png)
 
 Las rutas de archivos dentro de la colección se guardan relativas al archivo de
 la solicitud, así que la colección sigue funcionando en otro equipo.
@@ -198,7 +200,7 @@ protegido por un token. Después:
   valores.
 - **Mostrar esquema** pone todo el esquema junto a la consulta, en SDL.
 
-![Autocompletado a partir del esquema](../en/images/graphql.png)
+![Autocompletado a partir del esquema](images/graphql.png)
 
 Apix guarda el esquema de cada endpoint (en la carpeta de configuración, en
 `graphql/`) y lo vuelve a cargar cuando abres una solicitud a esa URL, así que
@@ -225,7 +227,7 @@ La pestaña Autenticación define cómo demuestra la solicitud quién es:
 | OAuth 2.0 | Credenciales de cliente, contraseña, o código de autorización con PKCE. Apix obtiene el token por sí mismo y lo envía como token Bearer. |
 | AWS Signature | AWS Signature Version 4 con clave de acceso, clave secreta, token de sesión opcional, región y servicio. |
 
-![OAuth 2.0 en la pestaña Autenticación](../en/images/auth.png)
+![OAuth 2.0 en la pestaña Autenticación](images/auth.png)
 
 **Tokens de OAuth 2.0.** El primer envío obtiene un token; los envíos
 siguientes lo reutilizan y lo renuevan con el token de actualización cuando
@@ -242,6 +244,8 @@ todo un proyecto. Las solicitudes cuya autenticación es *Heredar del nivel
 superior* la usan.
 
 ## Ajustes de la solicitud
+
+![La pestaña Ajustes de una solicitud](images/request-settings.png)
 
 La pestaña Ajustes controla cómo viaja la solicitud:
 
@@ -296,6 +300,8 @@ aplicación; las cookies de sesión desaparecen al cerrar la aplicación).
 solicitud, una carpeta, una colección o un proyecto. La CLI empieza con un
 almacén vacío en cada ejecución.
 
+![Las cookies guardadas](images/cookies.png)
+
 ## Variables y entornos
 
 Escribe `{{name}}` en una URL, un encabezado, un cuerpo o un campo de
@@ -325,7 +331,7 @@ Cambiar el ajuste mueve al momento los secretos de la colección o el proyecto
 abiertos; los demás se mueven la próxima vez que los guardes. Los secretos de
 una colección cifrada siempre se quedan dentro de ella.
 
-![El diálogo Variables](../en/images/variables.png)
+![El diálogo Variables](images/variables.png)
 
 Las **variables dinámicas** obtienen un valor nuevo en cada uso: `{{$guid}}`,
 `{{$timestamp}}`, `{{$isoTimestamp}}`, `{{$randomInt}}`, `{{$randomEmail}}` y
@@ -366,7 +372,7 @@ $.users[?@.active].email
 .users[] | select(.active) | {name, email}
 ```
 
-![Una respuesta JSON filtrada con JSONPath](../en/images/response-filter.png)
+![Una respuesta JSON filtrada con JSONPath](images/response-filter.png)
 
 El resultado sustituye al cuerpo en **Formateado** mientras el cuadro contiene
 una expresión (el contador de al lado dice cuántos valores hay); **Sin formato**
@@ -389,9 +395,9 @@ lo que selecciona). Las plantillas `pm.visualizer.set` de Postman no se dibujan,
 porque Apix no tiene vista web; los scripts que lo llaman reciben una nota en la
 consola.
 
-![La vista Tabla de una respuesta filtrada](../en/images/visual-table.png)
+![La vista Tabla de una respuesta filtrada](images/visual-table.png)
 
-![La vista Gráfico](../en/images/visual-chart.png)
+![La vista Gráfico](images/visual-chart.png)
 
 **Ejemplos.** El botón de la bandeja en la línea de estado guarda la respuesta
 como ejemplo de la solicitud: su estado, encabezados y cuerpo, y la solicitud
@@ -405,7 +411,7 @@ las respuestas guardadas de Postman llegan como ejemplos al importar y vuelven
 al exportar. `apix send --save-example '<name>'` guarda la respuesta desde la
 línea de comandos.
 
-![Un ejemplo mostrado en el panel de la respuesta](../en/images/examples.png)
+![Un ejemplo mostrado en el panel de la respuesta](images/examples.png)
 
 Cuando el panel es demasiado estrecho para todas las pestañas de la solicitud,
 la flecha al final de la barra de pestañas las lista todas.
@@ -430,9 +436,9 @@ La pestaña **Red** explica en qué se fue el tiempo y cómo era la conexión:
   quedan, la clave; para el del propio servidor, también sus nombres y su
   huella SHA-256
 
-![La pestaña Red](../en/images/network.png)
+![La pestaña Red](images/network.png)
 
-![El cifrado y la cadena de certificados](../en/images/network-tls.png)
+![El cifrado y la cadena de certificados](images/network-tls.png)
 
 Todo procede de la propia conexión de la solicitud, no de una segunda conexión
 hecha para mirar: cada envío abre una conexión nueva y Apix registra lo que
@@ -461,7 +467,7 @@ datos sitúan una dirección, como mucho, en una ciudad, y a veces se equivocan
 con los routers troncales. En una terminal, `apix trace <url or host>` imprime
 la misma lista.
 
-![La ruta en un mapa](../en/images/route.png)
+![La ruta en un mapa](images/route.png)
 
 La captura usa una pequeña base de datos de demostración (`cargo run -p apix-route
 --example demo_geo`), no consultas reales.
@@ -474,7 +480,7 @@ WebSocket: **Enviar** pasa a ser **Conectar**, y la pestaña Cuerpo pasa a ser
 la solicitud (Bearer, básica, clave de API, OAuth 2.0 …), como cualquier
 solicitud.
 
-![Una conexión WebSocket y su pestaña Mensajes](../en/images/websocket.png)
+![Una conexión WebSocket y su pestaña Mensajes](images/websocket.png)
 
 - Escribe un mensaje y pulsa **Enviar** (o Ctrl+Intro). Las `{{variables}}` se
   rellenan al enviarlo. Sin conexión, Apix conecta primero y lo envía en cuanto
@@ -541,7 +547,7 @@ entonces `http://`, `https://`, `ws://` o `wss://`, como en un cliente
 Socket.IO. El archivo de la solicitud recibe una tabla `[socketio]`, y una
 solicitud Socket.IO se abre en su pestaña Mensajes.
 
-![Una conexión Socket.IO: eventos, acks y un adjunto binario](../en/images/socketio.png)
+![Una conexión Socket.IO: eventos, acks y un adjunto binario](images/socketio.png)
 
 - **Espacio de nombres:** al que unirse, como `/chat`. Si se deja vacío, es la
   ruta de la URL (`http://localhost:3000/chat` se une a `/chat`), o `/`.
@@ -580,7 +586,7 @@ a un broker MQTT 3.1.1: la barra de URL y la barra lateral muestran **MQTT**,
 **Enviar** pasa a ser **Conectar**, y la pestaña Cuerpo pasa a ser
 **Mensajes**. El puerto es 1883, u 8883 con TLS, salvo que la URL indique uno.
 
-![Una conexión MQTT: suscripciones, mensajes publicados y recibidos](../en/images/mqtt.png)
+![Una conexión MQTT: suscripciones, mensajes publicados y recibidos](images/mqtt.png)
 
 - **Inicio de sesión:** el nombre de usuario y la contraseña del tipo
   Autenticación básica de la pestaña Autenticación, o de la URL
@@ -634,7 +640,7 @@ variable por puerto cuando son distintas), y también se leen los documentos que
 importa el WSDL. Lo que no se pudo leer, y los puertos que no son SOAP, se
 listan al terminar la importación.
 
-![Una solicitud SOAP a partir de un WSDL, con el fault que respondió el servidor](../en/images/soap.png)
+![Una solicitud SOAP a partir de un WSDL, con el fault que respondió el servidor](images/soap.png)
 
 - Los **encabezados** siguen la versión: SOAP 1.1 envía
   `Content-Type: text/xml` y `SOAPAction`; SOAP 1.2 envía
@@ -668,7 +674,7 @@ Una solicitud cuya URL empieza por `grpc://` (o `grpcs://` para TLS) llama a un
 método gRPC: la barra de URL muestra **gRPC**, y la pestaña Cuerpo pasa a ser
 **Mensaje**.
 
-![Una llamada gRPC](../en/images/grpc.png)
+![Una llamada gRPC](images/grpc.png)
 
 1. Escribe la dirección, como `grpc://localhost:50051`.
 2. **Cargar métodos** pregunta al servidor qué ofrece (reflexión de servidor
@@ -723,7 +729,7 @@ definición a partir de lo que tengas. Pégalo (o usa **Leer un archivo** o
 pulsa **Convertir**. El resultado es texto `.proto` que puedes editar, guardado
 en la solicitud; **Guardar como archivo** lo escribe en disco.
 
-![Una definición creada a partir de un ejemplo JSON, y el aviso cuando no coincide](../en/images/grpc-definition.png)
+![Una definición creada a partir de un ejemplo JSON, y el aviso cuando no coincide](images/grpc-definition.png)
 
 | Lo que tienes | Lo que se obtiene |
 |---|---|
@@ -772,6 +778,8 @@ y `apix send` imprime los mismos avisos; el informe de una ejecución no los
 incluye.
 
 ## Scripts y pruebas
+
+![Un script de pruebas y sus resultados](images/scripts.png)
 
 La pestaña **Scripts** contiene dos scripts de JavaScript para la solicitud:
 
@@ -845,7 +853,7 @@ con **Ver › Runner…** o Ctrl+Mayús+R para la colección en la que estás, o
 **Ejecutar…** sobre una colección o carpeta de la barra lateral para solo esa
 parte.
 
-![El Runner tras una ejecución basada en datos](../en/images/runner.png)
+![El Runner tras una ejecución basada en datos](images/runner.png)
 
 - **Peticiones**: todas las solicitudes en el orden de la barra lateral,
   marcadas. Desmarca las que quieras dejar fuera, y mueve una con ↑ ↓ para
@@ -900,7 +908,7 @@ flujo es un archivo `.flow` en la colección, junto a las solicitudes, así que 
 a git con ellas. Abre **Ver › Flujos…**; escribe un nombre y pulsa **Crear**
 para uno nuevo.
 
-![La ventana Flujos](../en/images/flows.png)
+![La ventana Flujos](images/flows.png)
 
 Hay cuatro tipos de nodo:
 
@@ -980,7 +988,7 @@ las solicitudes y las solicitudes por segundo, los fallos, los percentiles 50,
 solicitudes (las fallidas en rojo) con la latencia media como una marca
 amarilla.
 
-![Una prueba de carga](../en/images/load-test.png)
+![Una prueba de carga](images/load-test.png)
 
 - **A la vez**: solicitudes en curso al mismo tiempo (de 1 a 10 000).
 - **Solicitudes**: parar tras este número; vacío para sin límite.
@@ -1015,7 +1023,7 @@ Un **monitor** ejecuta la colección, o una carpeta o solicitud de ella, según 
 horario, y avisa cuando empieza a fallar o vuelve a pasar. Abre
 **Ver › Monitores…**.
 
-![Monitores](../en/images/monitors.png)
+![Monitores](images/monitors.png)
 
 - **Añadir monitor** pide un nombre, cada cuánto (`30s`, `5m`, `1h`, `1d`, o
   juntos como en `1h30m`; al menos `10s`), una carpeta o solicitud (vacío para
@@ -1061,7 +1069,7 @@ de la colección (consulta Ejemplos), así que se puede construir un front end o
 ejecutar una prueba antes de que exista la API real. Abre
 **Ver › Servidor simulado…**, elige un puerto y pulsa **Iniciar**.
 
-![El servidor simulado](../en/images/mock.png)
+![El servidor simulado](images/mock.png)
 
 - Una solicitud se empareja por método y ruta: la URL de la solicitud después
   de su host o después de una `{{variable}}` inicial, así que
@@ -1116,7 +1124,7 @@ un script (`HTTP_PROXY` y `HTTPS_PROXY`). Cada solicitud que pasa se guarda en l
 carpeta `captured/` de la colección como un archivo de solicitud, con su
 respuesta como el ejemplo `Captured`, y se lista en la ventana.
 
-![El proxy de captura](../en/images/capture.png)
+![El proxy de captura](images/capture.png)
 
 - **Solo** limita la grabación a algunos hosts (`example.com` también incluye
   `api.example.com`); el resto pasa sin grabarse.
@@ -1144,6 +1152,8 @@ próxima vez que abres la misma colección o proyecto (las pestañas de las
 colecciones cifradas no se recuerdan, porque sus nombres de archivo también son
 secretos).
 
+![Varias pestañas abiertas, una con cambios sin guardar](images/tabs.png)
+
 ## Organizar las solicitudes
 
 **Buscar**, en la parte superior de la barra lateral, la reduce a las
@@ -1170,6 +1180,8 @@ entornos y autenticación. Crea uno con **Archivo › Nuevo proyecto…**. En un
 proyecto, **Entorno › Agrupar la barra lateral por** puede mostrar la barra
 lateral como Proyecto › Entorno › Colecciones.
 
+![Un proyecto con tres colecciones](images/projects.png)
+
 - Arrastra la cabecera de una colección por encima o por debajo de otra para
   cambiar su orden.
 - Clic derecho en una colección › **Color** le da un color; un punto lo muestra
@@ -1190,7 +1202,7 @@ modificada (su archivo o sus propios scripts), **A** nueva. Las marcas siguen
 cada guardado y cada cambio en disco, y se vuelven a leer cuando la ventana
 vuelve al primer plano, así que un commit hecho en una terminal las borra.
 
-![La rama y las solicitudes modificadas](../en/images/git-status.png)
+![La rama y las solicitudes modificadas](images/git-status.png)
 
 Haz clic en la rama en la barra de estado (o **Ver › Git…**) para abrir la
 ventana Git. A la izquierda están los archivos modificados desde el último
@@ -1205,7 +1217,7 @@ fast-forward) y **Push** (definiendo el upstream la primera vez) ejecutan git
 con tu propia configuración, hooks y credenciales. La barra lateral sigue al
 momento un cambio de rama.
 
-![La ventana Git](../en/images/git-window.png)
+![La ventana Git](images/git-window.png)
 
 En la línea de comandos, `apix run --changed` envía solo las solicitudes a las
 que afecta un cambio y `apix diff` muestra qué cambió en ellas campo a campo; en
@@ -1217,6 +1229,8 @@ un pull request, la GitHub Action puede comentar el resultado. Consulta
 Una colección cifrada guarda sellados en disco todas las solicitudes, los
 entornos e incluso los nombres de archivo (XChaCha20-Poly1305 con una clave de
 contraseña Argon2id). Git solo ve qué blob cifrado cambió.
+
+![Desbloquear una colección cifrada](images/encrypted.png)
 
 - **Archivo › Cifrar esta colección…** o clic derecho en una colección ›
   **Cifrar…** cifra una colección existente en su sitio.
@@ -1296,6 +1310,8 @@ En la línea de comandos: `apix import <file, folder or zip>` y
 
 ## Importar desde Insomnia, OpenAPI y HAR
 
+![Importar desde una URL](images/import.png)
+
 **Archivo › Importar…** (o soltar el archivo en la ventana) también lee estos
 formatos; el formato se reconoce por el contenido, y una carpeta o un zip pueden
 mezclarlos:
@@ -1320,6 +1336,8 @@ envió, como cambios sin guardar, junto con la respuesta que obtuvo. Pulsa
 Ctrl+Intro para enviarla de nuevo, o Ctrl+S para quedarte con esa versión. Si el
 archivo de la solicitud ya no existe, la entrada se abre en el editor sin
 pestaña.
+
+![El historial de solicitudes enviadas](images/history.png)
 
 El historial se queda en este equipo (la carpeta `history` junto a la
 configuración), nunca dentro de una colección. Las solicitudes se guardan tal
@@ -1348,7 +1366,7 @@ Los encabezados que cambian en cada respuesta (Date, ids de solicitud, caché,
 cómo se envió el cuerpo) se omiten y se listan al final. **Copiar como texto**
 copia el resultado.
 
-![Comparación con una respuesta anterior](../en/images/compare.png)
+![Comparación con una respuesta anterior](images/compare.png)
 
 En una terminal, `apix compare <request> --env staging --against production`
 envía la solicitud en ambos entornos e imprime las diferencias; termina con 1
@@ -1380,7 +1398,7 @@ Entonces la respuesta recibe un botón más:
   respuesta, las causas probables y qué comprobar, en el idioma de la
   aplicación.
 
-![Explicación de una respuesta fallida](../en/images/ai-explain.png)
+![Explicación de una respuesta fallida](images/ai-explain.png)
 
 Lo que se envía al proveedor: el método, la URL, los encabezados y el cuerpo de
 la solicitud, y el estado, los encabezados y el cuerpo de la respuesta
@@ -1404,7 +1422,7 @@ copia en la carpeta de complementos (`<config>/Apix/plugins`), **Quitar** lo
 elimina, **Abrir carpeta** muestra la carpeta y **Recargar** la vuelve a leer
 después de que copies archivos allí tú mismo.
 
-![La ventana Complementos](../en/images/plugins.png)
+![La ventana Complementos](images/plugins.png)
 
 - Los **tipos de autenticación** aparecen en la lista de la pestaña
   Autenticación como «… (complemento)», con los campos que pide el complemento
@@ -1413,13 +1431,13 @@ después de que copies archivos allí tú mismo.
   añade encabezados o parámetros de consulta. Una solicitud cuyo complemento no
   está instalado lo indica y no se envía.
 
-  ![Una solicitud firmada por un complemento](../en/images/plugin-auth.png)
+  ![Una solicitud firmada por un complemento](images/plugin-auth.png)
 
 - Las **vistas** aparecen junto a Texto, Tabla y Gráfico encima de una respuesta
   JSON; el complemento lee el estado, los encabezados y el cuerpo y responde con
   una tabla o un texto.
 
-  ![Una vista de un complemento](../en/images/plugin-view.png)
+  ![Una vista de un complemento](images/plugin-view.png)
 
 - Los **importadores** tienen un botón **Importar un archivo…** en la ventana
   Complementos: el archivo se convierte en una nueva colección a su lado, que
@@ -1500,7 +1518,7 @@ Ctrl+K (o Ctrl+P) abre la paleta de comandos: escribe unas letras del nombre de
 una solicitud o de un comando y pulsa Intro. Los comandos se pueden encontrar
 por su nombre en inglés en todos los idiomas.
 
-![La paleta de comandos](../en/images/palette.png)
+![La paleta de comandos](images/palette.png)
 
 ## Configuración inicial
 
@@ -1518,7 +1536,7 @@ abrir. Apix funciona sin ninguno de ellos.
 - **Claude (MCP)**: **Conectar con Claude** (también **Ayuda › Conectar con
   Claude (MCP)…**) para la colección abierta; se explica a continuación.
 
-![Configuración inicial](../en/images/setup.png)
+![Configuración inicial](images/setup.png)
 
 ### Conectar Claude
 
@@ -1538,7 +1556,7 @@ sus pruebas sin ver los valores de las variables (consulta
 - Tanto la entrada como el comando se muestran con **Copiar**, para añadirlos a
   mano.
 
-![Conectar con Claude](../en/images/claude-connect.png)
+![Conectar con Claude](images/claude-connect.png)
 
 Lo mismo desde una terminal: `apix mcp my-api --add-to claude-desktop`,
 `apix mcp my-api --add-to claude-code`, `apix mcp my-api
@@ -1567,7 +1585,7 @@ Lo mismo desde una terminal: `apix mcp my-api --add-to claude-desktop`,
   Buscar actualizaciones…** pregunta en cualquier momento, y `apix update` hace
   lo mismo en una terminal.
 
-![Anuncio de una versión más nueva](../en/images/update.png)
+![Anuncio de una versión más nueva](images/update.png)
 
 - **Historial:** activado o desactivado (consulta [Historial](#historial)).
 
@@ -1600,7 +1618,7 @@ reiniciar:
   las palabras clave como los da el tema, los tipos y las funciones en el color
   de acento, y los comentarios y la puntuación atenuados.
 
-![Tamaño del texto, tamaño de fuente del código y densidad](../en/images/look.png)
+![Tamaño del texto, tamaño de fuente del código y densidad](images/look.png)
 
 - **Tus temas:** **Abrir la carpeta** abre `<config>/Apix/themes` y, la
   primera vez, escribe allí `my-theme.toml` como punto de partida. Cada archivo
@@ -1608,7 +1626,7 @@ reiniciar:
   tema integrado (`nord.toml`) lo sustituye. Un archivo que no se puede leer
   aparece en rojo con el motivo.
 
-![Configuración](../en/images/settings.png)
+![Configuración](images/settings.png)
 
 Un archivo de tema define un nombre, si es claro, y cualquiera de estos colores
 (`#RRGGBB`, o `#RRGGBBAA` con opacidad); los que omite vienen de Obsidian, o de

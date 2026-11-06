@@ -318,6 +318,11 @@ impl Workspace {
         }
         match name {
             "wait" => arg.parse().unwrap_or(500),
+            // A window opened after other steps (`dialog` opens it before them).
+            "dialog" => {
+                self.tour_dialog(arg, window, cx);
+                600
+            }
             "mock" => {
                 self.tour_mock(arg.parse().unwrap_or(4011), window, cx);
                 300

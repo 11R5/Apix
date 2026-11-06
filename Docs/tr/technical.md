@@ -1,4 +1,4 @@
-<!-- translated from en/technical.md sha256:2fedbe12e4a6ee20 -->
+<!-- translated from en/technical.md sha256:40c5e638c106f35d -->
 
 # Teknik notlar
 
@@ -195,6 +195,8 @@ cargo run -p docs-check                      # eksik veya güncel olmayan çevir
 cargo run -p docs-check -- stamps            # her İngilizce belgenin güncel damgasını yazdırır
 cargo run -p docs-check -- site site/docs    # belgeleri web sayfası olarak yazar (GitHub Pages)
 ```
+
+Kullanım kılavuzunun resimlerini `scripts/docs-tour.ps1` alır. Örnek sunucuları başlatır ve masaüstü uygulamasını her dil için bir kez `APIX_TOUR=Docs/tour/scenes.toml` ile çalıştırır: uygulama her sahneyi kendisi kurar (`Docs/tour/demo` içindeki örnek koleksiyonun isteklerini açar, gönderir, bir pencere açar), betik de pencereyi `Docs/<dil>/images/<sahne>.png` olarak kaydeder. `APIX_CONFIG_DIR`, tur boyunca uygulamanın ayarlarını, geçmişini ve çerezlerini ayrı bir klasörde tutar; sizinkilere dokunulmaz.
 
 ## Vendor'a alınmış gpui backend'i
 

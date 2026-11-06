@@ -1,0 +1,12 @@
+[package]
+name = "shrink-png"
+description = "Rewrites the documentation's screenshots as 256-colour PNGs, about a third smaller"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+color_quant = "1"
+image = { version = "0.25", default-features = false, features = ["png"] }
+png = "0.17"

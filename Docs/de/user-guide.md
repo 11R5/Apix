@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:302bcb1b0e41cc49 -->
+<!-- translated from en/user-guide.md sha256:930abab97809ed62 -->
 
 # Apix-Benutzerhandbuch
 
@@ -9,7 +9,7 @@ Handbuch führt durch die App; die [Arbeitsabläufe](workflows.md) zeigen häufi
 Aufgaben Schritt für Schritt, und die Kommandozeile `apix` führt dieselben
 Anfragen in einem Terminal oder in CI aus.
 
-![Das Apix-Fenster](../en/images/main.png)
+![Das Apix-Fenster](images/main.png)
 
 ## Inhalt
 
@@ -88,6 +88,8 @@ Eine **Sammlung** ist ein Ordner mit einer Datei `apix.toml` und Ihren Anfragen
 **Datei › Neue Sammlung…**. Wählen Sie einen Ordner, der noch keine Sammlung
 ist, bietet Apix an, eine daraus zu machen.
 
+![Apix ohne geöffnete Sammlung](images/open-collection.png)
+
 Zuletzt geöffnete Sammlungen stehen unter **Datei › Zuletzt geöffnet**. Wird die
 App mit einem Ordner gestartet (`apix-desktop path/to/collection`), öffnet sie
 ihn direkt.
@@ -147,7 +149,7 @@ leer gelassene Variable wird so gesendet, wie sie geschrieben ist. Die Werte
 stehen in der Datei als `[[path]]`, und Postman-Sammlungen bringen ihre mit
 (und bekommen sie beim Export zurück).
 
-![Parameter und Pfadvariablen](../en/images/path-variables.png)
+![Parameter und Pfadvariablen](images/path-variables.png)
 
 **Header-Vorschläge.** Während Sie den Namen eines Headers eingeben, erscheinen
 unter der Zeile die üblichen Header-Namen, die dazu passen (zuerst die, die mit
@@ -156,7 +158,7 @@ bekommt die üblichen Werte dieses Headers, etwa `application/json` für
 `Content-Type`. Enter übernimmt den ersten, ein Klick einen beliebigen, und nach
 einem Namen ist der Wert dran.
 
-![Vorgeschlagene Header-Namen beim Tippen](../en/images/header-hints.png)
+![Vorgeschlagene Header-Namen beim Tippen](images/header-hints.png)
 
 ## Body
 
@@ -171,7 +173,7 @@ Der Reiter Body bietet:
 | Binär | Die Bytes einer Datei, als `application/octet-stream`, sofern ein Header nichts anderes sagt. Apix zeigt die Dateigröße oder „Datei nicht gefunden“. |
 | GraphQL | Ein Query-Editor und ein JSON-Editor für Variablen; gesendet als JSON `{"query", "variables"}`. |
 
-![Multipart-Body](../en/images/body.png)
+![Multipart-Body](images/body.png)
 
 Dateipfade innerhalb der Sammlung werden relativ zur Anfragedatei gespeichert,
 damit die Sammlung auch auf einem anderen Rechner funktioniert.
@@ -195,7 +197,7 @@ der Anfrage, sodass auch ein Schema hinter einem Token funktioniert. Danach:
   Input-Objekten, Enum-Werte (als JSON-Strings) und `true`/`false` als Werte.
 - **Schema anzeigen** stellt das ganze Schema als SDL neben die Query.
 
-![Vervollständigung aus dem Schema](../en/images/graphql.png)
+![Vervollständigung aus dem Schema](images/graphql.png)
 
 Apix speichert das Schema jedes Endpunkts (im Konfigurationsordner, unter
 `graphql/`) und lädt es wieder, wenn Sie eine Anfrage an diese URL öffnen;
@@ -222,7 +224,7 @@ Der Reiter Auth legt fest, wie sich die Anfrage ausweist:
 | OAuth 2.0 | Client Credentials, Passwort oder Authorization Code mit PKCE. Apix holt das Token selbst und sendet es als Bearer-Token. |
 | AWS Signature | AWS Signature Version 4 mit Access Key, Secret Key, optionalem Session-Token, Region und Dienst. |
 
-![OAuth 2.0 im Reiter Auth](../en/images/auth.png)
+![OAuth 2.0 im Reiter Auth](images/auth.png)
 
 **OAuth-2.0-Tokens.** Das erste Senden holt ein Token; spätere Sendungen
 verwenden es weiter und erneuern es mit dem Refresh-Token, wenn es abläuft.
@@ -239,6 +241,8 @@ Authentifizierung einmal für alles darin festzulegen;
 Anfragen mit *Vom übergeordneten Element erben* verwenden sie.
 
 ## Anfrage-Einstellungen
+
+![Der Reiter Einstellungen einer Anfrage](images/request-settings.png)
 
 Der Reiter Einstellungen steuert, wie die Anfrage übertragen wird:
 
@@ -292,6 +296,8 @@ Cookies oder leert den Speicher. **Cookies senden** im Reiter Einstellungen
 schaltet den Speicher für eine Anfrage, einen Ordner, eine Sammlung oder ein
 Projekt ab. Die CLI beginnt bei jedem Lauf mit einem leeren Speicher.
 
+![Die gespeicherten Cookies](images/cookies.png)
+
 ## Variablen und Umgebungen
 
 Schreiben Sie `{{name}}` in eine URL, einen Header, einen Body oder ein
@@ -321,7 +327,7 @@ Einstellung verschiebt die geheimen Werte der geöffneten Sammlung oder des
 geöffneten Projekts sofort; andere werden beim nächsten Speichern verschoben.
 Geheime Werte einer verschlüsselten Sammlung bleiben immer in ihr.
 
-![Der Dialog Variablen](../en/images/variables.png)
+![Der Dialog Variablen](images/variables.png)
 
 **Dynamische Variablen** bekommen bei jeder Verwendung einen neuen Wert:
 `{{$guid}}`, `{{$timestamp}}`, `{{$isoTimestamp}}`, `{{$randomInt}}`,
@@ -364,7 +370,7 @@ $.users[?@.active].email
 .users[] | select(.active) | {name, email}
 ```
 
-![Eine mit JSONPath gefilterte JSON-Antwort](../en/images/response-filter.png)
+![Eine mit JSONPath gefilterte JSON-Antwort](images/response-filter.png)
 
 Das Ergebnis ersetzt den Inhalt in **Formatiert**, solange das Feld einen
 Ausdruck enthält (der Zähler daneben nennt die Anzahl der Werte); **Roh** und
@@ -387,9 +393,9 @@ sind wählbar. Bodies über 8 MB werden nicht zur Tabelle: Filtern Sie sie zuers
 `pm.visualizer.set` werden nicht gezeichnet, da Apix keine Web-Ansicht hat;
 Skripte, die es aufrufen, bekommen einen Hinweis in der Konsole.
 
-![Die Tabellenansicht einer gefilterten Antwort](../en/images/visual-table.png)
+![Die Tabellenansicht einer gefilterten Antwort](images/visual-table.png)
 
-![Die Diagrammansicht](../en/images/visual-chart.png)
+![Die Diagrammansicht](images/visual-chart.png)
 
 **Beispiele.** Die Ablage-Schaltfläche in der Statuszeile behält die Antwort
 als Beispiel der Anfrage: ihren Status, ihre Header und ihren Body sowie die
@@ -404,7 +410,7 @@ beim Import als Beispiele herein und gehen beim Export wieder hinaus.
 `apix send --save-example '<name>'` behält die Antwort von der Kommandozeile
 aus.
 
-![Ein Beispiel im Antwortbereich](../en/images/examples.png)
+![Ein Beispiel im Antwortbereich](images/examples.png)
 
 Ist der Bereich zu schmal für alle Reiter der Anfrage, listet der Pfeil am Ende
 der Reiterleiste sie alle auf.
@@ -430,9 +436,9 @@ aussah:
   Schlüssel; für das Zertifikat des Servers außerdem seine Namen und sein
   SHA-256-Fingerabdruck
 
-![Der Reiter Netzwerk](../en/images/network.png)
+![Der Reiter Netzwerk](images/network.png)
 
-![Verschlüsselung und Zertifikatskette](../en/images/network-tls.png)
+![Verschlüsselung und Zertifikatskette](images/network-tls.png)
 
 All das stammt aus der eigenen Verbindung der Anfrage, nicht aus einer zweiten,
 die nur zum Nachsehen aufgebaut wird: Jedes Senden öffnet eine neue Verbindung,
@@ -461,7 +467,7 @@ Datenbanken verorten eine Adresse bestenfalls in einer Stadt und liegen bei
 Backbone-Routern manchmal falsch. In einem Terminal gibt
 `apix trace <url or host>` dieselbe Liste aus.
 
-![Die Route auf einer Karte](../en/images/route.png)
+![Die Route auf einer Karte](images/route.png)
 
 Der Screenshot verwendet eine kleine Demonstrationsdatenbank
 (`cargo run -p apix-route --example demo_geo`), keine echten Abfragen.
@@ -474,7 +480,7 @@ ein WebSocket: Aus **Senden** wird **Verbinden**, und aus dem Reiter Body wird
 Authentifizierung der Anfrage (Bearer, Basic, API-Schlüssel, OAuth 2.0 …), wie
 jede Anfrage.
 
-![Eine WebSocket-Verbindung und ihr Reiter Nachrichten](../en/images/websocket.png)
+![Eine WebSocket-Verbindung und ihr Reiter Nachrichten](images/websocket.png)
 
 - Geben Sie eine Nachricht ein und drücken Sie **Senden** (oder Strg+Enter).
   `{{variables}}` werden beim Senden eingesetzt. Ohne Verbindung verbindet Apix
@@ -544,7 +550,7 @@ URL darf dann `http://`, `https://`, `ws://` oder `wss://` sein, wie bei einem
 Socket.IO-Client. Die Anfragedatei bekommt eine Tabelle `[socketio]`, und eine
 Socket.IO-Anfrage öffnet sich mit ihrem Reiter Nachrichten.
 
-![Eine Socket.IO-Verbindung: Ereignisse, Acks und ein binärer Anhang](../en/images/socketio.png)
+![Eine Socket.IO-Verbindung: Ereignisse, Acks und ein binärer Anhang](images/socketio.png)
 
 - **Namespace:** der, dem beigetreten wird, etwa `/chat`. Leer gelassen ist es
   der Pfad der URL (`http://localhost:3000/chat` tritt `/chat` bei) oder `/`.
@@ -584,7 +590,7 @@ verbindet sich mit einem MQTT-3.1.1-Broker: URL-Leiste und Seitenleiste zeigen
 **MQTT**, aus **Senden** wird **Verbinden**, und aus dem Reiter Body wird
 **Nachrichten**. Der Port ist 1883, mit TLS 8883, sofern die URL keinen nennt.
 
-![Eine MQTT-Verbindung: Abonnements, veröffentlichte und empfangene Nachrichten](../en/images/mqtt.png)
+![Eine MQTT-Verbindung: Abonnements, veröffentlichte und empfangene Nachrichten](images/mqtt.png)
 
 - **Anmeldung:** Benutzername und Passwort aus dem Typ Basic des Reiters Auth
   oder aus der URL (`mqtt://user:password@host`). Andere
@@ -638,7 +644,7 @@ für SOAP 1.1 und einen für 1.2. Die Adresse des Ports ist die Variable `baseUr
 WSDL importiert, werden ebenfalls gelesen. Was nicht gelesen werden konnte und
 Ports, die kein SOAP sind, werden am Ende des Imports aufgelistet.
 
-![Eine SOAP-Anfrage aus einer WSDL, mit dem Fault, den der Server geantwortet hat](../en/images/soap.png)
+![Eine SOAP-Anfrage aus einer WSDL, mit dem Fault, den der Server geantwortet hat](images/soap.png)
 
 - **Header** folgen der Version: SOAP 1.1 sendet `Content-Type: text/xml` und
   `SOAPAction`; SOAP 1.2 sendet `application/soap+xml` mit der Action darin.
@@ -672,7 +678,7 @@ Eine Anfrage, deren URL mit `grpc://` (oder `grpcs://` für TLS) beginnt, ruft
 eine gRPC-Methode auf: Die URL-Leiste zeigt **gRPC**, und aus dem Reiter Body
 wird **Nachricht**.
 
-![Ein gRPC-Aufruf](../en/images/grpc.png)
+![Ein gRPC-Aufruf](images/grpc.png)
 
 1. Schreiben Sie die Adresse, etwa `grpc://localhost:50051`.
 2. **Methoden laden** fragt den Server, was er anbietet (gRPC Server
@@ -728,7 +734,7 @@ nicht nennt, und drücken Sie **Umwandeln**. Das Ergebnis ist bearbeitbarer
 `.proto`-Text, der in der Anfrage gespeichert wird; **Als Datei speichern**
 schreibt ihn in eine Datei.
 
-![Eine aus einem JSON-Beispiel erzeugte Definition und die Warnung, wenn sie nicht passt](../en/images/grpc-definition.png)
+![Eine aus einem JSON-Beispiel erzeugte Definition und die Warnung, wenn sie nicht passt](images/grpc-definition.png)
 
 | Was Sie haben | Was daraus wird |
 |---|---|
@@ -778,6 +784,8 @@ Definition auf dieselbe Weise, und `apix send` gibt dieselben Warnungen aus; der
 Bericht eines Laufs enthält sie nicht.
 
 ## Skripte und Tests
+
+![Ein Testskript und seine Ergebnisse](images/scripts.png)
 
 Der Reiter **Skripte** enthält zwei JavaScript-Skripte für die Anfrage:
 
@@ -852,7 +860,7 @@ ihn mit **Ansicht › Runner…** oder Strg+Shift+R für die Sammlung, in der Si
 sind, oder mit **Ausführen…** auf einer Sammlung oder einem Ordner in der
 Seitenleiste nur für diesen Teil.
 
-![Der Runner nach einem datengetriebenen Lauf](../en/images/runner.png)
+![Der Runner nach einem datengetriebenen Lauf](images/runner.png)
 
 - **Anfragen**: jede Anfrage in der Reihenfolge der Seitenleiste, mit Häkchen.
   Entfernen Sie das Häkchen bei denen, die wegfallen sollen, und verschieben Sie
@@ -906,7 +914,7 @@ Ablauf ist eine `.flow`-Datei in der Sammlung, neben den Anfragen, und kommt so
 mit ihnen in git. Öffnen Sie **Ansicht › Abläufe…**; geben Sie einen Namen ein
 und drücken Sie **Anlegen** für einen neuen.
 
-![Das Fenster Abläufe](../en/images/flows.png)
+![Das Fenster Abläufe](images/flows.png)
 
 Es gibt vier Arten von Knoten:
 
@@ -988,7 +996,7 @@ und Anfragen pro Sekunde, Fehlschläge, das 50., 95. und 99. Perzentil und die
 langsamste Zeit sowie ein sekundengenaues Diagramm der Anfragen (fehlgeschlagene
 in Rot) mit der mittleren Latenz als gelbem Strich.
 
-![Ein Lasttest](../en/images/load-test.png)
+![Ein Lasttest](images/load-test.png)
 
 - **Gleichzeitig**: gleichzeitig laufende Anfragen (1 bis 10 000).
 - **Anfragen**: nach so vielen aufhören; leer für keine Grenze.
@@ -1023,7 +1031,7 @@ Ein **Monitor** führt die Sammlung oder einen Ordner oder eine Anfrage daraus
 nach Zeitplan aus und meldet, wenn er fehlschlägt oder wieder besteht. Öffnen
 Sie **Ansicht › Monitore…**.
 
-![Monitore](../en/images/monitors.png)
+![Monitore](images/monitors.png)
 
 - **Monitor hinzufügen** fragt nach einem Namen, wie oft (`30s`, `5m`, `1h`,
   `1d` oder zusammen wie in `1h30m`; mindestens `10s`), einem Ordner oder einer
@@ -1069,7 +1077,7 @@ Sammlung gespeichert sind (siehe Beispiele), sodass ein Frontend gebaut oder ein
 Test ausgeführt werden kann, bevor die echte API existiert. Öffnen Sie
 **Ansicht › Mock-Server…**, wählen Sie einen Port und **Starten**.
 
-![Der Mock-Server](../en/images/mock.png)
+![Der Mock-Server](images/mock.png)
 
 - Eine Anfrage wird nach Methode und Pfad zugeordnet: die URL der Anfrage nach
   ihrem Host oder nach einer führenden `{{variable}}`, sodass
@@ -1127,7 +1135,7 @@ oder eines Skripts ein (`HTTP_PROXY` und `HTTPS_PROXY`). Jede durchgehende
 Anfrage wird als Anfragedatei im Ordner `captured/` der Sammlung gespeichert,
 mit ihrer Antwort als Beispiel `Captured`, und im Fenster aufgelistet.
 
-![Der Mitschnitt-Proxy](../en/images/capture.png)
+![Der Mitschnitt-Proxy](images/capture.png)
 
 - **Nur** beschränkt das Aufzeichnen auf bestimmte Hosts (`example.com` umfasst
   auch `api.example.com`); der Rest geht unaufgezeichnet durch.
@@ -1157,6 +1165,8 @@ wenn Sie dieselbe Sammlung oder dasselbe Projekt das nächste Mal öffnen (Tabs
 verschlüsselter Sammlungen werden nicht gemerkt, da auch ihre Dateinamen geheim
 sind).
 
+![Mehrere offene Tabs, einer mit ungespeicherten Änderungen](images/tabs.png)
+
 ## Anfragen ordnen
 
 Die **Suche** oben in der Seitenleiste grenzt sie auf die Anfragen ein, deren
@@ -1184,6 +1194,8 @@ Umgebungen und Authentifizierung zwischen ihnen. Erstellen Sie eines mit
 **Umgebung › Seitenleiste gruppieren nach** die Seitenleiste als
 Projekt › Umgebung › Sammlungen zeigen.
 
+![Ein Projekt mit drei Sammlungen](images/projects.png)
+
 - Ziehen Sie den Kopf einer Sammlung über oder unter eine andere, um ihre
   Reihenfolge zu ändern.
 - Rechtsklick auf eine Sammlung › **Farbe** gibt ihr eine Farbe; ein Punkt
@@ -1205,7 +1217,7 @@ Markierungen folgen jedem Speichern und jeder Änderung auf der Festplatte und
 werden neu gelesen, wenn das Fenster wieder in den Vordergrund kommt; ein in
 einem Terminal gemachter Commit löscht sie also.
 
-![Branch und geänderte Anfragen](../en/images/git-status.png)
+![Branch und geänderte Anfragen](images/git-status.png)
 
 Klicken Sie auf den Branch in der Statusleiste (oder **Ansicht › Git…**), um das
 Fenster Git zu öffnen. Links stehen die seit dem letzten Commit geänderten
@@ -1221,7 +1233,7 @@ Namen an und wechselt zu ihm, und **Pull** (nur Fast-Forward) und **Push**
 Einstellungen, Hooks und Zugangsdaten aus. Die Seitenleiste folgt einem
 Branch-Wechsel sofort.
 
-![Das Fenster Git](../en/images/git-window.png)
+![Das Fenster Git](images/git-window.png)
 
 Auf der Kommandozeile sendet `apix run --changed` nur die Anfragen, die eine
 Änderung berührt, und `apix diff` zeigt Feld für Feld, was sich darin geändert
@@ -1235,6 +1247,8 @@ Eine verschlüsselte Sammlung hält jede Anfrage, jede Umgebung und sogar jeden
 Dateinamen auf der Festplatte versiegelt (XChaCha20-Poly1305 mit einem
 Passwortschlüssel aus Argon2id). Git sieht nur, welcher verschlüsselte Blob sich
 geändert hat.
+
+![Eine verschlüsselte Sammlung entsperren](images/encrypted.png)
 
 - **Datei › Diese Sammlung verschlüsseln…** oder Rechtsklick auf eine Sammlung ›
   **Verschlüsseln…** verschlüsselt eine bestehende Sammlung an Ort und Stelle.
@@ -1317,6 +1331,8 @@ Auf der Kommandozeile: `apix import <file, folder or zip>` und
 
 ## Import aus Insomnia, OpenAPI und HAR
 
+![Import von einer URL](images/import.png)
+
 **Datei › Importieren…** (oder das Ziehen der Datei ins Fenster) liest auch
 diese; das Format wird am Inhalt erkannt, und ein Ordner oder Zip darf sie
 mischen:
@@ -1340,6 +1356,8 @@ Eintrag, und die Anfrage kommt in dem Tab zurück, aus dem sie gesendet wurde,
 als ungespeicherte Änderungen, zusammen mit der Antwort, die sie bekam. Drücken
 Sie Strg+Enter, um sie erneut zu senden, Strg+S, um diese Fassung zu behalten.
 Ist die Anfragedatei nicht mehr da, öffnet sich der Eintrag im Editor ohne Tab.
+
+![Der Verlauf der gesendeten Anfragen](images/history.png)
 
 Der Verlauf bleibt auf diesem Computer (der Ordner `history` neben den
 Einstellungen), nie in einer Sammlung. Anfragen werden so gespeichert, wie sie
@@ -1368,7 +1386,7 @@ Text Zeile für Zeile. Header, die sich bei jeder Antwort ändern (Date,
 Anfrage-IDs, Caching, Übertragungsart des Bodys), werden ausgelassen und am Ende
 aufgelistet. **Als Text kopieren** kopiert das Ergebnis.
 
-![Vergleich mit einer früheren Antwort](../en/images/compare.png)
+![Vergleich mit einer früheren Antwort](images/compare.png)
 
 In einem Terminal sendet `apix compare <request> --env staging --against production`
 die Anfrage in beiden Umgebungen und gibt die Unterschiede aus; es endet mit 1,
@@ -1402,7 +1420,7 @@ Dann bekommt die Antwort eine weitere Schaltfläche:
   bedeutet, die wahrscheinlichen Ursachen und was zu prüfen ist, in der Sprache
   der App.
 
-![Erklärung einer fehlgeschlagenen Antwort](../en/images/ai-explain.png)
+![Erklärung einer fehlgeschlagenen Antwort](images/ai-explain.png)
 
 Was an den Anbieter gesendet wird: Methode, URL, Header und Body der Anfrage
 sowie Status, Header und Body der Antwort (abgeschnitten bei 12 KB).
@@ -1427,7 +1445,7 @@ den Plugin-Ordner (`<config>/Apix/plugins`), **Entfernen** löscht sie, **Ordner
 öffnen** zeigt den Ordner, und **Neu laden** liest ihn erneut, nachdem Sie
 selbst Dateien hineinkopiert haben.
 
-![Das Fenster Plugins](../en/images/plugins.png)
+![Das Fenster Plugins](images/plugins.png)
 
 - **Authentifizierungstypen** erscheinen in der Liste des Reiters Auth als
   „… (Plugin)“, mit den Feldern, nach denen das Plugin fragt (`{{variables}}`
@@ -1436,13 +1454,13 @@ selbst Dateien hineinkopiert haben.
   hinzu. Eine Anfrage, deren Plugin nicht installiert ist, sagt das und wird
   nicht gesendet.
 
-  ![Eine von einem Plugin signierte Anfrage](../en/images/plugin-auth.png)
+  ![Eine von einem Plugin signierte Anfrage](images/plugin-auth.png)
 
 - **Ansichten** erscheinen neben Text, Tabelle und Diagramm über einer
   JSON-Antwort; das Plugin liest Status, Header und Body und antwortet mit einer
   Tabelle oder einem Text.
 
-  ![Eine Ansicht aus einem Plugin](../en/images/plugin-view.png)
+  ![Eine Ansicht aus einem Plugin](images/plugin-view.png)
 
 - **Importer** haben im Fenster Plugins eine Schaltfläche **Datei importieren…**:
   Die Datei wird zu einer neuen Sammlung daneben, die sich dann öffnet.
@@ -1523,7 +1541,7 @@ Strg+K (oder Strg+P) öffnet die Befehlspalette: Tippen Sie ein paar Buchstaben
 eines Anfragenamens oder eines Befehls und drücken Sie Enter. Befehle lassen
 sich in jeder Sprache auch über ihre englischen Namen finden.
 
-![Die Befehlspalette](../en/images/palette.png)
+![Die Befehlspalette](images/palette.png)
 
 ## Einrichtung
 
@@ -1542,7 +1560,7 @@ jedes davon.
   **Hilfe › Mit Claude verbinden (MCP)…**) für die geöffnete Sammlung, siehe
   unten.
 
-![Einrichtung](../en/images/setup.png)
+![Einrichtung](images/setup.png)
 
 ### Claude verbinden
 
@@ -1563,7 +1581,7 @@ ausführen kann, ohne Variablenwerte zu sehen (siehe
 - Eintrag und Befehl werden beide mit **Kopieren** angezeigt, um sie von Hand
   hinzuzufügen.
 
-![Mit Claude verbinden](../en/images/claude-connect.png)
+![Mit Claude verbinden](images/claude-connect.png)
 
 Dasselbe in einem Terminal: `apix mcp my-api --add-to claude-desktop`,
 `apix mcp my-api --add-to claude-code`,
@@ -1591,7 +1609,7 @@ Dasselbe in einem Terminal: `apix mcp my-api --add-to claude-desktop`,
   die ihre Seite öffnet. **Hilfe › Nach Updates suchen…** fragt jederzeit nach,
   und `apix update` tut dasselbe in einem Terminal.
 
-![Eine neuere Version wird angekündigt](../en/images/update.png)
+![Eine neuere Version wird angekündigt](images/update.png)
 
 - **Verlauf:** an oder aus (siehe [Verlauf](#verlauf)).
 
@@ -1624,7 +1642,7 @@ Neustart:
   Schlüsselwörter so, wie das Theme sie vorgibt, Typen und Funktionen in der
   Akzentfarbe, Kommentare und Satzzeichen gedämpft.
 
-![Textgröße, Schriftgröße für Code und Dichte](../en/images/look.png)
+![Textgröße, Schriftgröße für Code und Dichte](images/look.png)
 
 - **Eigene Themes:** **Ordner öffnen** öffnet `<config>/Apix/themes` und
   schreibt beim ersten Mal `my-theme.toml` als Ausgangspunkt dorthin. Jede
@@ -1632,7 +1650,7 @@ Neustart:
   Namen eines eingebauten Themes (`nord.toml`) ersetzt es. Eine Datei, die nicht
   gelesen werden kann, wird rot mit dem Grund genannt.
 
-![Einstellungen](../en/images/settings.png)
+![Einstellungen](images/settings.png)
 
 Eine Theme-Datei legt einen Namen fest, ob es hell ist, und beliebige dieser
 Farben (`#RRGGBB` oder `#RRGGBBAA` mit Deckkraft); die, die sie weglässt, kommen

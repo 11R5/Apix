@@ -1,4 +1,4 @@
-<!-- translated from en/technical.md sha256:2fedbe12e4a6ee20 -->
+<!-- translated from en/technical.md sha256:40c5e638c106f35d -->
 
 # Notes techniques
 
@@ -199,6 +199,8 @@ cargo run -p docs-check                      # liste les traductions manquantes 
 cargo run -p docs-check -- stamps            # affiche le tampon actuel de chaque document anglais
 cargo run -p docs-check -- site site/docs    # la documentation en pages web (GitHub Pages)
 ```
+
+Les images du guide d’utilisation sont prises par `scripts/docs-tour.ps1`. Il démarre les serveurs d’exemple et lance l’application de bureau une fois par langue avec `APIX_TOUR=Docs/tour/scenes.toml` : l’application prépare elle-même chaque scène (ouvre des requêtes de la collection de démonstration dans `Docs/tour/demo`, les envoie, ouvre une fenêtre) et le script enregistre la fenêtre sous `Docs/<langue>/images/<scène>.png`. `APIX_CONFIG_DIR` garde les réglages, l’historique et les cookies de l’application dans un dossier à part pendant la visite, sans toucher aux vôtres.
 
 ## Le backend gpui embarqué
 

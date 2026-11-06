@@ -1,4 +1,4 @@
-<!-- translated from en/technical.md sha256:2fedbe12e4a6ee20 -->
+<!-- translated from en/technical.md sha256:40c5e638c106f35d -->
 
 # 技术说明
 
@@ -168,6 +168,8 @@ cargo run -p docs-check                      # 列出缺失或过期的翻译以
 cargo run -p docs-check -- stamps            # 打印每份英文文档当前的标记
 cargo run -p docs-check -- site site/docs    # 将文档生成为网页（GitHub Pages）
 ```
+
+用户指南中的图片由 `scripts/docs-tour.ps1` 截取。它会启动示例服务器，并以 `APIX_TOUR=Docs/tour/scenes.toml` 为每种语言运行一次桌面应用：应用自行准备每个场景（打开 `Docs/tour/demo` 中演示集合的请求、发送它们、打开窗口），脚本再把窗口保存为 `Docs/<语言>/images/<场景>.png`。导览期间，`APIX_CONFIG_DIR` 会把应用的设置、历史记录和 Cookie 放在单独的文件夹中，因此不会影响你自己的。
 
 ## 内置的 gpui 后端
 

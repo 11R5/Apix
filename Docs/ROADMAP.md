@@ -151,7 +151,7 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [ ] Keep the release binary under 100 MB (54.4 MB in 0.1.1); speed and smoothness come first
 - ~~Signed Windows builds and notarized macOS builds~~: dropped (5 Nov), they cost money every year; the download page and the user guide explain how to open the unsigned builds
 - [x] Documentation in all nine languages (user guide, architecture, technical notes, workflows; interface words taken from each language's UI texts) and a [docs site](https://11r5.github.io/Apix/docs/) with a language picker, made by `docs-check -- site`; `docs-check` also checks every link and heading anchor
-- [ ] Screenshots taken from each language's UI (the translations show the English pictures for now; Turkish has its own)
+- [x] Screenshots taken from each language's UI: 48 pictures × 9 languages, taken by a screenshot tour (`APIX_TOUR`, `Docs/tour/scenes.toml`, `scripts/docs-tour.ps1`) from a demo collection and the example servers, so they can be taken again after any interface change; every section of the user guide that shows a window has its picture
 - [ ] Side-by-side performance numbers against Postman, Insomnia, Bruno and Hoppscotch, measured on one machine with one script
 - [ ] Launch post (r/rust, Hacker News)
 

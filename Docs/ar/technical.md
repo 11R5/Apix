@@ -1,4 +1,4 @@
-<!-- translated from en/technical.md sha256:2fedbe12e4a6ee20 -->
+<!-- translated from en/technical.md sha256:40c5e638c106f35d -->
 
 # ملاحظات تقنية
 
@@ -194,6 +194,8 @@ cargo run -p docs-check                      # يسرد الترجمات الن�
 cargo run -p docs-check -- stamps            # يطبع الختم الحالي لكل مستند إنجليزي
 cargo run -p docs-check -- site site/docs    # يكتب التوثيق صفحات ويب (GitHub Pages)
 ```
+
+يلتقط `scripts/docs-tour.ps1` صور دليل المستخدم. يشغّل الخوادم التجريبية ثم يشغّل تطبيق سطح المكتب مرة لكل لغة مع `APIX_TOUR=Docs/tour/scenes.toml`: يُعدّ التطبيق كل مشهد بنفسه (يفتح طلبات المجموعة التجريبية في `Docs/tour/demo` ويرسلها ويفتح نافذة)، ثم يحفظ السكربت النافذة باسم `Docs/<اللغة>/images/<المشهد>.png`. يُبقي `APIX_CONFIG_DIR` إعدادات التطبيق وسجله وملفات تعريف الارتباط في مجلد منفصل أثناء الجولة، فلا تُمسّ إعداداتك.
 
 ## واجهة gpui الخلفية المضمّنة في المستودع
 
