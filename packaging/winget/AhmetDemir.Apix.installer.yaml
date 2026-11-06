@@ -1,5 +1,5 @@
-# winget installer manifest; scripts/channel-manifests.sh fills in @VERSION@
-# and @SHA256@. The three AhmetDemir.Apix.*.yaml files go to
+# winget installer manifest; scripts/channel-manifests.sh fills in the version
+# and the installer checksum. The three AhmetDemir.Apix.*.yaml files go to
 # microsoft/winget-pkgs as manifests/a/AhmetDemir/Apix/<version>/.
 # yaml-language-server: $schema=https://aka.ms/winget-manifest.installer.1.6.0.schema.json
 PackageIdentifier: AhmetDemir.Apix

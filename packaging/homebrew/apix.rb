@@ -1,5 +1,5 @@
 # The Homebrew cask for Apix. scripts/channel-manifests.sh fills in
-# @VERSION@ and @SHA256@ for each release; the filled-in file goes into a tap
+# the version and checksum for each release; the filled-in file goes into a tap
 # repository (homebrew-apix) as Casks/apix.rb:
 #   brew install --cask 11r5/apix/apix
 cask "apix" do
