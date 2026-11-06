@@ -1,4 +1,4 @@
-<!-- translated from en/workflows.md sha256:fe1e3fbf941b3b64 -->
+<!-- translated from en/workflows.md sha256:96cb14d5eeb691a0 -->
 
 # İş akışları
 
@@ -453,7 +453,7 @@ diff göstersin.
 1. **İstek › Yeni istek**, sonra adresi `grpc://` (TLS arkasındaysa
    `grpcs://`) ile yazın, örneğin `grpc://localhost:50051`.
 2. **Mesaj** sekmesinde **Metotları yükle**'ye basın. Sunucu reflection'ı
-   kapalıysa önce `.proto` dosyalarını ekleyin (**.proto ekle**); yolların her
+   kapalıysa önce `.proto` dosyalarını ekleyin (**Dosya ekle**); yolların her
    makinede çalışması için onları koleksiyonun içinde tutun.
 3. Metodu seçin, **Örnek mesaj**'a basın, değerleri doldurun.
 4. Token'ı **Yetkilendirme**'de (Bearer) verin ya da **Başlıklar**'a metadata

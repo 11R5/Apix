@@ -20,7 +20,7 @@ veya CI'da çalıştırır.
 - [Parametreler ve başlıklar](#parametreler-ve-başlıklar)
 - [Gövde](#gövde)
 - [Yetkilendirme](#yetkilendirme)
-- [İstek ayarları](#istek-ayarları)
+- [İstek ayarları](#i̇stek-ayarları)
 - [Çerezler](#çerezler)
 - [Değişkenler ve ortamlar](#değişkenler-ve-ortamlar)
 - [Yanıt](#yanıt)

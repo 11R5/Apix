@@ -1,4 +1,4 @@
-<!-- translated from en/architecture.md sha256:7c5f04d6b9e2b695 -->
+<!-- translated from en/architecture.md sha256:75b4d247b3b61d0d -->
 
 # Apix mimarisi
 

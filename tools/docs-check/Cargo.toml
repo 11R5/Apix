@@ -9,4 +9,5 @@ publish = false
 [dependencies]
 serde.workspace = true
 sha2 = "0.10"
+pulldown-cmark = { version = "0.13", default-features = false, features = ["html"] }
 toml.workspace = true

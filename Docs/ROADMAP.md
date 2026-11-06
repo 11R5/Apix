@@ -150,7 +150,8 @@ The visual direction is [design/mockup-v1.webp](design/mockup-v1.webp).
 - [ ] winget, Flatpak, the AUR: the winget manifests are made for every release (`scripts/channel-manifests.sh`) and wait for a winget-pkgs pull request; the AUR needs an account
 - [ ] Keep the release binary under 100 MB (54.4 MB in 0.1.1); speed and smoothness come first
 - ~~Signed Windows builds and notarized macOS builds~~: dropped (5 Nov), they cost money every year; the download page and the user guide explain how to open the unsigned builds
-- [ ] Documentation in all nine languages, an illustrated user guide with screenshots taken from each language's UI, a docs site with a language picker
+- [x] Documentation in all nine languages (user guide, architecture, technical notes, workflows; interface words taken from each language's UI texts) and a [docs site](https://11r5.github.io/Apix/docs/) with a language picker, made by `docs-check -- site`; `docs-check` also checks every link and heading anchor
+- [ ] Screenshots taken from each language's UI (the translations show the English pictures for now; Turkish has its own)
 - [ ] Side-by-side performance numbers against Postman, Insomnia, Bruno and Hoppscotch, measured on one machine with one script
 - [ ] Launch post (r/rust, Hacker News)
 

@@ -1,4 +1,4 @@
-<!-- translated from en/technical.md sha256:757cb30b608ba486 -->
+<!-- translated from en/technical.md sha256:2fedbe12e4a6ee20 -->
 
 # Teknik notlar
 
@@ -191,8 +191,9 @@ ekleyin.
 ```
 
 ```sh
-cargo run -p docs-check            # eksik veya güncel olmayan çevirileri listeler
-cargo run -p docs-check -- stamps  # her İngilizce belgenin güncel damgasını yazdırır
+cargo run -p docs-check                      # eksik veya güncel olmayan çevirileri ve kırık bağlantıları listeler
+cargo run -p docs-check -- stamps            # her İngilizce belgenin güncel damgasını yazdırır
+cargo run -p docs-check -- site site/docs    # belgeleri web sayfası olarak yazar (GitHub Pages)
 ```
 
 ## Vendor'a alınmış gpui backend'i

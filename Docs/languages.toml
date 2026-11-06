@@ -31,40 +31,40 @@ docs = true
 code = "ar"
 name = "العربية"
 direction = "rtl"
-docs = false
+docs = true
 
 [[language]]
 code = "de"
 name = "Deutsch"
 direction = "ltr"
-docs = false
+docs = true
 
 [[language]]
 code = "fr"
 name = "Français"
 direction = "ltr"
-docs = false
+docs = true
 
 [[language]]
 code = "ru"
 name = "Русский"
 direction = "ltr"
-docs = false
+docs = true
 
 [[language]]
 code = "ja"
 name = "日本語"
 direction = "ltr"
-docs = false
+docs = true
 
 [[language]]
 code = "zh-CN"
 name = "简体中文"
 direction = "ltr"
-docs = false
+docs = true
 
 [[language]]
 code = "es"
 name = "Español"
 direction = "ltr"
-docs = false
+docs = true

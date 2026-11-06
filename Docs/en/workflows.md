@@ -440,7 +440,7 @@ the diff show what changed.
 1. **Request › New request**, then type the address with `grpc://` (or
    `grpcs://` behind TLS), for example `grpc://localhost:50051`.
 2. In the **Message** tab press **Load methods**. With server reflection
-   turned off, add the `.proto` files first (**Add .proto**); keep them in the
+   turned off, add the `.proto` files first (**Add file**); keep them in the
    collection so the paths work on every machine.
 3. Pick the method, press **Example message**, fill in the values.
 4. Set the token in **Auth** (Bearer) or add metadata in **Headers**, then

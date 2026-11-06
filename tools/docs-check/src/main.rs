@@ -3,6 +3,7 @@
 //! ```sh
 //! cargo run -p docs-check            # list missing and stale translations; exit 1 if any
 //! cargo run -p docs-check -- stamps  # print the current stamp for every document
+//! cargo run -p docs-check -- site site/docs  # the documentation as web pages
 //! ```
 //!
 //! A translation starts with `<!-- translated from en/<doc> sha256:<16 hex> -->`,
@@ -12,6 +13,9 @@
 use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
+
+mod markdown;
+mod site;
 
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
@@ -38,7 +42,15 @@ enum Problem {
     Invalid(String),
     Missing(PathBuf),
     NoStamp(PathBuf),
-    Stale { file: PathBuf, stamp: String },
+    Stale {
+        file: PathBuf,
+        stamp: String,
+    },
+    /// A link or image whose file, or heading, is not there.
+    Broken {
+        file: PathBuf,
+        target: String,
+    },
 }
 
 fn docs_dir() -> PathBuf {
@@ -98,6 +110,54 @@ fn check(docs: &Path, config: &Languages) -> Vec<Problem> {
             }
         }
     }
+    problems.extend(check_links(docs, config));
+    problems
+}
+
+/// Links between the documents (and to images and repository files) in
+/// every language: the file must exist and a `#heading` must be one of its
+/// headings.
+fn check_links(docs: &Path, config: &Languages) -> Vec<Problem> {
+    let mut problems = Vec::new();
+    for language in config.languages.iter().filter(|l| l.docs) {
+        let folder = docs.join(&language.code);
+        for doc in &config.documents {
+            let file = folder.join(doc);
+            let Ok(text) = std::fs::read_to_string(&file) else {
+                continue;
+            };
+            let own = markdown::headings(&text);
+            for target in markdown::targets(&text) {
+                if markdown::is_external(&target) {
+                    continue;
+                }
+                let (path, anchor) = match target.split_once('#') {
+                    Some((path, anchor)) => (path, Some(anchor)),
+                    None => (target.as_str(), None),
+                };
+                let ok = if path.is_empty() {
+                    anchor.is_none_or(|a| own.iter().any(|h| h.id == a))
+                } else {
+                    let linked = folder.join(path);
+                    match (linked.is_file() || linked.is_dir(), anchor) {
+                        (false, _) => false,
+                        (true, Some(anchor)) if path.ends_with(".md") => {
+                            std::fs::read_to_string(&linked).is_ok_and(|other| {
+                                markdown::headings(&other).iter().any(|h| h.id == anchor)
+                            })
+                        }
+                        (true, _) => true,
+                    }
+                };
+                if !ok {
+                    problems.push(Problem::Broken {
+                        file: file.clone(),
+                        target,
+                    });
+                }
+            }
+        }
+    }
     problems
 }
 
@@ -109,6 +169,23 @@ fn main() -> ExitCode {
             println!("{}", stamp(&docs, &config.source, doc));
         }
         return ExitCode::SUCCESS;
+    }
+    if std::env::args().nth(1).as_deref() == Some("site") {
+        let out = PathBuf::from(
+            std::env::args()
+                .nth(2)
+                .unwrap_or_else(|| "site/docs".into()),
+        );
+        return match site::build(&docs, &config, &out) {
+            Ok(pages) => {
+                println!("{pages} pages written to {}", out.display());
+                ExitCode::SUCCESS
+            }
+            Err(error) => {
+                eprintln!("could not write the site: {error}");
+                ExitCode::FAILURE
+            }
+        };
     }
     let problems = check(&docs, &config);
     let show = |file: &PathBuf| {
@@ -129,6 +206,9 @@ fn main() -> ExitCode {
                     "older than English: {}\n  after updating it, start it with {stamp}",
                     file.display()
                 )
+            }
+            Problem::Broken { file, target } => {
+                println!("broken link in {}: {target}", show(file))
             }
         }
     }

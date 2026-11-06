@@ -40,11 +40,11 @@ crates/
 ├── apix-runner   runs collections: order, iterations (also side by side), data files, delay, bail,
 │                 reports (also Markdown for pull requests), monitors: schedule, log, webhooks
 ├── apix-grpc     gRPC calls: tonic, messages as JSON (prost-reflect), .proto files (protox), definitions from code or JSON
+│                 or server reflection
 ├── apix-proto    other protocols: MQTT (rumqttc)
 ├── apix-mock     a local mock server answering from saved examples (hyper)
 ├── apix-capture  a recording proxy: plain HTTP, CONNECT tunnels, HTTPS opened with a local CA (rcgen, rustls)
 ├── apix-route    the route to a server (the system's traceroute) and where its hops are (an offline .mmdb database)
-│                 or server reflection
 ├── apix-plugins  WebAssembly plugins (wasmi): auth types, importers, response views; apix-plugin-sdk writes them in Rust
 ├── apix-cli      `apix` binary: send / run / diff / schema / import / shell from terminal & CI
 └── apix-desktop  GPUI desktop app (Windows, macOS and Linux from one crate)

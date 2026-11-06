@@ -265,6 +265,10 @@ The [user guide](Docs/en/user-guide.md) and the
 [architecture](Docs/en/architecture.md#on-disk-format) describe the format in
 full: every body and auth type, folders, environments, secrets and projects.
 
+The documentation is in English, Türkçe, Deutsch, Español, Français,
+Русский, 日本語, 简体中文 and العربية, in [`Docs/`](Docs/) and on the
+[docs site](https://11r5.github.io/Apix/docs/).
+
 ## License
 
 [Apache-2.0](LICENSE)

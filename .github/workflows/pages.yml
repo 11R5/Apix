@@ -1,7 +1,9 @@
-# Publishes the download page (site/) on GitHub Pages:
-# https://11r5.github.io/Apix/ . The page reads the latest release from
-# GitHub's API, so a release needs no new deployment.
-name: Download page
+# Publishes the download page (site/) and the documentation in every
+# language (made from Docs/ into site/docs/) on GitHub Pages:
+# https://11r5.github.io/Apix/ and https://11r5.github.io/Apix/docs/ . The
+# download page reads the latest release from GitHub's API, so a release
+# needs no new deployment.
+name: Download page and documentation
 
 on:
   push:
@@ -9,7 +11,8 @@ on:
     paths:
       - "site/**"
       - "packaging/icons/**"
-      - "Docs/*/images/main.png"
+      - "Docs/**"
+      - "tools/docs-check/**"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -36,6 +39,9 @@ jobs:
           cp packaging/icons/apix-64.png site/favicon.png
           cp Docs/en/images/main.png site/screenshot-en.png
           cp Docs/tr/images/main.png site/screenshot-tr.png
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Documentation pages
+        run: cargo run --locked -p docs-check -- site site/docs
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

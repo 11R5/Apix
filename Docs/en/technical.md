@@ -189,8 +189,9 @@ with a stamp naming the English text they come from:
 ```
 
 ```sh
-cargo run -p docs-check            # lists missing or out-of-date translations
-cargo run -p docs-check -- stamps  # prints the current stamp of each English document
+cargo run -p docs-check                      # lists missing or out-of-date translations and broken links
+cargo run -p docs-check -- stamps            # prints the current stamp of each English document
+cargo run -p docs-check -- site site/docs    # the documentation as web pages (GitHub Pages)
 ```
 
 ## The vendored gpui backend

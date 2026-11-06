@@ -30,3 +30,5 @@ rustc-ice-*.txt
 /dist
 # Copied in by the Pages workflow (from packaging/icons and Docs/*/images).
 /site/*.png
+# The documentation pages, made by `cargo run -p docs-check -- site site/docs`.
+/site/docs

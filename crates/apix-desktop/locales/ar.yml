@@ -936,7 +936,7 @@ setup.geo_missing: "غير مثبّتة: قائمة المسار تعمل، وا
 setup.geo_title: قاعدة بيانات مواقع IP
 setup.geo_update: تحديث
 setup.intro: يعمل Apix كما هو. هذه الإضافات اختيارية؛ كلٌّ منها بنقرة واحدة ويمكن تغييرها أو إزالتها لاحقًا.
-setup.later: المساعدة › الإعداد… يفتح هذا مجددًا.
+setup.later: تعليمات › الإعداد… يفتح هذا مجددًا.
 setup.title: إعداد Apix
 sidebar.auth: المصادقة…
 sidebar.change_password: تغيير كلمة المرور…
