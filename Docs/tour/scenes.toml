@@ -102,7 +102,7 @@ name = "network-tls"
 tabs = ["users/create-user.apix", "users/list-users.apix"]
 send = true
 response_tab = 3
-steps = ["scroll_network 440"]
+steps = ["network_group timing", "network_group connection", "network_group encryption", "network_group certificates"]
 
 [[scene]]
 name = "route"

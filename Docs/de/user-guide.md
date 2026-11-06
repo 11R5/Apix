@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:930abab97809ed62 -->
+<!-- translated from en/user-guide.md sha256:e01a69a7a94b9d31 -->
 
 # Apix-Benutzerhandbuch
 
@@ -96,17 +96,21 @@ ihn direkt.
 
 ## Das Fenster
 
-- **Seitenleiste (links):** die Ordner und Anfragen der Sammlung, gelesen aus
-  den Dateien auf der Festplatte und aktualisiert, wenn sie sich ändern. Die
-  Auswahl unter dem Namen der Sammlung bestimmt die aktive Umgebung.
-- **Tabs (oben):** Jede geöffnete Anfrage bekommt einen Tab.
-- **Anfragebereich:** Methode, URL und die Reiter Parameter, Header, Auth, Body
-  und Einstellungen.
+- **Seitenleiste (links, volle Höhe):** oben die Suche, darunter die Ordner und
+  Anfragen der Sammlung, gelesen aus den Dateien auf der Festplatte und
+  aktualisiert, wenn sie sich ändern. Unten sitzen die Auswahl der aktiven
+  Umgebung und die geöffnete Sammlung oder das Projekt. Ziehen Sie ihren Rand,
+  um sie breiter oder schmaler zu machen.
+- **Tabs (oben):** Jede geöffnete Anfrage bekommt einen Tab; unter macOS sitzen
+  die Tabs in der Titelleiste.
+- **Anfragebereich:** Methode und URL in einem Adressfeld, dann die Reiter
+  Parameter, Header, Auth, Body, Skripte, Einstellungen und Beispiele.
 - **Antwortbereich (rechts):** Status, Zeit, Größe und der Inhalt der Antwort.
-- **Statusleiste (unten):** die Sammlung, die Datei der geöffneten Anfrage und
-  die nützlichsten Tastenkürzel.
+- **Statusleiste (unten):** die Zahl der Anfragen, die Datei der geöffneten
+  Anfrage, der Git-Branch und die nützlichsten Tastenkürzel.
 - **Menüleiste:** Datei, Anfrage, Umgebung, Ansicht und Hilfe enthalten jeden
-  Befehl.
+  Befehl. Unter macOS stehen sie in der Menüleiste des Systems oben am
+  Bildschirm.
 
 ## Eine Anfrage senden
 
@@ -174,6 +178,11 @@ Der Reiter Body bietet:
 | GraphQL | Ein Query-Editor und ein JSON-Editor für Variablen; gesendet als JSON `{"query", "variables"}`. |
 
 ![Multipart-Body](images/body.png)
+
+JSON-Editoren (der JSON-Body, GraphQL-Variablen, Nachrichten) markieren schon
+beim Tippen den ersten Fehler, mit einem Hinweis unter dem Editor, was falsch
+ist. `{{variables}}` sind überall erlaubt, wo ein Wert steht, und ein fehlendes
+Komma wird am Wert davor markiert.
 
 Dateipfade innerhalb der Sammlung werden relativ zur Anfragedatei gespeichert,
 damit die Sammlung auch auf einem anderen Rechner funktioniert.
@@ -418,7 +427,10 @@ der Reiterleiste sie alle auf.
 ## Der Reiter Netzwerk
 
 Der Reiter **Netzwerk** erklärt, wohin die Zeit ging und wie die Verbindung
-aussah:
+aussah, in Gruppen, die sich auf- und zuklappen lassen. Zeitmessung und
+Verbindung sind anfangs offen; die anderen zeigen eine einzeilige
+Zusammenfassung (die DNS-Zeit, die Kodierung, die TLS-Version, die
+verbleibenden Tage des Zertifikats), bis Sie sie anklicken:
 
 - ein Zeitbalken, aufgeteilt in DNS, TCP-Verbindung, TLS-Handshake, Warten und
   Herunterladen
@@ -1589,7 +1601,9 @@ Dasselbe in einem Terminal: `apix mcp my-api --add-to claude-desktop`,
 
 ## Einstellungen und Sprache
 
-**Datei › Einstellungen…** (Strg+,):
+**Datei › Einstellungen…** (Strg+,) hat vier Abschnitte: **Allgemein**,
+**Erscheinungsbild**, **Sicherheit** und **KI**. Das Suchfeld darüber
+durchsucht alle Abschnitte auf einmal.
 
 - **Sprache:** English, Türkçe, العربية, Deutsch, Français, Русский, 日本語,
   简体中文 oder Español. Die Änderung gilt sofort. Beim ersten Start folgt Apix
@@ -1613,14 +1627,15 @@ Dasselbe in einem Terminal: `apix mcp my-api --add-to claude-desktop`,
 
 - **Verlauf:** an oder aus (siehe [Verlauf](#verlauf)).
 
-Der Teil **Theme** der Einstellungen ändert das Aussehen von Apix sofort, ohne
+Der Abschnitt **Erscheinungsbild** ändert das Aussehen von Apix sofort, ohne
 Neustart:
 
 - **Erscheinungsbild:** dunkel, hell oder **System folgen**, das umschaltet,
   wenn Windows oder macOS zwischen hellem und dunklem Modus wechselt.
-- **Dunkles Theme:** Obsidian (die Vorgabe), Cyber Glass, Dracula, Nord oder
-  Solarized Dark. **Helles Theme:** Tageslicht oder Solarized Light. Die Wahl
-  eines Themes der jeweils anderen Art schaltet das Erscheinungsbild darauf um.
+- **Dunkles Theme:** Graphite (die Vorgabe, flach und neutral), Obsidian, Cyber
+  Glass, Dracula, Nord oder Solarized Dark. **Helles Theme:** Porcelain (die
+  Vorgabe), Tageslicht oder Solarized Light. Die Wahl eines Themes der jeweils
+  anderen Art schaltet das Erscheinungsbild darauf um.
 - **Akzentfarbe:** die des Themes oder Cyan, Blau, Lila, Pink, Rot, Orange, Gelb
   oder Grün, für Schaltflächen, Auswahl, Fokusrahmen und die Variablen-Chips.
   Helle Themes bekommen einen tieferen Farbton, und der Text auf dem Akzent ist
@@ -1631,7 +1646,7 @@ Neustart:
   durchsichtiger, Bereiche langsamer, damit Text einen Hintergrund behält, und
   Rahmen hellen sich auf wie die Kante von Glas; Menüs und Dialoge bleiben
   deckend. Helle Themes werden sanfter durchsichtig, da dunkler Text einen
-  hellen Hintergrund braucht. Die Vorgabe ist 20 %.
+  hellen Hintergrund braucht. Die Vorgabe ist 0 (deckend).
 - **Textgröße:** 90 %, 100 %, 110 %, 125 % oder 150 % der normalen Größe, für
   jeden Text im Fenster, sofort.
 - **Schriftgröße für Code:** 11 bis 18 px für die Code-Editoren (Bodies,

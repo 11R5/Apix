@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:930abab97809ed62 -->
+<!-- translated from en/user-guide.md sha256:e01a69a7a94b9d31 -->
 
 # Apix kullanım kılavuzu
 
@@ -93,17 +93,21 @@ klasörle başlatmak (`apix-desktop path/to/collection`) o klasörü doğrudan a
 
 ## Pencere
 
-- **Kenar çubuğu (sol):** koleksiyonun klasörleri ve istekleri; diskteki
-  dosyalardan okunur ve dosyalar değiştikçe güncel tutulur. Koleksiyon adının
-  altındaki seçici etkin ortamı belirler.
-- **Sekmeler (üst):** açtığınız her istek bir sekme alır.
-- **İstek bölmesi:** metot, URL ve Parametreler, Başlıklar, Yetkilendirme,
-  Gövde ve Ayarlar sekmeleri.
+- **Kenar çubuğu (sol, tam boy):** üstte arama, ardından koleksiyonun
+  klasörleri ve istekleri; diskteki dosyalardan okunur ve dosyalar değiştikçe
+  güncel tutulur. Alt ucunda etkin ortamın seçicisi ve açık koleksiyon ya da
+  proje durur. Kenarını sürükleyerek genişletip daraltabilirsiniz.
+- **Sekmeler (üst):** açtığınız her istek bir sekme alır; macOS'ta sekmeler
+  başlık çubuğunda durur.
+- **İstek bölmesi:** tek bir adres alanında metot ve URL, ardından
+  Parametreler, Başlıklar, Yetkilendirme, Gövde, Scriptler, Ayarlar ve
+  Örnekler sekmeleri.
 - **Yanıt bölmesi (sağ):** durum, süre, boyut ve yanıt gövdesi.
-- **Durum çubuğu (alt):** koleksiyon, açık isteğin dosyası ve en kullanışlı
-  kısayollar.
+- **Durum çubuğu (alt):** istek sayısı, açık isteğin dosyası, git dalı ve en
+  kullanışlı kısayollar.
 - **Menü çubuğu:** Dosya, İstek, Ortam, Görünüm ve Yardım menüleri tüm
-  komutları içerir.
+  komutları içerir. macOS'ta bunlar ekranın üstündeki sistem menü
+  çubuğundadır.
 
 ## Bir istek gönderme
 
@@ -167,6 +171,11 @@ Gövde sekmesi şunları sunar:
 | GraphQL | Bir sorgu düzenleyicisi ve bir JSON değişken düzenleyicisi; `{"query", "variables"}` JSON'u olarak gönderilir. |
 
 ![Multipart gövde](images/body.png)
+
+JSON düzenleyicileri (JSON gövdesi, GraphQL değişkenleri, mesajlar) siz
+yazarken ilk hatayı işaretler; düzenleyicinin altındaki bir not neyin yanlış
+olduğunu söyler. Bir değerin geldiği yerde `{{variables}}` kullanılabilir;
+eksik bir virgül, kendisinden önceki değerin üzerinde işaretlenir.
 
 Koleksiyon içindeki dosya yolları istek dosyasına göre göreli kaydedilir;
 böylece koleksiyon başka bir makinede de çalışmaya devam eder.
@@ -394,7 +403,10 @@ listeler.
 
 ## Ağ sekmesi
 
-**Ağ** sekmesi, sürenin nereye gittiğini ve bağlantının nasıl olduğunu açıklar:
+**Ağ** sekmesi, sürenin nereye gittiğini ve bağlantının nasıl olduğunu açılıp
+kapanan gruplar hâlinde açıklar. Zamanlama ve Bağlantı açık başlar; diğerleri
+siz tıklayana kadar tek satırlık bir özet gösterir (DNS süresi, kodlama, TLS
+sürümü, sertifikanın kalan gün sayısı):
 
 - DNS, TCP bağlantısı, TLS el sıkışması, bekleme ve indirme olarak bölünmüş
   bir zamanlama çubuğu
@@ -1482,7 +1494,9 @@ Aynısı terminalden: `apix mcp my-api --add-to claude-desktop`,
 
 ## Ayarlar ve dil
 
-**Dosya › Ayarlar…** (Ctrl+,):
+**Dosya › Ayarlar…** (Ctrl+,) dört bölümden oluşur: **Genel**, **Görünüm**,
+**Güvenlik** ve **Yapay zekâ**. Üstlerindeki arama kutusu tüm bölümlere aynı
+anda bakar.
 
 - **Dil:** English, Türkçe, العربية, Deutsch, Français, Русский, 日本語,
   简体中文 veya Español. Değişiklik hemen uygulanır. İlk açılışta Apix sistem
@@ -1506,14 +1520,15 @@ Aynısı terminalden: `apix mcp my-api --add-to claude-desktop`,
 
 - **Geçmiş:** açık veya kapalı (bkz. [Geçmiş](#geçmiş)).
 
-Ayarların **Tema** bölümü Apix'in görünüşünü yeniden başlatmadan, hemen
+**Görünüm** bölümü Apix'in görünüşünü yeniden başlatmadan, hemen
 değiştirir:
 
 - **Görünüm:** koyu, açık ya da **Sistemi izle**; sonuncusu Windows veya macOS
   açık ve koyu mod arasında geçtiğinde değişir.
-- **Koyu tema:** Obsidyen (varsayılan), Siber cam, Dracula, Nord veya
-  Solarized Dark. **Açık tema:** Gün ışığı veya Solarized Light. Diğer türden
-  bir tema seçmek görünümü de ona geçirir.
+- **Koyu tema:** Graphite (varsayılan; düz ve nötr), Obsidyen, Siber cam,
+  Dracula, Nord veya Solarized Dark. **Açık tema:** Porcelain (varsayılan),
+  Gün ışığı veya Solarized Light. Diğer türden bir tema seçmek görünümü de ona
+  geçirir.
 - **Vurgu rengi:** temanın kendi rengi ya da camgöbeği, mavi, mor, pembe,
   kırmızı, turuncu, sarı veya yeşil; düğmeler, seçimler, odak çerçeveleri ve
   değişken çipleri için. Açık temalarda daha koyu tonu kullanılır; vurgu
@@ -1523,7 +1538,7 @@ değiştirir:
   vibrancy) görüneceği. Pencere arka planı onunla açılır, paneller yazının
   arkası boş kalmasın diye daha yavaş açılır, kenarlar camın kenarı gibi
   parlaklaşır; menüler ve pencereler düz kalır. Koyu yazı açık bir zemine
-  ihtiyaç duyduğundan açık temalar daha az açılır. Varsayılan %20'dir.
+  ihtiyaç duyduğundan açık temalar daha az açılır. Varsayılan 0'dır (düz).
 - **Yazı boyutu:** penceredeki tüm yazılar için normal boyutun %90, %100,
   %110, %125 ya da %150'si; hemen uygulanır.
 - **Kod yazı boyutu:** kod editörleri (gövdeler, scriptler, yanıtın Biçimli

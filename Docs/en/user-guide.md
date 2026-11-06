@@ -90,16 +90,19 @@ with a folder (`apix-desktop path/to/collection`) opens it directly.
 
 ## The window
 
-- **Sidebar (left):** the collection's folders and requests, read from the
-  files on disk and kept up to date when they change. The picker under the
-  collection name chooses the active environment.
-- **Tabs (top):** every request you open gets a tab.
-- **Request pane:** method, URL and the Params, Headers, Auth, Body and
-  Settings tabs.
+- **Sidebar (left, full height):** the search on top, then the collection's
+  folders and requests, read from the files on disk and kept up to date when
+  they change. At its foot sit the active environment's picker and the open
+  collection or project. Drag its edge to make it wider or narrower.
+- **Tabs (top):** every request you open gets a tab; on macOS the tabs sit in
+  the title bar.
+- **Request pane:** method and URL in one address field, then the Params,
+  Headers, Auth, Body, Scripts, Settings and Examples tabs.
 - **Response pane (right):** status, timing, size and the response body.
-- **Status bar (bottom):** the collection, the file of the open request and the
-  most useful shortcuts.
+- **Status bar (bottom):** the number of requests, the file of the open
+  request, the git branch and the most useful shortcuts.
 - **Menu bar:** File, Request, Environment, View and Help hold every command.
+  On macOS they are in the system menu bar at the top of the screen.
 
 ## Sending a request
 
@@ -162,6 +165,11 @@ The Body tab offers:
 | GraphQL | A query editor and a JSON variables editor; sent as `{"query", "variables"}` JSON. |
 
 ![Multipart body](images/body.png)
+
+JSON editors (the JSON body, GraphQL variables, messages) mark the first
+mistake while you type, with a note under the editor saying what is wrong.
+`{{variables}}` are allowed where a value goes, and a missing comma is marked
+on the value before it.
 
 File paths inside the collection are saved relative to the request file, so the
 collection keeps working on another machine.
@@ -388,7 +396,10 @@ the tab bar lists them all.
 
 ## The Network tab
 
-The **Network** tab explains where the time went and what the connection was:
+The **Network** tab explains where the time went and what the connection was,
+in groups that open and close. Timing and Connection start open; the others
+show a one-line summary (the DNS time, the encoding, the TLS version, the days
+the certificate has left) until you click them:
 
 - a timing bar split into DNS, TCP connection, TLS handshake, waiting and
   downloading
@@ -1444,7 +1455,9 @@ The same from a terminal: `apix mcp my-api --add-to claude-desktop`,
 
 ## Settings and language
 
-**File › Settings…** (Ctrl+,):
+**File › Settings…** (Ctrl+,) has four sections: **General**, **Appearance**,
+**Security** and **AI**. The search box above them looks through every
+section at once.
 
 - **Language:** English, Türkçe, العربية, Deutsch, Français, Русский, 日本語,
   简体中文 or Español. The change applies at once. On first start Apix follows
@@ -1467,14 +1480,15 @@ The same from a terminal: `apix mcp my-api --add-to claude-desktop`,
 
 - **History:** on or off (see [History](#history)).
 
-The **Theme** part of Settings changes how Apix looks, at once, without a
+The **Appearance** section changes how Apix looks, at once, without a
 restart:
 
 - **Appearance:** dark, light, or **Follow the system**, which switches when
   Windows or macOS switches between light and dark mode.
-- **Dark theme:** Obsidian (the default), Cyber glass, Dracula, Nord or
-  Solarized Dark. **Light theme:** Daylight or Solarized Light. Picking a
-  theme of the other kind switches the appearance to it.
+- **Dark theme:** Graphite (the default, flat and neutral), Obsidian, Cyber
+  glass, Dracula, Nord or Solarized Dark. **Light theme:** Porcelain (the
+  default), Daylight or Solarized Light. Picking a theme of the other kind
+  switches the appearance to it.
 - **Accent colour:** the theme's own, or cyan, blue, purple, pink, red,
   orange, yellow or green, for buttons, selections, focus rings and the
   variable chips. Light themes get a deeper shade, and the text on the accent
@@ -1484,7 +1498,7 @@ restart:
   vibrancy on macOS). The window background clears with it, panels at a
   slower rate so text keeps a backing, and borders brighten like the edge of
   glass; menus and dialogs stay solid. Light themes clear more gently, as dark
-  text needs a light backing. The default is 20%.
+  text needs a light backing. The default is 0 (solid).
 - **Text size:** 90%, 100%, 110%, 125% or 150% of the normal size, for every
   text in the window, at once.
 - **Code font size:** 11 to 18 px for the code editors (bodies, scripts, the

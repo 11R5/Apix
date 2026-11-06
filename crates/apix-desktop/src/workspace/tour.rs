@@ -363,6 +363,25 @@ impl Workspace {
                 self.open_example(arg.parse().unwrap_or(0), window, cx);
                 300
             }
+            // Opens or closes a group of the Network tab.
+            "network_group" => {
+                const GROUPS: [&str; 7] = [
+                    "timing",
+                    "connection",
+                    "dns",
+                    "redirects",
+                    "body",
+                    "encryption",
+                    "certificates",
+                ];
+                if let Some(key) = GROUPS.iter().find(|g| **g == arg)
+                    && !self.network_toggled.remove(key)
+                {
+                    self.network_toggled.insert(key);
+                }
+                cx.notify();
+                200
+            }
             "scroll_network" => {
                 let y = arg.parse::<f32>().unwrap_or(400.);
                 self.network_scroll.set_offset(point(px(0.), px(-y)));

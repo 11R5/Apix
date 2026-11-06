@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:930abab97809ed62 -->
+<!-- translated from en/user-guide.md sha256:e01a69a7a94b9d31 -->
 
 # Guía de usuario de Apix
 
@@ -96,18 +96,23 @@ la abre directamente.
 
 ## La ventana
 
-- **Barra lateral (izquierda):** las carpetas y solicitudes de la colección,
-  leídas de los archivos en disco y actualizadas cuando cambian. El selector
-  bajo el nombre de la colección elige el entorno activo.
-- **Pestañas (arriba):** cada solicitud que abres tiene su pestaña.
-- **Panel de la solicitud:** el método, la URL y las pestañas Parámetros,
-  Encabezados, Autenticación, Cuerpo y Ajustes.
+- **Barra lateral (izquierda, a toda altura):** la búsqueda arriba y debajo las
+  carpetas y solicitudes de la colección, leídas de los archivos en disco y
+  actualizadas cuando cambian. Al pie están el selector del entorno activo y la
+  colección o el proyecto abierto. Arrastra su borde para ensancharla o
+  estrecharla.
+- **Pestañas (arriba):** cada solicitud que abres tiene su pestaña; en macOS las
+  pestañas están en la barra de título.
+- **Panel de la solicitud:** el método y la URL en un solo campo de dirección, y
+  luego las pestañas Parámetros, Encabezados, Autenticación, Cuerpo, Scripts,
+  Ajustes y Ejemplos.
 - **Panel de la respuesta (derecha):** el estado, los tiempos, el tamaño y el
   cuerpo de la respuesta.
-- **Barra de estado (abajo):** la colección, el archivo de la solicitud abierta
-  y los atajos más útiles.
+- **Barra de estado (abajo):** el número de solicitudes, el archivo de la
+  solicitud abierta, la rama de git y los atajos más útiles.
 - **Barra de menús:** Archivo, Solicitud, Entorno, Ver y Ayuda contienen todos
-  los comandos.
+  los comandos. En macOS están en la barra de menús del sistema, en la parte
+  superior de la pantalla.
 
 ## Enviar una solicitud
 
@@ -175,6 +180,11 @@ La pestaña Cuerpo ofrece:
 | GraphQL | Un editor de consultas y un editor de variables JSON; se envía como JSON `{"query", "variables"}`. |
 
 ![Cuerpo multipart](images/body.png)
+
+Los editores JSON (el cuerpo JSON, las variables de GraphQL, los mensajes)
+marcan el primer error mientras escribes, con una nota bajo el editor que dice
+qué está mal. Las `{{variables}}` se admiten donde va un valor, y una coma que
+falta se marca en el valor anterior.
 
 Las rutas de archivos dentro de la colección se guardan relativas al archivo de
 la solicitud, así que la colección sigue funcionando en otro equipo.
@@ -418,7 +428,11 @@ la flecha al final de la barra de pestañas las lista todas.
 
 ## La pestaña Red
 
-La pestaña **Red** explica en qué se fue el tiempo y cómo era la conexión:
+La pestaña **Red** explica en qué se fue el tiempo y cómo era la conexión, en
+grupos que se abren y se cierran. Tiempos y Conexión empiezan abiertos; los
+demás muestran un resumen de una línea (el tiempo de DNS, la codificación, la
+versión de TLS, los días que le quedan al certificado) hasta que haces clic en
+ellos:
 
 - una barra de tiempos dividida en DNS, conexión TCP, negociación TLS, espera y
   descarga
@@ -1564,7 +1578,9 @@ Lo mismo desde una terminal: `apix mcp my-api --add-to claude-desktop`,
 
 ## Configuración e idioma
 
-**Archivo › Configuración…** (Ctrl+,):
+**Archivo › Configuración…** (Ctrl+,) tiene cuatro secciones: **General**,
+**Apariencia**, **Seguridad** e **IA**. El cuadro de búsqueda que hay encima
+busca en todas las secciones a la vez.
 
 - **Idioma:** English, Türkçe, العربية, Deutsch, Français, Русский, 日本語,
   简体中文 o Español. El cambio se aplica al momento. En el primer inicio, Apix
@@ -1589,14 +1605,15 @@ Lo mismo desde una terminal: `apix mcp my-api --add-to claude-desktop`,
 
 - **Historial:** activado o desactivado (consulta [Historial](#historial)).
 
-La parte **Tema** de la configuración cambia el aspecto de Apix, al momento, sin
+La sección **Apariencia** cambia el aspecto de Apix, al momento, sin
 reiniciar:
 
 - **Apariencia:** oscura, clara, o **Seguir el sistema**, que cambia cuando
   Windows o macOS pasan del modo claro al oscuro.
-- **Tema oscuro:** Obsidian (el predeterminado), Cyber glass, Dracula, Nord o
-  Solarized Dark. **Tema claro:** Luz de día o Solarized Light. Elegir un tema
-  del otro tipo cambia la apariencia a ese tipo.
+- **Tema oscuro:** Graphite (el predeterminado, plano y neutro), Obsidian, Cyber
+  glass, Dracula, Nord o Solarized Dark. **Tema claro:** Porcelain (el
+  predeterminado), Luz de día o Solarized Light. Elegir un tema del otro tipo
+  cambia la apariencia a ese tipo.
 - **Color de acento:** el del tema, o cian, azul, morado, rosa, rojo, naranja,
   amarillo o verde, para los botones, las selecciones, los marcos de foco y los
   chips de variables. Los temas claros reciben un tono más intenso, y el texto
@@ -1607,7 +1624,7 @@ reiniciar:
   él, los paneles a un ritmo más lento para que el texto siga teniendo un fondo,
   y los bordes se iluminan como el canto de un vidrio; los menús y los diálogos
   siguen opacos. Los temas claros se aclaran con más suavidad, porque el texto
-  oscuro necesita un fondo claro. El valor por defecto es 20%.
+  oscuro necesita un fondo claro. El valor por defecto es 0 (opaca).
 - **Tamaño del texto:** 90%, 100%, 110%, 125% o 150% del tamaño normal, para
   todo el texto de la ventana, al momento.
 - **Tamaño de fuente del código:** de 11 a 18 px para los editores de código

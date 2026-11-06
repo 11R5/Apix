@@ -1,4 +1,4 @@
-<!-- translated from en/user-guide.md sha256:930abab97809ed62 -->
+<!-- translated from en/user-guide.md sha256:e01a69a7a94b9d31 -->
 
 # Guide d'utilisation d'Apix
 
@@ -97,19 +97,23 @@ récent**. Lancer l'application avec un dossier
 
 ## La fenêtre
 
-- **Barre latérale (à gauche) :** les dossiers et les requêtes de la
-  collection, lus depuis les fichiers sur le disque et tenus à jour quand ils
-  changent. Le sélecteur sous le nom de la collection choisit l'environnement
-  actif.
-- **Onglets (en haut) :** chaque requête que vous ouvrez a son onglet.
-- **Volet de requête :** la méthode, l'URL et les onglets Paramètres,
-  En-têtes, Auth, Corps et Réglages.
+- **Barre latérale (à gauche, sur toute la hauteur) :** la recherche en haut,
+  puis les dossiers et les requêtes de la collection, lus depuis les fichiers
+  sur le disque et tenus à jour quand ils changent. En bas se trouvent le
+  sélecteur de l'environnement actif et la collection ou le projet ouvert.
+  Faites glisser son bord pour l'élargir ou la rétrécir.
+- **Onglets (en haut) :** chaque requête que vous ouvrez a son onglet ; sous
+  macOS, les onglets sont dans la barre de titre.
+- **Volet de requête :** la méthode et l'URL dans un seul champ d'adresse, puis
+  les onglets Paramètres, En-têtes, Auth, Corps, Scripts, Réglages et
+  Exemples.
 - **Volet de réponse (à droite) :** le statut, le temps, la taille et le corps
   de la réponse.
-- **Barre d'état (en bas) :** la collection, le fichier de la requête ouverte
-  et les raccourcis les plus utiles.
+- **Barre d'état (en bas) :** le nombre de requêtes, le fichier de la requête
+  ouverte, la branche git et les raccourcis les plus utiles.
 - **Barre de menus :** Fichier, Requête, Environnement, Affichage et Aide
-  contiennent toutes les commandes.
+  contiennent toutes les commandes. Sous macOS, ils sont dans la barre de
+  menus du système, en haut de l'écran.
 
 ## Envoyer une requête
 
@@ -178,6 +182,12 @@ L'onglet Corps propose :
 | GraphQL | Un éditeur de requête et un éditeur JSON de variables ; envoyé sous forme de JSON `{"query", "variables"}`. |
 
 ![Corps multipart](images/body.png)
+
+Les éditeurs JSON (le corps JSON, les variables GraphQL, les messages)
+signalent la première erreur pendant que vous tapez, avec une note sous
+l'éditeur qui dit ce qui ne va pas. Les `{{variables}}` sont acceptées là où
+va une valeur, et une virgule manquante est signalée sur la valeur qui la
+précède.
 
 Les chemins de fichiers situés dans la collection sont enregistrés relativement
 au fichier de la requête, si bien que la collection continue de fonctionner sur
@@ -430,7 +440,10 @@ au bout de la barre d'onglets les liste tous.
 ## L'onglet Réseau
 
 L'onglet **Réseau** explique où le temps est passé et ce qu'était la
-connexion :
+connexion, en groupes qui s'ouvrent et se ferment. Durées et Connexion sont
+ouverts au départ ; les autres affichent un résumé d'une ligne (le temps DNS,
+l'encodage, la version de TLS, les jours qu'il reste au certificat) jusqu'à
+ce que vous cliquiez dessus :
 
 - une barre de temps découpée en DNS, connexion TCP, poignée de main TLS,
   attente et téléchargement
@@ -1625,7 +1638,9 @@ La même chose depuis un terminal : `apix mcp my-api --add-to claude-desktop`,
 
 ## Paramètres et langue
 
-**Fichier › Paramètres…** (Ctrl+,) :
+**Fichier › Paramètres…** (Ctrl+,) a quatre sections : **Général**,
+**Apparence**, **Sécurité** et **IA**. Le champ de recherche au-dessus
+cherche dans toutes les sections à la fois.
 
 - **Langue :** English, Türkçe, العربية, Deutsch, Français, Русский, 日本語,
   简体中文 ou Español. Le changement s'applique immédiatement. Au premier
@@ -1652,14 +1667,15 @@ La même chose depuis un terminal : `apix mcp my-api --add-to claude-desktop`,
 
 - **Historique :** activé ou désactivé (voir [Historique](#historique)).
 
-La partie **Thème** des Paramètres change l'apparence d'Apix, immédiatement,
-sans redémarrage :
+La section **Apparence** change l'apparence d'Apix, immédiatement, sans
+redémarrage :
 
 - **Apparence :** sombre, clair, ou **Suivre le système**, qui bascule quand
   Windows ou macOS passe du mode clair au mode sombre et inversement.
-- **Thème sombre :** Obsidian (par défaut), Cyber glass, Dracula, Nord ou
-  Solarized Dark. **Thème clair :** Daylight ou Solarized Light. Choisir un
-  thème de l'autre sorte fait passer l'apparence à celle-ci.
+- **Thème sombre :** Graphite (par défaut, plat et neutre), Obsidian, Cyber
+  glass, Dracula, Nord ou Solarized Dark. **Thème clair :** Porcelain (par
+  défaut), Lumière du jour ou Solarized Light. Choisir un thème de l'autre
+  sorte fait passer l'apparence à celle-ci.
 - **Couleur d'accent :** celle du thème, ou cyan, bleu, violet, rose, rouge,
   orange, jaune ou vert, pour les boutons, les sélections, les contours de
   focus et les pastilles de variables. Les thèmes clairs reçoivent une nuance
@@ -1671,7 +1687,7 @@ sans redémarrage :
   les panneaux plus lentement pour que le texte garde un fond, et les bordures
   s'éclairent comme le bord d'un verre ; les menus et les fenêtres de dialogue
   restent opaques. Les thèmes clairs s'éclaircissent plus doucement, car un
-  texte sombre a besoin d'un fond clair. La valeur par défaut est 20 %.
+  texte sombre a besoin d'un fond clair. La valeur par défaut est 0 (opaque).
 - **Taille du texte :** 90 %, 100 %, 110 %, 125 % ou 150 % de la taille
   normale, pour tout le texte de la fenêtre, immédiatement.
 - **Taille de la police du code :** de 11 à 18 px pour les éditeurs de code
